@@ -1,0 +1,108 @@
+services:
+  devcontainer:
+    # Container name will use project name automatically via COMPOSE_PROJECT_NAME
+    # which defaults to the parent directory name
+
+    # Use pre-built image from GitHub Container Registry with fallback to local build
+    # Docker Compose will try to pull first, then build if pull fails
+    # Image name uses COMPOSE_PROJECT_NAME (automatically set to parent directory name)
+    image: ghcr.io/kodflow/${COMPOSE_PROJECT_NAME}:devcontainer
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Build arguments for optimization
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+
+    env_file:
+      - .env
+    volumes:
+      # Mount workspace
+      - ..:/workspace:cached
+      # Named volumes for persistence (survive rebuilds)
+      - zsh-history:/home/vscode/.zsh_history_dir
+      - package-cache:/home/vscode/.cache
+      - config-dir:/home/vscode/.config
+      - local-bin:/home/vscode/.local/bin
+
+      # npm global packages persistence (survives rebuilds)
+      - npm-global:/home/vscode/.local/share/npm-global
+
+      # Claude CLI session persistence (survives rebuilds)
+      - claude-config:/home/vscode/.claude
+      - anthropic-config:/home/vscode/.config/@anthropic
+      - anthropic-cache:/home/vscode/.cache/@anthropic
+      - anthropic-data:/home/vscode/.local/share/@anthropic
+
+      # 1Password CLI session persistence (survives rebuilds)
+      - op-config:/home/vscode/.config/op
+      - op-cache:/home/vscode/.op
+
+    # Network configuration
+    networks:
+      - default
+
+    # Keep container running
+    command: /bin/sh -c "while sleep 1000; do :; done"
+
+    # Environment variables for package managers cache
+    environment:
+      # Claude CLI configuration
+      - CLAUDE_CONFIG_DIR=/home/vscode/.claude
+
+      # 1Password configuration
+      - OP_CONFIG_DIR=/home/vscode/.config/op
+
+      # Node.js / npm / yarn / pnpm
+      - npm_config_cache=/home/vscode/.cache/npm
+      - YARN_CACHE_FOLDER=/home/vscode/.cache/yarn
+      - PNPM_HOME=/home/vscode/.cache/pnpm
+
+      # Python / pip / poetry / pipenv
+      - PIP_CACHE_DIR=/home/vscode/.cache/pip
+      - POETRY_CACHE_DIR=/home/vscode/.cache/poetry
+      - PIPENV_CACHE_DIR=/home/vscode/.cache/pipenv
+
+      # Go
+      - GOPATH=/home/vscode/.cache/go
+      - GOCACHE=/home/vscode/.cache/go-build
+      - GOMODCACHE=/home/vscode/.cache/go/pkg/mod
+
+      # Ruby / Bundler
+      - GEM_HOME=/home/vscode/.cache/gems
+      - BUNDLE_PATH=/home/vscode/.cache/bundle
+
+      # Rust / Cargo
+      - CARGO_HOME=/home/vscode/.cache/cargo
+      - RUSTUP_HOME=/home/vscode/.cache/rustup
+
+      # Java / Maven / Gradle
+      - MAVEN_OPTS=-Dmaven.repo.local=/home/vscode/.cache/maven
+      - GRADLE_USER_HOME=/home/vscode/.cache/gradle
+
+      # PATH - Add all bin directories (npm-global first for user packages)
+      - PATH=/home/vscode/.local/share/npm-global/bin:/home/vscode/.local/bin:/home/vscode/.cache/go/bin:/home/vscode/.cache/cargo/bin:/home/vscode/.cache/gems/bin:/home/vscode/.cache/pnpm:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+
+    # User
+    user: vscode
+
+volumes:
+  zsh-history:
+  package-cache:
+  config-dir:
+  local-bin:
+  # npm global packages volume
+  npm-global:
+  # Claude CLI volumes (persist sessions across rebuilds)
+  claude-config:
+  anthropic-config:
+  anthropic-cache:
+  anthropic-data:
+  # 1Password CLI volumes (persist sessions across rebuilds)
+  op-config:
+  op-cache:
+
+networks:
+  default:
+    driver: bridge

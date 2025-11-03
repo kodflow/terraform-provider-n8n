@@ -1,0 +1,200 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor Files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+.devcontainer/.env
+
+# Secrets & credentials
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+credentials.json
+.credentials.json
+*.p12
+*.pfx
+.mcp.json
+.devcontainer/mcp.json
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+coverage.html
+go.work
+go.work.sum
+vendor/
+
+# Node.js / JavaScript / TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+.npm/
+.eslintcache
+.stylelintcache
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.hypothesis/
+*.cover
+.mypy_cache/
+.dmypy.json
+dmypy.json
+venv/
+env/
+ENV/
+.venv
+poetry.lock
+Pipfile.lock
+
+# Ruby
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+*.bundle
+.bundle/
+Gemfile.lock
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Java / Kotlin / Scala
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+.mvn/
+.m2/
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Build outputs
+dist/
+build/
+out/
+*.log
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Task tracking (local only)
+.tasks/
+
+# Data directories
+data/
+!data/.gitkeep
+
+# Cache directories
+.cache/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# AI/IDE specific
+.github/instructions/codacy.instructions.md
+.cursor/
+.windsurf/
+.codacy/
+
+# Keep empty directories
+!.gitkeep
+/.env
+.env

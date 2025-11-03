@@ -1,0 +1,22 @@
+---
+# Codacy configuration file
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+
+# Exclude patterns - files that should not be analyzed
+exclude_paths:
+  # DevContainer generated files with secrets
+  - '.devcontainer/mcp.json'
+
+  # Standard exclusions
+  - 'node_modules/**'
+  - 'vendor/**'
+  - 'dist/**'
+  - 'build/**'
+  - '*.min.js'
+  - '*.min.css'
+
+# Engines configuration
+engines:
+  trivy:
+    exclude_paths:
+      - '.devcontainer/mcp.json'
