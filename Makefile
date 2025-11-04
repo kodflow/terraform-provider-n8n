@@ -1,5 +1,9 @@
 .DEFAULT_GOAL := help
 
+# ============================================================================
+# Configuration
+# ============================================================================
+
 # Automatic OS and architecture detection
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
@@ -19,45 +23,77 @@ VERSION := $(MAJOR).$(MINOR).$(NEXT_PATCH)-dev
 
 PLUGIN_DIR := $(HOME)/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/$(VERSION)/$(GOOS)_$(GOARCH)
 
+# Colors for output
+CYAN := \033[36m
+GREEN := \033[32m
+YELLOW := \033[33m
+RED := \033[31m
+RESET := \033[0m
+BOLD := \033[1m
+
+# ============================================================================
+# Targets
+# ============================================================================
+
 .PHONY: help
-help: ## Display this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+help: ## Display available commands
+	@echo "$(BOLD)$(CYAN)Available commands:$(RESET)"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
+
+# ============================================================================
+# Build & Test
+# ============================================================================
 
 .PHONY: test
-test: ## Run tests
+test: ## Run test suite
+	@printf "$(BOLD)Running test suite...$(RESET)\n"
 	@bazel test --test_verbose_timeout_warnings //src/...
+	@printf "$(GREEN)✓$(RESET) Tests completed\n"
 
 .PHONY: build
-build: ## Build provider locally and install for Terraform
-	@echo "🔨 Compiling provider with Bazel..."
+build: ## Build and install provider
+	@printf "$(BOLD)Building Terraform provider...$(RESET)\n"
+	@printf "  $(CYAN)→$(RESET) Compiling with Bazel\n"
 	@bazel build //src:terraform-provider-n8n
-	@echo "📦 Installing to $(PLUGIN_DIR)..."
+	@printf "  $(CYAN)→$(RESET) Installing to plugin directory\n"
 	@mkdir -p $(PLUGIN_DIR)
 	@cp -f bazel-bin/src/terraform-provider-n8n_/terraform-provider-n8n $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)
 	@chmod +x $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)
-	@echo "✅ Provider installed successfully!"
-	@echo "📍 Location: $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)"
+	@printf "$(GREEN)✓$(RESET) Provider installed successfully\n"
+	@printf "  $(CYAN)Location:$(RESET) $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)\n"
 
 .PHONY: clean
-clean: ## Clean Bazel artifacts
+clean: ## Remove build artifacts
+	@printf "$(BOLD)Cleaning build artifacts...$(RESET)\n"
 	@bazel clean
+	@printf "$(GREEN)✓$(RESET) Cleanup completed\n"
+
+# ============================================================================
+# Code Quality
+# ============================================================================
 
 .PHONY: fmt
-fmt: ## Format all files in the project
-	@echo "🎨 Formatting all files..."
-	@echo "  → Go files..."
-	@go fmt ./...
-	@echo "  → Bazel files..."
-	@buildifier -r .
-	@echo "  → Shell scripts..."
-	@shfmt -w -i 2 -ci -bn .
-	@echo "  → YAML, JSON, Markdown..."
-	@prettier --write "**/*.{json,yaml,yml,md}"
-	@echo "  → Terraform files..."
-	@terraform fmt -recursive examples/ 2>/dev/null || true
-	@echo "✅ All files formatted!"
+fmt: ## Format all source files
+	@printf "$(BOLD)Formatting source files...$(RESET)\n"
+	@printf "  $(CYAN)→$(RESET) Go files\n"
+	@go fmt ./... > /dev/null
+	@printf "  $(CYAN)→$(RESET) Bazel files\n"
+	@buildifier -r . 2>&1 | grep -v "^$$" || true
+	@printf "  $(CYAN)→$(RESET) Shell scripts\n"
+	@find . -name "*.sh" ! -path "./bazel-*" ! -name "p10k.sh" -exec shfmt -w -i 2 -ci -bn {} \; 2>/dev/null
+	@printf "  $(CYAN)→$(RESET) YAML, JSON, Markdown\n"
+	@prettier --write "**/*.{json,yaml,yml,md}" --log-level silent
+	@printf "  $(CYAN)→$(RESET) Terraform files\n"
+	@terraform fmt -recursive examples/ > /dev/null 2>&1 || true
+	@printf "$(GREEN)✓$(RESET) Formatting completed\n"
 
 .PHONY: lint
-lint: ## Run golangci-lint with ktn-linter
-	@echo "🔍 Running golangci-lint with ktn-linter..."
+lint: ## Run code linters
+	@printf "$(BOLD)Running code analysis...$(RESET)\n"
+	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
 	@golangci-lint run ./...
+	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
+	@ktn-linter lint --simple ./... || true
+	@printf "$(GREEN)✓$(RESET) Linting completed\n"
