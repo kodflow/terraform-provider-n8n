@@ -5,6 +5,12 @@
   "workspaceFolder": "/workspace",
   // Initialize command runs on host BEFORE container build
   "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/init.sh",
+  // Features
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.25"
+    }
+  },
   // Configure tool-specific properties
   "customizations": {
     "vscode": {
@@ -18,15 +24,28 @@
         "editor.formatOnSave": true,
         "files.eol": "\n",
         "files.insertFinalNewline": true,
-        "files.trimTrailingWhitespace": true
+        "files.trimTrailingWhitespace": true,
+        "[go]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        },
+        "go.toolsManagement.autoUpdate": true,
+        "go.lintTool": "golangci-lint",
+        "go.lintOnSave": "package",
+        "bazel.buildifierExecutable": "/home/vscode/.local/bin/buildifier",
+        "bazel.enableCodeLens": true
       },
       "extensions": [
         "usernamehw.errorlens", // Affichage inline des erreurs et warnings
         "vscode-icons-team.vscode-icons", // Icônes pour les fichiers et dossiers
         "redhat.vscode-yaml", // Support YAML
         "tamasfe.even-better-toml", // Support TOML
-        "editorconfig.editorconfig", // EditorConfig
-        "visualstudioexptteam.vscodeintellicode" // IntelliCode gratuit de Microsoft
+        "visualstudioexptteam.vscodeintellicode", // IntelliCode gratuit de Microsoft
+        "golang.go", // Support Go officiel
+        "hashicorp.terraform", // Support Terraform
+        "bazelbuild.vscode-bazel" // Support Bazel
       ]
     }
   },

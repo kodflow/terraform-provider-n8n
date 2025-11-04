@@ -102,12 +102,22 @@ RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.z
         echo '# npm global packages path'; \
         echo 'export PATH="/home/vscode/.local/share/npm-global/bin:$PATH"'; \
         echo ''; \
+        echo '# Go environment'; \
+        echo 'export PATH="/usr/local/go/bin:$PATH"'; \
+        echo 'export GOPATH="/home/vscode/.cache/go"'; \
+        echo 'export GOBIN="/home/vscode/.cache/go/bin"'; \
+        echo 'export PATH="$GOBIN:$PATH"'; \
+        echo ''; \
         echo '# Super Claude alias'; \
         echo 'alias super-claude="claude --dangerously-skip-permissions --mcp-config /home/vscode/.devcontainer/mcp.json"'; \
     } >> "$HOME/.zshrc"
 
 # Install npm global packages as vscode user (no root needed)
 RUN npm install -g @anthropic-ai/claude-code@latest @bazel/bazelisk
+
+# Install buildifier for Bazel formatting and linting
+RUN curl -fsSL "https://github.com/bazelbuild/buildtools/releases/latest/download/buildifier-linux-amd64" -o /home/vscode/.local/bin/buildifier && \
+    chmod +x /home/vscode/.local/bin/buildifier
 
 # Set working directory
 WORKDIR /workspace

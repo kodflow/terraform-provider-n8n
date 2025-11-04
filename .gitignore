@@ -56,6 +56,9 @@ coverage.html
 go.work
 go.work.sum
 vendor/
+# Go binary output
+/terraform-provider-n8n
+/n8n
 
 # Node.js / JavaScript / TypeScript
 node_modules/
@@ -193,6 +196,12 @@ docker-compose.override.yml
 .cursor/
 .windsurf/
 .codacy/
+
+# Bazel
+bazel-*
+.bazel-cache
+MODULE.bazel.lock
+deps.bzl
 
 # Keep empty directories
 !.gitkeep

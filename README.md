@@ -1,223 +1,400 @@
-# DevContainer Minimal Template
+# Terraform Provider for n8n
 
-Template minimaliste pour démarrer rapidement vos projets avec un environnement DevContainer propre et léger.
+Provider Terraform pour gérer les ressources n8n (workflows, credentials, etc.).
 
-## Fonctionnalités
+[![Bazel](https://img.shields.io/badge/Build-Bazel%209.0-43A047?logo=bazel)](https://bazel.build/)
+[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)](https://go.dev/)
+[![Terraform](https://img.shields.io/badge/Terraform-Plugin%20Framework-7B42BC?logo=terraform)](https://developer.hashicorp.com/terraform/plugin/framework)
 
-- **Ubuntu 24.04 LTS** comme base
-- **User vscode** (UID/GID 1000:1000) avec sudo
-- **Zsh + Oh My Zsh + Powerlevel10k** pré-installé et configuré
-- **Outils essentiels** : git, curl, wget, jq, yq, build-essential
-- **MCP (Model Context Protocol)** : Configuration et scripts d'initialisation inclus
-- **Script d'initialisation** : Configuration automatique à la création du container
-- **Persistance** via volumes Docker
-- **Aucune feature externe** : tout est dans le Dockerfile
-- **GitHub Actions** : Workflow de build automatisé pour le devcontainer
+## Table des matières
 
-## Ce qui n'est PAS inclus
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Développement](#développement)
+- [Build et Tests](#build-et-tests)
+- [Structure du projet](#structure-du-projet)
+- [Publication](#publication)
+- [Contributing](#contributing)
+- [License](#license)
 
-Ce template est **volontairement minimaliste**. Il ne contient pas :
+## Prérequis
 
-- ❌ Langages de programmation (Go, Node.js, Python, etc.)
-- ❌ CLIs spécifiques (GitHub CLI, Claude CLI, etc.)
-- ❌ Docker-in-Docker
-- ❌ Bases de données
+### Versions requises
 
-**Pourquoi ?** Pour garder l'image légère et vous laisser installer uniquement ce dont vous avez besoin.
+- **Go 1.24.0+** (requis par terraform-plugin-framework v1.16+)
+- **Bazel 9.0+** (système de build)
+- **Terraform 1.0+** ou **OpenTofu 1.0+**
 
-## Installation rapide
+### DevContainer (Recommandé)
 
-### Via GitHub
+Le projet est configuré avec un DevContainer incluant tous les outils nécessaires:
+
+- **Go 1.25.3** (compatible 1.24+)
+- **Bazel 9.0.0rc1** (via Bazelisk)
+- **Terraform & OpenTofu** (pré-installés)
+- Extensions VS Code:
+  - `golang.go` - Support Go officiel
+  - `hashicorp.terraform` - Support Terraform
+  - `BazelBuild.vscode-bazel` - Support Bazel
+
+**Pour utiliser le DevContainer:**
+1. Ouvrir le projet dans VS Code
+2. Accepter la proposition d'ouvrir dans le conteneur
+3. Attendre la construction du conteneur (première fois uniquement)
+
+### Installation manuelle
+
+Si vous n'utilisez pas le DevContainer:
 
 ```bash
-# Utiliser ce repository comme template
-gh repo create mon-projet --template .repository --public
-cd mon-projet
-code .
+# Installer Go 1.24+
+# Voir: https://go.dev/doc/install
+
+# Installer Bazelisk (recommandé pour gérer les versions de Bazel)
+go install github.com/bazelbuild/bazelisk@latest
+
+# Vérifier les versions
+go version        # doit afficher go1.24 ou supérieur
+bazel version     # doit afficher Bazel 9.0+
 ```
 
-### Localement
+## Installation
 
-```bash
-# Copier le template
-cp -r .repository mon-projet
-cd mon-projet
-rm -rf .git
-git init
-code .
-```
+### Via Terraform Registry (À venir)
 
-Acceptez l'ouverture dans le DevContainer lorsque VS Code vous le propose.
-
-## Personnalisation
-
-### Ajouter des langages/outils
-
-**Option 1 : Dans le Dockerfile** (recommandé pour les outils systèmes)
-
-Éditez `.devcontainer/Dockerfile` :
-
-```dockerfile
-# Ajouter des packages apt
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    && apt-get clean
-
-# Installer Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
-    && apt-get install -y nodejs
-```
-
-**Option 2 : Avec les DevContainer Features** (pour les langages standards)
-
-Ajoutez dans `.devcontainer/devcontainer.json` :
-
-```json
-"features": {
-  "ghcr.io/devcontainers/features/go:1": {
-    "version": "latest"
-  },
-  "ghcr.io/devcontainers/features/node:1": {
-    "version": "lts"
+```hcl
+terraform {
+  required_providers {
+    n8n = {
+      source  = "kodflow/n8n"
+      version = "~> 0.1.0"
+    }
   }
+}
+
+provider "n8n" {
+  api_url = "https://your-n8n-instance.com"
+  api_key = var.n8n_api_key
 }
 ```
 
-Voir : <https://containers.dev/features>
-
-**Option 3 : Installation manuelle** (pour les outils utilisateur)
-
-Installez après l'ouverture du container :
+### Installation locale pour développement
 
 ```bash
-# Exemple
-curl -sSL https://example.com/install.sh | sh
+# Compiler et installer localement
+make test
+
+# Le provider sera installé dans:
+# ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/0.0.1/<OS>_<ARCH>/
 ```
 
-### Ajouter des extensions VS Code
+## Développement
 
-Éditez `.devcontainer/devcontainer.json` dans `customizations.vscode.extensions`.
+### Commandes Make disponibles
 
-### Variables d'environnement
-
-Créez un fichier `.env` à la racine pour vos variables d'environnement.
-
-### Personnaliser Powerlevel10k
-
-Pour configurer le prompt Powerlevel10k :
+Le `Makefile` fournit deux commandes essentielles:
 
 ```bash
-# Lancer l'assistant de configuration interactif
-p10k configure
+make help    # Affiche l'aide avec toutes les commandes disponibles
+make test    # Lance les tests avec Bazel
 ```
 
-Cela créera un fichier `~/.p10k.zsh` avec votre configuration personnalisée. Ce fichier sera automatiquement chargé au démarrage du shell.
+### Configuration Bazel
 
-## Structure des volumes
+Le projet utilise **Bazel 9** avec **bzlmod** (le nouveau système de gestion des dépendances):
 
-Les volumes Docker persistent entre les rebuilds :
+- **`.bazelversion`**: Version de Bazel (9.0.0rc1)
+- **`MODULE.bazel`**: Dépendances et configuration bzlmod
+- **`BUILD.bazel`**: Configuration de build à la racine
+- **`.bazelrc`**: Options de build Bazel
 
-### Volumes spécifiques au projet
+**Dépendances Bazel:**
+- `rules_go v0.58.3` - Règles Go pour Bazel (avec support Bazel 9)
+- `gazelle v0.46.0` - Générateur automatique de BUILD files
+- `rules_proto v7.1.0` - Support Protocol Buffers
+- `bazel_features v1.33.0` - Détection de fonctionnalités Bazel
 
-- `{nom-du-projet}-local-bin` : Binaires locaux installés
+### Architecture du projet
 
-### Volumes partagés
+```
+.
+├── .bazelrc              # Configuration Bazel
+├── .bazelversion         # Version Bazel (9.0.0rc1)
+├── MODULE.bazel          # Dépendances bzlmod
+├── BUILD.bazel           # Configuration build racine
+├── go.mod                # Dépendances Go
+├── Makefile              # Commandes de build
+├── .devcontainer/        # Configuration DevContainer
+│   ├── Dockerfile        # Image de développement
+│   └── devcontainer.json # Configuration VS Code
+├── src/                  # Code source du provider
+│   ├── main.go           # Point d'entrée
+│   ├── BUILD.bazel       # Configuration build src
+│   └── internal/
+│       └── provider/     # Implémentation du provider
+│           ├── provider.go
+│           ├── provider_test.go
+│           └── BUILD.bazel
+└── .github/
+    └── workflows/        # CI/CD GitHub Actions
+        └── release.yml   # Workflow de release automatique
+```
 
-- `vscode-extensions` : Extensions VS Code
-- `vscode-insiders-extensions` : Extensions VS Code Insiders
-- `zsh-history` : Historique Zsh
+## Build et Tests
 
-Vous pouvez ajouter vos propres volumes dans `.devcontainer/devcontainer.json`.
-
-## Commandes utiles
-
-### Rebuild du container
+### Lancer les tests
 
 ```bash
-# Depuis VS Code
-Cmd+Shift+P > "Dev Containers: Rebuild Container"
+# Via Make (recommandé)
+make test
 
-# Ou depuis le terminal
-docker compose -f .devcontainer/docker-compose.yml down
-docker compose -f .devcontainer/docker-compose.yml build --no-cache
-docker compose -f .devcontainer/docker-compose.yml up -d
+# Directement avec Bazel
+bazel test //src/...
+
+# Tests avec verbose timeout warnings
+bazel test --test_verbose_timeout_warnings //src/...
 ```
 
-### Nettoyer les volumes
+### Build du provider
 
 ```bash
-# Supprimer tous les volumes (⚠️ perte de données)
-docker compose -f .devcontainer/docker-compose.yml down -v
+# Build avec Bazel
+bazel build //src:terraform-provider-n8n
+
+# Le binaire sera disponible dans:
+# bazel-bin/src/terraform-provider-n8n
 ```
 
-### Voir les logs
+### Nettoyage
 
 ```bash
-docker compose -f .devcontainer/docker-compose.yml logs -f devcontainer
+# Nettoyer les artifacts Bazel
+bazel clean
+
+# Nettoyage complet (cache inclus)
+bazel clean --expunge
 ```
 
-## Configuration MCP (Model Context Protocol)
+## Structure du projet
 
-Le template inclut une configuration MCP pour faciliter l'intégration avec des outils d'IA.
+### Code source
 
-### Script de configuration
+Le provider est structuré selon les best practices Terraform Plugin Framework:
 
-Le script `.devcontainer/setup-mcp.sh` est exécuté automatiquement au démarrage du container et permet de :
+```
+src/
+├── main.go                    # Point d'entrée du provider
+└── internal/
+    └── provider/
+        ├── provider.go        # Implémentation du provider principal
+        ├── provider_test.go   # Tests du provider
+        └── BUILD.bazel        # Configuration build
+```
 
-- Configurer les serveurs MCP
-- Initialiser les variables d'environnement nécessaires
-- Préparer l'environnement pour l'utilisation des outils MCP
+### Configuration Terraform
 
-### Variables d'environnement
+Pour utiliser le provider en développement local:
 
-Copiez `.devcontainer/.env.example` vers `.devcontainer/.env` et configurez vos variables :
+```hcl
+terraform {
+  required_providers {
+    n8n = {
+      source  = "registry.terraform.io/kodflow/n8n"
+      version = "0.0.1"
+    }
+  }
+}
+
+provider "n8n" {
+  # Configuration du provider
+}
+```
+
+## Publication
+
+### Workflow de release
+
+Le projet utilise **GoReleaser** via GitHub Actions pour automatiser les releases:
+
+1. **Créer un tag**:
+   ```bash
+   git tag -a v0.1.0 -m "Release v0.1.0"
+   git push origin v0.1.0
+   ```
+
+2. **GitHub Actions** déclenche automatiquement:
+   - Compilation cross-platform (Linux, macOS, Windows, FreeBSD)
+   - Génération des checksums SHA256
+   - Signature GPG des checksums
+   - Création d'une release GitHub avec les artifacts
+
+### Configuration GPG
+
+Pour signer les releases, configurer une clé GPG:
 
 ```bash
-cp .devcontainer/.env.example .devcontainer/.env
+# Générer une clé GPG
+gpg --full-generate-key
+# Choisir: RSA and RSA, 4096 bits, pas d'expiration
+
+# Exporter la clé privée
+gpg --armor --export-secret-keys YOUR_EMAIL > private-key.asc
+
+# Exporter la clé publique
+gpg --armor --export YOUR_EMAIL
 ```
 
-Éditez `.devcontainer/.env` selon vos besoins pour ajouter vos clés API et configurations.
+Ajouter les secrets GitHub (Settings > Secrets and variables > Actions):
+- `GPG_PRIVATE_KEY`: Contenu de `private-key.asc`
+- `GPG_PASSPHRASE`: Passphrase de la clé GPG
 
-### Script d'initialisation
+### Artifacts de release
 
-Le script `.devcontainer/init.sh` s'exécute automatiquement à la création du container via le `postCreateCommand` et permet de :
+GoReleaser génère automatiquement:
 
-- Effectuer des configurations post-création
-- Installer des dépendances supplémentaires
-- Personnaliser l'environnement de développement
+```
+terraform-provider-n8n_0.1.0_darwin_amd64.zip
+terraform-provider-n8n_0.1.0_darwin_arm64.zip
+terraform-provider-n8n_0.1.0_linux_amd64.zip
+terraform-provider-n8n_0.1.0_linux_arm64.zip
+terraform-provider-n8n_0.1.0_windows_amd64.zip
+terraform-provider-n8n_0.1.0_SHA256SUMS
+terraform-provider-n8n_0.1.0_SHA256SUMS.sig
+```
 
-## Dépannage
+### Inscription sur le Registry
 
-### Problèmes de permissions
+#### Terraform Registry (officiel)
+
+1. Se connecter sur [registry.terraform.io](https://registry.terraform.io)
+2. Aller dans "Publish" > "Provider"
+3. Connecter le repository GitHub
+4. Ajouter la clé GPG publique
+5. Le registry détectera automatiquement les releases
+
+#### OpenTofu Registry
+
+OpenTofu utilise le même format. Suivre la documentation sur [github.com/opentofu/registry](https://github.com/opentofu/registry).
+
+## Contributing
+
+### Prérequis
+
+1. Fork le repository
+2. Cloner votre fork
+3. Ouvrir dans VS Code avec DevContainer (recommandé)
+4. Créer une branche pour vos modifications
+
+### Workflow de contribution
 
 ```bash
-# Depuis le container
-sudo chown -R vscode:vscode $HOME
+# Créer une branche
+git checkout -b feature/ma-fonctionnalite
+
+# Faire vos modifications
+# ...
+
+# Tester
+make test
+
+# Commit et push
+git add .
+git commit -m "feat: ajout de ma fonctionnalité"
+git push origin feature/ma-fonctionnalite
+
+# Créer une Pull Request sur GitHub
 ```
 
-### Rebuild complet
+### Standards de code
+
+- **Go**: Suivre les conventions Go standards (`gofmt`, `golint`)
+- **Commits**: Utiliser [Conventional Commits](https://www.conventionalcommits.org/)
+  - `feat:` - Nouvelle fonctionnalité
+  - `fix:` - Correction de bug
+  - `docs:` - Documentation
+  - `refactor:` - Refactoring
+  - `test:` - Ajout de tests
+  - `chore:` - Tâches de maintenance
+
+### Tests
+
+Tous les changements doivent inclure des tests:
 
 ```bash
-# Supprimer le container et les volumes
-docker compose -f .devcontainer/docker-compose.yml down -v
-docker system prune -a
+# Lancer les tests
+make test
 
-# Rouvrir dans VS Code
-code .
+# Les tests doivent passer avant de créer une PR
 ```
 
-## Philosophie
+## Dépendances
 
-Ce template suit le principe **"moins c'est plus"** :
+### Principales
 
-- ✅ Démarrage rapide
-- ✅ Faible consommation de ressources
-- ✅ Facile à personnaliser
-- ✅ Pas de dépendances inutiles
+- `github.com/hashicorp/terraform-plugin-framework` v1.16.1 - Framework pour providers Terraform
+- `github.com/hashicorp/terraform-plugin-docs` v0.24.0 - Génération de documentation
 
-Ajoutez seulement ce dont vous avez besoin, quand vous en avez besoin.
+### Build
+
+- Bazel 9.0.0rc1 - Système de build
+- Go 1.24.0 - Langage de programmation
+
+Voir `go.mod` pour la liste complète des dépendances.
+
+## CI/CD
+
+### GitHub Actions
+
+- **`.github/workflows/release.yml`**: Publication automatique sur les tags `v*`
+
+### Bazel
+
+Le build Bazel assure:
+- ✅ Builds reproductibles
+- ✅ Cache distribué
+- ✅ Compilation incrémentale
+- ✅ Tests parallèles
+- ✅ Support multi-plateforme
+
+## Troubleshooting
+
+### Bazel ne compile pas
+
+```bash
+# Nettoyer le cache
+bazel clean --expunge
+
+# Vérifier la version
+bazel version  # Doit afficher 9.0.0rc1 ou supérieur
+
+# Vérifier .bazelversion
+cat .bazelversion
+```
+
+### Tests échouent
+
+```bash
+# Lancer les tests avec plus de détails
+bazel test --test_output=all //src/...
+
+# Vérifier les logs
+bazel test --test_verbose_timeout_warnings //src/...
+```
+
+### DevContainer ne démarre pas
+
+```bash
+# Rebuild le container
+CMD/CTRL + Shift + P > "Dev Containers: Rebuild Container"
+
+# Vérifier les logs
+CMD/CTRL + Shift + P > "Dev Containers: Show Log"
+```
 
 ## License
 
-Libre d'utilisation pour vos projets personnels et professionnels.
+MPL-2.0
+
+---
+
+**Développé avec ❤️ par [KodFlow](https://github.com/kodflow)**

@@ -1,0 +1,8 @@
+{
+  "files.exclude": {
+    "bazel-*": true,
+    "**/*.lock": true,
+    "deps.bzl": true,
+    ".bazel-cache": true
+  }
+}
