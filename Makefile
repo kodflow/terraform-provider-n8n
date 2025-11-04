@@ -42,12 +42,22 @@ build: ## Build provider locally and install for Terraform
 clean: ## Clean Bazel artifacts
 	@bazel clean
 
+.PHONY: fmt
+fmt: ## Format all files in the project
+	@echo "🎨 Formatting all files..."
+	@echo "  → Go files..."
+	@go fmt ./...
+	@echo "  → Bazel files..."
+	@buildifier -r .
+	@echo "  → Shell scripts..."
+	@shfmt -w -i 2 -ci -bn .
+	@echo "  → YAML, JSON, Markdown..."
+	@prettier --write "**/*.{json,yaml,yml,md}"
+	@echo "  → Terraform files..."
+	@terraform fmt -recursive examples/ 2>/dev/null || true
+	@echo "✅ All files formatted!"
+
 .PHONY: lint
 lint: ## Run golangci-lint with ktn-linter
 	@echo "🔍 Running golangci-lint with ktn-linter..."
 	@golangci-lint run ./...
-
-.PHONY: lint-fix
-lint-fix: ## Run golangci-lint with auto-fix
-	@echo "🔧 Running golangci-lint with auto-fix..."
-	@golangci-lint run --fix ./...

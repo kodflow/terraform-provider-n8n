@@ -113,11 +113,18 @@ RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.z
     } >> "$HOME/.zshrc"
 
 # Install npm global packages as vscode user (no root needed)
-RUN npm install -g @anthropic-ai/claude-code@latest @bazel/bazelisk
+RUN npm install -g \
+    @anthropic-ai/claude-code@latest \
+    @bazel/bazelisk \
+    prettier \
+    prettier-plugin-sh
 
-# Install buildifier for Bazel formatting and linting
-RUN curl -fsSL "https://github.com/bazelbuild/buildtools/releases/latest/download/buildifier-linux-amd64" -o /home/vscode/.local/bin/buildifier && \
-    chmod +x /home/vscode/.local/bin/buildifier
+# Install code formatters and linters in parallel
+RUN curl -fsSL "https://github.com/bazelbuild/buildtools/releases/latest/download/buildifier-linux-amd64" -o /home/vscode/.local/bin/buildifier & \
+    curl -fsSL "https://github.com/mvdan/sh/releases/latest/download/shfmt_v3.10.0_linux_amd64" -o /home/vscode/.local/bin/shfmt & \
+    curl -sSL https://raw.githubusercontent.com/kodflow/ktn-linter/main/install.sh | bash -s -- --skip-golangci-config & \
+    wait && \
+    chmod +x /home/vscode/.local/bin/buildifier /home/vscode/.local/bin/shfmt
 
 # Set working directory
 WORKDIR /workspace
