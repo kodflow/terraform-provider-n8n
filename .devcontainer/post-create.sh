@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+
+echo "🔧 Installing development tools..."
+
+# Configure npm for local global packages (no sudo needed)
+# Using environment variable instead of npm config to avoid conflicts with nvm
+echo "⚙️  Configuring npm..."
+mkdir -p "$HOME/.local/share/npm-global"
+export NPM_CONFIG_PREFIX="$HOME/.local/share/npm-global"
+
+# Install npm global packages
+echo "📦 Installing npm packages..."
+npm install -g @anthropic-ai/claude-code@latest
+
+# Install ktn-linter from GitHub releases (doesn't require Go)
+echo "🧹 Installing ktn-linter..."
+ARCH="$(dpkg --print-architecture)"
+case "$ARCH" in
+  amd64) KTN_ARCH="amd64" ;;
+  arm64) KTN_ARCH="arm64" ;;
+  *) echo "❌ Unsupported architecture: $ARCH" && exit 1 ;;
+esac
+
+KTN_VERSION=$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v${KTN_VERSION}/ktn-linter-linux-${KTN_ARCH}" -o "$HOME/.local/bin/ktn-linter"
+chmod +x "$HOME/.local/bin/ktn-linter"
+
+echo "✅ Development tools installed successfully!"
+echo "ℹ️  Go tools will be installed on container start..."

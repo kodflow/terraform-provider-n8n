@@ -8,7 +8,25 @@
   // Features
   "features": {
     "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.25"
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/aws-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-community/features/bazel:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-community/npm-features/prettier:1": {
+      "version": "latest"
     }
   },
   // Configure tool-specific properties
@@ -49,8 +67,10 @@
       ]
     }
   },
-  // Post-start command
-  "postStartCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /workspace/.devcontainer/setup-mcp.sh && echo '🚀 DevContainer ready!'",
+  // Post-create command (runs once after container creation)
+  "postCreateCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /workspace/.devcontainer/post-create.sh",
+  // Post-start command (runs every time the container starts)
+  "postStartCommand": "/workspace/.devcontainer/post-start.sh",
   // Forward ports
   "forwardPorts": [],
   // Run as user

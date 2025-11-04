@@ -2,7 +2,10 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "provider",
-    srcs = ["provider.go"],
+    srcs = [
+        "model.go",
+        "provider.go",
+    ],
     importpath = "github.com/kodflow/n8n/src/internal/provider",
     visibility = ["//src:__subpackages__"],
     deps = [

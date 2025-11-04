@@ -5,6 +5,7 @@ This directory contains an example of using the Terraform provider for n8n in lo
 ## Prerequisites
 
 1. Build and install the provider locally:
+
    ```bash
    cd ..
    make build
@@ -18,11 +19,13 @@ This directory contains an example of using the Terraform provider for n8n in lo
 ## Usage
 
 1. Initialize Terraform:
+
    ```bash
    terraform init
    ```
 
 2. View execution plan:
+
    ```bash
    terraform plan
    ```

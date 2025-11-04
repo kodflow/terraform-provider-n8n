@@ -11,7 +11,7 @@ import (
 
 var (
 	// version represents the build version of the provider, injected at compile time.
-	version = "dev"
+	version string = "dev"
 )
 
 // main initializes and starts the Terraform provider server with the configured options.

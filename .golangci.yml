@@ -1,153 +1,102 @@
 # golangci-lint configuration for Terraform Provider n8n
-# Documentation: https://golangci-lint.run/usage/configuration/
-
-version: 2
+# Documentation: https://golangci-lint.run/docs/configuration/
+version: "2"
 
 run:
-  timeout: 5m
   go: "1.24"
   modules-download-mode: readonly
 
 linters:
-  disable-all: true
+  # Note: revive is intentionally not enabled due to conflicts with ktn-linter requirements
   enable:
-    # Default linters
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    # Additional linters
-    - revive
-    - gosec
-    - misspell
-    - unconvert
-    - unparam
-    - goconst
-    - gocyclo
-    - gocognit
-    - godot
-    - gocritic
     - bodyclose
-    - noctx
     - errname
     - errorlint
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
     - gomodguard
     - goprintffuncname
+    - gosec
+    - misspell
+    - noctx
     - predeclared
     - thelper
+    - unconvert
+    - unparam
     - wastedassign
-
-linters-settings:
-  custom:
-    ktn-linter:
-      path: /home/vscode/.local/bin/ktn-linter
-      description: Strict Go linter enforcing code quality standards
-      original-url: github.com/kodflow/ktn-linter
-      command: ktn-linter
-      args:
-        - lint
-        - --simple
-        - ./...
-      pattern: '^(?P<path>[^\s]+):(?P<line>\d+):(?P<column>\d+):\s+(?P<message>.+)$'
-
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  revive:
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    gocognit:
+      min-complexity: 20
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocritic:
+      disabled-checks:
+        - whyNoLint
+        - unnamedResult
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+    gocyclo:
+      min-complexity: 15
+    gosec:
+      excludes:
+        - G104
+        - G306
+    staticcheck:
+      checks:
+        - all
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unused-parameter
-      - name: unreachable-code
-      - name: redefines-builtin-id
-
-  gosec:
-    excludes:
-      - G104
-      - G306
-
-  gocyclo:
-    min-complexity: 15
-
-  gocognit:
-    min-complexity: 20
-
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-    ignore-tests: true
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-    disabled-checks:
-      - whyNoLint
-      - unnamedResult
-
-  staticcheck:
-    checks: ["all"]
-
+      - linters:
+          - errcheck
+          - gocognit
+          - goconst
+          - gocyclo
+          - gosec
+          - unparam
+        path: _test\.go
+      - linters:
+          - gocritic
+        path: internal/provider/
+      - linters:
+          - all
+        path: .*\.pb\.go$
+      - linters:
+          - all
+        path: mock_.*\.go$
+      - linters:
+          - goconst
+        path: (.+)_test\.go
+    paths:
+      - .*\.pb\.go$
+      - .*\.gen\.go$
+      - vendor
+      - testdata
+      - bazel-*
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-
-  exclude-dirs:
-    - vendor
-    - testdata
-    - bazel-*
-
-  exclude-files:
-    - ".*\\.pb\\.go$"
-    - ".*\\.gen\\.go$"
-
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - gosec
-        - goconst
-        - unparam
-        - gocognit
-
-    - path: internal/provider/
-      linters:
-        - gocritic
-
-    - path: ".*\\.pb\\.go$"
-      linters:
-        - all
-
-    - path: "mock_.*\\.go$"
-      linters:
-        - all
-
-severity:
-  default: error
-  rules:
-    - linters:
-        - revive
-      severity: warning
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

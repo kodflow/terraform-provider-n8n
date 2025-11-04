@@ -39,6 +39,7 @@ The project is configured with a DevContainer including all necessary tools:
   - `BazelBuild.vscode-bazel` - Bazel support
 
 **To use the DevContainer:**
+
 1. Open the project in VS Code
 2. Accept the prompt to open in container
 3. Wait for container build (first time only)
@@ -112,6 +113,7 @@ The project uses **Bazel 9** with **bzlmod** (the new dependency management syst
 - **`.bazelrc`**: Bazel build options
 
 **Bazel Dependencies:**
+
 - `rules_go v0.58.3` - Go rules for Bazel (with Bazel 9 support)
 - `gazelle v0.46.0` - Automatic BUILD files generator
 - `rules_proto v7.1.0` - Protocol Buffers support
@@ -221,6 +223,7 @@ provider "n8n" {
 The project uses **GoReleaser** via GitHub Actions to automate releases:
 
 1. **Create a tag**:
+
    ```bash
    git tag -a v0.1.0 -m "Release v0.1.0"
    git push origin v0.1.0
@@ -249,6 +252,7 @@ gpg --armor --export YOUR_EMAIL
 ```
 
 Add GitHub secrets (Settings > Secrets and variables > Actions):
+
 - `GPG_PRIVATE_KEY`: Content of `private-key.asc`
 - `GPG_PASSPHRASE`: GPG key passphrase
 
@@ -304,19 +308,20 @@ Each merge into `main` automatically triggers:
 
 We use [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Type | Description | Version Impact |
-|------|-------------|----------------|
-| `feat:` | New feature | Minor (0.1.0 → 0.2.0) |
-| `fix:` | Bug fix | Patch (0.1.0 → 0.1.1) |
-| `perf:` | Performance improvement | Patch |
-| `refactor:` | Refactoring | Patch |
-| `build:` | Build changes | Patch |
-| `docs:` | Documentation | No release |
-| `test:` | Tests | No release |
-| `chore:` | Maintenance | No release |
-| `ci:` | CI/CD | No release |
+| Type        | Description             | Version Impact        |
+| ----------- | ----------------------- | --------------------- |
+| `feat:`     | New feature             | Minor (0.1.0 → 0.2.0) |
+| `fix:`      | Bug fix                 | Patch (0.1.0 → 0.1.1) |
+| `perf:`     | Performance improvement | Patch                 |
+| `refactor:` | Refactoring             | Patch                 |
+| `build:`    | Build changes           | Patch                 |
+| `docs:`     | Documentation           | No release            |
+| `test:`     | Tests                   | No release            |
+| `chore:`    | Maintenance             | No release            |
+| `ci:`       | CI/CD                   | No release            |
 
 **Breaking Change** (Major):
+
 ```bash
 git commit -m "feat!: change workflows API"
 # or
@@ -374,6 +379,7 @@ See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 **Title**: `feat(workflows): add tags support`
 
 **Description**:
+
 - Implementation of tag management on workflows
 - Added unit tests
 - Updated documentation
@@ -419,6 +425,7 @@ The project uses GitHub Actions for complete automation:
 ### Bazel
 
 Bazel build ensures:
+
 - ✅ Reproducible builds
 - ✅ Distributed cache
 - ✅ Incremental compilation
