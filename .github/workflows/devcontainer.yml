@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - '.devcontainer/**'
-      - '.github/workflows/devcontainer.yml'
+      - ".devcontainer/**"
+      - ".github/workflows/devcontainer.yml"
   pull_request:
     branches:
       - main
     paths:
-      - '.devcontainer/**'
-      - '.github/workflows/devcontainer.yml'
+      - ".devcontainer/**"
+      - ".github/workflows/devcontainer.yml"
   workflow_dispatch:
 
 env:

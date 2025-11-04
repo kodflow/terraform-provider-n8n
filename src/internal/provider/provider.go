@@ -9,36 +9,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-// Compile-time assertion to ensure N8nProvider implements the provider.Provider interface.
-var _ provider.Provider = &N8nProvider{}
+// Compile-time assertions to ensure N8nProvider implements required interfaces.
+var (
+	_ provider.Provider = &N8nProvider{}
+	_ TerraformProvider = &N8nProvider{}
+)
 
-// N8nProvider implements the Terraform provider for n8n automation platform.
+// TerraformProvider defines the complete interface for a Terraform provider implementation.
+// This interface encompasses all provider lifecycle methods including metadata, schema,
+// configuration, and resource/data source registration.
+type TerraformProvider interface {
+	// Metadata populates provider metadata including type name and version
+	Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse)
+
+	// Schema defines the provider configuration schema
+	Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse)
+
+	// Configure initializes the provider with given configuration
+	Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse)
+
+	// Resources returns the list of resources supported by this provider
+	Resources(ctx context.Context) []func() resource.Resource
+
+	// DataSources returns the list of data sources supported by this provider
+	DataSources(ctx context.Context) []func() datasource.DataSource
+}
+
+// N8nProvider implements the TerraformProvider interface for n8n automation platform.
 // It manages the provider lifecycle including configuration, resources, and data sources.
 // The provider stores version information for metadata reporting to Terraform.
 type N8nProvider struct {
 	version string
 }
 
-// N8nProviderModel represents the configuration schema for the n8n Terraform provider.
-// Currently, the provider requires no configuration parameters but this struct
-// serves as a placeholder for future configuration options.
-type N8nProviderModel struct{}
-
-// Interface defines the contract for the n8n Terraform provider.
-// It encompasses all required provider operations including metadata, schema,
-// configuration, resource management, and data source management.
-type Interface interface {
-	provider.Provider
-}
-
 // Metadata populates the provider metadata including type name and version.
 // This information is used by Terraform to identify and version the provider.
 //
 // Params:
-//   - ctx: The context for the operation (currently unused).
-//   - req: The metadata request from Terraform (currently unused).
-//   - resp: The response object to populate with provider metadata.
-func (p *N8nProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+//   - ctx: context for the operation
+//   - req: metadata request from Terraform
+//   - resp: response object to populate with provider metadata
+func (p *N8nProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "n8n"
 	resp.Version = p.version
 }
@@ -47,10 +58,10 @@ func (p *N8nProvider) Metadata(_ context.Context, _ provider.MetadataRequest, re
 // Currently returns an empty schema as no provider-level configuration is required.
 //
 // Params:
-//   - ctx: The context for the operation (currently unused).
-//   - req: The schema request from Terraform (currently unused).
-//   - resp: The response object to populate with the provider schema.
-func (p *N8nProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+//   - ctx: context for the operation
+//   - req: schema request from Terraform
+//   - resp: response object to populate with the provider schema
+func (p *N8nProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Terraform provider for n8n automation platform",
 	}
@@ -60,13 +71,13 @@ func (p *N8nProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 // It parses the provider configuration and handles any configuration errors.
 //
 // Params:
-//   - ctx: The context for the configuration operation.
-//   - req: The configuration request containing provider settings.
-//   - resp: The response object to populate with configuration results or errors.
+//   - ctx: context for the configuration operation
+//   - req: configuration request containing provider settings
+//   - resp: response object to populate with configuration results or errors
 func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config N8nProviderModel
+	var config *N8nProviderModel
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, config)...)
 
 	// Exit early if configuration parsing encountered errors
 	if resp.Diagnostics.HasError() {
@@ -79,29 +90,36 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 // Currently returns an empty list as resources are not yet implemented.
 //
 // Params:
-//   - ctx: The context for the operation (currently unused).
-func (p *N8nProvider) Resources(_ context.Context) []func() resource.Resource {
-	// Return nil to avoid unnecessary allocation for empty slice
-	return nil
+//   - ctx: context for the operation
+//
+// Returns:
+//   - []func() resource.Resource: empty list of resource factory functions
+func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{}
 }
 
 // DataSources returns the list of data sources supported by this provider.
 // Currently returns an empty list as data sources are not yet implemented.
 //
 // Params:
-//   - ctx: The context for the operation (currently unused).
-func (p *N8nProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	// Return nil to avoid unnecessary allocation for empty slice
-	return nil
+//   - ctx: context for the operation
+//
+// Returns:
+//   - []func() datasource.DataSource: empty list of data source factory functions
+func (p *N8nProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{}
 }
 
 // NewN8nProvider creates and initializes a new N8nProvider instance with the specified version.
 // This is the recommended constructor for creating provider instances.
 //
 // Params:
-//   - version: The version string for the provider.
+//   - version: provider version string
+//
+// Returns:
+//   - *N8nProvider: initialized provider instance
 func NewN8nProvider(version string) *N8nProvider {
-	// Create and return a new provider instance with the given version
+	// Construct provider with version for Terraform metadata reporting
 	return &N8nProvider{
 		version: version,
 	}
@@ -111,11 +129,27 @@ func NewN8nProvider(version string) *N8nProvider {
 // This function is required by the Terraform plugin framework for provider initialization.
 //
 // Params:
-//   - version: The version string to assign to created provider instances.
+//   - version: version string to assign to created provider instances
+//
+// Returns:
+//   - func() provider.Provider: factory function that creates provider instances
 func New(version string) func() provider.Provider {
-	// Return a factory function that creates new provider instances
+	// Lazy initialization pattern required by Terraform plugin framework
 	return func() provider.Provider {
-		// Create and return a new provider instance with the specified version
+		// Delegate to constructor for consistent provider initialization
 		return NewN8nProvider(version)
 	}
+}
+
+// ValidateProvider ensures the given provider implements all required interface methods.
+// This function serves as a compile-time validation helper for TerraformProvider compliance.
+//
+// Params:
+//   - p: provider instance to validate
+//
+// Returns:
+//   - TerraformProvider: the validated provider instance
+func ValidateProvider(p TerraformProvider) TerraformProvider {
+	// Provider validation ensures complete interface implementation
+	return p
 }

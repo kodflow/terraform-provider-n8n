@@ -97,3 +97,14 @@ lint: ## Run code linters
 	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
 	@ktn-linter lint --simple ./... || true
 	@printf "$(GREEN)✓$(RESET) Linting completed\n"
+
+.PHONY: update
+update: ## Update ktn-linter to latest version
+	@printf "$(BOLD)Updating ktn-linter...$(RESET)\n"
+	@KTN_ARCH=$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
+	KTN_VERSION=$$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	printf "  $(CYAN)→$(RESET) Downloading version v$$KTN_VERSION for $$KTN_ARCH\n"; \
+	mkdir -p $$HOME/.local/bin; \
+	curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v$${KTN_VERSION}/ktn-linter-linux-$${KTN_ARCH}" -o "$$HOME/.local/bin/ktn-linter" && \
+	chmod +x "$$HOME/.local/bin/ktn-linter" && \
+	printf "$(GREEN)✓$(RESET) ktn-linter updated to v$$KTN_VERSION\n"
