@@ -41,24 +41,6 @@ make build
 cd sample/ && terraform init && terraform plan
 ```
 
-## Commit Convention
-
-This PR follows [Conventional Commits](https://www.conventionalcommits.org/).
-
-The **PR title** must be in the format: `<type>(<scope>): <description>`
-
-### Valid title examples:
-- `feat: add n8n workflows support`
-- `fix: correct credentials parsing error`
-- `feat(workflows)!: change workflows API` (breaking change)
-- `docs: update README with examples`
-
-### Impact on versioning:
-- `fix:`, `perf:`, `refactor:`, `build:` → **Patch** (0.1.0 → 0.1.1)
-- `feat:` → **Minor** (0.1.0 → 0.2.0)
-- `BREAKING CHANGE:` or `!` → **Major** (0.1.0 → 1.0.0)
-- `docs:`, `test:`, `chore:`, `ci:` → **No release**
-
 ## Additional Notes
 
 <!-- Any other relevant information -->
