@@ -1,65 +1,65 @@
-# Exemple d'utilisation du provider n8n
+# n8n Provider Usage Example
 
-Ce dossier contient un exemple d'utilisation du provider Terraform pour n8n en développement local.
+This directory contains an example of using the Terraform provider for n8n in local development.
 
-## Prérequis
+## Prerequisites
 
-1. Compiler et installer le provider localement :
+1. Build and install the provider locally:
    ```bash
    cd ..
    make build
    ```
 
-2. Vérifier l'installation :
+2. Verify installation:
    ```bash
    ls -la ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/0.0.1/
    ```
 
-## Utilisation
+## Usage
 
-1. Initialiser Terraform :
+1. Initialize Terraform:
    ```bash
    terraform init
    ```
 
-2. Voir le plan d'exécution :
+2. View execution plan:
    ```bash
    terraform plan
    ```
 
-3. Appliquer la configuration :
+3. Apply configuration:
    ```bash
    terraform apply
    ```
 
 ## Configuration
 
-Le provider n8n nécessite la configuration suivante :
+The n8n provider requires the following configuration:
 
-- `api_url` : URL de votre instance n8n (ex: `https://your-n8n.com`)
-- `api_key` : Clé API n8n pour l'authentification
+- `api_url`: URL of your n8n instance (e.g., `https://your-n8n.com`)
+- `api_key`: n8n API key for authentication
 
-### Variables d'environnement
+### Environment Variables
 
-Vous pouvez également utiliser des variables d'environnement :
+You can also use environment variables:
 
 ```bash
 export N8N_API_URL="https://your-n8n.com"
 export N8N_API_KEY="your-api-key"
 ```
 
-### Fichier de variables
+### Variables File
 
-Créez un fichier `terraform.tfvars` (ignoré par Git) :
+Create a `terraform.tfvars` file (ignored by Git):
 
 ```hcl
 n8n_api_url = "https://your-n8n.com"
 n8n_api_key = "your-api-key"
 ```
 
-## Nettoyage
+## Cleanup
 
-Pour détruire les ressources créées :
+To destroy created resources:
 
 ```bash
 terraform destroy

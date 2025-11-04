@@ -1,66 +1,67 @@
 # Terraform Provider for n8n
 
-Provider Terraform pour gérer les ressources n8n (workflows, credentials, etc.).
+Terraform provider to manage n8n resources (workflows, credentials, etc.).
 
 [![Bazel](https://img.shields.io/badge/Build-Bazel%209.0-43A047?logo=bazel)](https://bazel.build/)
 [![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)](https://go.dev/)
 [![Terraform](https://img.shields.io/badge/Terraform-Plugin%20Framework-7B42BC?logo=terraform)](https://developer.hashicorp.com/terraform/plugin/framework)
 
-## Table des matières
+## Table of Contents
 
-- [Prérequis](#prérequis)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Développement](#développement)
-- [Build et Tests](#build-et-tests)
-- [Structure du projet](#structure-du-projet)
-- [Publication](#publication)
+- [Development](#development)
+- [Build and Tests](#build-and-tests)
+- [Project Structure](#project-structure)
+- [Release](#release)
+- [Versioning and Releases](#versioning-and-releases)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Prérequis
+## Prerequisites
 
-### Versions requises
+### Required Versions
 
-- **Go 1.24.0+** (requis par terraform-plugin-framework v1.16+)
-- **Bazel 9.0+** (système de build)
-- **Terraform 1.0+** ou **OpenTofu 1.0+**
+- **Go 1.24.0+** (required by terraform-plugin-framework v1.16+)
+- **Bazel 9.0+** (build system)
+- **Terraform 1.0+** or **OpenTofu 1.0+**
 
-### DevContainer (Recommandé)
+### DevContainer (Recommended)
 
-Le projet est configuré avec un DevContainer incluant tous les outils nécessaires:
+The project is configured with a DevContainer including all necessary tools:
 
 - **Go 1.25.3** (compatible 1.24+)
 - **Bazel 9.0.0rc1** (via Bazelisk)
-- **Terraform & OpenTofu** (pré-installés)
-- Extensions VS Code:
-  - `golang.go` - Support Go officiel
-  - `hashicorp.terraform` - Support Terraform
-  - `BazelBuild.vscode-bazel` - Support Bazel
+- **Terraform & OpenTofu** (pre-installed)
+- VS Code Extensions:
+  - `golang.go` - Official Go support
+  - `hashicorp.terraform` - Terraform support
+  - `BazelBuild.vscode-bazel` - Bazel support
 
-**Pour utiliser le DevContainer:**
-1. Ouvrir le projet dans VS Code
-2. Accepter la proposition d'ouvrir dans le conteneur
-3. Attendre la construction du conteneur (première fois uniquement)
+**To use the DevContainer:**
+1. Open the project in VS Code
+2. Accept the prompt to open in container
+3. Wait for container build (first time only)
 
-### Installation manuelle
+### Manual Installation
 
-Si vous n'utilisez pas le DevContainer:
+If you're not using the DevContainer:
 
 ```bash
-# Installer Go 1.24+
-# Voir: https://go.dev/doc/install
+# Install Go 1.24+
+# See: https://go.dev/doc/install
 
-# Installer Bazelisk (recommandé pour gérer les versions de Bazel)
+# Install Bazelisk (recommended for managing Bazel versions)
 go install github.com/bazelbuild/bazelisk@latest
 
-# Vérifier les versions
-go version        # doit afficher go1.24 ou supérieur
-bazel version     # doit afficher Bazel 9.0+
+# Verify versions
+go version        # should display go1.24 or higher
+bazel version     # should display Bazel 9.0+
 ```
 
 ## Installation
 
-### Via Terraform Registry (À venir)
+### Via Terraform Registry (Coming Soon)
 
 ```hcl
 terraform {
@@ -78,122 +79,125 @@ provider "n8n" {
 }
 ```
 
-### Installation locale pour développement
+### Local Installation for Development
 
 ```bash
-# Compiler et installer localement
-make test
+# Build and install locally
+make build
 
-# Le provider sera installé dans:
+# The provider will be installed in:
 # ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/0.0.1/<OS>_<ARCH>/
 ```
 
-## Développement
+## Development
 
-### Commandes Make disponibles
+### Available Make Commands
 
-Le `Makefile` fournit deux commandes essentielles:
+The `Makefile` provides essential commands:
 
 ```bash
-make help    # Affiche l'aide avec toutes les commandes disponibles
-make test    # Lance les tests avec Bazel
+make help    # Display help with all available commands
+make test    # Run tests with Bazel
+make build   # Build and install provider locally
+make clean   # Clean Bazel artifacts
 ```
 
-### Configuration Bazel
+### Bazel Configuration
 
-Le projet utilise **Bazel 9** avec **bzlmod** (le nouveau système de gestion des dépendances):
+The project uses **Bazel 9** with **bzlmod** (the new dependency management system):
 
-- **`.bazelversion`**: Version de Bazel (9.0.0rc1)
-- **`MODULE.bazel`**: Dépendances et configuration bzlmod
-- **`BUILD.bazel`**: Configuration de build à la racine
-- **`.bazelrc`**: Options de build Bazel
+- **`.bazelversion`**: Bazel version (9.0.0rc1)
+- **`MODULE.bazel`**: Dependencies and bzlmod configuration
+- **`BUILD.bazel`**: Root build configuration
+- **`.bazelrc`**: Bazel build options
 
-**Dépendances Bazel:**
-- `rules_go v0.58.3` - Règles Go pour Bazel (avec support Bazel 9)
-- `gazelle v0.46.0` - Générateur automatique de BUILD files
-- `rules_proto v7.1.0` - Support Protocol Buffers
-- `bazel_features v1.33.0` - Détection de fonctionnalités Bazel
+**Bazel Dependencies:**
+- `rules_go v0.58.3` - Go rules for Bazel (with Bazel 9 support)
+- `gazelle v0.46.0` - Automatic BUILD files generator
+- `rules_proto v7.1.0` - Protocol Buffers support
+- `bazel_features v1.33.0` - Bazel features detection
 
-### Architecture du projet
+### Project Architecture
 
 ```
 .
-├── .bazelrc              # Configuration Bazel
-├── .bazelversion         # Version Bazel (9.0.0rc1)
-├── MODULE.bazel          # Dépendances bzlmod
-├── BUILD.bazel           # Configuration build racine
-├── go.mod                # Dépendances Go
-├── Makefile              # Commandes de build
-├── .devcontainer/        # Configuration DevContainer
-│   ├── Dockerfile        # Image de développement
-│   └── devcontainer.json # Configuration VS Code
-├── src/                  # Code source du provider
-│   ├── main.go           # Point d'entrée
-│   ├── BUILD.bazel       # Configuration build src
+├── .bazelrc              # Bazel configuration
+├── .bazelversion         # Bazel version (9.0.0rc1)
+├── MODULE.bazel          # bzlmod dependencies
+├── BUILD.bazel           # Root build configuration
+├── go.mod                # Go dependencies
+├── Makefile              # Build commands
+├── .devcontainer/        # DevContainer configuration
+│   ├── Dockerfile        # Development image
+│   └── devcontainer.json # VS Code configuration
+├── src/                  # Provider source code
+│   ├── main.go           # Entry point
+│   ├── BUILD.bazel       # Source build configuration
 │   └── internal/
-│       └── provider/     # Implémentation du provider
+│       └── provider/     # Provider implementation
 │           ├── provider.go
 │           ├── provider_test.go
 │           └── BUILD.bazel
 └── .github/
     └── workflows/        # CI/CD GitHub Actions
-        └── release.yml   # Workflow de release automatique
+        ├── semver.yml    # Automatic semantic versioning
+        └── release.yml   # Automatic release workflow
 ```
 
-## Build et Tests
+## Build and Tests
 
-### Lancer les tests
+### Running Tests
 
 ```bash
-# Via Make (recommandé)
+# Via Make (recommended)
 make test
 
-# Directement avec Bazel
+# Directly with Bazel
 bazel test //src/...
 
-# Tests avec verbose timeout warnings
+# Tests with verbose timeout warnings
 bazel test --test_verbose_timeout_warnings //src/...
 ```
 
-### Build du provider
+### Building the Provider
 
 ```bash
-# Build avec Bazel
+# Build with Bazel
 bazel build //src:terraform-provider-n8n
 
-# Le binaire sera disponible dans:
+# Binary will be available at:
 # bazel-bin/src/terraform-provider-n8n
 ```
 
-### Nettoyage
+### Cleanup
 
 ```bash
-# Nettoyer les artifacts Bazel
+# Clean Bazel artifacts
 bazel clean
 
-# Nettoyage complet (cache inclus)
+# Complete cleanup (including cache)
 bazel clean --expunge
 ```
 
-## Structure du projet
+## Project Structure
 
-### Code source
+### Source Code
 
-Le provider est structuré selon les best practices Terraform Plugin Framework:
+The provider follows Terraform Plugin Framework best practices:
 
 ```
 src/
-├── main.go                    # Point d'entrée du provider
+├── main.go                    # Provider entry point
 └── internal/
     └── provider/
-        ├── provider.go        # Implémentation du provider principal
-        ├── provider_test.go   # Tests du provider
-        └── BUILD.bazel        # Configuration build
+        ├── provider.go        # Main provider implementation
+        ├── provider_test.go   # Provider tests
+        └── BUILD.bazel        # Build configuration
 ```
 
-### Configuration Terraform
+### Terraform Configuration
 
-Pour utiliser le provider en développement local:
+To use the provider in local development:
 
 ```hcl
 terraform {
@@ -206,51 +210,51 @@ terraform {
 }
 
 provider "n8n" {
-  # Configuration du provider
+  # Provider configuration
 }
 ```
 
-## Publication
+## Release
 
-### Workflow de release
+### Release Workflow
 
-Le projet utilise **GoReleaser** via GitHub Actions pour automatiser les releases:
+The project uses **GoReleaser** via GitHub Actions to automate releases:
 
-1. **Créer un tag**:
+1. **Create a tag**:
    ```bash
    git tag -a v0.1.0 -m "Release v0.1.0"
    git push origin v0.1.0
    ```
 
-2. **GitHub Actions** déclenche automatiquement:
-   - Compilation cross-platform (Linux, macOS, Windows, FreeBSD)
-   - Génération des checksums SHA256
-   - Signature GPG des checksums
-   - Création d'une release GitHub avec les artifacts
+2. **GitHub Actions** automatically triggers:
+   - Cross-platform compilation (Linux, macOS, Windows, FreeBSD)
+   - SHA256 checksums generation
+   - GPG signature of checksums
+   - GitHub release creation with artifacts
 
-### Configuration GPG
+### GPG Configuration
 
-Pour signer les releases, configurer une clé GPG:
+To sign releases, configure a GPG key:
 
 ```bash
-# Générer une clé GPG
+# Generate a GPG key
 gpg --full-generate-key
-# Choisir: RSA and RSA, 4096 bits, pas d'expiration
+# Choose: RSA and RSA, 4096 bits, no expiration
 
-# Exporter la clé privée
+# Export private key
 gpg --armor --export-secret-keys YOUR_EMAIL > private-key.asc
 
-# Exporter la clé publique
+# Export public key
 gpg --armor --export YOUR_EMAIL
 ```
 
-Ajouter les secrets GitHub (Settings > Secrets and variables > Actions):
-- `GPG_PRIVATE_KEY`: Contenu de `private-key.asc`
-- `GPG_PASSPHRASE`: Passphrase de la clé GPG
+Add GitHub secrets (Settings > Secrets and variables > Actions):
+- `GPG_PRIVATE_KEY`: Content of `private-key.asc`
+- `GPG_PASSPHRASE`: GPG key passphrase
 
-### Artifacts de release
+### Release Artifacts
 
-GoReleaser génère automatiquement:
+GoReleaser automatically generates:
 
 ```
 terraform-provider-n8n_0.1.0_darwin_amd64.zip
@@ -262,132 +266,197 @@ terraform-provider-n8n_0.1.0_SHA256SUMS
 terraform-provider-n8n_0.1.0_SHA256SUMS.sig
 ```
 
-### Inscription sur le Registry
+### Registry Registration
 
-#### Terraform Registry (officiel)
+#### Terraform Registry (Official)
 
-1. Se connecter sur [registry.terraform.io](https://registry.terraform.io)
-2. Aller dans "Publish" > "Provider"
-3. Connecter le repository GitHub
-4. Ajouter la clé GPG publique
-5. Le registry détectera automatiquement les releases
+1. Login to [registry.terraform.io](https://registry.terraform.io)
+2. Go to "Publish" > "Provider"
+3. Connect GitHub repository
+4. Add GPG public key
+5. Registry will automatically detect releases
 
 #### OpenTofu Registry
 
-OpenTofu utilise le même format. Suivre la documentation sur [github.com/opentofu/registry](https://github.com/opentofu/registry).
+OpenTofu uses the same format. Follow documentation at [github.com/opentofu/registry](https://github.com/opentofu/registry).
+
+## Versioning and Releases
+
+### Automatic Semantic Versioning
+
+This project uses **semantic-release** to automate versioning according to [Semantic Versioning 2.0.0](https://semver.org/).
+
+#### How It Works
+
+Each merge into `main` automatically triggers:
+
+1. **Commit analysis** since last release
+2. **Version determination** based on commit types:
+   - `fix:`, `perf:`, `refactor:`, `build:` → **Patch** (0.1.0 → 0.1.1)
+   - `feat:` → **Minor** (0.1.0 → 0.2.0)
+   - `BREAKING CHANGE:` or `!` → **Major** (0.1.0 → 1.0.0)
+3. **Git tag creation** (e.g., `v0.2.0`)
+4. **Automatic update** of [CHANGELOG.md](CHANGELOG.md)
+5. **GitHub Release creation** with detailed notes
+6. **Multi-platform binary compilation** and publication via GoReleaser
+
+#### Commit Conventions
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+| Type | Description | Version Impact |
+|------|-------------|----------------|
+| `feat:` | New feature | Minor (0.1.0 → 0.2.0) |
+| `fix:` | Bug fix | Patch (0.1.0 → 0.1.1) |
+| `perf:` | Performance improvement | Patch |
+| `refactor:` | Refactoring | Patch |
+| `build:` | Build changes | Patch |
+| `docs:` | Documentation | No release |
+| `test:` | Tests | No release |
+| `chore:` | Maintenance | No release |
+| `ci:` | CI/CD | No release |
+
+**Breaking Change** (Major):
+```bash
+git commit -m "feat!: change workflows API"
+# or
+git commit -m "feat: change API
+
+BREAKING CHANGE: API changed, see docs"
+```
+
+#### Release Workflow
+
+```bash
+# 1. Develop on a branch
+git checkout -b feat/my-feature
+git commit -m "feat: add my feature"
+git push
+
+# 2. Create PR with title: "feat: add my feature"
+
+# 3. After review, merge into main
+
+# 4. Automatically:
+#    ✅ Version calculated (e.g., 0.2.0)
+#    ✅ Tag created (v0.2.0)
+#    ✅ CHANGELOG updated
+#    ✅ GitHub Release published
+#    ✅ Binaries compiled and signed (GPG)
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
 ## Contributing
 
-### Prérequis
+**Contributions welcome!**
 
-1. Fork le repository
-2. Cloner votre fork
-3. Ouvrir dans VS Code avec DevContainer (recommandé)
-4. Créer une branche pour vos modifications
+### Quick Start
 
-### Workflow de contribution
+1. **Fork** the repository
+2. **Clone** your fork
+3. **Create a branch**: `git checkout -b feat/my-feature`
+4. **Develop** and test: `make test && make build`
+5. **Commit** with convention: `git commit -m "feat: my feature"`
+6. **Push**: `git push origin feat/my-feature`
+7. **Create a Pull Request** with conventional title
 
-```bash
-# Créer une branche
-git checkout -b feature/ma-fonctionnalite
+### Standards
 
-# Faire vos modifications
-# ...
+- ✅ Go code with `gofmt` and `golint`
+- ✅ Tests for any new feature
+- ✅ [Conventional Commits](https://www.conventionalcommits.org/)
+- ✅ PR title follows convention: `<type>: <description>`
+- ✅ Updated documentation if necessary
 
-# Tester
-make test
+### Valid PR Example
 
-# Commit et push
-git add .
-git commit -m "feat: ajout de ma fonctionnalité"
-git push origin feature/ma-fonctionnalite
+**Title**: `feat(workflows): add tags support`
 
-# Créer une Pull Request sur GitHub
-```
+**Description**:
+- Implementation of tag management on workflows
+- Added unit tests
+- Updated documentation
 
-### Standards de code
+**Impact**: Minor version bump (0.1.0 → 0.2.0)
 
-- **Go**: Suivre les conventions Go standards (`gofmt`, `golint`)
-- **Commits**: Utiliser [Conventional Commits](https://www.conventionalcommits.org/)
-  - `feat:` - Nouvelle fonctionnalité
-  - `fix:` - Correction de bug
-  - `docs:` - Documentation
-  - `refactor:` - Refactoring
-  - `test:` - Ajout de tests
-  - `chore:` - Tâches de maintenance
+See [PR template](.github/pull_request_template.md) for more details.
 
-### Tests
+## Dependencies
 
-Tous les changements doivent inclure des tests:
+### Main
 
-```bash
-# Lancer les tests
-make test
-
-# Les tests doivent passer avant de créer une PR
-```
-
-## Dépendances
-
-### Principales
-
-- `github.com/hashicorp/terraform-plugin-framework` v1.16.1 - Framework pour providers Terraform
-- `github.com/hashicorp/terraform-plugin-docs` v0.24.0 - Génération de documentation
+- `github.com/hashicorp/terraform-plugin-framework` v1.16.1 - Terraform provider framework
+- `github.com/hashicorp/terraform-plugin-docs` v0.24.0 - Documentation generation
 
 ### Build
 
-- Bazel 9.0.0rc1 - Système de build
-- Go 1.24.0 - Langage de programmation
+- Bazel 9.0.0rc1 - Build system
+- Go 1.24.0 - Programming language
 
-Voir `go.mod` pour la liste complète des dépendances.
+See `go.mod` for complete dependencies list.
 
 ## CI/CD
 
 ### GitHub Actions
 
-- **`.github/workflows/release.yml`**: Publication automatique sur les tags `v*`
+The project uses GitHub Actions for complete automation:
+
+- **`.github/workflows/semver.yml`**: Automatic semantic versioning
+  - Triggers on push to `main` (after PR merge)
+  - Analyzes conventional commits
+  - Determines new version (major, minor, patch)
+  - Creates Git tag and GitHub Release
+  - Automatically updates CHANGELOG.md
+
+- **`.github/workflows/release.yml`**: Binary publication
+  - Triggers on `v*` tags created by semantic-release
+  - Compiles for all platforms (Linux, macOS, Windows, FreeBSD)
+  - Generates SHA256 checksums
+  - Signs with GPG
+  - Publishes artifacts on GitHub Releases
 
 ### Bazel
 
-Le build Bazel assure:
-- ✅ Builds reproductibles
-- ✅ Cache distribué
-- ✅ Compilation incrémentale
-- ✅ Tests parallèles
-- ✅ Support multi-plateforme
+Bazel build ensures:
+- ✅ Reproducible builds
+- ✅ Distributed cache
+- ✅ Incremental compilation
+- ✅ Parallel tests
+- ✅ Multi-platform support
 
 ## Troubleshooting
 
-### Bazel ne compile pas
+### Bazel Won't Compile
 
 ```bash
-# Nettoyer le cache
+# Clean cache
 bazel clean --expunge
 
-# Vérifier la version
-bazel version  # Doit afficher 9.0.0rc1 ou supérieur
+# Check version
+bazel version  # Should display 9.0.0rc1 or higher
 
-# Vérifier .bazelversion
+# Check .bazelversion
 cat .bazelversion
 ```
 
-### Tests échouent
+### Tests Failing
 
 ```bash
-# Lancer les tests avec plus de détails
+# Run tests with more details
 bazel test --test_output=all //src/...
 
-# Vérifier les logs
+# Check logs
 bazel test --test_verbose_timeout_warnings //src/...
 ```
 
-### DevContainer ne démarre pas
+### DevContainer Won't Start
 
 ```bash
-# Rebuild le container
+# Rebuild container
 CMD/CTRL + Shift + P > "Dev Containers: Rebuild Container"
 
-# Vérifier les logs
+# Check logs
 CMD/CTRL + Shift + P > "Dev Containers: Show Log"
 ```
 
@@ -397,4 +466,4 @@ MPL-2.0
 
 ---
 
-**Développé avec ❤️ par [KodFlow](https://github.com/kodflow)**
+**Developed with ❤️ by [KodFlow](https://github.com/kodflow)**
