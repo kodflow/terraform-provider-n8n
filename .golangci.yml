@@ -1,125 +1,61 @@
 # golangci-lint configuration for Terraform Provider n8n
 # Documentation: https://golangci-lint.run/usage/configuration/
 
+version: 2
+
 run:
-  # Timeout for analysis
   timeout: 5m
-
-  # Directories to skip
-  skip-dirs:
-    - vendor
-    - testdata
-    - bazel-*
-
-  # Files to skip
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*\\.gen\\.go$"
-
-  # Allow multiple parallel golangci-lint instances
-  allow-parallel-runners: true
-
-  # Go version to target
   go: "1.24"
+  modules-download-mode: readonly
 
-# Output configuration
-output:
-  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
-  formats:
-    - format: colored-line-number
-
-  # Print lines of code with issue
-  print-issued-lines: true
-
-  # Print linter name in the end of issue text
-  print-linter-name: true
-
-  # Make issues output unique by line
-  uniq-by-line: true
-
-  # Sort results by: filepath, line and column
-  sort-results: true
-
-# Linters configuration
 linters:
   disable-all: true
   enable:
-    # Enabled by default linters
-    - errcheck      # Check for unchecked errors
-    - gosimple      # Simplify code
-    - govet         # Reports suspicious constructs
-    - ineffassign   # Detect ineffectual assignments
-    - staticcheck   # Go static analysis
-    - unused        # Check for unused constants, variables, functions and types
-
-    # Additional recommended linters
-    - gofmt         # Check whether code was gofmt-ed
-    - goimports     # Check import statements are formatted according to goimports
-    - revive        # Fast, configurable, extensible, flexible, and beautiful linter for Go
-    - gosec         # Inspect source code for security problems
-    - misspell      # Find commonly misspelled English words in comments
-    - unconvert     # Remove unnecessary type conversions
-    - unparam       # Report unused function parameters
-    - goconst       # Find repeated strings that could be replaced by a constant
-    - gocyclo       # Compute cyclomatic complexities of functions
-    - gocognit      # Compute cognitive complexities of functions
-    - godot         # Check if comments end in a period
-    - gocritic      # Provides diagnostics that check for bugs, performance and style issues
-    - bodyclose     # Check whether HTTP response body is closed successfully
-    - noctx         # Detect sending http request without context.Context
-    - errname       # Check that sentinel errors are prefixed with the Err and error types are suffixed with the Error
-    - errorlint     # Find code that will cause problems with the error wrapping scheme introduced in Go 1.13
-    - exportloopref # Check for pointers to enclosing loop variables
-    - gomodguard    # Allow and block list linter for direct Go module dependencies
-    - goprintffuncname # Check that printf-like functions are named with f at the end
-    - predeclared   # Find code that shadows one of Go's predeclared identifiers
-    - stylecheck    # Stylecheck is a replacement for golint
-    - thelper       # Detect golang test helpers without t.Helper() call
-    - tparallel     # Detect inappropriate usage of t.Parallel() method in Go tests
-    - wastedassign  # Find wasted assignment statements
-    - whitespace    # Tool for detection of leading and trailing whitespace
+    # Default linters
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # Additional linters
+    - revive
+    - gosec
+    - misspell
+    - unconvert
+    - unparam
+    - goconst
+    - gocyclo
+    - gocognit
+    - godot
+    - gocritic
+    - bodyclose
+    - noctx
+    - errname
+    - errorlint
+    - gomodguard
+    - goprintffuncname
+    - predeclared
+    - thelper
+    - wastedassign
 
 linters-settings:
-  # KTN-Linter custom integration
   custom:
     ktn-linter:
-      # The path to the plugin *.so. Can be absolute or local
       path: /home/vscode/.local/bin/ktn-linter
-      # Description of the linter
       description: Strict Go linter enforcing code quality standards
-      # Intended to point to the repo location of the linter
       original-url: github.com/kodflow/ktn-linter
-      # Settings for the custom linter
-      settings:
-        # Pass flags to ktn-linter
-        flags:
-          - "--simple"
+      command: ktn-linter
+      args:
+        - lint
+        - --simple
+        - ./...
+      pattern: '^(?P<path>[^\s]+):(?P<line>\d+):(?P<column>\d+):\s+(?P<message>.+)$'
 
-  # Error check configuration
   errcheck:
-    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`
     check-type-assertions: true
-    # Report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`
     check-blank: true
 
-  # Gofmt configuration
-  gofmt:
-    # Simplify code
-    simplify: true
-
-  # Goimports configuration
-  goimports:
-    # Put imports beginning with prefix after 3rd-party packages
-    local-prefixes: github.com/kodflow/n8n
-
-  # Revive configuration
   revive:
-    # Maximum number of open files at the same time
-    max-open-files: 2048
-    # When set to false, ignores files with "GENERATED" header, similar to golint
-    ignore-generated-header: true
-    # Sets the default severity to "warning"
-    severity: warning
     rules:
       - name: blank-imports
       - name: context-as-argument
@@ -146,91 +82,48 @@ linters-settings:
       - name: unreachable-code
       - name: redefines-builtin-id
 
-  # Gosec configuration
   gosec:
-    # To specify a set of rules to explicitly exclude
     excludes:
-      - G104 # Audit errors not checked - covered by errcheck
-      - G306 # Poor file permissions used when writing to a new file
-    # To specify the configuration of rules
-    config:
-      G101: # Look for hardcoded credentials
-        pattern: "(?i)passwd|pass|password|pwd|secret|token|api[-_]?key"
-        ignore_entropy: false
-        entropy_threshold: "80.0"
-        per_char_threshold: "3.0"
-        truncate: "32"
+      - G104
+      - G306
 
-  # Gocyclo configuration
   gocyclo:
-    # Minimal code complexity to report
     min-complexity: 15
 
-  # Gocognit configuration
   gocognit:
-    # Minimal code complexity to report
     min-complexity: 20
 
-  # Goconst configuration
   goconst:
-    # Minimal length of string constant
     min-len: 3
-    # Minimum occurrences of constant string count to trigger issue
     min-occurrences: 3
-    # Ignore test files
     ignore-tests: true
 
-  # Gocritic configuration
   gocritic:
-    # Enable multiple checks by tags
     enabled-tags:
       - diagnostic
       - style
       - performance
-      - experimental
-      - opinionated
     disabled-checks:
       - whyNoLint
       - unnamedResult
 
-  # Stylecheck configuration
-  stylecheck:
-    # Select the Go version to target
-    go: "1.24"
-    # https://staticcheck.io/docs/options#checks
-    checks: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
-    # https://staticcheck.io/docs/options#dot_import_whitelist
-    dot-import-whitelist:
-      - fmt
-    # https://staticcheck.io/docs/options#initialisms
-    initialisms: ["ACL", "API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS"]
-    # https://staticcheck.io/docs/options#http_status_code_whitelist
-    http-status-code-whitelist: ["200", "400", "404", "500"]
-
-  # Staticcheck configuration
   staticcheck:
-    # Select the Go version to target
-    go: "1.24"
-    # https://staticcheck.io/docs/options#checks
     checks: ["all"]
 
-# Issues configuration
 issues:
-  # Maximum issues count per one linter
   max-issues-per-linter: 0
-
-  # Maximum count of issues with the same text
   max-same-issues: 0
 
-  # Show only new issues created after git revision or timestamp
-  new: false
+  exclude-dirs:
+    - vendor
+    - testdata
+    - bazel-*
 
-  # Fix found issues (if it's supported by the linter)
-  fix: false
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
 
-  # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
-    # Exclude some linters from running on tests files
     - path: _test\.go
       linters:
         - gocyclo
@@ -240,45 +133,20 @@ issues:
         - unparam
         - gocognit
 
-    # Exclude known linters from partially hard-vendored code
     - path: internal/provider/
       linters:
         - gocritic
-        - stylecheck
 
-    # Exclude specific rules for generated files
     - path: ".*\\.pb\\.go$"
       linters:
         - all
 
-    # Exclude specific rules for mock files
     - path: "mock_.*\\.go$"
       linters:
         - all
 
-  # Independently of option `exclude` we use default exclude patterns
-  exclude-use-default: true
-
-  # If set to true exclude and exclude-rules regular expressions become case sensitive
-  exclude-case-sensitive: false
-
-  # The list of ids of default excludes to include or disable
-  include:
-    - EXC0002 # Disable excluding of issues about comments from golint
-    - EXC0011 # Disable excluding of issues about TODO comments
-    - EXC0012 # Disable excluding of issues about FIXME comments
-    - EXC0013 # Disable excluding of issues about XXX comments
-    - EXC0014 # Disable excluding of issues about NOTE comments
-    - EXC0015 # Disable excluding of issues about BUG comments
-
 severity:
-  # Default value is empty string
-  default-severity: error
-
-  # If set to true severity-rules regular expressions become case sensitive
-  case-sensitive: false
-
-  # Default rules are applied on top of user-defined rules
+  default: error
   rules:
     - linters:
         - revive

@@ -137,7 +137,6 @@ knowledge_base:
     - "Tests must be hermetic and reproducible with Bazel"
     - "Breaking changes require major version bump (use ! or BREAKING CHANGE)"
     - "Uses ktn-linter (github.com/kodflow/ktn-linter) for strict Go code quality enforcement"
-    - "ktn-linter requires: constants in SCREAMING_SNAKE_CASE, functions max 35 lines, one struct per file, explicit types, comprehensive godoc comments"
 
 # Review filters
 reviews_filters:
