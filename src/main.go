@@ -10,9 +10,12 @@ import (
 )
 
 var (
-	version string = "dev"
+	// version represents the build version of the provider, injected at compile time.
+	version = "dev"
 )
 
+// main initializes and starts the Terraform provider server with the configured options.
+// It supports debug mode for development and handles provider registration with Terraform.
 func main() {
 	var debug bool
 
@@ -26,6 +29,7 @@ func main() {
 
 	err := providerserver.Serve(context.Background(), provider.New(version), opts)
 
+	// Handle fatal errors during provider server startup
 	if err != nil {
 		log.Fatal(err.Error())
 	}
