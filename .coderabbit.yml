@@ -106,9 +106,12 @@ tools:
   markdownlint:
     enabled: true
 
-  # Golangci-lint for Go code
+  # Golangci-lint for Go code (includes ktn-linter custom integration)
   golangci-lint:
     enabled: true
+    # Uses custom .golangci.yml configuration with ktn-linter integration
+    # ktn-linter enforces strict code quality standards (28 rules)
+    # See: https://github.com/kodflow/ktn-linter
 
   # Actionlint for GitHub Actions
   actionlint:
@@ -133,6 +136,8 @@ knowledge_base:
     - "Provider targets n8n API for workflow automation management"
     - "Tests must be hermetic and reproducible with Bazel"
     - "Breaking changes require major version bump (use ! or BREAKING CHANGE)"
+    - "Uses ktn-linter (github.com/kodflow/ktn-linter) for strict Go code quality enforcement"
+    - "ktn-linter requires: constants in SCREAMING_SNAKE_CASE, functions max 35 lines, one struct per file, explicit types, comprehensive godoc comments"
 
 # Review filters
 reviews_filters:
@@ -163,6 +168,10 @@ conventions:
   - "Use consistent naming: provider resources should be prefixed with 'n8n_'"
   - "Tests should follow table-driven test pattern where applicable"
   - "All Terraform configurations must include examples in comments"
+  - "Constants must use SCREAMING_SNAKE_CASE naming convention"
+  - "Functions must not exceed 35 lines of code"
+  - "Each struct should be in its own file"
+  - "Variable and function types must be explicit (no type inference for declarations)"
 
 # Custom prompts
 prompts:

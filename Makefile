@@ -41,3 +41,13 @@ build: ## Build provider locally and install for Terraform
 .PHONY: clean
 clean: ## Clean Bazel artifacts
 	@bazel clean
+
+.PHONY: lint
+lint: ## Run golangci-lint with ktn-linter
+	@echo "🔍 Running golangci-lint with ktn-linter..."
+	@golangci-lint run ./...
+
+.PHONY: lint-fix
+lint-fix: ## Run golangci-lint with auto-fix
+	@echo "🔧 Running golangci-lint with auto-fix..."
+	@golangci-lint run --fix ./...
