@@ -14,7 +14,7 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure CredentialResource implements required interfaces
+// Ensure CredentialResource implements required interfaces.
 var (
 	_ resource.Resource                = &CredentialResource{}
 	_ resource.ResourceWithConfigure   = &CredentialResource{}
@@ -22,7 +22,7 @@ var (
 )
 
 // CredentialResource defines the resource implementation for n8n credentials.
-// Note: Uses rotation strategy for updates (CREATE new, UPDATE workflows, DELETE old)
+// Note: Uses rotation strategy for updates (CREATE new, UPDATE workflows, DELETE old).
 type CredentialResource struct {
 	client *providertypes.N8nClient
 }
@@ -37,7 +37,7 @@ type CredentialResourceModel struct {
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
-// WorkflowBackup stores workflow state for rollback
+// WorkflowBackup stores workflow state for rollback.
 type WorkflowBackup struct {
 	ID       string
 	Original *n8nsdk.Workflow
@@ -138,6 +138,9 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	createResp, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -151,7 +154,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	plan.Name = types.StringValue(createResp.Name)
 	plan.Type = types.StringValue(createResp.Type)
 
-	// Note: Data is not returned by the API for security reasons (contains secrets)
+	// Note: Data is not returned by the API for security reasons (contains secrets).
 	// We keep the data from the plan
 
 	// Map timestamps
@@ -162,7 +165,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 // Read refreshes the Terraform state with the latest data.
-// WORKAROUND: n8n API doesn't support GET /credentials/{id}
+// WORKAROUND: n8n API doesn't support GET /credentials/{id}.
 // We keep the state as-is and warn about drift detection limitations.
 func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state CredentialResourceModel
@@ -172,7 +175,7 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// WORKAROUND: No API call - n8n doesn't support GET /credentials/{id}
+	// WORKAROUND: No API call - n8n doesn't support GET /credentials/{id}.
 	tflog.Debug(ctx, fmt.Sprintf(
 		"Read credential %s (state-only, no API verification)",
 		state.ID.ValueString(),
@@ -183,8 +186,8 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 // Update updates the resource using rotation strategy.
-// WORKAROUND: n8n API doesn't support PUT /credentials/{id}
-// Instead: CREATE new -> UPDATE workflows -> DELETE old
+// WORKAROUND: n8n API doesn't support PUT /credentials/{id}.
+// Instead: CREATE new -> UPDATE workflows -> DELETE old.
 func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state CredentialResourceModel
 
@@ -215,6 +218,9 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	newCred, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -228,11 +234,21 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	tflog.Info(ctx, fmt.Sprintf("Created new credential %s", newCredID))
 
 	// STEP 2: Scan workflows using old credential
-	workflowList, _, err := r.client.APIClient.WorkflowAPI.WorkflowsGet(ctx).Execute()
+	workflowList, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	if err != nil {
 		// Rollback: delete new credential
 		tflog.Error(ctx, "Failed to list workflows, rolling back")
-		r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+		_, httpResp2, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+		if httpResp2 != nil && httpResp2.Body != nil {
+			defer httpResp2.Body.Close()
+		}
+		if err != nil {
+			// Log error but continue - cleanup is best effort
+			tflog.Error(ctx, fmt.Sprintf("Failed to delete credential during cleanup: %s", err.Error()))
+		}
 
 		resp.Diagnostics.AddError(
 			"Error scanning workflows during rotation",
@@ -265,13 +281,16 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		// Get fresh workflow data
-		workflow, _, err := r.client.APIClient.WorkflowAPI.
+		workflow, httpResp, err := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdGet(ctx, backup.ID).
 			Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to get workflow %s, rolling back", backup.ID))
-			r.rollbackRotation(ctx, newCredID, oldCredID, affectedWorkflows, updatedWorkflows)
+			r.rollbackRotation(ctx, newCredID, affectedWorkflows, updatedWorkflows)
 
 			resp.Diagnostics.AddError(
 				"Error reading workflow during rotation",
@@ -284,14 +303,17 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		updatedWorkflow := replaceCredentialInWorkflow(workflow, oldCredID, newCredID)
 
 		// Update workflow
-		_, _, err = r.client.APIClient.WorkflowAPI.
+		_, httpResp, err = r.client.APIClient.WorkflowAPI.
 			WorkflowsIdPut(ctx, backup.ID).
 			Workflow(*updatedWorkflow).
 			Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to update workflow %s, rolling back", backup.ID))
-			r.rollbackRotation(ctx, newCredID, oldCredID, affectedWorkflows, updatedWorkflows)
+			r.rollbackRotation(ctx, newCredID, affectedWorkflows, updatedWorkflows)
 
 			resp.Diagnostics.AddError(
 				"Error updating workflow during rotation",
@@ -305,7 +327,10 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// STEP 4: Delete old credential
-	_, _, err = r.client.APIClient.CredentialAPI.DeleteCredential(ctx, oldCredID).Execute()
+	_, httpResp, err = r.client.APIClient.CredentialAPI.DeleteCredential(ctx, oldCredID).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	if err != nil {
 		// Not critical - new credential works, old is just orphaned
 		tflog.Warn(ctx, fmt.Sprintf(
@@ -370,17 +395,20 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// rollbackRotation rolls back a failed rotation
+// rollbackRotation rolls back a failed rotation.
 func (r *CredentialResource) rollbackRotation(
 	ctx context.Context,
-	newCredID, oldCredID string,
+	newCredID string,
 	affectedWorkflows []WorkflowBackup,
 	updatedWorkflows []string,
 ) {
 	tflog.Error(ctx, "Rolling back credential rotation")
 
 	// Delete new credential
-	_, _, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("CRITICAL: Failed to delete new credential %s during rollback: %s", newCredID, err.Error()))
 	} else {
@@ -405,10 +433,13 @@ func (r *CredentialResource) rollbackRotation(
 		}
 
 		// Restore
-		_, _, err := r.client.APIClient.WorkflowAPI.
+		_, httpResp, err := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdPut(ctx, workflowID).
 			Workflow(*original).
 			Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, err.Error()))
@@ -422,7 +453,7 @@ func (r *CredentialResource) rollbackRotation(
 	tflog.Info(ctx, fmt.Sprintf("Rollback complete: restored %d/%d workflows", restoredCount, len(updatedWorkflows)))
 }
 
-// usesCredential checks if a workflow uses a specific credential
+// usesCredential checks if a workflow uses a specific credential.
 func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 	if workflow.Nodes == nil {
 		return false
@@ -444,7 +475,7 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 	return false
 }
 
-// replaceCredentialInWorkflow replaces all references to oldCredID with newCredID
+// replaceCredentialInWorkflow replaces all references to oldCredID with newCredID.
 func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) *n8nsdk.Workflow {
 	if workflow.Nodes == nil {
 		return workflow

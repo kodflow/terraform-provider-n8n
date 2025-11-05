@@ -101,6 +101,9 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 	// Execute transfer
 	httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTransferPut(ctx, plan.WorkflowID.ValueString()).
 		WorkflowsIdTransferPutRequest(*transferReq).Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error transferring workflow",

@@ -101,6 +101,9 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 	// Execute transfer
 	httpResp, err := r.client.APIClient.CredentialAPI.CredentialsIdTransferPut(ctx, plan.CredentialID.ValueString()).
 		CredentialsIdTransferPutRequest(*transferReq).Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error transferring credential",

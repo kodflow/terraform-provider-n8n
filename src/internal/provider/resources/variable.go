@@ -12,7 +12,7 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure VariableResource implements required interfaces
+// Ensure VariableResource implements required interfaces.
 var (
 	_ resource.Resource                = &VariableResource{}
 	_ resource.ResourceWithConfigure   = &VariableResource{}
@@ -125,6 +125,9 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesPost(ctx).
 		VariableCreate(variableRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -262,6 +265,9 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdPut(ctx, plan.ID.ValueString()).
 		VariableCreate(variableRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

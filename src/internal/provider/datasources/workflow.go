@@ -10,7 +10,7 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure WorkflowDataSource implements required interfaces
+// Ensure WorkflowDataSource implements required interfaces.
 var _ datasource.DataSource = &WorkflowDataSource{}
 var _ datasource.DataSourceWithConfigure = &WorkflowDataSource{}
 

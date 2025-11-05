@@ -107,6 +107,9 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 	// Add user to project
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersPost(ctx, plan.ProjectID.ValueString()).
 		ProjectsProjectIdUsersPostRequest(*addUserReq).Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error adding user to project",
@@ -136,6 +139,9 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 		ProjectId(state.ProjectID.ValueString()).
 		IncludeRole(true).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading project users",
@@ -196,6 +202,9 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 			plan.ProjectID.ValueString(),
 			plan.UserID.ValueString(),
 		).ProjectsProjectIdUsersUserIdPatchRequest(*roleReq).Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -225,6 +234,9 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 		state.ProjectID.ValueString(),
 		state.UserID.ValueString(),
 	).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

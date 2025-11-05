@@ -12,7 +12,7 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure TagResource implements required interfaces
+// Ensure TagResource implements required interfaces.
 var (
 	_ resource.Resource                = &TagResource{}
 	_ resource.ResourceWithConfigure   = &TagResource{}
@@ -102,6 +102,9 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsPost(ctx).
 		Tag(tagRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -172,6 +175,9 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdPut(ctx, plan.ID.ValueString()).
 		Tag(tagRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

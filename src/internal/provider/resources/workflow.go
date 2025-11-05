@@ -14,7 +14,7 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure WorkflowResource implements required interfaces
+// Ensure WorkflowResource implements required interfaces.
 var (
 	_ resource.Resource                = &WorkflowResource{}
 	_ resource.ResourceWithConfigure   = &WorkflowResource{}
@@ -157,8 +157,8 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	// Create workflow using SDK
-	// Note: 'active' and 'tags' fields are read-only during creation
-	// Note: 'nodes', 'connections', and 'settings' are required by the API
+	// Note: 'active' and 'tags' fields are read-only during creation.
+	// Note: 'nodes', 'connections', and 'settings' are required by the API.
 
 	// Parse nodes from JSON if provided, otherwise use empty array
 	var nodes []n8nsdk.Node
@@ -211,6 +211,9 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
 		Workflow(workflowRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -237,6 +240,9 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		tags, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, *workflow.Id).
 			TagIdsInner(tagIdsInner).
 			Execute()
+			if httpResp != nil && httpResp.Body != nil {
+				defer httpResp.Body.Close()
+			}
 
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -258,7 +264,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	// Map tags from response
-	if workflow.Tags != nil && len(workflow.Tags) > 0 {
+	if len(workflow.Tags) > 0 {
 		tagIDs := make([]types.String, len(workflow.Tags))
 		for i, tag := range workflow.Tags {
 			if tag.Id != nil {
@@ -356,7 +362,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	// Map tags from response
-	if workflow.Tags != nil && len(workflow.Tags) > 0 {
+	if len(workflow.Tags) > 0 {
 		tagIDs := make([]types.String, len(workflow.Tags))
 		for i, tag := range workflow.Tags {
 			if tag.Id != nil {
@@ -496,10 +502,16 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		// Use dedicated activate/deactivate endpoints
 		if plan.Active.ValueBool() {
 			// Activate workflow
-			workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdActivatePost(ctx, plan.ID.ValueString()).Execute()
+			_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdActivatePost(ctx, plan.ID.ValueString()).Execute()
+			if httpResp != nil && httpResp.Body != nil {
+				defer httpResp.Body.Close()
+			}
 		} else {
 			// Deactivate workflow
-			workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdDeactivatePost(ctx, plan.ID.ValueString()).Execute()
+			_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdDeactivatePost(ctx, plan.ID.ValueString()).Execute()
+			if httpResp != nil && httpResp.Body != nil {
+				defer httpResp.Body.Close()
+			}
 		}
 
 		if err != nil {
@@ -527,6 +539,9 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, plan.ID.ValueString()).
 		Workflow(workflowRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -552,6 +567,9 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		tags, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, plan.ID.ValueString()).
 			TagIdsInner(tagIdsInner).
 			Execute()
+			if httpResp != nil && httpResp.Body != nil {
+				defer httpResp.Body.Close()
+			}
 
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -572,7 +590,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// Map tags from response
-	if workflow.Tags != nil && len(workflow.Tags) > 0 {
+	if len(workflow.Tags) > 0 {
 		tagIDs := make([]types.String, len(workflow.Tags))
 		for i, tag := range workflow.Tags {
 			if tag.Id != nil {

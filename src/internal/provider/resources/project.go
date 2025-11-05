@@ -12,7 +12,7 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure ProjectResource implements required interfaces
+// Ensure ProjectResource implements required interfaces.
 var (
 	_ resource.Resource                = &ProjectResource{}
 	_ resource.ResourceWithConfigure   = &ProjectResource{}
@@ -101,6 +101,9 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsPost(ctx).
 		Project(projectRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -219,6 +222,9 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdPut(ctx, plan.ID.ValueString()).
 		Project(projectRequest).
 		Execute()
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

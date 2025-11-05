@@ -275,6 +275,9 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
 		httpResp, err := r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
 			UsersIdRolePatchRequest(*roleReq).Execute()
+			if httpResp != nil && httpResp.Body != nil {
+				defer httpResp.Body.Close()
+			}
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating user role",
