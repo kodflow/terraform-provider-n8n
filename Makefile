@@ -108,3 +108,14 @@ update: ## Update ktn-linter to latest version
 	curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v$${KTN_VERSION}/ktn-linter-linux-$${KTN_ARCH}" -o "$$HOME/.local/bin/ktn-linter" && \
 	chmod +x "$$HOME/.local/bin/ktn-linter" && \
 	printf "$(GREEN)✓$(RESET) ktn-linter updated to v$$KTN_VERSION\n"
+
+# ============================================================================
+# API Tools
+# ============================================================================
+
+.PHONY: openapi
+openapi: ## Download n8n OpenAPI specification
+	@printf "$(BOLD)Downloading n8n OpenAPI specification...$(RESET)\n"
+	@printf "  $(CYAN)→$(RESET) Fetching from https://docs.n8n.io/api/v1/openapi.yml\n"
+	@curl -fsSL "https://docs.n8n.io/api/v1/openapi.yml" -o openapi.yml
+	@printf "$(GREEN)✓$(RESET) OpenAPI specification saved to openapi.yml\n"

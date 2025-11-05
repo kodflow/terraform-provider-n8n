@@ -171,6 +171,9 @@ temp/
 *.tmp
 *.temp
 
+# API specifications (downloaded)
+openapi.yml
+
 # Task tracking (local only)
 .tasks/
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	n8nprovider "github.com/kodflow/n8n/src/internal/provider"
 )
 
@@ -145,6 +147,229 @@ func TestProviderMetadata(t *testing.T) {
 				if resp.Version != tt.expectedVersion {
 					t.Errorf("Expected Version %q, got %q", tt.expectedVersion, resp.Version)
 				}
+			}
+		})
+	}
+}
+
+func TestProviderSchema(t *testing.T) {
+	tests := []struct {
+		name                     string
+		version                  string
+		expectedMarkdownContains string
+	}{
+		{
+			name:                     "returns schema with description",
+			version:                  "1.0.0",
+			expectedMarkdownContains: "Terraform provider for n8n automation platform",
+		},
+		{
+			name:                     "schema consistent across versions",
+			version:                  "2.0.0",
+			expectedMarkdownContains: "Terraform provider for n8n automation platform",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := n8nprovider.New(tt.version)()
+			if p == nil {
+				t.Fatal("Provider should not be nil")
+			}
+
+			var resp provider.SchemaResponse
+			p.Schema(context.Background(), provider.SchemaRequest{}, &resp)
+
+			if resp.Schema.MarkdownDescription != tt.expectedMarkdownContains {
+				t.Errorf("Expected MarkdownDescription to contain %q, got %q", tt.expectedMarkdownContains, resp.Schema.MarkdownDescription)
+			}
+		})
+	}
+}
+
+func TestProviderConfigure(t *testing.T) {
+	t.Run("configure succeeds with valid config", func(t *testing.T) {
+		p := n8nprovider.New("1.0.0")()
+		if p == nil {
+			t.Fatal("Provider should not be nil")
+		}
+
+		// Create a valid Config using the provider's schema
+		ctx := context.Background()
+		var schemaResp provider.SchemaResponse
+		p.Schema(ctx, provider.SchemaRequest{}, &schemaResp)
+
+		// Create an empty object value matching the schema
+		configValue := tftypes.NewValue(
+			tftypes.Object{
+				AttributeTypes: map[string]tftypes.Type{},
+			},
+			map[string]tftypes.Value{},
+		)
+
+		config := tfsdk.Config{
+			Schema: schemaResp.Schema,
+			Raw:    configValue,
+		}
+
+		req := provider.ConfigureRequest{
+			Config: config,
+		}
+
+		var resp provider.ConfigureResponse
+		p.Configure(ctx, req, &resp)
+
+		if resp.Diagnostics.HasError() {
+			t.Errorf("Expected no error but got: %v", resp.Diagnostics.Errors())
+		}
+	})
+
+	t.Run("configure handles invalid config", func(t *testing.T) {
+		p := n8nprovider.New("1.0.0")()
+		if p == nil {
+			t.Fatal("Provider should not be nil")
+		}
+
+		ctx := context.Background()
+		var schemaResp provider.SchemaResponse
+		p.Schema(ctx, provider.SchemaRequest{}, &schemaResp)
+
+		// Create an invalid config with wrong type
+		configValue := tftypes.NewValue(tftypes.String, "invalid")
+
+		config := tfsdk.Config{
+			Schema: schemaResp.Schema,
+			Raw:    configValue,
+		}
+
+		req := provider.ConfigureRequest{
+			Config: config,
+		}
+
+		var resp provider.ConfigureResponse
+		p.Configure(ctx, req, &resp)
+
+		if !resp.Diagnostics.HasError() {
+			t.Error("Expected error with invalid config but got none")
+		}
+	})
+}
+
+func TestProviderResources(t *testing.T) {
+	tests := []struct {
+		name          string
+		version       string
+		expectedCount int
+		expectNonNil  bool
+	}{
+		{
+			name:          "returns empty resource list",
+			version:       "1.0.0",
+			expectedCount: 0,
+			expectNonNil:  true,
+		},
+		{
+			name:          "returns consistent empty list",
+			version:       "2.0.0",
+			expectedCount: 0,
+			expectNonNil:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := n8nprovider.New(tt.version)()
+			if p == nil {
+				t.Fatal("Provider should not be nil")
+			}
+
+			resources := p.Resources(context.Background())
+
+			if tt.expectNonNil && resources == nil {
+				t.Error("Expected non-nil resources list")
+			}
+			if len(resources) != tt.expectedCount {
+				t.Errorf("Expected %d resources, got %d", tt.expectedCount, len(resources))
+			}
+		})
+	}
+}
+
+func TestProviderDataSources(t *testing.T) {
+	tests := []struct {
+		name          string
+		version       string
+		expectedCount int
+		expectNonNil  bool
+	}{
+		{
+			name:          "returns empty data sources list",
+			version:       "1.0.0",
+			expectedCount: 0,
+			expectNonNil:  true,
+		},
+		{
+			name:          "returns consistent empty list",
+			version:       "2.0.0",
+			expectedCount: 0,
+			expectNonNil:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := n8nprovider.New(tt.version)()
+			if p == nil {
+				t.Fatal("Provider should not be nil")
+			}
+
+			dataSources := p.DataSources(context.Background())
+
+			if tt.expectNonNil && dataSources == nil {
+				t.Error("Expected non-nil data sources list")
+			}
+			if len(dataSources) != tt.expectedCount {
+				t.Errorf("Expected %d data sources, got %d", tt.expectedCount, len(dataSources))
+			}
+		})
+	}
+}
+
+func TestValidateProvider(t *testing.T) {
+	tests := []struct {
+		name        string
+		version     string
+		expectError bool
+	}{
+		{
+			name:        "validates provider successfully",
+			version:     "1.0.0",
+			expectError: false,
+		},
+		{
+			name:        "validates provider with empty version",
+			version:     "",
+			expectError: false,
+		},
+		{
+			name:        "validates provider with dev version",
+			version:     "dev",
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := n8nprovider.NewN8nProvider(tt.version)
+
+			validated := n8nprovider.ValidateProvider(p)
+
+			if validated == nil {
+				t.Fatal("ValidateProvider should not return nil")
+			}
+
+			if validated != p {
+				t.Error("ValidateProvider should return the same provider instance")
 			}
 		})
 	}
