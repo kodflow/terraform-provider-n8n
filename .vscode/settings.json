@@ -3,6 +3,15 @@
     "bazel-*": true,
     "**/*.lock": true,
     "deps.bzl": true,
-    ".bazel-cache": true
+    ".bazel-cache": true,
+    ".bazelrc": true,
+    ".bazelversion": true,
+    ".codacy.yml": true,
+    ".coderabbit.yml": true,
+    ".goreleaser.yml": true,
+    ".prettierignore": true,
+    ".prettierrc.json": true,
+    ".releaserc.yml": true,
+    "MODULE.bazel.lock": true
   }
 }

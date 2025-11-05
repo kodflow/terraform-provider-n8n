@@ -1,36 +1,14 @@
 package main
 
-import (
-	"context"
-	"flag"
-	"log"
-
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/kodflow/n8n/src/internal/provider"
-)
+import "github.com/kodflow/n8n/src/cmd"
 
 var (
 	// version represents the build version of the provider, injected at compile time.
+	// This value is replaced at build time using -ldflags "-X main.version=x.y.z".
 	version string = "dev"
 )
 
-// main initializes and starts the Terraform provider server with the configured options.
-// It supports debug mode for development and handles provider registration with Terraform.
 func main() {
-	var debug bool
-
-	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
-	flag.Parse()
-
-	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/kodflow/n8n",
-		Debug:   debug,
-	}
-
-	err := providerserver.Serve(context.Background(), provider.New(version), opts)
-
-	// Handle fatal errors during provider server startup
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	cmd.SetVersion(version)
+	cmd.Execute()
 }

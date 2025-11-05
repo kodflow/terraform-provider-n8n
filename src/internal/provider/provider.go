@@ -75,7 +75,7 @@ func (p *N8nProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 //   - req: configuration request containing provider settings
 //   - resp: response object to populate with configuration results or errors
 func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config *N8nProviderModel
+	config := &N8nProviderModel{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, config)...)
 
