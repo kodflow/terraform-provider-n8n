@@ -8,7 +8,6 @@ run:
 
 linters:
   # Note: revive is intentionally not enabled due to conflicts with ktn-linter requirements
-  # ktn-linter is run separately via Makefile (make lint) as it's not integrated in golangci-lint v2
   enable:
     - bodyclose
     - errname

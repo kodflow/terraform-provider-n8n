@@ -164,8 +164,8 @@ lint: ## Run code linters
 	@echo "$(BOLD)Running code analysis...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
 	@golangci-lint run ./...
-	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
-	@ktn-linter lint --simple ./... || true
+	@printf "  $(CYAN)→$(RESET) ktn-linter (filtered)\n"
+	@.vscode/ktn-lint-filtered.sh ./... || true
 	@echo "$(GREEN)✓$(RESET) Linting completed"
 	@echo ""
 

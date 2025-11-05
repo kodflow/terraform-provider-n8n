@@ -22,5 +22,50 @@
       "file:///workspace/openapi.yml",
       "file:///workspace/sdk/n8nsdk/api/openapi.yaml"
     ]
+  },
+  // Go language configuration
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": [
+    "--config=${workspaceFolder}/.golangci.yml",
+    "--out-format=colored-line-number"
+  ],
+  "go.lintOnSave": "package",
+  "go.buildOnSave": "off",
+  "go.vetOnSave": "off",
+  "go.formatTool": "gofmt",
+  "go.useLanguageServer": true,
+  "go.toolsManagement.autoUpdate": true,
+  "gopls": {
+    "ui.diagnostic.analyses": {
+      "shadow": true,
+      "unusedparams": true,
+      "unusedwrite": true,
+      "nilness": true,
+      "unusedvariable": true
+    },
+    "ui.diagnostic.staticcheck": true,
+    "ui.diagnostic.annotations": {
+      "bounds": true,
+      "escape": true,
+      "inline": true,
+      "nil": true
+    }
+  },
+  // Run linters on save
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.go$",
+        "isAsync": true,
+        "cmd": "golangci-lint run --fix ${file} && ${workspaceFolder}/.vscode/ktn-lint-filtered.sh ${file} || true"
+      }
+    ]
+  },
+  // File watcher for Go files
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/bazel-*/**": true
   }
 }
