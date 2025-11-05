@@ -13,6 +13,8 @@ RUN apt-get update \
         yq \
         zsh \
         unzip \
+        wget \
+        openjdk-17-jre-headless \
     # Add HashiCorp repository
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg \

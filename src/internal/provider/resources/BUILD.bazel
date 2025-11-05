@@ -1,0 +1,24 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "resources",
+    srcs = [
+        "credential.go",
+        "project.go",
+        "resources.go",
+        "tag.go",
+        "variable.go",
+        "workflow.go",
+    ],
+    importpath = "github.com/kodflow/n8n/src/internal/provider/resources",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/types",
+        "@com_github_hashicorp_terraform_plugin_framework//path",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_hashicorp_terraform_plugin_log//tflog",
+    ],
+)

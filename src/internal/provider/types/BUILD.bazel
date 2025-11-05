@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "types",
+    srcs = [
+        "client.go",
+        "model.go",
+    ],
+    importpath = "github.com/kodflow/n8n/src/internal/provider/types",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//sdk/n8nsdk",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+    ],
+)

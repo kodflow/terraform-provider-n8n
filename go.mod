@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1
 	github.com/hashicorp/terraform-plugin-go v0.29.0
+	github.com/kodflow/n8n/sdk/n8nsdk v0.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.10.1
 )
 
@@ -75,3 +76,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/kodflow/n8n/sdk/n8nsdk => ./sdk/n8nsdk

@@ -52,6 +52,49 @@ test: ## Run test suite
 	@bazel test --test_verbose_timeout_warnings //src/...
 	@printf "$(GREEN)✓$(RESET) Tests completed\n"
 
+.PHONY: test/n8n
+test/n8n: build test/n8n/plan test/n8n/apply test/n8n/destroy ## Test provider with real n8n instance (plan → apply → destroy)
+	@printf "$(GREEN)✓$(RESET) Full test cycle completed successfully\n"
+
+.PHONY: test/n8n/plan
+test/n8n/plan: build ## Run terraform plan with n8n provider
+	@printf "$(BOLD)Running terraform plan...$(RESET)\n"
+	@if [ ! -f .env ]; then \
+		printf "$(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		exit 1; \
+	fi
+	@export $$(cat .env | xargs) && cd examples/basic-sample && \
+	terraform plan \
+		-var="n8n_api_key=$$N8N_API_TOKEN" \
+		-var="n8n_base_url=$$N8N_URL"
+	@printf "$(GREEN)✓$(RESET) Plan completed successfully\n"
+
+.PHONY: test/n8n/apply
+test/n8n/apply: build ## Run terraform apply with n8n provider
+	@printf "$(BOLD)Running terraform apply...$(RESET)\n"
+	@if [ ! -f .env ]; then \
+		printf "$(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		exit 1; \
+	fi
+	@export $$(cat .env | xargs) && cd examples/basic-sample && \
+	terraform apply -auto-approve \
+		-var="n8n_api_key=$$N8N_API_TOKEN" \
+		-var="n8n_base_url=$$N8N_URL"
+	@printf "$(GREEN)✓$(RESET) Apply completed successfully\n"
+
+.PHONY: test/n8n/destroy
+test/n8n/destroy: ## Run terraform destroy with n8n provider
+	@printf "$(BOLD)Running terraform destroy...$(RESET)\n"
+	@if [ ! -f .env ]; then \
+		printf "$(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		exit 1; \
+	fi
+	@export $$(cat .env | xargs) && cd examples/basic-sample && \
+	terraform destroy -auto-approve \
+		-var="n8n_api_key=$$N8N_API_TOKEN" \
+		-var="n8n_base_url=$$N8N_URL"
+	@printf "$(GREEN)✓$(RESET) Destroy completed successfully\n"
+
 .PHONY: build
 build: ## Build and install provider
 	@printf "$(BOLD)Building Terraform provider...$(RESET)\n"
@@ -114,8 +157,5 @@ update: ## Update ktn-linter to latest version
 # ============================================================================
 
 .PHONY: openapi
-openapi: ## Download n8n OpenAPI specification
-	@printf "$(BOLD)Downloading n8n OpenAPI specification...$(RESET)\n"
-	@printf "  $(CYAN)→$(RESET) Fetching from https://docs.n8n.io/api/v1/openapi.yml\n"
-	@curl -fsSL "https://docs.n8n.io/api/v1/openapi.yml" -o openapi.yml
-	@printf "$(GREEN)✓$(RESET) OpenAPI specification saved to openapi.yml\n"
+openapi: ## Download n8n OpenAPI from GitHub, patch, and generate SDK - Complete pipeline
+	@python3 codegen/build-sdk.py

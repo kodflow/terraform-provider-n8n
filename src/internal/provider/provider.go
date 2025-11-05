@@ -7,6 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/kodflow/n8n/src/internal/provider/datasources"
+	"github.com/kodflow/n8n/src/internal/provider/resources"
+	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
 // Compile-time assertions to ensure N8nProvider implements required interfaces.
@@ -55,7 +58,7 @@ func (p *N8nProvider) Metadata(ctx context.Context, req provider.MetadataRequest
 }
 
 // Schema defines the provider configuration schema.
-// Currently returns an empty schema as no provider-level configuration is required.
+// Requires API key and base URL for n8n instance authentication.
 //
 // Params:
 //   - ctx: context for the operation
@@ -64,50 +67,89 @@ func (p *N8nProvider) Metadata(ctx context.Context, req provider.MetadataRequest
 func (p *N8nProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Terraform provider for n8n automation platform",
+		Attributes: map[string]schema.Attribute{
+			"api_key": schema.StringAttribute{
+				MarkdownDescription: "API key for n8n instance authentication",
+				Required:            true,
+				Sensitive:           true,
+			},
+			"base_url": schema.StringAttribute{
+				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com)",
+				Required:            true,
+			},
+		},
 	}
 }
 
 // Configure initializes the provider with the given configuration.
-// It parses the provider configuration and handles any configuration errors.
+// It creates an n8n SDK client and makes it available to resources and data sources.
 //
 // Params:
 //   - ctx: context for the configuration operation
 //   - req: configuration request containing provider settings
 //   - resp: response object to populate with configuration results or errors
 func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	config := &N8nProviderModel{}
+	config := &providertypes.N8nProviderModel{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, config)...)
 
 	// Exit early if configuration parsing encountered errors
 	if resp.Diagnostics.HasError() {
-		// Stop processing due to configuration validation errors
 		return
 	}
+
+	// Validate required configuration
+	if config.APIKey.IsNull() || config.APIKey.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing API Key",
+			"The provider requires an API key. Set the api_key attribute in the provider configuration.",
+		)
+	}
+
+	if config.BaseURL.IsNull() || config.BaseURL.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing Base URL",
+			"The provider requires a base URL. Set the base_url attribute in the provider configuration.",
+		)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Create n8n client using the generated SDK
+	client := providertypes.NewN8nClient(
+		config.BaseURL.ValueString(),
+		config.APIKey.ValueString(),
+	)
+
+	// Make client available to resources and data sources
+	resp.DataSourceData = client
+	resp.ResourceData = client
 }
 
 // Resources returns the list of resources supported by this provider.
-// Currently returns an empty list as resources are not yet implemented.
+// Returns factory functions for all supported resources.
 //
 // Params:
 //   - ctx: context for the operation
 //
 // Returns:
-//   - []func() resource.Resource: empty list of resource factory functions
+//   - []func() resource.Resource: list of resource factory functions
 func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return resources.Resources()
 }
 
 // DataSources returns the list of data sources supported by this provider.
-// Currently returns an empty list as data sources are not yet implemented.
+// Returns factory functions for all supported data sources.
 //
 // Params:
 //   - ctx: context for the operation
 //
 // Returns:
-//   - []func() datasource.DataSource: empty list of data source factory functions
+//   - []func() datasource.DataSource: list of data source factory functions
 func (p *N8nProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return datasources.DataSources()
 }
 
 // NewN8nProvider creates and initializes a new N8nProvider instance with the specified version.

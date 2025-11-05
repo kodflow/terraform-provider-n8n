@@ -7,18 +7,18 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//src/internal/provider",
-        "@com_github_hashicorp_terraform_plugin_framework//provider:go_default_library",
-        "@com_github_hashicorp_terraform_plugin_framework//providerserver:go_default_library",
-        "@com_github_spf13_cobra//:go_default_library",
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
+        "@com_github_spf13_cobra//:cobra",
     ],
 )
 
 go_test(
     name = "cmd_test",
     srcs = ["cmd_test.go"],
-    embed = [":cmd"],
     deps = [
-        "@com_github_hashicorp_terraform_plugin_framework//provider:go_default_library",
-        "@com_github_hashicorp_terraform_plugin_framework//providerserver:go_default_library",
+        ":cmd",
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
     ],
 )

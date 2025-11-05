@@ -171,8 +171,32 @@ temp/
 *.tmp
 *.temp
 
-# API specifications (downloaded)
-openapi.yml
+# API specifications (legacy - root level only)
+/openapi.yml
+
+# Code Generation
+sdk/n8nsdk/*
+!sdk/n8nsdk/api/
+sdk/n8nsdk/api/*
+!sdk/n8nsdk/api/openapi.yaml
+!sdk/n8nsdk/api/openapi.patch
+!sdk/n8nsdk/api/openapi-source/
+!sdk/n8nsdk/api/openapi-source/**/*.yml
+!sdk/n8nsdk/api/openapi-source/**/*.yaml
+!sdk/n8nsdk/api/openapi-source/**/*.json
+!sdk/n8nsdk/api/openapi-source/**/*.md
+!sdk/n8nsdk/api/README.md
+# Ignore backup files from patching
+*.backup
+*.orig
+*.rej
+generated/
+.openapi-generator/
+.openapi-generator-ignore
+openapitools.json
+
+# openapi-generator cache
+~/.openapi-generator/
 
 # Task tracking (local only)
 .tasks/
