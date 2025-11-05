@@ -10,14 +10,18 @@ func DataSources() []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewWorkflowDataSource,
 		NewWorkflowsDataSource,
+		NewProjectDataSource,
+		NewProjectsDataSource,
+		NewVariableDataSource,
+		NewVariablesDataSource,
+		NewTagDataSource,
+		NewTagsDataSource,
+		NewUserDataSource,
+		NewUsersDataSource,
+		NewExecutionDataSource,
+		NewExecutionsDataSource,
 		// TODO: Add more data sources as needed
 		// NewCredentialDataSource,
 		// NewCredentialsDataSource,
-		// NewTagDataSource,
-		// NewTagsDataSource,
-		// NewVariableDataSource,
-		// NewVariablesDataSource,
-		// NewProjectDataSource,
-		// NewProjectsDataSource,
 	}
 }

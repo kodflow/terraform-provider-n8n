@@ -2,7 +2,9 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -26,17 +28,20 @@ type WorkflowResource struct {
 
 // WorkflowResourceModel describes the resource data model.
 type WorkflowResourceModel struct {
-	ID           types.String `tfsdk:"id"`
-	Name         types.String `tfsdk:"name"`
-	Active       types.Bool   `tfsdk:"active"`
-	Tags         types.List   `tfsdk:"tags"`
-	CreatedAt    types.String `tfsdk:"created_at"`
-	UpdatedAt    types.String `tfsdk:"updated_at"`
-	VersionId    types.String `tfsdk:"version_id"`
-	IsArchived   types.Bool   `tfsdk:"is_archived"`
-	TriggerCount types.Int64  `tfsdk:"trigger_count"`
-	Meta         types.Map    `tfsdk:"meta"`
-	PinData      types.Map    `tfsdk:"pin_data"`
+	ID              types.String `tfsdk:"id"`
+	Name            types.String `tfsdk:"name"`
+	Active          types.Bool   `tfsdk:"active"`
+	Tags            types.List   `tfsdk:"tags"`
+	NodesJSON       types.String `tfsdk:"nodes_json"`
+	ConnectionsJSON types.String `tfsdk:"connections_json"`
+	SettingsJSON    types.String `tfsdk:"settings_json"`
+	CreatedAt       types.String `tfsdk:"created_at"`
+	UpdatedAt       types.String `tfsdk:"updated_at"`
+	VersionId       types.String `tfsdk:"version_id"`
+	IsArchived      types.Bool   `tfsdk:"is_archived"`
+	TriggerCount    types.Int64  `tfsdk:"trigger_count"`
+	Meta            types.Map    `tfsdk:"meta"`
+	PinData         types.Map    `tfsdk:"pin_data"`
 }
 
 // NewWorkflowResource creates a new WorkflowResource instance.
@@ -72,6 +77,21 @@ func (r *WorkflowResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "List of tag IDs associated with this workflow",
 				ElementType:         types.StringType,
 				Optional:            true,
+			},
+			"nodes_json": schema.StringAttribute{
+				MarkdownDescription: "Workflow nodes as JSON string. Must be valid JSON array of node objects.",
+				Optional:            true,
+				Computed:            true,
+			},
+			"connections_json": schema.StringAttribute{
+				MarkdownDescription: "Workflow connections as JSON string. Must be valid JSON object mapping node connections.",
+				Optional:            true,
+				Computed:            true,
+			},
+			"settings_json": schema.StringAttribute{
+				MarkdownDescription: "Workflow settings as JSON string. Must be valid JSON object.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"created_at": schema.StringAttribute{
 				MarkdownDescription: "Timestamp when the workflow was created",
@@ -138,11 +158,53 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 
 	// Create workflow using SDK
 	// Note: 'active' and 'tags' fields are read-only during creation
-	// Note: 'nodes' and 'connections' are required by the API
+	// Note: 'nodes', 'connections', and 'settings' are required by the API
+
+	// Parse nodes from JSON if provided, otherwise use empty array
+	var nodes []n8nsdk.Node
+	if !plan.NodesJSON.IsNull() && !plan.NodesJSON.IsUnknown() {
+		if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid nodes JSON",
+				fmt.Sprintf("Could not parse nodes_json: %s", err.Error()),
+			)
+			return
+		}
+	} else {
+		nodes = []n8nsdk.Node{}
+	}
+
+	// Parse connections from JSON if provided, otherwise use empty object
+	var connections map[string]interface{}
+	if !plan.ConnectionsJSON.IsNull() && !plan.ConnectionsJSON.IsUnknown() {
+		if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid connections JSON",
+				fmt.Sprintf("Could not parse connections_json: %s", err.Error()),
+			)
+			return
+		}
+	} else {
+		connections = map[string]interface{}{}
+	}
+
+	// Parse settings from JSON if provided, otherwise use empty object
+	var settings n8nsdk.WorkflowSettings
+	if !plan.SettingsJSON.IsNull() && !plan.SettingsJSON.IsUnknown() {
+		if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid settings JSON",
+				fmt.Sprintf("Could not parse settings_json: %s", err.Error()),
+			)
+			return
+		}
+	}
+
 	workflowRequest := n8nsdk.Workflow{
 		Name:        plan.Name.ValueString(),
-		Nodes:       []n8nsdk.Node{},            // Empty nodes array required by API
-		Connections: map[string]interface{}{}, // Empty connections object required by API
+		Nodes:       nodes,
+		Connections: connections,
+		Settings:    settings,
 	}
 
 	// Call SDK API to create workflow
@@ -241,6 +303,24 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
+	// Serialize nodes, connections, and settings back to JSON
+	if workflow.Nodes != nil {
+		nodesJSON, err := json.Marshal(workflow.Nodes)
+		if err == nil {
+			plan.NodesJSON = types.StringValue(string(nodesJSON))
+		}
+	}
+	if workflow.Connections != nil {
+		connectionsJSON, err := json.Marshal(workflow.Connections)
+		if err == nil {
+			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
+		}
+	}
+	settingsJSON, err := json.Marshal(workflow.Settings)
+	if err == nil {
+		plan.SettingsJSON = types.StringValue(string(settingsJSON))
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -257,6 +337,9 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	// Get workflow from SDK
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdGet(ctx, state.ID.ValueString()).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -325,6 +408,24 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
+	// Serialize nodes, connections, and settings back to JSON
+	if workflow.Nodes != nil {
+		nodesJSON, err := json.Marshal(workflow.Nodes)
+		if err == nil {
+			state.NodesJSON = types.StringValue(string(nodesJSON))
+		}
+	}
+	if workflow.Connections != nil {
+		connectionsJSON, err := json.Marshal(workflow.Connections)
+		if err == nil {
+			state.ConnectionsJSON = types.StringValue(string(connectionsJSON))
+		}
+	}
+	settingsJSON, err := json.Marshal(workflow.Settings)
+	if err == nil {
+		state.SettingsJSON = types.StringValue(string(settingsJSON))
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -332,25 +433,98 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan WorkflowResourceModel
+	var state WorkflowResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform plan and state data into the models
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Update workflow using SDK
+
+	// Parse nodes from JSON if provided
+	var nodes []n8nsdk.Node
+	if !plan.NodesJSON.IsNull() && !plan.NodesJSON.IsUnknown() {
+		if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid nodes JSON",
+				fmt.Sprintf("Could not parse nodes_json: %s", err.Error()),
+			)
+			return
+		}
+	} else {
+		nodes = []n8nsdk.Node{}
+	}
+
+	// Parse connections from JSON if provided
+	var connections map[string]interface{}
+	if !plan.ConnectionsJSON.IsNull() && !plan.ConnectionsJSON.IsUnknown() {
+		if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid connections JSON",
+				fmt.Sprintf("Could not parse connections_json: %s", err.Error()),
+			)
+			return
+		}
+	} else {
+		connections = map[string]interface{}{}
+	}
+
+	// Parse settings from JSON if provided
+	var settings n8nsdk.WorkflowSettings
+	if !plan.SettingsJSON.IsNull() && !plan.SettingsJSON.IsUnknown() {
+		if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid settings JSON",
+				fmt.Sprintf("Could not parse settings_json: %s", err.Error()),
+			)
+			return
+		}
+	}
+
+	// Check if activation status changed - use dedicated endpoints if so
+	var workflow *n8nsdk.Workflow
+	var httpResp *http.Response
+	var err error
+
+	activeChanged := !plan.Active.IsNull() && !state.Active.IsNull() &&
+		plan.Active.ValueBool() != state.Active.ValueBool()
+
+	if activeChanged {
+		// Use dedicated activate/deactivate endpoints
+		if plan.Active.ValueBool() {
+			// Activate workflow
+			workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdActivatePost(ctx, plan.ID.ValueString()).Execute()
+		} else {
+			// Deactivate workflow
+			workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdDeactivatePost(ctx, plan.ID.ValueString()).Execute()
+		}
+
+		if err != nil {
+			action := "activate"
+			if !plan.Active.ValueBool() {
+				action = "deactivate"
+			}
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error changing workflow activation status to %s", action),
+				fmt.Sprintf("Could not %s workflow ID %s: %s\nHTTP Response: %v", action, plan.ID.ValueString(), err.Error(), httpResp),
+			)
+			return
+		}
+	}
+
+	// Update workflow content (name, nodes, connections, settings)
 	workflowRequest := n8nsdk.Workflow{
-		Name: plan.Name.ValueString(),
+		Name:        plan.Name.ValueString(),
+		Nodes:       nodes,
+		Connections: connections,
+		Settings:    settings,
 	}
 
-	if !plan.Active.IsNull() {
-		active := plan.Active.ValueBool()
-		workflowRequest.Active = &active
-	}
-
-	// Call SDK API to update workflow (name, active, etc.)
-	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, plan.ID.ValueString()).
+	// Call SDK API to update workflow content
+	workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, plan.ID.ValueString()).
 		Workflow(workflowRequest).
 		Execute()
 
@@ -450,6 +624,24 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
+	// Serialize nodes, connections, and settings back to JSON
+	if workflow.Nodes != nil {
+		nodesJSON, err := json.Marshal(workflow.Nodes)
+		if err == nil {
+			plan.NodesJSON = types.StringValue(string(nodesJSON))
+		}
+	}
+	if workflow.Connections != nil {
+		connectionsJSON, err := json.Marshal(workflow.Connections)
+		if err == nil {
+			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
+		}
+	}
+	settingsJSON, err := json.Marshal(workflow.Settings)
+	if err == nil {
+		plan.SettingsJSON = types.StringValue(string(settingsJSON))
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -466,6 +658,9 @@ func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	// Delete workflow using SDK
 	_, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdDelete(ctx, state.ID.ValueString()).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

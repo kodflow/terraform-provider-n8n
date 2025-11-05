@@ -343,6 +343,9 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, state.ID.ValueString()).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

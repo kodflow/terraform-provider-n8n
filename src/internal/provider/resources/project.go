@@ -112,6 +112,9 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Workaround: List all projects to find the one we just created
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -161,6 +164,9 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	// Workaround: No GET by ID, use LIST and filter
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -224,6 +230,9 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	// Workaround: List all projects to verify the update
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -271,6 +280,9 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdDelete(ctx, state.ID.ValueString()).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

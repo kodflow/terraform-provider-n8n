@@ -86,6 +86,9 @@ func (d *WorkflowDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	workflow, httpResp, err := d.client.APIClient.WorkflowAPI.WorkflowsIdGet(ctx, data.ID.ValueString()).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

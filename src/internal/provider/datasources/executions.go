@@ -1,0 +1,202 @@
+package datasources
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
+)
+
+// Ensure ExecutionsDataSource implements required interfaces.
+var _ datasource.DataSource = &ExecutionsDataSource{}
+var _ datasource.DataSourceWithConfigure = &ExecutionsDataSource{}
+
+// ExecutionsDataSource defines the data source implementation for listing executions.
+type ExecutionsDataSource struct {
+	client *providertypes.N8nClient
+}
+
+// ExecutionsDataSourceModel describes the data source data model.
+type ExecutionsDataSourceModel struct {
+	WorkflowID  types.String          `tfsdk:"workflow_id"`
+	ProjectID   types.String          `tfsdk:"project_id"`
+	Status      types.String          `tfsdk:"status"`
+	IncludeData types.Bool            `tfsdk:"include_data"`
+	Executions  []ExecutionItemModel  `tfsdk:"executions"`
+}
+
+// ExecutionItemModel represents a single execution in the list.
+type ExecutionItemModel struct {
+	ID         types.String `tfsdk:"id"`
+	WorkflowID types.String `tfsdk:"workflow_id"`
+	Finished   types.Bool   `tfsdk:"finished"`
+	Mode       types.String `tfsdk:"mode"`
+	StartedAt  types.String `tfsdk:"started_at"`
+	StoppedAt  types.String `tfsdk:"stopped_at"`
+	Status     types.String `tfsdk:"status"`
+}
+
+// NewExecutionsDataSource creates a new ExecutionsDataSource instance.
+func NewExecutionsDataSource() datasource.DataSource {
+	return &ExecutionsDataSource{}
+}
+
+// Metadata returns the data source type name.
+func (d *ExecutionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_executions"
+}
+
+// Schema defines the schema for the data source.
+func (d *ExecutionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Fetches a list of n8n workflow executions with optional filtering",
+
+		Attributes: map[string]schema.Attribute{
+			"workflow_id": schema.StringAttribute{
+				MarkdownDescription: "Filter executions by workflow ID",
+				Optional:            true,
+			},
+			"project_id": schema.StringAttribute{
+				MarkdownDescription: "Filter executions by project ID",
+				Optional:            true,
+			},
+			"status": schema.StringAttribute{
+				MarkdownDescription: "Filter executions by status (e.g., 'success', 'error', 'running')",
+				Optional:            true,
+			},
+			"include_data": schema.BoolAttribute{
+				MarkdownDescription: "Whether to include execution data in the response",
+				Optional:            true,
+			},
+			"executions": schema.ListNestedAttribute{
+				MarkdownDescription: "List of executions",
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							MarkdownDescription: "Execution identifier",
+							Computed:            true,
+						},
+						"workflow_id": schema.StringAttribute{
+							MarkdownDescription: "ID of the workflow that was executed",
+							Computed:            true,
+						},
+						"finished": schema.BoolAttribute{
+							MarkdownDescription: "Whether the execution finished",
+							Computed:            true,
+						},
+						"mode": schema.StringAttribute{
+							MarkdownDescription: "Execution mode",
+							Computed:            true,
+						},
+						"started_at": schema.StringAttribute{
+							MarkdownDescription: "Timestamp when the execution started",
+							Computed:            true,
+						},
+						"stopped_at": schema.StringAttribute{
+							MarkdownDescription: "Timestamp when the execution stopped",
+							Computed:            true,
+						},
+						"status": schema.StringAttribute{
+							MarkdownDescription: "Execution status",
+							Computed:            true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+// Configure adds the provider configured client to the data source.
+func (d *ExecutionsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
+		)
+		return
+	}
+
+	d.client = client
+}
+
+// Read refreshes the Terraform state with the latest data.
+func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data ExecutionsDataSourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Build API request with optional filters
+	apiReq := d.client.APIClient.ExecutionAPI.ExecutionsGet(ctx)
+
+	if !data.WorkflowID.IsNull() {
+		apiReq = apiReq.WorkflowId(data.WorkflowID.ValueString())
+	}
+	if !data.ProjectID.IsNull() {
+		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
+	}
+	if !data.Status.IsNull() {
+		apiReq = apiReq.Status(data.Status.ValueString())
+	}
+	if !data.IncludeData.IsNull() {
+		apiReq = apiReq.IncludeData(data.IncludeData.ValueBool())
+	}
+
+	executionList, httpResp, err := apiReq.Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error listing executions",
+			fmt.Sprintf("Could not list executions: %s\nHTTP Response: %v", err.Error(), httpResp),
+		)
+		return
+	}
+
+	data.Executions = make([]ExecutionItemModel, 0)
+	if executionList.Data != nil {
+		for _, execution := range executionList.Data {
+			item := ExecutionItemModel{}
+			if execution.Id != nil {
+				item.ID = types.StringValue(fmt.Sprintf("%v", *execution.Id))
+			}
+			if execution.WorkflowId != nil {
+				item.WorkflowID = types.StringValue(fmt.Sprintf("%v", *execution.WorkflowId))
+			}
+			if execution.Finished != nil {
+				item.Finished = types.BoolPointerValue(execution.Finished)
+			}
+			if execution.Mode != nil {
+				item.Mode = types.StringPointerValue(execution.Mode)
+			}
+			if execution.StartedAt != nil {
+				item.StartedAt = types.StringValue(execution.StartedAt.String())
+			}
+			if execution.StoppedAt.IsSet() {
+				stoppedAt := execution.StoppedAt.Get()
+				if stoppedAt != nil {
+					item.StoppedAt = types.StringValue(stoppedAt.String())
+				}
+			}
+			if execution.Status != nil {
+				item.Status = types.StringPointerValue(execution.Status)
+			}
+			data.Executions = append(data.Executions, item)
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}

@@ -13,5 +13,11 @@ func Resources() []func() resource.Resource {
 		NewVariableResource,
 		NewProjectResource,
 		NewCredentialResource,
+		NewExecutionRetryResource,
+		NewSourceControlPullResource,
+		NewUserResource,
+		NewProjectUserResource,
+		NewWorkflowTransferResource,
+		NewCredentialTransferResource,
 	}
 }

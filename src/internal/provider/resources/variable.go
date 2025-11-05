@@ -136,6 +136,9 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 
 	// Workaround: List all variables to find the one we just created
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -189,6 +192,9 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	// Workaround: No GET by ID, use LIST and filter
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -267,6 +273,9 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Workaround: List all variables to verify the update
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -318,6 +327,9 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdDelete(ctx, state.ID.ValueString()).Execute()
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
