@@ -111,7 +111,57 @@ def main():
 
     # 5. Generate SDK
     print("🔨 Generating SDK...")
-    run("bash codegen/generate-sdk.sh")
+
+    OPENAPI_SPEC = "sdk/n8nsdk/api/openapi.yaml"
+    GENERATOR_JAR = "/tmp/openapi-generator-cli.jar"
+    GENERATOR_VERSION = "7.11.0"
+
+    # Check Java
+    if not shutil.which("java"):
+        print("   ❌ Error: Java required", file=sys.stderr)
+        sys.exit(1)
+
+    # Download openapi-generator JAR if needed
+    if not Path(GENERATOR_JAR).exists():
+        print("   → Downloading openapi-generator JAR...")
+        run(f"wget -q https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/{GENERATOR_VERSION}/openapi-generator-cli-{GENERATOR_VERSION}.jar -O {GENERATOR_JAR}")
+
+    # Clean previous generation (keep api directory)
+    sdk_dir = Path("sdk/n8nsdk")
+    for item in sdk_dir.iterdir():
+        if item.name != "api":
+            if item.is_dir():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
+
+    # Generate SDK
+    print("   → Running openapi-generator...")
+    result = subprocess.run(
+        f"java -jar {GENERATOR_JAR} generate -i {OPENAPI_SPEC} -g go -o sdk/n8nsdk -c codegen/openapi-generator-config.yaml --skip-validate-spec",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        print(f"   ❌ Generator failed", file=sys.stderr)
+        print(result.stderr, file=sys.stderr)
+        sys.exit(1)
+
+    # Fix module paths
+    print("   → Fixing module paths...")
+    for go_file in sdk_dir.rglob("*.go"):
+        content = go_file.read_text()
+        content = content.replace(
+            "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk",
+            "github.com/kodflow/n8n/sdk/n8nsdk"
+        )
+        go_file.write_text(content)
+
+    # Run go mod tidy
+    print("   → Running go mod tidy...")
+    subprocess.run("go mod tidy", shell=True, cwd="sdk/n8nsdk", capture_output=True)
+
     print("   ✓ Generated\n")
 
     # 6. Generate Bazel files

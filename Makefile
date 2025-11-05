@@ -37,9 +37,14 @@ BOLD := \033[1m
 
 .PHONY: help
 help: ## Display available commands
-	@echo "$(BOLD)$(CYAN)Available commands:$(RESET)"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
+	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
+	@echo "$(BOLD)  N8N Terraform Provider - Development Commands$(RESET)"
+	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
+	@echo ""
+	@grep -E '^[a-zA-Z_/-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
 	@echo ""
 
 # ============================================================================
@@ -48,70 +53,89 @@ help: ## Display available commands
 
 .PHONY: test
 test: ## Run test suite
-	@printf "$(BOLD)Running test suite...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Running test suite...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Executing Bazel tests\n"
 	@bazel test --test_verbose_timeout_warnings //src/...
-	@printf "$(GREEN)✓$(RESET) Tests completed\n"
+	@echo "$(GREEN)✓$(RESET) Tests completed"
+	@echo ""
 
 .PHONY: test/n8n
 test/n8n: build test/n8n/plan test/n8n/apply test/n8n/destroy ## Test provider with real n8n instance (plan → apply → destroy)
-	@printf "$(GREEN)✓$(RESET) Full test cycle completed successfully\n"
+	@echo ""
+	@echo "$(GREEN)✓$(RESET) Full test cycle completed successfully"
+	@echo ""
 
 .PHONY: test/n8n/plan
 test/n8n/plan: build ## Run terraform plan with n8n provider
-	@printf "$(BOLD)Running terraform plan...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Running terraform plan...$(RESET)"
 	@if [ ! -f .env ]; then \
-		printf "$(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
 		exit 1; \
 	fi
+	@printf "  $(CYAN)→$(RESET) Validating configuration\n"
 	@export $$(cat .env | xargs) && cd examples/basic-sample && \
 	terraform plan \
 		-var="n8n_api_key=$$N8N_API_TOKEN" \
 		-var="n8n_base_url=$$N8N_URL"
-	@printf "$(GREEN)✓$(RESET) Plan completed successfully\n"
+	@echo "$(GREEN)✓$(RESET) Plan completed successfully"
+	@echo ""
 
 .PHONY: test/n8n/apply
 test/n8n/apply: build ## Run terraform apply with n8n provider
-	@printf "$(BOLD)Running terraform apply...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Running terraform apply...$(RESET)"
 	@if [ ! -f .env ]; then \
-		printf "$(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
 		exit 1; \
 	fi
+	@printf "  $(CYAN)→$(RESET) Applying configuration\n"
 	@export $$(cat .env | xargs) && cd examples/basic-sample && \
 	terraform apply -auto-approve \
 		-var="n8n_api_key=$$N8N_API_TOKEN" \
 		-var="n8n_base_url=$$N8N_URL"
-	@printf "$(GREEN)✓$(RESET) Apply completed successfully\n"
+	@echo "$(GREEN)✓$(RESET) Apply completed successfully"
+	@echo ""
 
 .PHONY: test/n8n/destroy
 test/n8n/destroy: ## Run terraform destroy with n8n provider
-	@printf "$(BOLD)Running terraform destroy...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Running terraform destroy...$(RESET)"
 	@if [ ! -f .env ]; then \
-		printf "$(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
 		exit 1; \
 	fi
+	@printf "  $(CYAN)→$(RESET) Destroying resources\n"
 	@export $$(cat .env | xargs) && cd examples/basic-sample && \
 	terraform destroy -auto-approve \
 		-var="n8n_api_key=$$N8N_API_TOKEN" \
 		-var="n8n_base_url=$$N8N_URL"
-	@printf "$(GREEN)✓$(RESET) Destroy completed successfully\n"
+	@echo "$(GREEN)✓$(RESET) Destroy completed successfully"
+	@echo ""
 
 .PHONY: build
 build: ## Build and install provider
-	@printf "$(BOLD)Building Terraform provider...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Building Terraform provider...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Compiling with Bazel\n"
 	@bazel build //src:terraform-provider-n8n
 	@printf "  $(CYAN)→$(RESET) Installing to plugin directory\n"
 	@mkdir -p $(PLUGIN_DIR)
 	@cp -f bazel-bin/src/terraform-provider-n8n_/terraform-provider-n8n $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)
 	@chmod +x $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)
-	@printf "$(GREEN)✓$(RESET) Provider installed successfully\n"
-	@printf "  $(CYAN)Location:$(RESET) $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)\n"
+	@echo "$(GREEN)✓$(RESET) Provider installed successfully"
+	@echo "  $(CYAN)Location:$(RESET) $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)"
+	@echo ""
 
 .PHONY: clean
 clean: ## Remove build artifacts
-	@printf "$(BOLD)Cleaning build artifacts...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Cleaning build artifacts...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Running Bazel clean\n"
 	@bazel clean
-	@printf "$(GREEN)✓$(RESET) Cleanup completed\n"
+	@echo "$(GREEN)✓$(RESET) Cleanup completed"
+	@echo ""
 
 # ============================================================================
 # Code Quality
@@ -119,7 +143,8 @@ clean: ## Remove build artifacts
 
 .PHONY: fmt
 fmt: ## Format all source files
-	@printf "$(BOLD)Formatting source files...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Formatting source files...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Go files\n"
 	@go fmt ./... > /dev/null
 	@printf "  $(CYAN)→$(RESET) Bazel files\n"
@@ -130,27 +155,32 @@ fmt: ## Format all source files
 	@prettier --write "**/*.{json,yaml,yml,md}" --log-level silent
 	@printf "  $(CYAN)→$(RESET) Terraform files\n"
 	@terraform fmt -recursive examples/ > /dev/null 2>&1 || true
-	@printf "$(GREEN)✓$(RESET) Formatting completed\n"
+	@echo "$(GREEN)✓$(RESET) Formatting completed"
+	@echo ""
 
 .PHONY: lint
 lint: ## Run code linters
-	@printf "$(BOLD)Running code analysis...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Running code analysis...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
 	@golangci-lint run ./...
 	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
 	@ktn-linter lint --simple ./... || true
-	@printf "$(GREEN)✓$(RESET) Linting completed\n"
+	@echo "$(GREEN)✓$(RESET) Linting completed"
+	@echo ""
 
 .PHONY: update
 update: ## Update ktn-linter to latest version
-	@printf "$(BOLD)Updating ktn-linter...$(RESET)\n"
+	@echo ""
+	@echo "$(BOLD)Updating ktn-linter...$(RESET)"
 	@KTN_ARCH=$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
 	KTN_VERSION=$$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
 	printf "  $(CYAN)→$(RESET) Downloading version v$$KTN_VERSION for $$KTN_ARCH\n"; \
 	mkdir -p $$HOME/.local/bin; \
 	curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v$${KTN_VERSION}/ktn-linter-linux-$${KTN_ARCH}" -o "$$HOME/.local/bin/ktn-linter" && \
 	chmod +x "$$HOME/.local/bin/ktn-linter" && \
-	printf "$(GREEN)✓$(RESET) ktn-linter updated to v$$KTN_VERSION\n"
+	printf "$(GREEN)✓$(RESET) ktn-linter updated to v$$KTN_VERSION\n"; \
+	echo ""
 
 # ============================================================================
 # API Tools
@@ -158,4 +188,6 @@ update: ## Update ktn-linter to latest version
 
 .PHONY: openapi
 openapi: ## Download n8n OpenAPI from GitHub, patch, and generate SDK - Complete pipeline
+	@echo ""
 	@python3 codegen/build-sdk.py
+	@echo ""
