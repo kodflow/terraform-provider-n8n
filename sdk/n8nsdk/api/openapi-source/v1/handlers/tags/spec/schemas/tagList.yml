@@ -3,7 +3,7 @@ properties:
   data:
     type: array
     items:
-      $ref: './tag.yml'
+      $ref: "./tag.yml"
   nextCursor:
     type: string
     description: Paginate through tags by setting the cursor parameter to a nextCursor attribute returned by a previous request. Default value fetches the first "page" of the collection.

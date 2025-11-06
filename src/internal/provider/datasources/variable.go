@@ -30,7 +30,7 @@ type VariableDataSourceModel struct {
 
 // NewVariableDataSource creates a new VariableDataSource instance.
 func NewVariableDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &VariableDataSource{}
 }
 
@@ -142,7 +142,7 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var found bool
 	// Check for non-nil value.
 	if variableList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, variable := range variableList.Data {
 			matchByID := !data.ID.IsNull() && variable.Id != nil && *variable.Id == data.ID.ValueString()
 			matchByKey := !data.Key.IsNull() && variable.Key == data.Key.ValueString()

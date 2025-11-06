@@ -37,7 +37,7 @@ type ProjectItemModel struct {
 
 // NewProjectsDataSource creates a new ProjectsDataSource instance.
 func NewProjectsDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &ProjectsDataSource{}
 }
 
@@ -135,7 +135,7 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 	data.Projects = make([]ProjectItemModel, 0)
 	// Check for non-nil value.
 	if projectList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, project := range projectList.Data {
 			item := ProjectItemModel{
 				Name: types.StringValue(project.Name),

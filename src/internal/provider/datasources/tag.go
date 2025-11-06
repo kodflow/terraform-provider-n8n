@@ -29,7 +29,7 @@ type TagDataSourceModel struct {
 
 // NewTagDataSource creates a new TagDataSource instance.
 func NewTagDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &TagDataSource{}
 }
 
@@ -137,7 +137,7 @@ func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		if tag.UpdatedAt != nil {
 			data.UpdatedAt = types.StringValue(tag.UpdatedAt.String())
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		// If only name is provided, list all tags and filter client-side
 		tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
@@ -159,7 +159,7 @@ func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		var found bool
 		// Check for non-nil value.
 		if tagList.Data != nil {
-   // Iterate over items.
+			// Iterate over items.
 			for _, tag := range tagList.Data {
 				// Check condition.
 				if tag.Name == data.Name.ValueString() {

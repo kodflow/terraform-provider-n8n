@@ -28,7 +28,7 @@ type WorkflowDataSourceModel struct {
 
 // NewWorkflowDataSource creates a new WorkflowDataSource instance.
 func NewWorkflowDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &WorkflowDataSource{}
 }
 

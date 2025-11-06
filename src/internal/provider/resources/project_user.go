@@ -35,7 +35,7 @@ type ProjectUserResourceModel struct {
 
 // NewProjectUserResource creates a new ProjectUserResource instance.
 func NewProjectUserResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &ProjectUserResource{}
 }
 
@@ -112,10 +112,10 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 	// Add user to project
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersPost(ctx, plan.ProjectID.ValueString()).
 		ProjectsProjectIdUsersPostRequest(*addUserReq).Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -148,10 +148,10 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 		ProjectId(state.ProjectID.ValueString()).
 		IncludeRole(true).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -167,7 +167,7 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 	found := false
 	// Check for non-nil value.
 	if userList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, user := range userList.Data {
 			// Check for non-nil value.
 			if user.Id != nil && *user.Id == state.UserID.ValueString() {

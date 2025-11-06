@@ -33,7 +33,7 @@ type UserDataSourceModel struct {
 
 // NewUserDataSource creates a new UserDataSource instance.
 func NewUserDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &UserDataSource{}
 }
 

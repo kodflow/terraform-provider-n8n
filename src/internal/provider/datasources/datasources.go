@@ -7,7 +7,7 @@ import (
 // DataSources returns all data sources supported by the provider.
 // Each data source factory function creates a new instance of the data source.
 func DataSources() []func() datasource.DataSource {
- // Return result.
+	// Return result.
 	return []func() datasource.DataSource{
 		NewWorkflowDataSource,
 		NewWorkflowsDataSource,

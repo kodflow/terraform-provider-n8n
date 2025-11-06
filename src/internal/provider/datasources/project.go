@@ -32,7 +32,7 @@ type ProjectDataSourceModel struct {
 
 // NewProjectDataSource creates a new ProjectDataSource instance.
 func NewProjectDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &ProjectDataSource{}
 }
 
@@ -142,7 +142,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	var found bool
 	// Check for non-nil value.
 	if projectList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, project := range projectList.Data {
 			matchByID := !data.ID.IsNull() && project.Id != nil && *project.Id == data.ID.ValueString()
 			matchByName := !data.Name.IsNull() && project.Name == data.Name.ValueString()

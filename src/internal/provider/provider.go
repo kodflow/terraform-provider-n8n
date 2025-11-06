@@ -139,7 +139,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 // Returns:
 //   - []func() resource.Resource: list of resource factory functions
 func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource {
- // Return result.
+	// Return result.
 	return resources.Resources()
 }
 
@@ -152,7 +152,7 @@ func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource 
 // Returns:
 //   - []func() datasource.DataSource: list of data source factory functions
 func (p *N8nProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
- // Return result.
+	// Return result.
 	return datasources.DataSources()
 }
 

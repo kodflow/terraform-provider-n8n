@@ -34,7 +34,7 @@ type CredentialTransferResourceModel struct {
 
 // NewCredentialTransferResource creates a new CredentialTransferResource instance.
 func NewCredentialTransferResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &CredentialTransferResource{}
 }
 
@@ -106,10 +106,10 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 	// Execute transfer
 	httpResp, err := r.client.APIClient.CredentialAPI.CredentialsIdTransferPut(ctx, plan.CredentialID.ValueString()).
 		CredentialsIdTransferPutRequest(*transferReq).Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(

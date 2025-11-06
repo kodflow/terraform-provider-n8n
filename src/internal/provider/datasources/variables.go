@@ -21,9 +21,9 @@ type VariablesDataSource struct {
 
 // VariablesDataSourceModel describes the data source data model.
 type VariablesDataSourceModel struct {
-	ProjectID types.String          `tfsdk:"project_id"`
-	State     types.String          `tfsdk:"state"`
-	Variables []VariableItemModel   `tfsdk:"variables"`
+	ProjectID types.String        `tfsdk:"project_id"`
+	State     types.String        `tfsdk:"state"`
+	Variables []VariableItemModel `tfsdk:"variables"`
 }
 
 // VariableItemModel represents a single variable in the list.
@@ -37,7 +37,7 @@ type VariableItemModel struct {
 
 // NewVariablesDataSource creates a new VariablesDataSource instance.
 func NewVariablesDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &VariablesDataSource{}
 }
 
@@ -154,7 +154,7 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	data.Variables = make([]VariableItemModel, 0)
 	// Check for non-nil value.
 	if variableList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, variable := range variableList.Data {
 			item := VariableItemModel{}
 			// Check for non-nil value.

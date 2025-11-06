@@ -6,15 +6,15 @@ post:
   summary: Activate a workflow
   description: Active a workflow.
   parameters:
-    - $ref: '../schemas/parameters/workflowId.yml'
+    - $ref: "../schemas/parameters/workflowId.yml"
   responses:
-    '200':
+    "200":
       description: Workflow object
       content:
         application/json:
           schema:
-            $ref: '../schemas/workflow.yml'
-    '401':
-      $ref: '../../../../shared/spec/responses/unauthorized.yml'
-    '404':
-      $ref: '../../../../shared/spec/responses/notFound.yml'
+            $ref: "../schemas/workflow.yml"
+    "401":
+      $ref: "../../../../shared/spec/responses/unauthorized.yml"
+    "404":
+      $ref: "../../../../shared/spec/responses/notFound.yml"

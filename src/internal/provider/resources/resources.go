@@ -7,9 +7,9 @@ import (
 // Resources returns all resources supported by the provider.
 // Each resource factory function creates a new instance of the resource.
 func Resources() []func() resource.Resource {
- // Return result.
+	// Return result.
 	return []func() resource.Resource{
- 		NewWorkflowResource,
+		NewWorkflowResource,
 		NewTagResource,
 		NewVariableResource,
 		NewProjectResource,

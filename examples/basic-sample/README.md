@@ -148,9 +148,9 @@ As the provider matures, this example will be enhanced with:
 
 ## Resources Created
 
-| Type | Name | Purpose |
-|------|------|---------|
-| `n8n_tag` | `tf:basic-sample` | Organizes resources |
+| Type           | Name                              | Purpose                     |
+| -------------- | --------------------------------- | --------------------------- |
+| `n8n_tag`      | `tf:basic-sample`                 | Organizes resources         |
 | `n8n_workflow` | `TF Basic Sample - Mocky.io Test` | Empty workflow to configure |
 
 ## Troubleshooting

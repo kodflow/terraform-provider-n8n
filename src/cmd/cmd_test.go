@@ -29,7 +29,7 @@ func TestSetVersion(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd.SetVersion(tt.version)
@@ -58,7 +58,7 @@ func TestExecute_Success(t *testing.T) {
 
 	// Mock ProviderServe to return success
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-  // Return result.
+		// Return result.
 		return nil
 	}
 
@@ -88,7 +88,7 @@ func TestExecute_WithError(t *testing.T) {
 
 	// Mock ProviderServe to return an error
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-  // Return error.
+		// Return error.
 		return errors.New("mock error")
 	}
 
@@ -148,7 +148,7 @@ func TestRun_WithError(t *testing.T) {
 	// Mock ProviderServe to return an error
 	expectedErr := errors.New("mock provider error")
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-  // Return result.
+		// Return result.
 		return expectedErr
 	}
 

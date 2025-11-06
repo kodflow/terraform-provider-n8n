@@ -37,7 +37,7 @@ type VariableResourceModel struct {
 
 // NewVariableResource creates a new VariableResource instance.
 func NewVariableResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &VariableResource{}
 }
 
@@ -131,10 +131,10 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesPost(ctx).
 		VariableCreate(variableRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -167,7 +167,7 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	var foundVariable *n8nsdk.Variable
 	// Check for non-nil value.
 	if variableList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, v := range variableList.Data {
 			// Check condition.
 			if v.Key == plan.Key.ValueString() {
@@ -234,7 +234,7 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 	var foundVariable *n8nsdk.Variable
 	// Check for non-nil value.
 	if variableList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, v := range variableList.Data {
 			// Check for non-nil value.
 			if v.Id != nil && *v.Id == state.ID.ValueString() {
@@ -297,10 +297,10 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdPut(ctx, plan.ID.ValueString()).
 		VariableCreate(variableRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -333,7 +333,7 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	var foundVariable *n8nsdk.Variable
 	// Check for non-nil value.
 	if variableList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, v := range variableList.Data {
 			// Check for non-nil value.
 			if v.Id != nil && *v.Id == plan.ID.ValueString() {

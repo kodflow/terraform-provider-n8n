@@ -63,7 +63,7 @@ func TestMainFunction(t *testing.T) {
 
 	// Mock ProviderServe to return success
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-  // Return result.
+		// Return result.
 		return nil
 	}
 

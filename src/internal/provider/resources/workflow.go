@@ -46,7 +46,7 @@ type WorkflowResourceModel struct {
 
 // NewWorkflowResource creates a new WorkflowResource instance.
 func NewWorkflowResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &WorkflowResource{}
 }
 
@@ -177,7 +177,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 			// Return result.
 			return
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		nodes = []n8nsdk.Node{}
 	}
@@ -195,7 +195,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 			// Return result.
 			return
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		connections = map[string]interface{}{}
 	}
@@ -226,10 +226,10 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
 		Workflow(workflowRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -252,7 +252,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		}
 
 		tagIdsInner := make([]n8nsdk.TagIdsInner, len(tagIDs))
-  // Iterate over items.
+		// Iterate over items.
 		for i, tagID := range tagIDs {
 			tagIdsInner[i] = n8nsdk.TagIdsInner{Id: tagID}
 		}
@@ -260,10 +260,10 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		tags, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, *workflow.Id).
 			TagIdsInner(tagIdsInner).
 			Execute()
-			// Check for non-nil value.
-			if httpResp != nil && httpResp.Body != nil {
-				defer httpResp.Body.Close()
-			}
+		// Check for non-nil value.
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 		// Check for error.
 		if err != nil {
@@ -290,7 +290,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	// Map tags from response
 	if len(workflow.Tags) > 0 {
 		tagIDs := make([]types.String, len(workflow.Tags))
-  // Iterate over items.
+		// Iterate over items.
 		for i, tag := range workflow.Tags {
 			// Check for non-nil value.
 			if tag.Id != nil {
@@ -408,7 +408,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 	// Map tags from response
 	if len(workflow.Tags) > 0 {
 		tagIDs := make([]types.String, len(workflow.Tags))
-  // Iterate over items.
+		// Iterate over items.
 		for i, tag := range workflow.Tags {
 			// Check for non-nil value.
 			if tag.Id != nil {
@@ -421,7 +421,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 		if !resp.Diagnostics.HasError() {
 			state.Tags = tagList
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		// Set to empty list if no tags
 		emptyList, diags := types.ListValueFrom(ctx, types.StringType, []types.String{})
@@ -525,7 +525,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 			// Return result.
 			return
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		nodes = []n8nsdk.Node{}
 	}
@@ -543,7 +543,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 			// Return result.
 			return
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		connections = map[string]interface{}{}
 	}
@@ -581,7 +581,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 			if httpResp != nil && httpResp.Body != nil {
 				defer httpResp.Body.Close()
 			}
-  // Handle alternative case.
+			// Handle alternative case.
 		} else {
 			// Deactivate workflow
 			_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdDeactivatePost(ctx, plan.ID.ValueString()).Execute()
@@ -619,10 +619,10 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	workflow, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, plan.ID.ValueString()).
 		Workflow(workflowRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -644,7 +644,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 
 		tagIdsInner := make([]n8nsdk.TagIdsInner, len(tagIDs))
-  // Iterate over items.
+		// Iterate over items.
 		for i, tagID := range tagIDs {
 			tagIdsInner[i] = n8nsdk.TagIdsInner{Id: tagID}
 		}
@@ -652,10 +652,10 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		tags, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, plan.ID.ValueString()).
 			TagIdsInner(tagIdsInner).
 			Execute()
-			// Check for non-nil value.
-			if httpResp != nil && httpResp.Body != nil {
-				defer httpResp.Body.Close()
-			}
+		// Check for non-nil value.
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 
 		// Check for error.
 		if err != nil {
@@ -681,7 +681,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	// Map tags from response
 	if len(workflow.Tags) > 0 {
 		tagIDs := make([]types.String, len(workflow.Tags))
-  // Iterate over items.
+		// Iterate over items.
 		for i, tag := range workflow.Tags {
 			// Check for non-nil value.
 			if tag.Id != nil {
@@ -694,7 +694,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		if !resp.Diagnostics.HasError() {
 			plan.Tags = tagList
 		}
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		// Set to empty list if no tags
 		emptyList, diags := types.ListValueFrom(ctx, types.StringType, []types.String{})

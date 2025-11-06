@@ -22,19 +22,19 @@ type ExecutionDataSource struct {
 
 // ExecutionDataSourceModel describes the data source data model.
 type ExecutionDataSourceModel struct {
-	ID           types.String `tfsdk:"id"`
-	WorkflowID   types.String `tfsdk:"workflow_id"`
-	Finished     types.Bool   `tfsdk:"finished"`
-	Mode         types.String `tfsdk:"mode"`
-	StartedAt    types.String `tfsdk:"started_at"`
-	StoppedAt    types.String `tfsdk:"stopped_at"`
-	Status       types.String `tfsdk:"status"`
-	IncludeData  types.Bool   `tfsdk:"include_data"`
+	ID          types.String `tfsdk:"id"`
+	WorkflowID  types.String `tfsdk:"workflow_id"`
+	Finished    types.Bool   `tfsdk:"finished"`
+	Mode        types.String `tfsdk:"mode"`
+	StartedAt   types.String `tfsdk:"started_at"`
+	StoppedAt   types.String `tfsdk:"stopped_at"`
+	Status      types.String `tfsdk:"status"`
+	IncludeData types.Bool   `tfsdk:"include_data"`
 }
 
 // NewExecutionDataSource creates a new ExecutionDataSource instance.
 func NewExecutionDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &ExecutionDataSource{}
 }
 

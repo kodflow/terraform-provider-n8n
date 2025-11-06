@@ -79,7 +79,7 @@ func TestProviderNew(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			factory := n8nprovider.New(tt.version)
@@ -95,7 +95,7 @@ func TestProviderNew(t *testing.T) {
 				if p != nil {
 					t.Errorf("Expected error but got provider: %v", p)
 				}
-   // Handle alternative case.
+				// Handle alternative case.
 			} else {
 				// Check for non-nil value.
 				if tt.checkResult != nil {
@@ -137,7 +137,7 @@ func TestProviderMetadata(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
@@ -155,7 +155,7 @@ func TestProviderMetadata(t *testing.T) {
 				if resp.TypeName != "" {
 					t.Errorf("Expected error but got TypeName: %s", resp.TypeName)
 				}
-   // Handle alternative case.
+				// Handle alternative case.
 			} else {
 				// Check condition.
 				if resp.TypeName != tt.expectedType {
@@ -188,7 +188,7 @@ func TestProviderSchema(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
@@ -301,7 +301,7 @@ func TestProviderResources(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
@@ -345,7 +345,7 @@ func TestProviderDataSources(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
@@ -391,7 +391,7 @@ func TestValidateProvider(t *testing.T) {
 		},
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.NewN8nProvider(tt.version)

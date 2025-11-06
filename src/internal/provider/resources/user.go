@@ -38,7 +38,7 @@ type UserResourceModel struct {
 
 // NewUserResource creates a new UserResource instance.
 func NewUserResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &UserResource{}
 }
 
@@ -308,10 +308,10 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
 		httpResp, err := r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
 			UsersIdRolePatchRequest(*roleReq).Execute()
-			// Check for non-nil value.
-			if httpResp != nil && httpResp.Body != nil {
-				defer httpResp.Body.Close()
-			}
+		// Check for non-nil value.
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
 		// Check for error.
 		if err != nil {
 			resp.Diagnostics.AddError(

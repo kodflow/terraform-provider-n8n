@@ -10,15 +10,15 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../schemas/variable.create.yml'
+          $ref: "../schemas/variable.create.yml"
     required: true
   responses:
-    '201':
+    "201":
       description: Operation successful.
-    '400':
-      $ref: '../../../../shared/spec/responses/badRequest.yml'
-    '401':
-      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    "400":
+      $ref: "../../../../shared/spec/responses/badRequest.yml"
+    "401":
+      $ref: "../../../../shared/spec/responses/unauthorized.yml"
 get:
   x-eov-operation-id: getVariables
   x-eov-operation-handler: v1/handlers/variables/variables.handler
@@ -27,8 +27,8 @@ get:
   summary: Retrieve variables
   description: Retrieve variables from your instance.
   parameters:
-    - $ref: '../../../../shared/spec/parameters/limit.yml'
-    - $ref: '../../../../shared/spec/parameters/cursor.yml'
+    - $ref: "../../../../shared/spec/parameters/limit.yml"
+    - $ref: "../../../../shared/spec/parameters/cursor.yml"
     - name: projectId
       in: query
       required: false
@@ -44,11 +44,11 @@ get:
         type: string
         enum: [empty]
   responses:
-    '200':
+    "200":
       description: Operation successful.
       content:
         application/json:
           schema:
-            $ref: '../schemas/variableList.yml'
-    '401':
-      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+            $ref: "../schemas/variableList.yml"
+    "401":
+      $ref: "../../../../shared/spec/responses/unauthorized.yml"

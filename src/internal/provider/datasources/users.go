@@ -38,7 +38,7 @@ type UserItemModel struct {
 
 // NewUsersDataSource creates a new UsersDataSource instance.
 func NewUsersDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &UsersDataSource{}
 }
 
@@ -140,7 +140,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	data.Users = make([]UserItemModel, 0)
 	// Check for non-nil value.
 	if userList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, user := range userList.Data {
 			item := UserItemModel{
 				Email: types.StringValue(user.Email),

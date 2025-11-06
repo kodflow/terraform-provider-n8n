@@ -10,14 +10,14 @@ properties:
     example: true
   mode:
     type: string
-    enum: ['cli', 'error', 'integrated', 'internal', 'manual', 'retry', 'trigger', 'webhook']
+    enum: ["cli", "error", "integrated", "internal", "manual", "retry", "trigger", "webhook"]
   retryOf:
     type: number
     nullable: true
   retrySuccessId:
     type: number
     nullable: true
-    example: '2'
+    example: "2"
   startedAt:
     type: string
     format: date-time
@@ -28,7 +28,7 @@ properties:
     description: The time at which the execution stopped. Will only be null for executions that still have the status 'running'.
   workflowId:
     type: number
-    example: '1000'
+    example: "1000"
   waitTill:
     type: string
     nullable: true
@@ -37,4 +37,4 @@ properties:
     type: object
   status:
     type: string
-    enum: ['canceled', 'crashed', 'error', 'new', 'running', 'success', 'unknown', 'waiting']
+    enum: ["canceled", "crashed", "error", "new", "running", "success", "unknown", "waiting"]

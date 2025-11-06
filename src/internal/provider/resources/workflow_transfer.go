@@ -34,7 +34,7 @@ type WorkflowTransferResourceModel struct {
 
 // NewWorkflowTransferResource creates a new WorkflowTransferResource instance.
 func NewWorkflowTransferResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &WorkflowTransferResource{}
 }
 
@@ -106,10 +106,10 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 	// Execute transfer
 	httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTransferPut(ctx, plan.WorkflowID.ValueString()).
 		WorkflowsIdTransferPutRequest(*transferReq).Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(

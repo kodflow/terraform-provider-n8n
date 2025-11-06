@@ -46,7 +46,7 @@ func run(cmd *cobra.Command, args []string) error {
 	err := ProviderServe(context.Background(), n8nprovider.New(Version), opts)
 	// Check for error.
 	if err != nil {
-  // Return error.
+		// Return error.
 		return err
 	}
 

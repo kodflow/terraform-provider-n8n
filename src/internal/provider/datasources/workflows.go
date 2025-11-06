@@ -34,7 +34,7 @@ type WorkflowModel struct {
 
 // NewWorkflowsDataSource creates a new WorkflowsDataSource instance.
 func NewWorkflowsDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &WorkflowsDataSource{}
 }
 
@@ -136,7 +136,7 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	data.Workflows = make([]WorkflowModel, 0)
 	// Check for non-nil value.
 	if workflowList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, workflow := range workflowList.Data {
 			workflowModel := WorkflowModel{
 				ID:   types.StringPointerValue(workflow.Id),

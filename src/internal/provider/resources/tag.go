@@ -34,7 +34,7 @@ type TagResourceModel struct {
 
 // NewTagResource creates a new TagResource instance.
 func NewTagResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &TagResource{}
 }
 
@@ -107,10 +107,10 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsPost(ctx).
 		Tag(tagRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -192,10 +192,10 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdPut(ctx, plan.ID.ValueString()).
 		Tag(tagRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {

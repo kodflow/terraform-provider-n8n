@@ -35,7 +35,7 @@ type SourceControlPullResourceModel struct {
 
 // NewSourceControlPullResource creates a new SourceControlPullResource instance.
 func NewSourceControlPullResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &SourceControlPullResource{}
 }
 
@@ -153,7 +153,7 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 				"Could not serialize import result",
 				fmt.Sprintf("Import was successful but result could not be serialized: %s", err.Error()),
 			)
-  // Handle alternative case.
+			// Handle alternative case.
 		} else {
 			plan.ResultJSON = types.StringValue(string(resultJSON))
 		}

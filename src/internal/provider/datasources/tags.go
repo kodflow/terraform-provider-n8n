@@ -34,7 +34,7 @@ type TagItemModel struct {
 
 // NewTagsDataSource creates a new TagsDataSource instance.
 func NewTagsDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &TagsDataSource{}
 }
 
@@ -120,7 +120,7 @@ func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.Tags = make([]TagItemModel, 0)
 	// Check for non-nil value.
 	if tagList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, tag := range tagList.Data {
 			item := TagItemModel{
 				Name: types.StringValue(tag.Name),

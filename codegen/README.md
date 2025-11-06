@@ -12,11 +12,11 @@ That's it! This downloads the OpenAPI spec from GitHub, applies patches, and gen
 
 ## 📁 Files
 
-| File | Purpose |
-|------|---------|
-| `build-sdk.py` | Main orchestration script (~100 lines) |
-| `generate-sdk.sh` | Runs openapi-generator and fixes imports |
-| `openapi-generator-config.yaml` | OpenAPI generator settings |
+| File                            | Purpose                                  |
+| ------------------------------- | ---------------------------------------- |
+| `build-sdk.py`                  | Main orchestration script (~100 lines)   |
+| `generate-sdk.sh`               | Runs openapi-generator and fixes imports |
+| `openapi-generator-config.yaml` | OpenAPI generator settings               |
 
 ## 🔧 How It Works
 
@@ -43,16 +43,15 @@ workflow['properties']['isArchived'] = {'type': 'boolean', 'readOnly': True}
 ```
 
 To modify patches:
+
 1. Edit `build-sdk.py` directly
 2. Run `make openapi`
 3. Verify changes in generated `sdk/n8nsdk/*.go` files
 
 ## 🎯 Current Patches
 
-**Workflow:** `versionId`, `isArchived`, `triggerCount`, `meta`, `pinData`
-**Credential:** Remove `writeOnly` from `data`, add `isManaged`
-**Create-Credential-Response:** Add `isManaged`
-**Project:** Add `createdAt`, `updatedAt`, `icon`, `description`, `projectRelations`
+**Workflow:** `versionId`, `isArchived`, `triggerCount`, `meta`, `pinData` **Credential:** Remove `writeOnly` from `data`, add `isManaged`
+**Create-Credential-Response:** Add `isManaged` **Project:** Add `createdAt`, `updatedAt`, `icon`, `description`, `projectRelations`
 
 ## 🔄 Updating n8n Version
 
@@ -79,6 +78,7 @@ sdk/n8nsdk/*.go (generated SDK)
 ## 🐛 Troubleshooting
 
 **Regenerate from scratch:**
+
 ```bash
 rm -rf sdk/n8nsdk
 mkdir -p sdk/n8nsdk/api
@@ -86,6 +86,7 @@ make openapi
 ```
 
 **Java not found:**
+
 ```bash
 sudo apt install openjdk-17-jre-headless  # Ubuntu/Debian
 brew install openjdk@17                    # macOS

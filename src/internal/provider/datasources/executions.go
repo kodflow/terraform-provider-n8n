@@ -21,11 +21,11 @@ type ExecutionsDataSource struct {
 
 // ExecutionsDataSourceModel describes the data source data model.
 type ExecutionsDataSourceModel struct {
-	WorkflowID  types.String          `tfsdk:"workflow_id"`
-	ProjectID   types.String          `tfsdk:"project_id"`
-	Status      types.String          `tfsdk:"status"`
-	IncludeData types.Bool            `tfsdk:"include_data"`
-	Executions  []ExecutionItemModel  `tfsdk:"executions"`
+	WorkflowID  types.String         `tfsdk:"workflow_id"`
+	ProjectID   types.String         `tfsdk:"project_id"`
+	Status      types.String         `tfsdk:"status"`
+	IncludeData types.Bool           `tfsdk:"include_data"`
+	Executions  []ExecutionItemModel `tfsdk:"executions"`
 }
 
 // ExecutionItemModel represents a single execution in the list.
@@ -41,7 +41,7 @@ type ExecutionItemModel struct {
 
 // NewExecutionsDataSource creates a new ExecutionsDataSource instance.
 func NewExecutionsDataSource() datasource.DataSource {
- // Return result.
+	// Return result.
 	return &ExecutionsDataSource{}
 }
 
@@ -181,7 +181,7 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.Executions = make([]ExecutionItemModel, 0)
 	// Check for non-nil value.
 	if executionList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, execution := range executionList.Data {
 			item := ExecutionItemModel{}
 			// Check for non-nil value.

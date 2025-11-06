@@ -26,19 +26,19 @@ type ExecutionRetryResource struct {
 
 // ExecutionRetryResourceModel describes the resource data model.
 type ExecutionRetryResourceModel struct {
-	ExecutionID     types.String `tfsdk:"execution_id"`
-	NewExecutionID  types.String `tfsdk:"new_execution_id"`
-	WorkflowID      types.String `tfsdk:"workflow_id"`
-	Finished        types.Bool   `tfsdk:"finished"`
-	Mode            types.String `tfsdk:"mode"`
-	StartedAt       types.String `tfsdk:"started_at"`
-	StoppedAt       types.String `tfsdk:"stopped_at"`
-	Status          types.String `tfsdk:"status"`
+	ExecutionID    types.String `tfsdk:"execution_id"`
+	NewExecutionID types.String `tfsdk:"new_execution_id"`
+	WorkflowID     types.String `tfsdk:"workflow_id"`
+	Finished       types.Bool   `tfsdk:"finished"`
+	Mode           types.String `tfsdk:"mode"`
+	StartedAt      types.String `tfsdk:"started_at"`
+	StoppedAt      types.String `tfsdk:"stopped_at"`
+	Status         types.String `tfsdk:"status"`
 }
 
 // NewExecutionRetryResource creates a new ExecutionRetryResource instance.
 func NewExecutionRetryResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &ExecutionRetryResource{}
 }
 

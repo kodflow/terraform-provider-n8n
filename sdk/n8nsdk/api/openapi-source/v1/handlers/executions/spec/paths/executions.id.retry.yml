@@ -6,7 +6,7 @@ post:
   summary: Retry an execution
   description: Retry an execution from your instance.
   parameters:
-    - $ref: '../schemas/parameters/executionId.yml'
+    - $ref: "../schemas/parameters/executionId.yml"
   requestBody:
     required: false
     content:
@@ -18,15 +18,15 @@ post:
               type: boolean
               description: Whether to load the currently saved workflow to execute instead of the one saved at the time of the execution. If set to true, it will retry with the latest version of the workflow.
   responses:
-    '200':
+    "200":
       description: Operation successful.
       content:
         application/json:
           schema:
-            $ref: '../schemas/execution.yml'
-    '401':
-      $ref: '../../../../shared/spec/responses/unauthorized.yml'
-    '404':
-      $ref: '../../../../shared/spec/responses/notFound.yml'
-    '409':
-      $ref: '../../../../shared/spec/responses/conflict.yml'
+            $ref: "../schemas/execution.yml"
+    "401":
+      $ref: "../../../../shared/spec/responses/unauthorized.yml"
+    "404":
+      $ref: "../../../../shared/spec/responses/notFound.yml"
+    "409":
+      $ref: "../../../../shared/spec/responses/conflict.yml"

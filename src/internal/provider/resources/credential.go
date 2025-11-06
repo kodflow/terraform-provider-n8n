@@ -45,7 +45,7 @@ type WorkflowBackup struct {
 
 // NewCredentialResource creates a new CredentialResource instance.
 func NewCredentialResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &CredentialResource{}
 }
 
@@ -144,10 +144,10 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	createResp, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -230,10 +230,10 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	newCred, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -281,7 +281,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	affectedWorkflows := []WorkflowBackup{}
 	// Check for non-nil value.
 	if workflowList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, workflow := range workflowList.Data {
 			// Check condition.
 			if usesCredential(&workflow, oldCredID) {
@@ -297,7 +297,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// STEP 3: Update each workflow
 	updatedWorkflows := []string{}
- // Iterate over items.
+	// Iterate over items.
 	for i, backup := range affectedWorkflows {
 		// Throttle to avoid rate limiting
 		if i > 0 {
@@ -369,7 +369,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 			"Could not delete old credential %s: %s. New credential %s is active. Manual cleanup may be required.",
 			oldCredID, err.Error(), newCredID,
 		))
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		tflog.Info(ctx, fmt.Sprintf("Deleted old credential %s", oldCredID))
 	}
@@ -450,18 +450,18 @@ func (r *CredentialResource) rollbackRotation(
 	// Check for error.
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("CRITICAL: Failed to delete new credential %s during rollback: %s", newCredID, err.Error()))
- // Handle alternative case.
+		// Handle alternative case.
 	} else {
 		tflog.Info(ctx, fmt.Sprintf("Deleted new credential %s during rollback", newCredID))
 	}
 
 	// Restore updated workflows
 	restoredCount := 0
- // Iterate over items.
+	// Iterate over items.
 	for _, workflowID := range updatedWorkflows {
 		// Find original
 		var original *n8nsdk.Workflow
-  // Iterate over items.
+		// Iterate over items.
 		for _, backup := range affectedWorkflows {
 			// Check condition.
 			if backup.ID == workflowID {
@@ -503,11 +503,11 @@ func (r *CredentialResource) rollbackRotation(
 func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 	// Check for nil value.
 	if workflow.Nodes == nil {
-  // Return result.
+		// Return result.
 		return false
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for _, node := range workflow.Nodes {
 		// Check for non-nil value.
 		if node.Credentials != nil {
@@ -517,7 +517,7 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 				if credInfo, ok := credValue.(map[string]interface{}); ok {
 					// Check condition.
 					if id, ok := credInfo["id"].(string); ok && id == credentialID {
-      // Return result.
+						// Return result.
 						return true
 					}
 				}
@@ -533,11 +533,11 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) *n8nsdk.Workflow {
 	// Check for nil value.
 	if workflow.Nodes == nil {
-  // Return result.
+		// Return result.
 		return workflow
 	}
 
- // Iterate over items.
+	// Iterate over items.
 	for i := range workflow.Nodes {
 		node := &workflow.Nodes[i]
 

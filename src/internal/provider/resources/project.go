@@ -35,7 +35,7 @@ type ProjectResourceModel struct {
 
 // NewProjectResource creates a new ProjectResource instance.
 func NewProjectResource() resource.Resource {
- // Return result.
+	// Return result.
 	return &ProjectResource{}
 }
 
@@ -106,10 +106,10 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsPost(ctx).
 		Project(projectRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -142,7 +142,7 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	var foundProject *n8nsdk.Project
 	// Check for non-nil value.
 	if projectList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, p := range projectList.Data {
 			// Check condition.
 			if p.Name == plan.Name.ValueString() {
@@ -204,7 +204,7 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	var foundProject *n8nsdk.Project
 	// Check for non-nil value.
 	if projectList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, p := range projectList.Data {
 			// Check for non-nil value.
 			if p.Id != nil && *p.Id == state.ID.ValueString() {
@@ -250,10 +250,10 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdPut(ctx, plan.ID.ValueString()).
 		Project(projectRequest).
 		Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 
 	// Check for error.
 	if err != nil {
@@ -286,7 +286,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	var foundProject *n8nsdk.Project
 	// Check for non-nil value.
 	if projectList.Data != nil {
-  // Iterate over items.
+		// Iterate over items.
 		for _, p := range projectList.Data {
 			// Check for non-nil value.
 			if p.Id != nil && *p.Id == plan.ID.ValueString() {
