@@ -165,7 +165,7 @@ lint: ## Run code linters
 	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
 	@golangci-lint run ./...
 	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
-	@ktn-linter lint --simple ./... 2>&1 | grep -v '\[KTN-STRUCT-005\]' || true
+	@ktn-linter lint ./... 2>&1 || true
 	@echo "$(GREEN)✓$(RESET) Linting completed"
 	@echo ""
 

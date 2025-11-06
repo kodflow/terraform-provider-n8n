@@ -7,9 +7,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/kodflow/n8n/src/internal/provider/datasources"
-	"github.com/kodflow/n8n/src/internal/provider/resources"
-	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
+	"github.com/kodflow/n8n/src/internal/provider/credential"
+	"github.com/kodflow/n8n/src/internal/provider/execution"
+	"github.com/kodflow/n8n/src/internal/provider/project"
+	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/shared/models"
+	"github.com/kodflow/n8n/src/internal/provider/sourcecontrol"
+	"github.com/kodflow/n8n/src/internal/provider/tag"
+	"github.com/kodflow/n8n/src/internal/provider/user"
+	"github.com/kodflow/n8n/src/internal/provider/variable"
+	"github.com/kodflow/n8n/src/internal/provider/workflow"
 )
 
 // Compile-time assertions to ensure N8nProvider implements required interfaces.
@@ -89,7 +96,7 @@ func (p *N8nProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 //   - req: configuration request containing provider settings
 //   - resp: response object to populate with configuration results or errors
 func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	config := &providertypes.N8nProviderModel{}
+	config := &models.N8nProviderModel{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, config)...)
 
@@ -120,14 +127,14 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 
 	// Create n8n client using the generated SDK
-	client := providertypes.NewN8nClient(
+	n8nClient := client.NewN8nClient(
 		config.BaseURL.ValueString(),
 		config.APIKey.ValueString(),
 	)
 
 	// Make client available to resources and data sources
-	resp.DataSourceData = client
-	resp.ResourceData = client
+	resp.DataSourceData = n8nClient
+	resp.ResourceData = n8nClient
 }
 
 // Resources returns the list of resources supported by this provider.
@@ -140,7 +147,27 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 //   - []func() resource.Resource: list of resource factory functions
 func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource {
 	// Return result.
-	return resources.Resources()
+	return []func() resource.Resource{
+		// Workflow domain
+		workflow.NewWorkflowResource,
+		workflow.NewWorkflowTransferResource,
+		// Project domain
+		project.NewProjectResource,
+		project.NewProjectUserResource,
+		// Credential domain
+		credential.NewCredentialResource,
+		credential.NewCredentialTransferResource,
+		// Execution domain
+		execution.NewExecutionRetryResource,
+		// Tag domain
+		tag.NewTagResource,
+		// Variable domain
+		variable.NewVariableResource,
+		// User domain
+		user.NewUserResource,
+		// Source control domain
+		sourcecontrol.NewSourceControlPullResource,
+	}
 }
 
 // DataSources returns the list of data sources supported by this provider.
@@ -153,7 +180,26 @@ func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource 
 //   - []func() datasource.DataSource: list of data source factory functions
 func (p *N8nProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	// Return result.
-	return datasources.DataSources()
+	return []func() datasource.DataSource{
+		// Workflow domain
+		workflow.NewWorkflowDataSource,
+		workflow.NewWorkflowsDataSource,
+		// Project domain
+		project.NewProjectDataSource,
+		project.NewProjectsDataSource,
+		// Execution domain
+		execution.NewExecutionDataSource,
+		execution.NewExecutionsDataSource,
+		// Tag domain
+		tag.NewTagDataSource,
+		tag.NewTagsDataSource,
+		// Variable domain
+		variable.NewVariableDataSource,
+		variable.NewVariablesDataSource,
+		// User domain
+		user.NewUserDataSource,
+		user.NewUsersDataSource,
+	}
 }
 
 // NewN8nProvider creates and initializes a new N8nProvider instance with the specified version.

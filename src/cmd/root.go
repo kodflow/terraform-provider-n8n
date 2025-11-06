@@ -32,11 +32,19 @@ var (
 	}
 )
 
+// init initializes the root command with flags.
 func init() {
 	rootCmd.Flags().BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 }
 
 // run starts the Terraform provider server.
+//
+// Params:
+//   - cmd: The cobra command being executed
+//   - args: Command line arguments
+//
+// Returns:
+//   - error: Error if provider server fails to start
 func run(cmd *cobra.Command, args []string) error {
 	opts := providerserver.ServeOpts{
 		Address: "registry.terraform.io/kodflow/n8n",
@@ -63,6 +71,9 @@ func Execute() {
 }
 
 // SetVersion sets the version for the provider.
+//
+// Params:
+//   - v: Version string to set
 func SetVersion(v string) {
 	Version = v
 }
