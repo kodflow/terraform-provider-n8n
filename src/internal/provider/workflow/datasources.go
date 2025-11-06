@@ -35,13 +35,13 @@ func NewWorkflowsDataSource() datasource.DataSource {
 // WorkflowsDataSourceModel maps the Terraform schema attributes for the workflows datasource.
 // It represents the complete set of workflows data returned by the n8n API with optional active status filtering.
 type WorkflowsDataSourceModel struct {
-	Workflows []WorkflowModel `tfsdk:"workflows"`
-	Active    types.Bool      `tfsdk:"active"`
+	Workflows []WorkflowItemModel `tfsdk:"workflows"`
+	Active    types.Bool          `tfsdk:"active"`
 }
 
-// WorkflowModel maps individual workflow attributes within the Terraform schema.
+// WorkflowItemModel maps individual workflow attributes within the Terraform schema.
 // Each item represents a single workflow with its identifier, name, and activation status.
-type WorkflowModel struct {
+type WorkflowItemModel struct {
 	ID     types.String `tfsdk:"id"`
 	Name   types.String `tfsdk:"name"`
 	Active types.Bool   `tfsdk:"active"`
@@ -170,12 +170,12 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response to state
-	data.Workflows = make([]WorkflowModel, 0, constants.DefaultListCapacity)
+	data.Workflows = make([]WorkflowItemModel, 0, constants.DefaultListCapacity)
 	// Check for non-nil value.
 	if workflowList.Data != nil {
 		// Iterate over items.
 		for _, workflow := range workflowList.Data {
-			workflowModel := WorkflowModel{
+			workflowModel := WorkflowItemModel{
 				ID:   types.StringPointerValue(workflow.Id),
 				Name: types.StringValue(workflow.Name),
 			}

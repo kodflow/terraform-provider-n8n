@@ -61,9 +61,9 @@ func (r *CredentialResource) createNewCredential(ctx context.Context, name, cred
 //   - diags: Diagnostics collector for errors
 //
 // Returns:
-//   - []WorkflowBackup: List of workflows using the old credential
+//   - []CredentialWorkflowBackup: List of workflows using the old credential
 //   - bool: True if scan succeeded, false otherwise
-func (r *CredentialResource) scanAffectedWorkflows(ctx context.Context, oldCredID, newCredID string, diags *diag.Diagnostics) ([]WorkflowBackup, bool) {
+func (r *CredentialResource) scanAffectedWorkflows(ctx context.Context, oldCredID, newCredID string, diags *diag.Diagnostics) ([]CredentialWorkflowBackup, bool) {
 	workflowList, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsGet(ctx).Execute()
 	// Close response body if present.
 	if httpResp != nil && httpResp.Body != nil {
@@ -80,18 +80,18 @@ func (r *CredentialResource) scanAffectedWorkflows(ctx context.Context, oldCredI
 			fmt.Sprintf("Could not list workflows: %s", err.Error()),
 		)
 		// Return empty slice and failure status.
-		return []WorkflowBackup{}, false
+		return []CredentialWorkflowBackup{}, false
 	}
 
 	// Find affected workflows
-	affectedWorkflows := []WorkflowBackup{}
+	affectedWorkflows := []CredentialWorkflowBackup{}
 	// Check if workflow data is available.
 	if workflowList.Data != nil {
 		// Iterate through workflows to find those using the credential.
 		for _, workflow := range workflowList.Data {
 			// Check if workflow uses the old credential.
 			if usesCredential(&workflow, oldCredID) {
-				affectedWorkflows = append(affectedWorkflows, WorkflowBackup{
+				affectedWorkflows = append(affectedWorkflows, CredentialWorkflowBackup{
 					ID:       *workflow.Id,
 					Original: &workflow,
 				})
@@ -117,7 +117,7 @@ func (r *CredentialResource) scanAffectedWorkflows(ctx context.Context, oldCredI
 // Returns:
 //   - []string: List of successfully updated workflow IDs
 //   - bool: True if all updates succeeded, false otherwise
-func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affectedWorkflows []WorkflowBackup, oldCredID, newCredID string, diags *diag.Diagnostics) ([]string, bool) {
+func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affectedWorkflows []CredentialWorkflowBackup, oldCredID, newCredID string, diags *diag.Diagnostics) ([]string, bool) {
 	updatedWorkflows := []string{}
 
 	// Iterate through all affected workflows.

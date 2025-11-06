@@ -30,9 +30,9 @@ type CredentialResource struct {
 }
 
 
-// WorkflowBackup stores workflow state for rollback.
+// CredentialWorkflowBackup stores workflow state for rollback during credential rotation.
 // Captures original workflow data during credential rotation to enable recovery if the operation fails.
-type WorkflowBackup struct {
+type CredentialWorkflowBackup struct {
 	ID       string
 	Original *n8nsdk.Workflow
 }
@@ -349,7 +349,7 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 func (r *CredentialResource) rollbackRotation(
 	ctx context.Context,
 	newCredID string,
-	affectedWorkflows []WorkflowBackup,
+	affectedWorkflows []CredentialWorkflowBackup,
 	updatedWorkflows []string,
 ) {
 	tflog.Error(ctx, "Rolling back credential rotation")
