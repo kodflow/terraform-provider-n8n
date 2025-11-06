@@ -10,16 +10,23 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
-// Ensure ExecutionsDataSource implements required interfaces.
-var _ datasource.DataSource = &ExecutionsDataSource{}
-var _ datasource.DataSourceWithConfigure = &ExecutionsDataSource{}
+// DefaultListCapacity is the initial capacity for slices when listing items.
+const DefaultListCapacity int = 10
 
-// ExecutionsDataSource defines the data source implementation for listing executions.
+// Ensure ExecutionsDataSource implements required interfaces.
+var (
+	_ datasource.DataSource              = &ExecutionsDataSource{}
+	_ datasource.DataSourceWithConfigure = &ExecutionsDataSource{}
+)
+
+// ExecutionsDataSource is a Terraform datasource that provides read-only access to n8n executions.
+// It enables querying and filtering workflow executions from the n8n API.
 type ExecutionsDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// ExecutionsDataSourceModel describes the data source data model.
+// ExecutionsDataSourceModel maps the Terraform schema to the datasource response.
+// It represents the filtered execution list with workflow and execution details from the n8n API.
 type ExecutionsDataSourceModel struct {
 	WorkflowID  types.String         `tfsdk:"workflow_id"`
 	ProjectID   types.String         `tfsdk:"project_id"`
@@ -28,7 +35,8 @@ type ExecutionsDataSourceModel struct {
 	Executions  []ExecutionItemModel `tfsdk:"executions"`
 }
 
-// ExecutionItemModel represents a single execution in the list.
+// ExecutionItemModel represents a single execution in the list returned from the n8n API.
+// It contains the execution metadata including timestamps, status, and workflow reference.
 type ExecutionItemModel struct {
 	ID         types.String `tfsdk:"id"`
 	WorkflowID types.String `tfsdk:"workflow_id"`
@@ -178,7 +186,7 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	data.Executions = make([]ExecutionItemModel, 0)
+	data.Executions = make([]ExecutionItemModel, 0, DefaultListCapacity)
 	// Check for non-nil value.
 	if executionList.Data != nil {
 		// Iterate over items.

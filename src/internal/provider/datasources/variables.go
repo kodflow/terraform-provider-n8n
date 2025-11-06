@@ -11,22 +11,27 @@ import (
 )
 
 // Ensure VariablesDataSource implements required interfaces.
-var _ datasource.DataSource = &VariablesDataSource{}
-var _ datasource.DataSourceWithConfigure = &VariablesDataSource{}
+var (
+	_ datasource.DataSource              = &VariablesDataSource{}
+	_ datasource.DataSourceWithConfigure = &VariablesDataSource{}
+)
 
-// VariablesDataSource defines the data source implementation for listing variables.
+// VariablesDataSource provides a Terraform datasource for read-only access to n8n variables.
+// It enables users to fetch and list variables from their n8n instance through the n8n API.
 type VariablesDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// VariablesDataSourceModel describes the data source data model.
+// VariablesDataSourceModel maps the Terraform schema attributes for the variables datasource.
+// It represents the complete set of variables data returned by the n8n API with optional filtering.
 type VariablesDataSourceModel struct {
 	ProjectID types.String        `tfsdk:"project_id"`
 	State     types.String        `tfsdk:"state"`
 	Variables []VariableItemModel `tfsdk:"variables"`
 }
 
-// VariableItemModel represents a single variable in the list.
+// VariableItemModel maps individual variable attributes within the Terraform schema.
+// Each item represents a single variable with its ID, key, value, type, and associated project.
 type VariableItemModel struct {
 	ID        types.String `tfsdk:"id"`
 	Key       types.String `tfsdk:"key"`
@@ -151,7 +156,7 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	data.Variables = make([]VariableItemModel, 0)
+	data.Variables = make([]VariableItemModel, 0, DefaultListCapacity)
 	// Check for non-nil value.
 	if variableList.Data != nil {
 		// Iterate over items.

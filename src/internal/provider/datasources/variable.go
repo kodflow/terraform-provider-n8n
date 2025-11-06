@@ -11,15 +11,19 @@ import (
 )
 
 // Ensure VariableDataSource implements required interfaces.
-var _ datasource.DataSource = &VariableDataSource{}
-var _ datasource.DataSourceWithConfigure = &VariableDataSource{}
+var (
+	_ datasource.DataSource              = &VariableDataSource{}
+	_ datasource.DataSourceWithConfigure = &VariableDataSource{}
+)
 
-// VariableDataSource defines the data source implementation for a single variable.
+// VariableDataSource is a Terraform datasource implementation for retrieving a single variable.
+// It provides read-only access to n8n variable details through the n8n API.
 type VariableDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// VariableDataSourceModel describes the data source data model.
+// VariableDataSourceModel maps Terraform schema attributes for variable data.
+// It represents a single variable with all related attributes from the n8n API.
 type VariableDataSourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Key       types.String `tfsdk:"key"`

@@ -11,16 +11,25 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
+// Float32BitSize is the bit size used for parsing execution IDs to float32.
+const Float32BitSize int = 32
+
 // Ensure ExecutionDataSource implements required interfaces.
-var _ datasource.DataSource = &ExecutionDataSource{}
-var _ datasource.DataSourceWithConfigure = &ExecutionDataSource{}
+var (
+	_ datasource.DataSource              = &ExecutionDataSource{}
+	_ datasource.DataSourceWithConfigure = &ExecutionDataSource{}
+)
 
 // ExecutionDataSource defines the data source implementation for a single execution.
+// It provides read-only access to workflow execution details in n8n, including
+// status, timing information, and execution mode via the n8n API.
 type ExecutionDataSource struct {
 	client *providertypes.N8nClient
 }
 
 // ExecutionDataSourceModel describes the data source data model.
+// It maps the Terraform schema attributes for reading a single execution,
+// including workflow ID, execution status, timestamps, and optional data inclusion.
 type ExecutionDataSourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	WorkflowID  types.String `tfsdk:"workflow_id"`
@@ -117,7 +126,7 @@ func (d *ExecutionDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Convert ID string to float32 as required by the API
-	executionID, err := strconv.ParseFloat(data.ID.ValueString(), 32)
+	executionID, err := strconv.ParseFloat(data.ID.ValueString(), Float32BitSize)
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(

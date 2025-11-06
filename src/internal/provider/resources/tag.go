@@ -20,11 +20,13 @@ var (
 )
 
 // TagResource defines the resource implementation for n8n tags.
+// Terraform resource that manages CRUD operations for n8n tags via the n8n API.
 type TagResource struct {
 	client *providertypes.N8nClient
 }
 
 // TagResourceModel describes the resource data model.
+// Maps n8n tag attributes to Terraform schema, storing tag metadata including name and timestamps.
 type TagResourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`

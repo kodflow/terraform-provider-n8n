@@ -13,6 +13,9 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
+// CompositeIDParts is the expected number of parts in a composite ID (project_id/user_id).
+const CompositeIDParts int = 2
+
 // Ensure ProjectUserResource implements required interfaces.
 var (
 	_ resource.Resource                = &ProjectUserResource{}
@@ -21,11 +24,13 @@ var (
 )
 
 // ProjectUserResource defines the resource implementation for project-user relationships.
+// Terraform resource that manages CRUD operations for user memberships in n8n projects via the n8n API.
 type ProjectUserResource struct {
 	client *providertypes.N8nClient
 }
 
 // ProjectUserResourceModel describes the resource data model.
+// Maps n8n project-user relationship attributes to Terraform schema, storing user roles and project associations.
 type ProjectUserResourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	ProjectID types.String `tfsdk:"project_id"`
@@ -279,7 +284,7 @@ func (r *ProjectUserResource) ImportState(ctx context.Context, req resource.Impo
 	// Split composite ID
 	parts := strings.Split(req.ID, "/")
 	// Check condition.
-	if len(parts) != 2 {
+	if len(parts) != CompositeIDParts {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
 			fmt.Sprintf("Expected import ID in format 'project_id/user_id', got: %s", req.ID),

@@ -11,20 +11,25 @@ import (
 )
 
 // Ensure TagsDataSource implements required interfaces.
-var _ datasource.DataSource = &TagsDataSource{}
-var _ datasource.DataSourceWithConfigure = &TagsDataSource{}
+var (
+	_ datasource.DataSource              = &TagsDataSource{}
+	_ datasource.DataSourceWithConfigure = &TagsDataSource{}
+)
 
-// TagsDataSource defines the data source implementation for listing tags.
+// TagsDataSource is a Terraform datasource implementation for listing tags.
+// It provides read-only access to all n8n tags through the n8n API.
 type TagsDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// TagsDataSourceModel describes the data source data model.
+// TagsDataSourceModel maps Terraform schema attributes for tag list data.
+// It represents the complete data structure returned from the n8n tags API.
 type TagsDataSourceModel struct {
 	Tags []TagItemModel `tfsdk:"tags"`
 }
 
 // TagItemModel represents a single tag in the list.
+// It maps individual tag attributes from the n8n API to Terraform schema.
 type TagItemModel struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`
@@ -117,7 +122,7 @@ func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	data.Tags = make([]TagItemModel, 0)
+	data.Tags = make([]TagItemModel, 0, DefaultListCapacity)
 	// Check for non-nil value.
 	if tagList.Data != nil {
 		// Iterate over items.

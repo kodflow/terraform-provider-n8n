@@ -11,15 +11,19 @@ import (
 )
 
 // Ensure ProjectDataSource implements required interfaces.
-var _ datasource.DataSource = &ProjectDataSource{}
-var _ datasource.DataSourceWithConfigure = &ProjectDataSource{}
+var (
+	_ datasource.DataSource              = &ProjectDataSource{}
+	_ datasource.DataSourceWithConfigure = &ProjectDataSource{}
+)
 
-// ProjectDataSource defines the data source implementation for a single project.
+// ProjectDataSource is a Terraform datasource that provides read-only access to a single n8n project.
+// It fetches project details from the n8n API using ID or name-based filtering.
 type ProjectDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// ProjectDataSourceModel describes the data source data model.
+// ProjectDataSourceModel maps the Terraform schema to a single project from the n8n API.
+// It contains project metadata including timestamps, type, and descriptive information.
 type ProjectDataSourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`

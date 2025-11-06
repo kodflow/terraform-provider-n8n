@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -21,11 +22,13 @@ var (
 )
 
 // SourceControlPullResource defines the resource implementation for pulling from source control.
+// Terraform resource that manages CRUD operations for source control pull operations with the n8n API.
 type SourceControlPullResource struct {
 	client *providertypes.N8nClient
 }
 
 // SourceControlPullResourceModel describes the resource data model.
+// Maps n8n source control pull attributes to Terraform schema, storing pull configuration and import results.
 type SourceControlPullResourceModel struct {
 	ID            types.String `tfsdk:"id"`
 	Force         types.Bool   `tfsdk:"force"`
@@ -94,6 +97,8 @@ func (r *SourceControlPullResource) Configure(ctx context.Context, req resource.
 // Create triggers the source control pull.
 func (r *SourceControlPullResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan SourceControlPullResourceModel
+	var err error
+	var httpResp *http.Response
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -114,7 +119,7 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 	if !plan.VariablesJSON.IsNull() && !plan.VariablesJSON.IsUnknown() {
 		var variables map[string]interface{}
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.VariablesJSON.ValueString()), &variables); err != nil {
+		if err = json.Unmarshal([]byte(plan.VariablesJSON.ValueString()), &variables); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid variables JSON",
 				fmt.Sprintf("Could not parse variables_json: %s", err.Error()),
@@ -126,7 +131,8 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	// Execute pull operation
-	importResult, httpResp, err := r.client.APIClient.SourceControlAPI.SourceControlPullPost(ctx).Pull(*pullReq).Execute()
+	var importResult *n8nsdk.ImportResult
+	importResult, httpResp, err = r.client.APIClient.SourceControlAPI.SourceControlPullPost(ctx).Pull(*pullReq).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
@@ -146,7 +152,8 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 
 	// Serialize import result to JSON
 	if importResult != nil {
-		resultJSON, err := json.Marshal(importResult)
+		var resultJSON []byte
+		resultJSON, err = json.Marshal(importResult)
 		// Check for error.
 		if err != nil {
 			resp.Diagnostics.AddWarning(

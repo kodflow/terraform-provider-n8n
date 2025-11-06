@@ -209,75 +209,77 @@ func TestProviderSchema(t *testing.T) {
 }
 
 func TestProviderConfigure(t *testing.T) {
-	t.Run("configure succeeds with valid config", func(t *testing.T) {
-		p := n8nprovider.New("1.0.0")()
-		// Check for nil value.
-		if p == nil {
-			t.Fatal("Provider should not be nil")
-		}
+	tests := []struct {
+		name          string
+		version       string
+		isValidConfig bool
+		expectError   bool
+	}{
+		{
+			name:          "configure succeeds with valid config",
+			version:       "1.0.0",
+			isValidConfig: true,
+			expectError:   false,
+		},
+		{
+			name:          "configure handles invalid config",
+			version:       "1.0.0",
+			isValidConfig: false,
+			expectError:   true,
+		},
+	}
 
-		// Create a valid Config using the provider's schema
-		ctx := context.Background()
-		var schemaResp provider.SchemaResponse
-		p.Schema(ctx, provider.SchemaRequest{}, &schemaResp)
+	// Iterate over test cases.
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := n8nprovider.New(tt.version)()
+			// Check for nil value.
+			if p == nil {
+				t.Fatal("Provider should not be nil")
+			}
 
-		// Create an empty object value matching the schema
-		configValue := tftypes.NewValue(
-			tftypes.Object{
-				AttributeTypes: map[string]tftypes.Type{},
-			},
-			map[string]tftypes.Value{},
-		)
+			ctx := context.Background()
+			var schemaResp provider.SchemaResponse
+			p.Schema(ctx, provider.SchemaRequest{}, &schemaResp)
 
-		config := tfsdk.Config{
-			Schema: schemaResp.Schema,
-			Raw:    configValue,
-		}
+			var configValue tftypes.Value
+			// Check condition.
+			if tt.isValidConfig {
+				// Create an empty object value matching the schema
+				configValue = tftypes.NewValue(
+					tftypes.Object{
+						AttributeTypes: map[string]tftypes.Type{},
+					},
+					map[string]tftypes.Value{},
+				)
+				// Handle alternative case.
+			} else {
+				// Create an invalid config with wrong type
+				configValue = tftypes.NewValue(tftypes.String, "invalid")
+			}
 
-		req := provider.ConfigureRequest{
-			Config: config,
-		}
+			config := tfsdk.Config{
+				Schema: schemaResp.Schema,
+				Raw:    configValue,
+			}
 
-		var resp provider.ConfigureResponse
-		p.Configure(ctx, req, &resp)
+			req := provider.ConfigureRequest{
+				Config: config,
+			}
 
-		// Check condition.
-		if resp.Diagnostics.HasError() {
-			t.Errorf("Expected no error but got: %v", resp.Diagnostics.Errors())
-		}
-	})
+			var resp provider.ConfigureResponse
+			p.Configure(ctx, req, &resp)
 
-	t.Run("configure handles invalid config", func(t *testing.T) {
-		p := n8nprovider.New("1.0.0")()
-		// Check for nil value.
-		if p == nil {
-			t.Fatal("Provider should not be nil")
-		}
-
-		ctx := context.Background()
-		var schemaResp provider.SchemaResponse
-		p.Schema(ctx, provider.SchemaRequest{}, &schemaResp)
-
-		// Create an invalid config with wrong type
-		configValue := tftypes.NewValue(tftypes.String, "invalid")
-
-		config := tfsdk.Config{
-			Schema: schemaResp.Schema,
-			Raw:    configValue,
-		}
-
-		req := provider.ConfigureRequest{
-			Config: config,
-		}
-
-		var resp provider.ConfigureResponse
-		p.Configure(ctx, req, &resp)
-
-		// Check condition.
-		if !resp.Diagnostics.HasError() {
-			t.Error("Expected error with invalid config but got none")
-		}
-	})
+			// Check condition.
+			if tt.expectError && !resp.Diagnostics.HasError() {
+				t.Error("Expected error but got none")
+			}
+			// Check condition.
+			if !tt.expectError && resp.Diagnostics.HasError() {
+				t.Errorf("Expected no error but got: %v", resp.Diagnostics.Errors())
+			}
+		})
+	}
 }
 
 func TestProviderResources(t *testing.T) {

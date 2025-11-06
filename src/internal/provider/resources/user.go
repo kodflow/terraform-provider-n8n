@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,11 +21,13 @@ var (
 )
 
 // UserResource defines the resource implementation for user management.
+// Terraform resource that manages CRUD operations for n8n users via the n8n API.
 type UserResource struct {
 	client *providertypes.N8nClient
 }
 
 // UserResourceModel describes the resource data model.
+// Maps n8n user attributes to Terraform schema, storing user identity, role, and account information.
 type UserResourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Email     types.String `tfsdk:"email"`
@@ -280,6 +283,8 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 // Update updates the user. Only role changes are supported by the API.
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state UserResourceModel
+	var err error
+	var httpResp *http.Response
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -306,7 +311,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	if roleChanged {
 		// Update role
 		roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
-		httpResp, err := r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
+		httpResp, err = r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
 			UsersIdRolePatchRequest(*roleReq).Execute()
 		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
@@ -324,7 +329,8 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Refresh user data after update
-	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
+	var user *n8nsdk.User
+	user, httpResp, err = r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()

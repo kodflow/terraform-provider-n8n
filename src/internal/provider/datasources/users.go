@@ -11,20 +11,25 @@ import (
 )
 
 // Ensure UsersDataSource implements required interfaces.
-var _ datasource.DataSource = &UsersDataSource{}
-var _ datasource.DataSourceWithConfigure = &UsersDataSource{}
+var (
+	_ datasource.DataSource              = &UsersDataSource{}
+	_ datasource.DataSourceWithConfigure = &UsersDataSource{}
+)
 
-// UsersDataSource defines the data source implementation for listing users.
+// UsersDataSource is a Terraform datasource implementation for listing users.
+// It provides read-only access to all n8n users through the n8n API.
 type UsersDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// UsersDataSourceModel describes the data source data model.
+// UsersDataSourceModel maps Terraform schema attributes for user list data.
+// It represents the complete data structure returned from the n8n users API.
 type UsersDataSourceModel struct {
 	Users []UserItemModel `tfsdk:"users"`
 }
 
 // UserItemModel represents a single user in the list.
+// It maps individual user attributes from the n8n API to Terraform schema.
 type UserItemModel struct {
 	ID        types.String `tfsdk:"id"`
 	Email     types.String `tfsdk:"email"`
@@ -137,7 +142,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	data.Users = make([]UserItemModel, 0)
+	data.Users = make([]UserItemModel, 0, DefaultListCapacity)
 	// Check for non-nil value.
 	if userList.Data != nil {
 		// Iterate over items.

@@ -11,21 +11,26 @@ import (
 )
 
 // Ensure WorkflowsDataSource implements required interfaces.
-var _ datasource.DataSource = &WorkflowsDataSource{}
-var _ datasource.DataSourceWithConfigure = &WorkflowsDataSource{}
+var (
+	_ datasource.DataSource              = &WorkflowsDataSource{}
+	_ datasource.DataSourceWithConfigure = &WorkflowsDataSource{}
+)
 
-// WorkflowsDataSource defines the data source implementation for listing workflows.
+// WorkflowsDataSource provides a Terraform datasource for read-only access to n8n workflows.
+// It enables users to fetch and list workflows from their n8n instance through the n8n API with optional filtering.
 type WorkflowsDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// WorkflowsDataSourceModel describes the data source data model.
+// WorkflowsDataSourceModel maps the Terraform schema attributes for the workflows datasource.
+// It represents the complete set of workflows data returned by the n8n API with optional active status filtering.
 type WorkflowsDataSourceModel struct {
 	Workflows []WorkflowModel `tfsdk:"workflows"`
 	Active    types.Bool      `tfsdk:"active"`
 }
 
-// WorkflowModel represents a single workflow in the list.
+// WorkflowModel maps individual workflow attributes within the Terraform schema.
+// Each item represents a single workflow with its identifier, name, and activation status.
 type WorkflowModel struct {
 	ID     types.String `tfsdk:"id"`
 	Name   types.String `tfsdk:"name"`
@@ -133,7 +138,7 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response to state
-	data.Workflows = make([]WorkflowModel, 0)
+	data.Workflows = make([]WorkflowModel, 0, DefaultListCapacity)
 	// Check for non-nil value.
 	if workflowList.Data != nil {
 		// Iterate over items.

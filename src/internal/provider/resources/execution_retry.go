@@ -12,6 +12,9 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
+// Float32BitSize is the bit size used for parsing execution IDs to float32.
+const Float32BitSize int = 32
+
 // Ensure ExecutionRetryResource implements required interfaces.
 var (
 	_ resource.Resource                = &ExecutionRetryResource{}
@@ -20,11 +23,13 @@ var (
 )
 
 // ExecutionRetryResource defines the resource implementation for retrying an execution.
+// Terraform resource that manages CRUD operations for execution retries with the n8n API.
 type ExecutionRetryResource struct {
 	client *providertypes.N8nClient
 }
 
 // ExecutionRetryResourceModel describes the resource data model.
+// Maps n8n execution retry attributes to Terraform schema, storing execution details and retry results.
 type ExecutionRetryResourceModel struct {
 	ExecutionID    types.String `tfsdk:"execution_id"`
 	NewExecutionID types.String `tfsdk:"new_execution_id"`
@@ -121,7 +126,7 @@ func (r *ExecutionRetryResource) Create(ctx context.Context, req resource.Create
 	}
 
 	// Convert execution ID to float32 as required by the API
-	executionID, err := strconv.ParseFloat(plan.ExecutionID.ValueString(), 32)
+	executionID, err := strconv.ParseFloat(plan.ExecutionID.ValueString(), Float32BitSize)
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(

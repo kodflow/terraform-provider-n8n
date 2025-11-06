@@ -11,15 +11,19 @@ import (
 )
 
 // Ensure TagDataSource implements required interfaces.
-var _ datasource.DataSource = &TagDataSource{}
-var _ datasource.DataSourceWithConfigure = &TagDataSource{}
+var (
+	_ datasource.DataSource              = &TagDataSource{}
+	_ datasource.DataSourceWithConfigure = &TagDataSource{}
+)
 
-// TagDataSource defines the data source implementation for a single tag.
+// TagDataSource is a Terraform datasource that provides read-only access to a single n8n tag.
+// It fetches tag details from the n8n API using ID or name-based filtering.
 type TagDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// TagDataSourceModel describes the data source data model.
+// TagDataSourceModel maps the Terraform schema to a single tag from the n8n API.
+// It contains tag metadata including name and creation/update timestamps.
 type TagDataSourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`

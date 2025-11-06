@@ -11,15 +11,19 @@ import (
 )
 
 // Ensure UserDataSource implements required interfaces.
-var _ datasource.DataSource = &UserDataSource{}
-var _ datasource.DataSourceWithConfigure = &UserDataSource{}
+var (
+	_ datasource.DataSource              = &UserDataSource{}
+	_ datasource.DataSourceWithConfigure = &UserDataSource{}
+)
 
-// UserDataSource defines the data source implementation for a single user.
+// UserDataSource is a Terraform datasource implementation for retrieving a single user.
+// It provides read-only access to n8n user details through the n8n API.
 type UserDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// UserDataSourceModel describes the data source data model.
+// UserDataSourceModel maps Terraform schema attributes for user data.
+// It represents a single user with all related attributes from the n8n API.
 type UserDataSourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Email     types.String `tfsdk:"email"`

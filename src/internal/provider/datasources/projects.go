@@ -11,20 +11,25 @@ import (
 )
 
 // Ensure ProjectsDataSource implements required interfaces.
-var _ datasource.DataSource = &ProjectsDataSource{}
-var _ datasource.DataSourceWithConfigure = &ProjectsDataSource{}
+var (
+	_ datasource.DataSource              = &ProjectsDataSource{}
+	_ datasource.DataSourceWithConfigure = &ProjectsDataSource{}
+)
 
-// ProjectsDataSource defines the data source implementation for listing projects.
+// ProjectsDataSource is a Terraform datasource that provides read-only access to all n8n projects.
+// It enables querying and iterating through all available projects from the n8n API.
 type ProjectsDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// ProjectsDataSourceModel describes the data source data model.
+// ProjectsDataSourceModel maps the Terraform schema to the datasource response.
+// It represents a list of projects retrieved from the n8n API with all project details.
 type ProjectsDataSourceModel struct {
 	Projects []ProjectItemModel `tfsdk:"projects"`
 }
 
-// ProjectItemModel represents a single project in the list.
+// ProjectItemModel represents a single project in the list returned from the n8n API.
+// It contains project metadata including name, type, timestamps, and descriptive information.
 type ProjectItemModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -132,7 +137,7 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	data.Projects = make([]ProjectItemModel, 0)
+	data.Projects = make([]ProjectItemModel, 0, DefaultListCapacity)
 	// Check for non-nil value.
 	if projectList.Data != nil {
 		// Iterate over items.

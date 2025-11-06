@@ -27,6 +27,7 @@ type ProjectResource struct {
 }
 
 // ProjectResourceModel describes the resource data model.
+// Maps n8n project attributes to Terraform schema, storing project metadata and configuration.
 type ProjectResourceModel struct {
 	ID   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`

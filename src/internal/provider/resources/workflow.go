@@ -22,11 +22,13 @@ var (
 )
 
 // WorkflowResource defines the resource implementation for n8n workflows.
+// Terraform resource that manages CRUD operations for n8n workflows via the n8n API.
 type WorkflowResource struct {
 	client *providertypes.N8nClient
 }
 
 // WorkflowResourceModel describes the resource data model.
+// Maps n8n workflow attributes to Terraform schema, storing workflow configuration, nodes, connections, and metadata.
 type WorkflowResourceModel struct {
 	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
@@ -37,7 +39,7 @@ type WorkflowResourceModel struct {
 	SettingsJSON    types.String `tfsdk:"settings_json"`
 	CreatedAt       types.String `tfsdk:"created_at"`
 	UpdatedAt       types.String `tfsdk:"updated_at"`
-	VersionId       types.String `tfsdk:"version_id"`
+	VersionID       types.String `tfsdk:"version_id"`
 	IsArchived      types.Bool   `tfsdk:"is_archived"`
 	TriggerCount    types.Int64  `tfsdk:"trigger_count"`
 	Meta            types.Map    `tfsdk:"meta"`
@@ -152,6 +154,13 @@ func (r *WorkflowResource) Configure(ctx context.Context, req resource.Configure
 // Create creates the resource and sets the initial Terraform state.
 func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan WorkflowResourceModel
+	var err error
+	var httpResp *http.Response
+	var tags []n8nsdk.Tag
+	var marshallErr error
+	var nodesJSON []byte
+	var connectionsJSON []byte
+	var settingsJSON []byte
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -169,7 +178,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	// Check condition.
 	if !plan.NodesJSON.IsNull() && !plan.NodesJSON.IsUnknown() {
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
+		if err = json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid nodes JSON",
 				fmt.Sprintf("Could not parse nodes_json: %s", err.Error()),
@@ -187,7 +196,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	// Check condition.
 	if !plan.ConnectionsJSON.IsNull() && !plan.ConnectionsJSON.IsUnknown() {
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
+		if err = json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid connections JSON",
 				fmt.Sprintf("Could not parse connections_json: %s", err.Error()),
@@ -205,7 +214,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	// Check condition.
 	if !plan.SettingsJSON.IsNull() && !plan.SettingsJSON.IsUnknown() {
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
+		if err = json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid settings JSON",
 				fmt.Sprintf("Could not parse settings_json: %s", err.Error()),
@@ -241,8 +250,9 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	// If tags were provided, update the workflow with tags using the dedicated tags endpoint
-	// (tags field is read-only in POST/PUT /workflows but can be set via PUT /workflows/{id}/tags)
+	// If tags were provided, update the workflow with tags using the dedicated
+	// tags endpoint. Tags field is read-only in POST/PUT /workflows but can be
+	// set via PUT /workflows/{id}/tags.
 	if !plan.Tags.IsNull() && !plan.Tags.IsUnknown() && workflow.Id != nil {
 		var tagIDs []string
 		resp.Diagnostics.Append(plan.Tags.ElementsAs(ctx, &tagIDs, false)...)
@@ -251,13 +261,13 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 			return
 		}
 
-		tagIdsInner := make([]n8nsdk.TagIdsInner, len(tagIDs))
+		tagIdsInner := make([]n8nsdk.TagIdsInner, 0, len(tagIDs))
 		// Iterate over items.
-		for i, tagID := range tagIDs {
-			tagIdsInner[i] = n8nsdk.TagIdsInner{Id: tagID}
+		for _, tagID := range tagIDs {
+			tagIdsInner = append(tagIdsInner, n8nsdk.TagIdsInner{Id: tagID})
 		}
 
-		tags, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, *workflow.Id).
+		tags, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, *workflow.Id).
 			TagIdsInner(tagIdsInner).
 			Execute()
 		// Check for non-nil value.
@@ -289,12 +299,12 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 
 	// Map tags from response
 	if len(workflow.Tags) > 0 {
-		tagIDs := make([]types.String, len(workflow.Tags))
+		tagIDs := make([]types.String, 0, len(workflow.Tags))
 		// Iterate over items.
-		for i, tag := range workflow.Tags {
+		for _, tag := range workflow.Tags {
 			// Check for non-nil value.
 			if tag.Id != nil {
-				tagIDs[i] = types.StringValue(*tag.Id)
+				tagIDs = append(tagIDs, types.StringValue(*tag.Id))
 			}
 		}
 		tagList, diags := types.ListValueFrom(ctx, types.StringType, tagIDs)
@@ -315,7 +325,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	// Check for non-nil value.
 	if workflow.VersionId != nil {
-		plan.VersionId = types.StringPointerValue(workflow.VersionId)
+		plan.VersionID = types.StringPointerValue(workflow.VersionId)
 	}
 	// Check for non-nil value.
 	if workflow.IsArchived != nil {
@@ -346,23 +356,23 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 
 	// Serialize nodes, connections, and settings back to JSON
 	if workflow.Nodes != nil {
-		nodesJSON, err := json.Marshal(workflow.Nodes)
+		nodesJSON, marshallErr = json.Marshal(workflow.Nodes)
 		// Check for nil value.
-		if err == nil {
+		if marshallErr == nil {
 			plan.NodesJSON = types.StringValue(string(nodesJSON))
 		}
 	}
 	// Check for non-nil value.
 	if workflow.Connections != nil {
-		connectionsJSON, err := json.Marshal(workflow.Connections)
+		connectionsJSON, marshallErr = json.Marshal(workflow.Connections)
 		// Check for nil value.
-		if err == nil {
+		if marshallErr == nil {
 			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
 		}
 	}
-	settingsJSON, err := json.Marshal(workflow.Settings)
+	settingsJSON, marshallErr = json.Marshal(workflow.Settings)
 	// Check for nil value.
-	if err == nil {
+	if marshallErr == nil {
 		plan.SettingsJSON = types.StringValue(string(settingsJSON))
 	}
 
@@ -373,6 +383,12 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 // Read refreshes the Terraform state with the latest data.
 func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state WorkflowResourceModel
+	var err error
+	var httpResp *http.Response
+	var marshallErr error
+	var nodesJSON []byte
+	var connectionsJSON []byte
+	var settingsJSON []byte
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -407,12 +423,12 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	// Map tags from response
 	if len(workflow.Tags) > 0 {
-		tagIDs := make([]types.String, len(workflow.Tags))
+		tagIDs := make([]types.String, 0, len(workflow.Tags))
 		// Iterate over items.
-		for i, tag := range workflow.Tags {
+		for _, tag := range workflow.Tags {
 			// Check for non-nil value.
 			if tag.Id != nil {
-				tagIDs[i] = types.StringValue(*tag.Id)
+				tagIDs = append(tagIDs, types.StringValue(*tag.Id))
 			}
 		}
 		tagList, diags := types.ListValueFrom(ctx, types.StringType, tagIDs)
@@ -442,7 +458,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	// Check for non-nil value.
 	if workflow.VersionId != nil {
-		state.VersionId = types.StringPointerValue(workflow.VersionId)
+		state.VersionID = types.StringPointerValue(workflow.VersionId)
 	}
 	// Check for non-nil value.
 	if workflow.IsArchived != nil {
@@ -473,23 +489,23 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	// Serialize nodes, connections, and settings back to JSON
 	if workflow.Nodes != nil {
-		nodesJSON, err := json.Marshal(workflow.Nodes)
+		nodesJSON, marshallErr = json.Marshal(workflow.Nodes)
 		// Check for nil value.
-		if err == nil {
+		if marshallErr == nil {
 			state.NodesJSON = types.StringValue(string(nodesJSON))
 		}
 	}
 	// Check for non-nil value.
 	if workflow.Connections != nil {
-		connectionsJSON, err := json.Marshal(workflow.Connections)
+		connectionsJSON, marshallErr = json.Marshal(workflow.Connections)
 		// Check for nil value.
-		if err == nil {
+		if marshallErr == nil {
 			state.ConnectionsJSON = types.StringValue(string(connectionsJSON))
 		}
 	}
-	settingsJSON, err := json.Marshal(workflow.Settings)
+	settingsJSON, marshallErr = json.Marshal(workflow.Settings)
 	// Check for nil value.
-	if err == nil {
+	if marshallErr == nil {
 		state.SettingsJSON = types.StringValue(string(settingsJSON))
 	}
 
@@ -501,6 +517,13 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan WorkflowResourceModel
 	var state WorkflowResourceModel
+	var err error
+	var httpResp *http.Response
+	var tags []n8nsdk.Tag
+	var marshallErr error
+	var nodesJSON []byte
+	var connectionsJSON []byte
+	var settingsJSON []byte
 
 	// Read Terraform plan and state data into the models
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -517,7 +540,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	// Check condition.
 	if !plan.NodesJSON.IsNull() && !plan.NodesJSON.IsUnknown() {
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
+		if err = json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid nodes JSON",
 				fmt.Sprintf("Could not parse nodes_json: %s", err.Error()),
@@ -535,7 +558,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	// Check condition.
 	if !plan.ConnectionsJSON.IsNull() && !plan.ConnectionsJSON.IsUnknown() {
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
+		if err = json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid connections JSON",
 				fmt.Sprintf("Could not parse connections_json: %s", err.Error()),
@@ -553,7 +576,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	// Check condition.
 	if !plan.SettingsJSON.IsNull() && !plan.SettingsJSON.IsUnknown() {
 		// Check for error.
-		if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
+		if err = json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid settings JSON",
 				fmt.Sprintf("Could not parse settings_json: %s", err.Error()),
@@ -565,8 +588,6 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Check if activation status changed - use dedicated endpoints if so
 	var workflow *n8nsdk.Workflow
-	var httpResp *http.Response
-	var err error
 
 	activeChanged := !plan.Active.IsNull() && !state.Active.IsNull() &&
 		plan.Active.ValueBool() != state.Active.ValueBool()
@@ -643,13 +664,13 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		tagIdsInner := make([]n8nsdk.TagIdsInner, len(tagIDs))
+		tagIdsInner := make([]n8nsdk.TagIdsInner, 0, len(tagIDs))
 		// Iterate over items.
-		for i, tagID := range tagIDs {
-			tagIdsInner[i] = n8nsdk.TagIdsInner{Id: tagID}
+		for _, tagID := range tagIDs {
+			tagIdsInner = append(tagIdsInner, n8nsdk.TagIdsInner{Id: tagID})
 		}
 
-		tags, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, plan.ID.ValueString()).
+		tags, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdTagsPut(ctx, plan.ID.ValueString()).
 			TagIdsInner(tagIdsInner).
 			Execute()
 		// Check for non-nil value.
@@ -680,12 +701,12 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Map tags from response
 	if len(workflow.Tags) > 0 {
-		tagIDs := make([]types.String, len(workflow.Tags))
+		tagIDs := make([]types.String, 0, len(workflow.Tags))
 		// Iterate over items.
-		for i, tag := range workflow.Tags {
+		for _, tag := range workflow.Tags {
 			// Check for non-nil value.
 			if tag.Id != nil {
-				tagIDs[i] = types.StringValue(*tag.Id)
+				tagIDs = append(tagIDs, types.StringValue(*tag.Id))
 			}
 		}
 		tagList, diags := types.ListValueFrom(ctx, types.StringType, tagIDs)
@@ -715,7 +736,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	// Check for non-nil value.
 	if workflow.VersionId != nil {
-		plan.VersionId = types.StringPointerValue(workflow.VersionId)
+		plan.VersionID = types.StringPointerValue(workflow.VersionId)
 	}
 	// Check for non-nil value.
 	if workflow.IsArchived != nil {
@@ -746,23 +767,23 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Serialize nodes, connections, and settings back to JSON
 	if workflow.Nodes != nil {
-		nodesJSON, err := json.Marshal(workflow.Nodes)
+		nodesJSON, marshallErr = json.Marshal(workflow.Nodes)
 		// Check for nil value.
-		if err == nil {
+		if marshallErr == nil {
 			plan.NodesJSON = types.StringValue(string(nodesJSON))
 		}
 	}
 	// Check for non-nil value.
 	if workflow.Connections != nil {
-		connectionsJSON, err := json.Marshal(workflow.Connections)
+		connectionsJSON, marshallErr = json.Marshal(workflow.Connections)
 		// Check for nil value.
-		if err == nil {
+		if marshallErr == nil {
 			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
 		}
 	}
-	settingsJSON, err := json.Marshal(workflow.Settings)
+	settingsJSON, marshallErr = json.Marshal(workflow.Settings)
 	// Check for nil value.
-	if err == nil {
+	if marshallErr == nil {
 		plan.SettingsJSON = types.StringValue(string(settingsJSON))
 	}
 

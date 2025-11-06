@@ -11,15 +11,19 @@ import (
 )
 
 // Ensure WorkflowDataSource implements required interfaces.
-var _ datasource.DataSource = &WorkflowDataSource{}
-var _ datasource.DataSourceWithConfigure = &WorkflowDataSource{}
+var (
+	_ datasource.DataSource              = &WorkflowDataSource{}
+	_ datasource.DataSourceWithConfigure = &WorkflowDataSource{}
+)
 
-// WorkflowDataSource defines the data source implementation for a single workflow.
+// WorkflowDataSource provides a Terraform datasource for read-only access to individual n8n workflows.
+// It enables users to fetch workflow details by ID from their n8n instance through the n8n API.
 type WorkflowDataSource struct {
 	client *providertypes.N8nClient
 }
 
-// WorkflowDataSourceModel describes the data source data model.
+// WorkflowDataSourceModel maps the Terraform schema attributes for a single workflow datasource.
+// It represents workflow metadata including its identifier, name, and activation status.
 type WorkflowDataSourceModel struct {
 	ID     types.String `tfsdk:"id"`
 	Name   types.String `tfsdk:"name"`

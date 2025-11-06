@@ -20,11 +20,13 @@ var (
 )
 
 // CredentialTransferResource defines the resource implementation for transferring a credential to a project.
+// Terraform resource that manages CRUD operations for credential transfers to n8n projects via the n8n API.
 type CredentialTransferResource struct {
 	client *providertypes.N8nClient
 }
 
 // CredentialTransferResourceModel describes the resource data model.
+// Maps n8n credential transfer attributes to Terraform schema, storing transfer metadata and timestamps.
 type CredentialTransferResourceModel struct {
 	ID                   types.String `tfsdk:"id"`
 	CredentialID         types.String `tfsdk:"credential_id"`

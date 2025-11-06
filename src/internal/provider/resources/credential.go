@@ -14,6 +14,9 @@ import (
 	providertypes "github.com/kodflow/n8n/src/internal/provider/types"
 )
 
+// RotationThrottleMilliseconds is the delay between workflow updates during credential rotation.
+const RotationThrottleMilliseconds int = 100
+
 // Ensure CredentialResource implements required interfaces.
 var (
 	_ resource.Resource                = &CredentialResource{}
@@ -28,6 +31,7 @@ type CredentialResource struct {
 }
 
 // CredentialResourceModel describes the resource data model.
+// Maps n8n credential attributes to Terraform schema, storing credential metadata and sensitive data.
 type CredentialResourceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`
@@ -38,6 +42,7 @@ type CredentialResourceModel struct {
 }
 
 // WorkflowBackup stores workflow state for rollback.
+// Captures original workflow data during credential rotation to enable recovery if the operation fails.
 type WorkflowBackup struct {
 	ID       string
 	Original *n8nsdk.Workflow
@@ -258,15 +263,15 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	if err != nil {
 		// Rollback: delete new credential
 		tflog.Error(ctx, "Failed to list workflows, rolling back")
-		_, httpResp2, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+		_, httpResp2, errDelete := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
 		// Check for non-nil value.
 		if httpResp2 != nil && httpResp2.Body != nil {
 			defer httpResp2.Body.Close()
 		}
 		// Check for error.
-		if err != nil {
+		if errDelete != nil {
 			// Log error but continue - cleanup is best effort
-			tflog.Error(ctx, fmt.Sprintf("Failed to delete credential during cleanup: %s", err.Error()))
+			tflog.Error(ctx, fmt.Sprintf("Failed to delete credential during cleanup: %s", errDelete.Error()))
 		}
 
 		resp.Diagnostics.AddError(
@@ -301,26 +306,26 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	for i, backup := range affectedWorkflows {
 		// Throttle to avoid rate limiting
 		if i > 0 {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(time.Duration(RotationThrottleMilliseconds) * time.Millisecond)
 		}
 
 		// Get fresh workflow data
-		workflow, httpResp, err := r.client.APIClient.WorkflowAPI.
+		workflow, httpRespGet, errGet := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdGet(ctx, backup.ID).
 			Execute()
 		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
+		if httpRespGet != nil && httpRespGet.Body != nil {
+			defer httpRespGet.Body.Close()
 		}
 
 		// Check for error.
-		if err != nil {
+		if errGet != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to get workflow %s, rolling back", backup.ID))
 			r.rollbackRotation(ctx, newCredID, affectedWorkflows, updatedWorkflows)
 
 			resp.Diagnostics.AddError(
 				"Error reading workflow during rotation",
-				fmt.Sprintf("Could not read workflow %s: %s\nRotation rolled back.", backup.ID, err.Error()),
+				fmt.Sprintf("Could not read workflow %s: %s\nRotation rolled back.", backup.ID, errGet.Error()),
 			)
 			// Return result.
 			return
@@ -477,18 +482,18 @@ func (r *CredentialResource) rollbackRotation(
 		}
 
 		// Restore
-		_, httpResp, err := r.client.APIClient.WorkflowAPI.
+		_, httpRespRestore, errRestore := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdPut(ctx, workflowID).
 			Workflow(*original).
 			Execute()
 		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
+		if httpRespRestore != nil && httpRespRestore.Body != nil {
+			defer httpRespRestore.Body.Close()
 		}
 
 		// Check for error.
-		if err != nil {
-			tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, err.Error()))
+		if errRestore != nil {
+			tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, errRestore.Error()))
 			continue
 		}
 
@@ -514,9 +519,9 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 			// node.Credentials is already map[string]interface{}
 			for _, credValue := range node.Credentials {
 				// Check condition.
-				if credInfo, ok := credValue.(map[string]interface{}); ok {
+				if credInfo, okMap := credValue.(map[string]interface{}); okMap {
 					// Check condition.
-					if id, ok := credInfo["id"].(string); ok && id == credentialID {
+					if id, okID := credInfo["id"].(string); okID && id == credentialID {
 						// Return result.
 						return true
 					}
@@ -546,9 +551,9 @@ func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID
 			// node.Credentials is already map[string]interface{}
 			for credType, credValue := range node.Credentials {
 				// Check condition.
-				if credInfo, ok := credValue.(map[string]interface{}); ok {
+				if credInfo, okMap := credValue.(map[string]interface{}); okMap {
 					// Check condition.
-					if id, ok := credInfo["id"].(string); ok && id == oldCredID {
+					if id, okID := credInfo["id"].(string); okID && id == oldCredID {
 						credInfo["id"] = newCredID
 						node.Credentials[credType] = credInfo
 					}
