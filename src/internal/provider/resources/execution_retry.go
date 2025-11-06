@@ -38,6 +38,7 @@ type ExecutionRetryResourceModel struct {
 
 // NewExecutionRetryResource creates a new ExecutionRetryResource instance.
 func NewExecutionRetryResource() resource.Resource {
+ // Return result.
 	return &ExecutionRetryResource{}
 }
 
@@ -90,16 +91,19 @@ func (r *ExecutionRetryResource) Schema(ctx context.Context, req resource.Schema
 
 // Configure adds the provider configured client to the resource.
 func (r *ExecutionRetryResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -111,30 +115,36 @@ func (r *ExecutionRetryResource) Create(ctx context.Context, req resource.Create
 	var plan ExecutionRetryResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Convert execution ID to float32 as required by the API
 	executionID, err := strconv.ParseFloat(plan.ExecutionID.ValueString(), 32)
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Execution ID",
 			fmt.Sprintf("Could not parse execution ID %s as number: %s", plan.ExecutionID.ValueString(), err.Error()),
 		)
+		// Return result.
 		return
 	}
 
 	// Retry the execution
 	execution, httpResp, err := r.client.APIClient.ExecutionAPI.ExecutionsIdRetryPost(ctx, float32(executionID)).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrying execution",
 			fmt.Sprintf("Could not retry execution ID %s: %s\nHTTP Response: %v", plan.ExecutionID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -142,24 +152,31 @@ func (r *ExecutionRetryResource) Create(ctx context.Context, req resource.Create
 	if execution.Id != nil {
 		plan.NewExecutionID = types.StringValue(fmt.Sprintf("%v", *execution.Id))
 	}
+	// Check for non-nil value.
 	if execution.WorkflowId != nil {
 		plan.WorkflowID = types.StringValue(fmt.Sprintf("%v", *execution.WorkflowId))
 	}
+	// Check for non-nil value.
 	if execution.Finished != nil {
 		plan.Finished = types.BoolPointerValue(execution.Finished)
 	}
+	// Check for non-nil value.
 	if execution.Mode != nil {
 		plan.Mode = types.StringPointerValue(execution.Mode)
 	}
+	// Check for non-nil value.
 	if execution.StartedAt != nil {
 		plan.StartedAt = types.StringValue(execution.StartedAt.String())
 	}
+	// Check condition.
 	if execution.StoppedAt.IsSet() {
 		stoppedAt := execution.StoppedAt.Get()
+		// Check for non-nil value.
 		if stoppedAt != nil {
 			plan.StoppedAt = types.StringValue(stoppedAt.String())
 		}
 	}
+	// Check for non-nil value.
 	if execution.Status != nil {
 		plan.Status = types.StringPointerValue(execution.Status)
 	}
@@ -172,6 +189,7 @@ func (r *ExecutionRetryResource) Read(ctx context.Context, req resource.ReadRequ
 	var state ExecutionRetryResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}

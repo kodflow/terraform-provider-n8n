@@ -34,6 +34,7 @@ type TagResourceModel struct {
 
 // NewTagResource creates a new TagResource instance.
 func NewTagResource() resource.Resource {
+ // Return result.
 	return &TagResource{}
 }
 
@@ -70,16 +71,19 @@ func (r *TagResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 
 // Configure adds the provider configured client to the resource.
 func (r *TagResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -91,6 +95,7 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	var plan TagResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -102,23 +107,28 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsPost(ctx).
 		Tag(tagRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating tag",
 			fmt.Sprintf("Could not create tag: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	plan.ID = types.StringPointerValue(tag.Id)
 	plan.Name = types.StringValue(tag.Name)
+	// Check for non-nil value.
 	if tag.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
+	// Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
@@ -131,27 +141,33 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	var state TagResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdGet(ctx, state.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading tag",
 			fmt.Sprintf("Could not read tag ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	state.Name = types.StringValue(tag.Name)
+	// Check for non-nil value.
 	if tag.CreatedAt != nil {
 		state.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
+	// Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		state.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
@@ -164,6 +180,7 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	var plan TagResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -175,22 +192,27 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdPut(ctx, plan.ID.ValueString()).
 		Tag(tagRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating tag",
 			fmt.Sprintf("Could not update tag ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	plan.Name = types.StringValue(tag.Name)
+	// Check for non-nil value.
 	if tag.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
+	// Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
@@ -203,20 +225,24 @@ func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	var state TagResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, httpResp, err := r.client.APIClient.TagsAPI.TagsIdDelete(ctx, state.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting tag",
 			fmt.Sprintf("Could not delete tag ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 }

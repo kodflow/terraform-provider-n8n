@@ -32,6 +32,7 @@ type ProjectDataSourceModel struct {
 
 // NewProjectDataSource creates a new ProjectDataSource instance.
 func NewProjectDataSource() datasource.DataSource {
+ // Return result.
 	return &ProjectDataSource{}
 }
 
@@ -82,16 +83,19 @@ func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 
 // Configure adds the provider configured client to the data source.
 func (d *ProjectDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -103,6 +107,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	var data ProjectDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -113,47 +118,59 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			"Missing Required Attribute",
 			"Either 'id' or 'name' must be specified",
 		)
+		// Return result.
 		return
 	}
 
 	// List all projects and filter client-side (API limitation)
 	projectList, httpResp, err := d.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing projects",
 			fmt.Sprintf("Could not list projects: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Filter by ID or name
 	var found bool
+	// Check for non-nil value.
 	if projectList.Data != nil {
+  // Iterate over items.
 		for _, project := range projectList.Data {
 			matchByID := !data.ID.IsNull() && project.Id != nil && *project.Id == data.ID.ValueString()
 			matchByName := !data.Name.IsNull() && project.Name == data.Name.ValueString()
 
+			// Check condition.
 			if matchByID || matchByName {
 				// Populate data model
 				if project.Id != nil {
 					data.ID = types.StringValue(*project.Id)
 				}
 				data.Name = types.StringValue(project.Name)
+				// Check for non-nil value.
 				if project.Type != nil {
 					data.Type = types.StringPointerValue(project.Type)
 				}
+				// Check for non-nil value.
 				if project.CreatedAt != nil {
 					data.CreatedAt = types.StringValue(project.CreatedAt.String())
 				}
+				// Check for non-nil value.
 				if project.UpdatedAt != nil {
 					data.UpdatedAt = types.StringValue(project.UpdatedAt.String())
 				}
+				// Check for non-nil value.
 				if project.Icon != nil {
 					data.Icon = types.StringPointerValue(project.Icon)
 				}
+				// Check for non-nil value.
 				if project.Description != nil {
 					data.Description = types.StringPointerValue(project.Description)
 				}
@@ -163,8 +180,10 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		}
 	}
 
+	// Check condition.
 	if !found {
 		identifier := data.ID.ValueString()
+		// Check condition.
 		if identifier == "" {
 			identifier = data.Name.ValueString()
 		}
@@ -172,6 +191,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			"Project Not Found",
 			fmt.Sprintf("Could not find project with identifier: %s", identifier),
 		)
+		// Return result.
 		return
 	}
 

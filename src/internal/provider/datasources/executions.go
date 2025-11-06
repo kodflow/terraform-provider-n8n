@@ -41,6 +41,7 @@ type ExecutionItemModel struct {
 
 // NewExecutionsDataSource creates a new ExecutionsDataSource instance.
 func NewExecutionsDataSource() datasource.DataSource {
+ // Return result.
 	return &ExecutionsDataSource{}
 }
 
@@ -113,16 +114,19 @@ func (d *ExecutionsDataSource) Schema(ctx context.Context, req datasource.Schema
 
 // Configure adds the provider configured client to the data source.
 func (d *ExecutionsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -134,6 +138,7 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var data ExecutionsDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -141,56 +146,73 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	// Build API request with optional filters
 	apiReq := d.client.APIClient.ExecutionAPI.ExecutionsGet(ctx)
 
+	// Check condition.
 	if !data.WorkflowID.IsNull() {
 		apiReq = apiReq.WorkflowId(data.WorkflowID.ValueString())
 	}
+	// Check condition.
 	if !data.ProjectID.IsNull() {
 		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
 	}
+	// Check condition.
 	if !data.Status.IsNull() {
 		apiReq = apiReq.Status(data.Status.ValueString())
 	}
+	// Check condition.
 	if !data.IncludeData.IsNull() {
 		apiReq = apiReq.IncludeData(data.IncludeData.ValueBool())
 	}
 
 	executionList, httpResp, err := apiReq.Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing executions",
 			fmt.Sprintf("Could not list executions: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	data.Executions = make([]ExecutionItemModel, 0)
+	// Check for non-nil value.
 	if executionList.Data != nil {
+  // Iterate over items.
 		for _, execution := range executionList.Data {
 			item := ExecutionItemModel{}
+			// Check for non-nil value.
 			if execution.Id != nil {
 				item.ID = types.StringValue(fmt.Sprintf("%v", *execution.Id))
 			}
+			// Check for non-nil value.
 			if execution.WorkflowId != nil {
 				item.WorkflowID = types.StringValue(fmt.Sprintf("%v", *execution.WorkflowId))
 			}
+			// Check for non-nil value.
 			if execution.Finished != nil {
 				item.Finished = types.BoolPointerValue(execution.Finished)
 			}
+			// Check for non-nil value.
 			if execution.Mode != nil {
 				item.Mode = types.StringPointerValue(execution.Mode)
 			}
+			// Check for non-nil value.
 			if execution.StartedAt != nil {
 				item.StartedAt = types.StringValue(execution.StartedAt.String())
 			}
+			// Check condition.
 			if execution.StoppedAt.IsSet() {
 				stoppedAt := execution.StoppedAt.Get()
+				// Check for non-nil value.
 				if stoppedAt != nil {
 					item.StoppedAt = types.StringValue(stoppedAt.String())
 				}
 			}
+			// Check for non-nil value.
 			if execution.Status != nil {
 				item.Status = types.StringPointerValue(execution.Status)
 			}

@@ -29,9 +29,11 @@ func TestSetVersion(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd.SetVersion(tt.version)
+			// Check condition.
 			if cmd.Version != tt.version {
 				t.Errorf("Expected version %q, got %q", tt.version, cmd.Version)
 			}
@@ -56,6 +58,7 @@ func TestExecute_Success(t *testing.T) {
 
 	// Mock ProviderServe to return success
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+  // Return result.
 		return nil
 	}
 
@@ -85,6 +88,7 @@ func TestExecute_WithError(t *testing.T) {
 
 	// Mock ProviderServe to return an error
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+  // Return error.
 		return errors.New("mock error")
 	}
 
@@ -112,6 +116,7 @@ func TestRun_Success(t *testing.T) {
 		if opts.Address != "registry.terraform.io/kodflow/n8n" {
 			t.Errorf("Expected address 'registry.terraform.io/kodflow/n8n', got %q", opts.Address)
 		}
+		// Return result.
 		return nil
 	}
 
@@ -143,6 +148,7 @@ func TestRun_WithError(t *testing.T) {
 	// Mock ProviderServe to return an error
 	expectedErr := errors.New("mock provider error")
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+  // Return result.
 		return expectedErr
 	}
 

@@ -35,6 +35,7 @@ type ProjectResourceModel struct {
 
 // NewProjectResource creates a new ProjectResource instance.
 func NewProjectResource() resource.Resource {
+ // Return result.
 	return &ProjectResource{}
 }
 
@@ -67,16 +68,19 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 // Configure adds the provider configured client to the resource.
 func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -89,6 +93,7 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	var plan ProjectResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -101,36 +106,45 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsPost(ctx).
 		Project(projectRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
 			fmt.Sprintf("Could not create project: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Workaround: List all projects to find the one we just created
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading project after creation",
 			fmt.Sprintf("Project was created but could not retrieve ID: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find our project by name
 	var foundProject *n8nsdk.Project
+	// Check for non-nil value.
 	if projectList.Data != nil {
+  // Iterate over items.
 		for _, p := range projectList.Data {
+			// Check condition.
 			if p.Name == plan.Name.ValueString() {
 				foundProject = &p
 				break
@@ -138,16 +152,19 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
+	// Check for nil value.
 	if foundProject == nil {
 		resp.Diagnostics.AddError(
 			"Error finding created project",
 			fmt.Sprintf("Project with name '%s' was created but not found in list", plan.Name.ValueString()),
 		)
+		// Return result.
 		return
 	}
 
 	plan.ID = types.StringPointerValue(foundProject.Id)
 	plan.Name = types.StringValue(foundProject.Name)
+	// Check for non-nil value.
 	if foundProject.Type != nil {
 		plan.Type = types.StringPointerValue(foundProject.Type)
 	}
@@ -161,28 +178,35 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	var state ProjectResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Workaround: No GET by ID, use LIST and filter
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading project",
 			fmt.Sprintf("Could not read project ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find our project by ID
 	var foundProject *n8nsdk.Project
+	// Check for non-nil value.
 	if projectList.Data != nil {
+  // Iterate over items.
 		for _, p := range projectList.Data {
+			// Check for non-nil value.
 			if p.Id != nil && *p.Id == state.ID.ValueString() {
 				foundProject = &p
 				break
@@ -190,13 +214,16 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 	}
 
+	// Check for nil value.
 	if foundProject == nil {
 		// Project not found = deleted outside Terraform
 		resp.State.RemoveResource(ctx)
+		// Return result.
 		return
 	}
 
 	state.Name = types.StringValue(foundProject.Name)
+	// Check for non-nil value.
 	if foundProject.Type != nil {
 		state.Type = types.StringPointerValue(foundProject.Type)
 	}
@@ -210,6 +237,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	var plan ProjectResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -222,36 +250,45 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdPut(ctx, plan.ID.ValueString()).
 		Project(projectRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating project",
 			fmt.Sprintf("Could not update project ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Workaround: List all projects to verify the update
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading project after update",
 			fmt.Sprintf("Project was updated but could not verify: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find our project by ID
 	var foundProject *n8nsdk.Project
+	// Check for non-nil value.
 	if projectList.Data != nil {
+  // Iterate over items.
 		for _, p := range projectList.Data {
+			// Check for non-nil value.
 			if p.Id != nil && *p.Id == plan.ID.ValueString() {
 				foundProject = &p
 				break
@@ -259,15 +296,18 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 	}
 
+	// Check for nil value.
 	if foundProject == nil {
 		resp.Diagnostics.AddError(
 			"Error verifying updated project",
 			fmt.Sprintf("Project with ID '%s' was updated but not found in list", plan.ID.ValueString()),
 		)
+		// Return result.
 		return
 	}
 
 	plan.Name = types.StringValue(foundProject.Name)
+	// Check for non-nil value.
 	if foundProject.Type != nil {
 		plan.Type = types.StringPointerValue(foundProject.Type)
 	}
@@ -280,21 +320,25 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	var state ProjectResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdDelete(ctx, state.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting project",
 			fmt.Sprintf("Could not delete project ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 }

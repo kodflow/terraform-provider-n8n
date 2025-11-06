@@ -37,6 +37,7 @@ type VariableResourceModel struct {
 
 // NewVariableResource creates a new VariableResource instance.
 func NewVariableResource() resource.Resource {
+ // Return result.
 	return &VariableResource{}
 }
 
@@ -80,16 +81,19 @@ func (r *VariableResource) Schema(ctx context.Context, req resource.SchemaReques
 
 // Configure adds the provider configured client to the resource.
 func (r *VariableResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -102,6 +106,7 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	var plan VariableResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -116,6 +121,7 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 		typeVal := plan.Type.ValueString()
 		variableRequest.Type = &typeVal
 	}
+	// Check condition.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 		projectID := plan.ProjectID.ValueString()
 		variableRequest.ProjectId = *n8nsdk.NewNullableString(&projectID)
@@ -125,36 +131,45 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesPost(ctx).
 		VariableCreate(variableRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating variable",
 			fmt.Sprintf("Could not create variable: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Workaround: List all variables to find the one we just created
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading variable after creation",
 			fmt.Sprintf("Variable was created but could not retrieve ID: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find our variable by key
 	var foundVariable *n8nsdk.Variable
+	// Check for non-nil value.
 	if variableList.Data != nil {
+  // Iterate over items.
 		for _, v := range variableList.Data {
+			// Check condition.
 			if v.Key == plan.Key.ValueString() {
 				foundVariable = &v
 				break
@@ -162,20 +177,24 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
+	// Check for nil value.
 	if foundVariable == nil {
 		resp.Diagnostics.AddError(
 			"Error finding created variable",
 			fmt.Sprintf("Variable with key '%s' was created but not found in list", plan.Key.ValueString()),
 		)
+		// Return result.
 		return
 	}
 
 	plan.ID = types.StringPointerValue(foundVariable.Id)
 	plan.Key = types.StringValue(foundVariable.Key)
 	plan.Value = types.StringValue(foundVariable.Value)
+	// Check for non-nil value.
 	if foundVariable.Type != nil {
 		plan.Type = types.StringPointerValue(foundVariable.Type)
 	}
+	// Check for non-nil value.
 	if foundVariable.Project != nil && foundVariable.Project.Id != nil {
 		plan.ProjectID = types.StringPointerValue(foundVariable.Project.Id)
 	}
@@ -189,28 +208,35 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 	var state VariableResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Workaround: No GET by ID, use LIST and filter
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading variable",
 			fmt.Sprintf("Could not read variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find our variable by ID
 	var foundVariable *n8nsdk.Variable
+	// Check for non-nil value.
 	if variableList.Data != nil {
+  // Iterate over items.
 		for _, v := range variableList.Data {
+			// Check for non-nil value.
 			if v.Id != nil && *v.Id == state.ID.ValueString() {
 				foundVariable = &v
 				break
@@ -218,17 +244,21 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
+	// Check for nil value.
 	if foundVariable == nil {
 		// Variable not found = deleted outside Terraform
 		resp.State.RemoveResource(ctx)
+		// Return result.
 		return
 	}
 
 	state.Key = types.StringValue(foundVariable.Key)
 	state.Value = types.StringValue(foundVariable.Value)
+	// Check for non-nil value.
 	if foundVariable.Type != nil {
 		state.Type = types.StringPointerValue(foundVariable.Type)
 	}
+	// Check for non-nil value.
 	if foundVariable.Project != nil && foundVariable.Project.Id != nil {
 		state.ProjectID = types.StringPointerValue(foundVariable.Project.Id)
 	}
@@ -242,6 +272,7 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	var plan VariableResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -256,6 +287,7 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 		typeVal := plan.Type.ValueString()
 		variableRequest.Type = &typeVal
 	}
+	// Check condition.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 		projectID := plan.ProjectID.ValueString()
 		variableRequest.ProjectId = *n8nsdk.NewNullableString(&projectID)
@@ -265,36 +297,45 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdPut(ctx, plan.ID.ValueString()).
 		VariableCreate(variableRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating variable",
 			fmt.Sprintf("Could not update variable ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Workaround: List all variables to verify the update
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading variable after update",
 			fmt.Sprintf("Variable was updated but could not verify: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find our variable by ID
 	var foundVariable *n8nsdk.Variable
+	// Check for non-nil value.
 	if variableList.Data != nil {
+  // Iterate over items.
 		for _, v := range variableList.Data {
+			// Check for non-nil value.
 			if v.Id != nil && *v.Id == plan.ID.ValueString() {
 				foundVariable = &v
 				break
@@ -302,19 +343,23 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
+	// Check for nil value.
 	if foundVariable == nil {
 		resp.Diagnostics.AddError(
 			"Error verifying updated variable",
 			fmt.Sprintf("Variable with ID '%s' was updated but not found in list", plan.ID.ValueString()),
 		)
+		// Return result.
 		return
 	}
 
 	plan.Key = types.StringValue(foundVariable.Key)
 	plan.Value = types.StringValue(foundVariable.Value)
+	// Check for non-nil value.
 	if foundVariable.Type != nil {
 		plan.Type = types.StringPointerValue(foundVariable.Type)
 	}
+	// Check for non-nil value.
 	if foundVariable.Project != nil && foundVariable.Project.Id != nil {
 		plan.ProjectID = types.StringPointerValue(foundVariable.Project.Id)
 	}
@@ -327,21 +372,25 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 	var state VariableResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdDelete(ctx, state.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting variable",
 			fmt.Sprintf("Could not delete variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 }

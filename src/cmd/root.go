@@ -15,21 +15,22 @@ var (
 	Version string = "dev"
 
 	// OsExit allows mocking os.Exit for testing.
-	OsExit = os.Exit
+	OsExit func(int) = os.Exit
 
 	// ProviderServe allows mocking providerserver.Serve for testing.
 	ProviderServe func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error = providerserver.Serve
 
+	// debug enables support for debuggers like delve when set to true.
 	debug bool
-)
 
-// rootCmd represents the base command.
-var rootCmd = &cobra.Command{
-	Use:   "terraform-provider-n8n",
-	Short: "Terraform provider for n8n automation platform",
-	Long:  `A Terraform provider that allows you to manage n8n resources.`,
-	RunE:  run,
-}
+	// rootCmd represents the base command.
+	rootCmd *cobra.Command = &cobra.Command{
+		Use:   "terraform-provider-n8n",
+		Short: "Terraform provider for n8n automation platform",
+		Long:  `A Terraform provider that allows you to manage n8n resources.`,
+		RunE:  run,
+	}
+)
 
 func init() {
 	rootCmd.Flags().BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
@@ -43,15 +44,19 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	err := ProviderServe(context.Background(), n8nprovider.New(Version), opts)
+	// Check for error.
 	if err != nil {
+  // Return error.
 		return err
 	}
 
+	// Return result.
 	return nil
 }
 
 // Execute runs the root command.
 func Execute() {
+	// Check for error.
 	if err := rootCmd.Execute(); err != nil {
 		OsExit(1)
 	}

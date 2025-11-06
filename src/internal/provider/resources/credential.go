@@ -45,6 +45,7 @@ type WorkflowBackup struct {
 
 // NewCredentialResource creates a new CredentialResource instance.
 func NewCredentialResource() resource.Resource {
+ // Return result.
 	return &CredentialResource{}
 }
 
@@ -97,16 +98,19 @@ func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequ
 
 // Configure adds the provider configured client to the resource.
 func (r *CredentialResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -118,6 +122,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	var plan CredentialResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -125,6 +130,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	// Prepare credential data
 	var credData map[string]interface{}
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -138,15 +144,18 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	createResp, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating credential",
 			fmt.Sprintf("Could not create credential: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -171,6 +180,7 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 	var state CredentialResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -193,6 +203,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -205,6 +216,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Prepare credential data
 	var credData map[string]interface{}
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -218,15 +230,18 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	newCred, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating new credential during rotation",
 			fmt.Sprintf("Could not create new credential: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -235,16 +250,20 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// STEP 2: Scan workflows using old credential
 	workflowList, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		// Rollback: delete new credential
 		tflog.Error(ctx, "Failed to list workflows, rolling back")
 		_, httpResp2, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+		// Check for non-nil value.
 		if httpResp2 != nil && httpResp2.Body != nil {
 			defer httpResp2.Body.Close()
 		}
+		// Check for error.
 		if err != nil {
 			// Log error but continue - cleanup is best effort
 			tflog.Error(ctx, fmt.Sprintf("Failed to delete credential during cleanup: %s", err.Error()))
@@ -254,13 +273,17 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 			"Error scanning workflows during rotation",
 			fmt.Sprintf("Could not list workflows: %s", err.Error()),
 		)
+		// Return result.
 		return
 	}
 
 	// Find affected workflows
 	affectedWorkflows := []WorkflowBackup{}
+	// Check for non-nil value.
 	if workflowList.Data != nil {
+  // Iterate over items.
 		for _, workflow := range workflowList.Data {
+			// Check condition.
 			if usesCredential(&workflow, oldCredID) {
 				affectedWorkflows = append(affectedWorkflows, WorkflowBackup{
 					ID:       *workflow.Id,
@@ -274,6 +297,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// STEP 3: Update each workflow
 	updatedWorkflows := []string{}
+ // Iterate over items.
 	for i, backup := range affectedWorkflows {
 		// Throttle to avoid rate limiting
 		if i > 0 {
@@ -284,10 +308,12 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		workflow, httpResp, err := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdGet(ctx, backup.ID).
 			Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+		// Check for error.
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to get workflow %s, rolling back", backup.ID))
 			r.rollbackRotation(ctx, newCredID, affectedWorkflows, updatedWorkflows)
@@ -296,6 +322,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 				"Error reading workflow during rotation",
 				fmt.Sprintf("Could not read workflow %s: %s\nRotation rolled back.", backup.ID, err.Error()),
 			)
+			// Return result.
 			return
 		}
 
@@ -307,10 +334,12 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 			WorkflowsIdPut(ctx, backup.ID).
 			Workflow(*updatedWorkflow).
 			Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+		// Check for error.
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to update workflow %s, rolling back", backup.ID))
 			r.rollbackRotation(ctx, newCredID, affectedWorkflows, updatedWorkflows)
@@ -319,6 +348,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 				"Error updating workflow during rotation",
 				fmt.Sprintf("Could not update workflow %s: %s\nRotation rolled back.", backup.ID, err.Error()),
 			)
+			// Return result.
 			return
 		}
 
@@ -328,15 +358,18 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// STEP 4: Delete old credential
 	_, httpResp, err = r.client.APIClient.CredentialAPI.DeleteCredential(ctx, oldCredID).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		// Not critical - new credential works, old is just orphaned
 		tflog.Warn(ctx, fmt.Sprintf(
 			"Could not delete old credential %s: %s. New credential %s is active. Manual cleanup may be required.",
 			oldCredID, err.Error(), newCredID,
 		))
+ // Handle alternative case.
 	} else {
 		tflog.Info(ctx, fmt.Sprintf("Deleted old credential %s", oldCredID))
 	}
@@ -363,20 +396,24 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 	var state CredentialResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, state.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting credential",
 			fmt.Sprintf("Could not delete credential ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -406,27 +443,34 @@ func (r *CredentialResource) rollbackRotation(
 
 	// Delete new credential
 	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("CRITICAL: Failed to delete new credential %s during rollback: %s", newCredID, err.Error()))
+ // Handle alternative case.
 	} else {
 		tflog.Info(ctx, fmt.Sprintf("Deleted new credential %s during rollback", newCredID))
 	}
 
 	// Restore updated workflows
 	restoredCount := 0
+ // Iterate over items.
 	for _, workflowID := range updatedWorkflows {
 		// Find original
 		var original *n8nsdk.Workflow
+  // Iterate over items.
 		for _, backup := range affectedWorkflows {
+			// Check condition.
 			if backup.ID == workflowID {
 				original = backup.Original
 				break
 			}
 		}
 
+		// Check for nil value.
 		if original == nil {
 			tflog.Error(ctx, fmt.Sprintf("Cannot find original for workflow %s", workflowID))
 			continue
@@ -437,10 +481,12 @@ func (r *CredentialResource) rollbackRotation(
 			WorkflowsIdPut(ctx, workflowID).
 			Workflow(*original).
 			Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+		// Check for error.
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, err.Error()))
 			continue
@@ -455,16 +501,23 @@ func (r *CredentialResource) rollbackRotation(
 
 // usesCredential checks if a workflow uses a specific credential.
 func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
+	// Check for nil value.
 	if workflow.Nodes == nil {
+  // Return result.
 		return false
 	}
 
+ // Iterate over items.
 	for _, node := range workflow.Nodes {
+		// Check for non-nil value.
 		if node.Credentials != nil {
 			// node.Credentials is already map[string]interface{}
 			for _, credValue := range node.Credentials {
+				// Check condition.
 				if credInfo, ok := credValue.(map[string]interface{}); ok {
+					// Check condition.
 					if id, ok := credInfo["id"].(string); ok && id == credentialID {
+      // Return result.
 						return true
 					}
 				}
@@ -472,22 +525,29 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 		}
 	}
 
+	// Return result.
 	return false
 }
 
 // replaceCredentialInWorkflow replaces all references to oldCredID with newCredID.
 func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) *n8nsdk.Workflow {
+	// Check for nil value.
 	if workflow.Nodes == nil {
+  // Return result.
 		return workflow
 	}
 
+ // Iterate over items.
 	for i := range workflow.Nodes {
 		node := &workflow.Nodes[i]
 
+		// Check for non-nil value.
 		if node.Credentials != nil {
 			// node.Credentials is already map[string]interface{}
 			for credType, credValue := range node.Credentials {
+				// Check condition.
 				if credInfo, ok := credValue.(map[string]interface{}); ok {
+					// Check condition.
 					if id, ok := credInfo["id"].(string); ok && id == oldCredID {
 						credInfo["id"] = newCredID
 						node.Credentials[credType] = credInfo
@@ -497,5 +557,6 @@ func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID
 		}
 	}
 
+	// Return result.
 	return workflow
 }

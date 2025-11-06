@@ -28,6 +28,7 @@ type WorkflowDataSourceModel struct {
 
 // NewWorkflowDataSource creates a new WorkflowDataSource instance.
 func NewWorkflowDataSource() datasource.DataSource {
+ // Return result.
 	return &WorkflowDataSource{}
 }
 
@@ -60,16 +61,19 @@ func (d *WorkflowDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 
 // Configure adds the provider configured client to the data source.
 func (d *WorkflowDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -81,24 +85,29 @@ func (d *WorkflowDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var data WorkflowDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	workflow, httpResp, err := d.client.APIClient.WorkflowAPI.WorkflowsIdGet(ctx, data.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading workflow",
 			fmt.Sprintf("Could not read workflow ID %s: %s\nHTTP Response: %v", data.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	data.Name = types.StringValue(workflow.Name)
+	// Check for non-nil value.
 	if workflow.Active != nil {
 		data.Active = types.BoolPointerValue(workflow.Active)
 	}

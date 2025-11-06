@@ -34,6 +34,7 @@ type WorkflowModel struct {
 
 // NewWorkflowsDataSource creates a new WorkflowsDataSource instance.
 func NewWorkflowsDataSource() datasource.DataSource {
+ // Return result.
 	return &WorkflowsDataSource{}
 }
 
@@ -78,16 +79,19 @@ func (d *WorkflowsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 
 // Configure adds the provider configured client to the data source.
 func (d *WorkflowsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -99,6 +103,7 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data WorkflowsDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -112,26 +117,32 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	workflowList, httpResp, err := apiReq.Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading workflows",
 			fmt.Sprintf("Could not read workflows: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Map response to state
 	data.Workflows = make([]WorkflowModel, 0)
+	// Check for non-nil value.
 	if workflowList.Data != nil {
+  // Iterate over items.
 		for _, workflow := range workflowList.Data {
 			workflowModel := WorkflowModel{
 				ID:   types.StringPointerValue(workflow.Id),
 				Name: types.StringValue(workflow.Name),
 			}
+			// Check for non-nil value.
 			if workflow.Active != nil {
 				workflowModel.Active = types.BoolPointerValue(workflow.Active)
 			}

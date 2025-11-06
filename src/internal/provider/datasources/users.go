@@ -38,6 +38,7 @@ type UserItemModel struct {
 
 // NewUsersDataSource creates a new UsersDataSource instance.
 func NewUsersDataSource() datasource.DataSource {
+ // Return result.
 	return &UsersDataSource{}
 }
 
@@ -98,16 +99,19 @@ func (d *UsersDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 
 // Configure adds the provider configured client to the data source.
 func (d *UsersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -119,41 +123,53 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var data UsersDataSourceModel
 
 	userList, httpResp, err := d.client.APIClient.UserAPI.UsersGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing users",
 			fmt.Sprintf("Could not list users: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	data.Users = make([]UserItemModel, 0)
+	// Check for non-nil value.
 	if userList.Data != nil {
+  // Iterate over items.
 		for _, user := range userList.Data {
 			item := UserItemModel{
 				Email: types.StringValue(user.Email),
 			}
+			// Check for non-nil value.
 			if user.Id != nil {
 				item.ID = types.StringValue(*user.Id)
 			}
+			// Check for non-nil value.
 			if user.FirstName != nil {
 				item.FirstName = types.StringPointerValue(user.FirstName)
 			}
+			// Check for non-nil value.
 			if user.LastName != nil {
 				item.LastName = types.StringPointerValue(user.LastName)
 			}
+			// Check for non-nil value.
 			if user.IsPending != nil {
 				item.IsPending = types.BoolPointerValue(user.IsPending)
 			}
+			// Check for non-nil value.
 			if user.CreatedAt != nil {
 				item.CreatedAt = types.StringValue(user.CreatedAt.String())
 			}
+			// Check for non-nil value.
 			if user.UpdatedAt != nil {
 				item.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 			}
+			// Check for non-nil value.
 			if user.Role != nil {
 				item.Role = types.StringPointerValue(user.Role)
 			}

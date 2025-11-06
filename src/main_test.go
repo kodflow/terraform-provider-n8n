@@ -18,6 +18,7 @@ func TestVersion(t *testing.T) {
 	// Test version can be modified (for build-time injection)
 	originalVersion := version
 	version = "1.2.3"
+	// Check condition.
 	if version != "1.2.3" {
 		t.Error("Version should be modifiable")
 	}
@@ -62,6 +63,7 @@ func TestMainFunction(t *testing.T) {
 
 	// Mock ProviderServe to return success
 	cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+  // Return result.
 		return nil
 	}
 

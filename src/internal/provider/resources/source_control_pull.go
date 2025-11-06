@@ -35,6 +35,7 @@ type SourceControlPullResourceModel struct {
 
 // NewSourceControlPullResource creates a new SourceControlPullResource instance.
 func NewSourceControlPullResource() resource.Resource {
+ // Return result.
 	return &SourceControlPullResource{}
 }
 
@@ -71,16 +72,19 @@ func (r *SourceControlPullResource) Schema(ctx context.Context, req resource.Sch
 
 // Configure adds the provider configured client to the resource.
 func (r *SourceControlPullResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -92,6 +96,7 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 	var plan SourceControlPullResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -108,11 +113,13 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 	// Parse variables JSON if provided
 	if !plan.VariablesJSON.IsNull() && !plan.VariablesJSON.IsUnknown() {
 		var variables map[string]interface{}
+		// Check for error.
 		if err := json.Unmarshal([]byte(plan.VariablesJSON.ValueString()), &variables); err != nil {
 			resp.Diagnostics.AddError(
 				"Invalid variables JSON",
 				fmt.Sprintf("Could not parse variables_json: %s", err.Error()),
 			)
+			// Return result.
 			return
 		}
 		pullReq.SetVariables(variables)
@@ -120,14 +127,17 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 
 	// Execute pull operation
 	importResult, httpResp, err := r.client.APIClient.SourceControlAPI.SourceControlPullPost(ctx).Pull(*pullReq).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error pulling from source control",
 			fmt.Sprintf("Could not pull from source control: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -137,11 +147,13 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 	// Serialize import result to JSON
 	if importResult != nil {
 		resultJSON, err := json.Marshal(importResult)
+		// Check for error.
 		if err != nil {
 			resp.Diagnostics.AddWarning(
 				"Could not serialize import result",
 				fmt.Sprintf("Import was successful but result could not be serialized: %s", err.Error()),
 			)
+  // Handle alternative case.
 		} else {
 			plan.ResultJSON = types.StringValue(string(resultJSON))
 		}
@@ -155,6 +167,7 @@ func (r *SourceControlPullResource) Read(ctx context.Context, req resource.ReadR
 	var state SourceControlPullResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}

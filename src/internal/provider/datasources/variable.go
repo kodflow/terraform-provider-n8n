@@ -30,6 +30,7 @@ type VariableDataSourceModel struct {
 
 // NewVariableDataSource creates a new VariableDataSource instance.
 func NewVariableDataSource() datasource.DataSource {
+ // Return result.
 	return &VariableDataSource{}
 }
 
@@ -74,16 +75,19 @@ func (d *VariableDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 
 // Configure adds the provider configured client to the data source.
 func (d *VariableDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -95,6 +99,7 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var data VariableDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -105,6 +110,7 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 			"Missing Required Attribute",
 			"Either 'id' or 'key' must be specified",
 		)
+		// Return result.
 		return
 	}
 
@@ -118,24 +124,30 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	// List all variables and filter client-side (API limitation)
 	variableList, httpResp, err := apiReq.Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing variables",
 			fmt.Sprintf("Could not list variables: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Filter by ID or key
 	var found bool
+	// Check for non-nil value.
 	if variableList.Data != nil {
+  // Iterate over items.
 		for _, variable := range variableList.Data {
 			matchByID := !data.ID.IsNull() && variable.Id != nil && *variable.Id == data.ID.ValueString()
 			matchByKey := !data.Key.IsNull() && variable.Key == data.Key.ValueString()
 
+			// Check condition.
 			if matchByID || matchByKey {
 				// Populate data model
 				if variable.Id != nil {
@@ -143,6 +155,7 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 				}
 				data.Key = types.StringValue(variable.Key)
 				data.Value = types.StringValue(variable.Value)
+				// Check for non-nil value.
 				if variable.Type != nil {
 					data.Type = types.StringPointerValue(variable.Type)
 				}
@@ -156,8 +169,10 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 		}
 	}
 
+	// Check condition.
 	if !found {
 		identifier := data.ID.ValueString()
+		// Check condition.
 		if identifier == "" {
 			identifier = data.Key.ValueString()
 		}
@@ -165,6 +180,7 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 			"Variable Not Found",
 			fmt.Sprintf("Could not find variable with identifier: %s", identifier),
 		)
+		// Return result.
 		return
 	}
 

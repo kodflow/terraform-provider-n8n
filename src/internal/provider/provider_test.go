@@ -23,6 +23,7 @@ func TestProviderNew(t *testing.T) {
 			expectError: false,
 			checkResult: func(t *testing.T, p provider.Provider) {
 				t.Helper()
+				// Check for nil value.
 				if p == nil {
 					t.Fatal("Provider should not be nil")
 				}
@@ -34,6 +35,7 @@ func TestProviderNew(t *testing.T) {
 			expectError: false,
 			checkResult: func(t *testing.T, p provider.Provider) {
 				t.Helper()
+				// Check for nil value.
 				if p == nil {
 					t.Fatal("Provider should not be nil even with empty version")
 				}
@@ -45,6 +47,7 @@ func TestProviderNew(t *testing.T) {
 			expectError: false,
 			checkResult: func(t *testing.T, p provider.Provider) {
 				t.Helper()
+				// Check for nil value.
 				if p == nil {
 					t.Fatal("Provider should not be nil with dev version")
 				}
@@ -56,6 +59,7 @@ func TestProviderNew(t *testing.T) {
 			expectError: false,
 			checkResult: func(t *testing.T, p provider.Provider) {
 				t.Helper()
+				// Check for nil value.
 				if p == nil {
 					t.Fatal("Provider should not be nil with semver version")
 				}
@@ -67,6 +71,7 @@ func TestProviderNew(t *testing.T) {
 			expectError: false,
 			checkResult: func(t *testing.T, p provider.Provider) {
 				t.Helper()
+				// Check for nil value.
 				if p == nil {
 					t.Fatal("Provider should not be nil with long version")
 				}
@@ -74,19 +79,25 @@ func TestProviderNew(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			factory := n8nprovider.New(tt.version)
+			// Check for nil value.
 			if factory == nil {
 				t.Fatal("Factory function should not be nil")
 			}
 
 			p := factory()
+			// Check condition.
 			if tt.expectError {
+				// Check for non-nil value.
 				if p != nil {
 					t.Errorf("Expected error but got provider: %v", p)
 				}
+   // Handle alternative case.
 			} else {
+				// Check for non-nil value.
 				if tt.checkResult != nil {
 					tt.checkResult(t, p)
 				}
@@ -126,9 +137,11 @@ func TestProviderMetadata(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
+			// Check for nil value.
 			if p == nil {
 				t.Fatal("Provider should not be nil")
 			}
@@ -136,14 +149,19 @@ func TestProviderMetadata(t *testing.T) {
 			var resp provider.MetadataResponse
 			p.Metadata(context.Background(), provider.MetadataRequest{}, &resp)
 
+			// Check condition.
 			if tt.expectError {
+				// Check condition.
 				if resp.TypeName != "" {
 					t.Errorf("Expected error but got TypeName: %s", resp.TypeName)
 				}
+   // Handle alternative case.
 			} else {
+				// Check condition.
 				if resp.TypeName != tt.expectedType {
 					t.Errorf("Expected TypeName %q, got %q", tt.expectedType, resp.TypeName)
 				}
+				// Check condition.
 				if resp.Version != tt.expectedVersion {
 					t.Errorf("Expected Version %q, got %q", tt.expectedVersion, resp.Version)
 				}
@@ -170,9 +188,11 @@ func TestProviderSchema(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
+			// Check for nil value.
 			if p == nil {
 				t.Fatal("Provider should not be nil")
 			}
@@ -180,6 +200,7 @@ func TestProviderSchema(t *testing.T) {
 			var resp provider.SchemaResponse
 			p.Schema(context.Background(), provider.SchemaRequest{}, &resp)
 
+			// Check condition.
 			if resp.Schema.MarkdownDescription != tt.expectedMarkdownContains {
 				t.Errorf("Expected MarkdownDescription to contain %q, got %q", tt.expectedMarkdownContains, resp.Schema.MarkdownDescription)
 			}
@@ -190,6 +211,7 @@ func TestProviderSchema(t *testing.T) {
 func TestProviderConfigure(t *testing.T) {
 	t.Run("configure succeeds with valid config", func(t *testing.T) {
 		p := n8nprovider.New("1.0.0")()
+		// Check for nil value.
 		if p == nil {
 			t.Fatal("Provider should not be nil")
 		}
@@ -219,6 +241,7 @@ func TestProviderConfigure(t *testing.T) {
 		var resp provider.ConfigureResponse
 		p.Configure(ctx, req, &resp)
 
+		// Check condition.
 		if resp.Diagnostics.HasError() {
 			t.Errorf("Expected no error but got: %v", resp.Diagnostics.Errors())
 		}
@@ -226,6 +249,7 @@ func TestProviderConfigure(t *testing.T) {
 
 	t.Run("configure handles invalid config", func(t *testing.T) {
 		p := n8nprovider.New("1.0.0")()
+		// Check for nil value.
 		if p == nil {
 			t.Fatal("Provider should not be nil")
 		}
@@ -249,6 +273,7 @@ func TestProviderConfigure(t *testing.T) {
 		var resp provider.ConfigureResponse
 		p.Configure(ctx, req, &resp)
 
+		// Check condition.
 		if !resp.Diagnostics.HasError() {
 			t.Error("Expected error with invalid config but got none")
 		}
@@ -276,18 +301,22 @@ func TestProviderResources(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
+			// Check for nil value.
 			if p == nil {
 				t.Fatal("Provider should not be nil")
 			}
 
 			resources := p.Resources(context.Background())
 
+			// Check for nil value.
 			if tt.expectNonNil && resources == nil {
 				t.Error("Expected non-nil resources list")
 			}
+			// Check condition.
 			if len(resources) != tt.expectedCount {
 				t.Errorf("Expected %d resources, got %d", tt.expectedCount, len(resources))
 			}
@@ -316,18 +345,22 @@ func TestProviderDataSources(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.New(tt.version)()
+			// Check for nil value.
 			if p == nil {
 				t.Fatal("Provider should not be nil")
 			}
 
 			dataSources := p.DataSources(context.Background())
 
+			// Check for nil value.
 			if tt.expectNonNil && dataSources == nil {
 				t.Error("Expected non-nil data sources list")
 			}
+			// Check condition.
 			if len(dataSources) != tt.expectedCount {
 				t.Errorf("Expected %d data sources, got %d", tt.expectedCount, len(dataSources))
 			}
@@ -358,16 +391,19 @@ func TestValidateProvider(t *testing.T) {
 		},
 	}
 
+ // Iterate over items.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := n8nprovider.NewN8nProvider(tt.version)
 
 			validated := n8nprovider.ValidateProvider(p)
 
+			// Check for nil value.
 			if validated == nil {
 				t.Fatal("ValidateProvider should not return nil")
 			}
 
+			// Check condition.
 			if validated != p {
 				t.Error("ValidateProvider should return the same provider instance")
 			}

@@ -33,6 +33,7 @@ type UserDataSourceModel struct {
 
 // NewUserDataSource creates a new UserDataSource instance.
 func NewUserDataSource() datasource.DataSource {
+ // Return result.
 	return &UserDataSource{}
 }
 
@@ -87,16 +88,19 @@ func (d *UserDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 
 // Configure adds the provider configured client to the data source.
 func (d *UserDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -108,6 +112,7 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	var data UserDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -118,24 +123,29 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 			"Missing Required Attribute",
 			"Either 'id' or 'email' must be specified",
 		)
+		// Return result.
 		return
 	}
 
 	// Use ID if provided, otherwise use email
 	identifier := data.ID.ValueString()
+	// Check condition.
 	if identifier == "" {
 		identifier = data.Email.ValueString()
 	}
 
 	user, httpResp, err := d.client.APIClient.UserAPI.UsersIdGet(ctx, identifier).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving user",
 			fmt.Sprintf("Could not retrieve user with identifier %s: %s\nHTTP Response: %v", identifier, err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -144,21 +154,27 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		data.ID = types.StringValue(*user.Id)
 	}
 	data.Email = types.StringValue(user.Email)
+	// Check for non-nil value.
 	if user.FirstName != nil {
 		data.FirstName = types.StringPointerValue(user.FirstName)
 	}
+	// Check for non-nil value.
 	if user.LastName != nil {
 		data.LastName = types.StringPointerValue(user.LastName)
 	}
+	// Check for non-nil value.
 	if user.IsPending != nil {
 		data.IsPending = types.BoolPointerValue(user.IsPending)
 	}
+	// Check for non-nil value.
 	if user.CreatedAt != nil {
 		data.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
+	// Check for non-nil value.
 	if user.UpdatedAt != nil {
 		data.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}
+	// Check for non-nil value.
 	if user.Role != nil {
 		data.Role = types.StringPointerValue(user.Role)
 	}

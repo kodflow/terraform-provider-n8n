@@ -35,6 +35,7 @@ type ProjectUserResourceModel struct {
 
 // NewProjectUserResource creates a new ProjectUserResource instance.
 func NewProjectUserResource() resource.Resource {
+ // Return result.
 	return &ProjectUserResource{}
 }
 
@@ -71,16 +72,19 @@ func (r *ProjectUserResource) Schema(ctx context.Context, req resource.SchemaReq
 
 // Configure adds the provider configured client to the resource.
 func (r *ProjectUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -92,6 +96,7 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 	var plan ProjectUserResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -107,15 +112,18 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 	// Add user to project
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersPost(ctx, plan.ProjectID.ValueString()).
 		ProjectsProjectIdUsersPostRequest(*addUserReq).Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error adding user to project",
 			fmt.Sprintf("Could not add user %s to project %s: %s\nHTTP Response: %v",
 				plan.UserID.ValueString(), plan.ProjectID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -130,6 +138,7 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 	var state ProjectUserResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -139,22 +148,28 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 		ProjectId(state.ProjectID.ValueString()).
 		IncludeRole(true).
 		Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading project users",
 			fmt.Sprintf("Could not read users for project %s: %s\nHTTP Response: %v",
 				state.ProjectID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	// Find the user in the project
 	found := false
+	// Check for non-nil value.
 	if userList.Data != nil {
+  // Iterate over items.
 		for _, user := range userList.Data {
+			// Check for non-nil value.
 			if user.Id != nil && *user.Id == state.UserID.ValueString() {
 				found = true
 				// Update role if available
@@ -166,9 +181,11 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 		}
 	}
 
+	// Check condition.
 	if !found {
 		// User not found in project - resource has been deleted outside Terraform
 		resp.State.RemoveResource(ctx)
+		// Return result.
 		return
 	}
 
@@ -181,6 +198,7 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,6 +209,7 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 			"Project/User Change Not Supported",
 			"Cannot change project_id or user_id. Please delete and recreate the resource.",
 		)
+		// Return result.
 		return
 	}
 
@@ -202,16 +221,19 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 			plan.ProjectID.ValueString(),
 			plan.UserID.ValueString(),
 		).ProjectsProjectIdUsersUserIdPatchRequest(*roleReq).Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
+		// Check for error.
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating user role in project",
 				fmt.Sprintf("Could not update role for user %s in project %s: %s\nHTTP Response: %v",
 					plan.UserID.ValueString(), plan.ProjectID.ValueString(), err.Error(), httpResp),
 			)
+			// Return result.
 			return
 		}
 	}
@@ -224,6 +246,7 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 	var state ProjectUserResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -234,16 +257,19 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 		state.ProjectID.ValueString(),
 		state.UserID.ValueString(),
 	).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
 
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error removing user from project",
 			fmt.Sprintf("Could not remove user %s from project %s: %s\nHTTP Response: %v",
 				state.UserID.ValueString(), state.ProjectID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 }
@@ -252,11 +278,13 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 func (r *ProjectUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Split composite ID
 	parts := strings.Split(req.ID, "/")
+	// Check condition.
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
 			fmt.Sprintf("Expected import ID in format 'project_id/user_id', got: %s", req.ID),
 		)
+		// Return result.
 		return
 	}
 

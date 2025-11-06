@@ -8,6 +8,8 @@ var (
 	version string = "dev"
 )
 
+// main is the entry point for the n8n Terraform provider.
+// It sets the provider version and executes the root command.
 func main() {
 	cmd.SetVersion(version)
 	cmd.Execute()

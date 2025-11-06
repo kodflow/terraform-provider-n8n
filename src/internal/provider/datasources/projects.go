@@ -37,6 +37,7 @@ type ProjectItemModel struct {
 
 // NewProjectsDataSource creates a new ProjectsDataSource instance.
 func NewProjectsDataSource() datasource.DataSource {
+ // Return result.
 	return &ProjectsDataSource{}
 }
 
@@ -93,16 +94,19 @@ func (d *ProjectsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 
 // Configure adds the provider configured client to the data source.
 func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -114,38 +118,49 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var data ProjectsDataSourceModel
 
 	projectList, httpResp, err := d.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing projects",
 			fmt.Sprintf("Could not list projects: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	data.Projects = make([]ProjectItemModel, 0)
+	// Check for non-nil value.
 	if projectList.Data != nil {
+  // Iterate over items.
 		for _, project := range projectList.Data {
 			item := ProjectItemModel{
 				Name: types.StringValue(project.Name),
 			}
+			// Check for non-nil value.
 			if project.Id != nil {
 				item.ID = types.StringValue(*project.Id)
 			}
+			// Check for non-nil value.
 			if project.Type != nil {
 				item.Type = types.StringPointerValue(project.Type)
 			}
+			// Check for non-nil value.
 			if project.CreatedAt != nil {
 				item.CreatedAt = types.StringValue(project.CreatedAt.String())
 			}
+			// Check for non-nil value.
 			if project.UpdatedAt != nil {
 				item.UpdatedAt = types.StringValue(project.UpdatedAt.String())
 			}
+			// Check for non-nil value.
 			if project.Icon != nil {
 				item.Icon = types.StringPointerValue(project.Icon)
 			}
+			// Check for non-nil value.
 			if project.Description != nil {
 				item.Description = types.StringPointerValue(project.Description)
 			}

@@ -43,6 +43,7 @@ func NewN8nClient(baseURL, apiKey string) *N8nClient {
 	// Create the API client
 	apiClient := n8nsdk.NewAPIClient(cfg)
 
+	// Return result.
 	return &N8nClient{
 		APIClient: apiClient,
 		BaseURL:   baseURL,

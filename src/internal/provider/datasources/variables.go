@@ -37,6 +37,7 @@ type VariableItemModel struct {
 
 // NewVariablesDataSource creates a new VariablesDataSource instance.
 func NewVariablesDataSource() datasource.DataSource {
+ // Return result.
 	return &VariablesDataSource{}
 }
 
@@ -94,16 +95,19 @@ func (d *VariablesDataSource) Schema(ctx context.Context, req datasource.SchemaR
 
 // Configure adds the provider configured client to the data source.
 func (d *VariablesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -115,6 +119,7 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data VariablesDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -122,34 +127,43 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	// Build API request with optional filters
 	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
 
+	// Check condition.
 	if !data.ProjectID.IsNull() {
 		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
 	}
+	// Check condition.
 	if !data.State.IsNull() {
 		apiReq = apiReq.State(data.State.ValueString())
 	}
 
 	variableList, httpResp, err := apiReq.Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing variables",
 			fmt.Sprintf("Could not list variables: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	data.Variables = make([]VariableItemModel, 0)
+	// Check for non-nil value.
 	if variableList.Data != nil {
+  // Iterate over items.
 		for _, variable := range variableList.Data {
 			item := VariableItemModel{}
+			// Check for non-nil value.
 			if variable.Id != nil {
 				item.ID = types.StringValue(*variable.Id)
 			}
 			item.Key = types.StringValue(variable.Key)
 			item.Value = types.StringValue(variable.Value)
+			// Check for non-nil value.
 			if variable.Type != nil {
 				item.Type = types.StringPointerValue(variable.Type)
 			}

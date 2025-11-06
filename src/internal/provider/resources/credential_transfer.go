@@ -34,6 +34,7 @@ type CredentialTransferResourceModel struct {
 
 // NewCredentialTransferResource creates a new CredentialTransferResource instance.
 func NewCredentialTransferResource() resource.Resource {
+ // Return result.
 	return &CredentialTransferResource{}
 }
 
@@ -70,16 +71,19 @@ func (r *CredentialTransferResource) Schema(ctx context.Context, req resource.Sc
 
 // Configure adds the provider configured client to the resource.
 func (r *CredentialTransferResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -91,6 +95,7 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 	var plan CredentialTransferResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -101,15 +106,18 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 	// Execute transfer
 	httpResp, err := r.client.APIClient.CredentialAPI.CredentialsIdTransferPut(ctx, plan.CredentialID.ValueString()).
 		CredentialsIdTransferPutRequest(*transferReq).Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error transferring credential",
 			fmt.Sprintf("Could not transfer credential %s to project %s: %s\nHTTP Response: %v",
 				plan.CredentialID.ValueString(), plan.DestinationProjectID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -125,6 +133,7 @@ func (r *CredentialTransferResource) Read(ctx context.Context, req resource.Read
 	var state CredentialTransferResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}

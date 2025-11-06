@@ -34,6 +34,7 @@ type WorkflowTransferResourceModel struct {
 
 // NewWorkflowTransferResource creates a new WorkflowTransferResource instance.
 func NewWorkflowTransferResource() resource.Resource {
+ // Return result.
 	return &WorkflowTransferResource{}
 }
 
@@ -70,16 +71,19 @@ func (r *WorkflowTransferResource) Schema(ctx context.Context, req resource.Sche
 
 // Configure adds the provider configured client to the resource.
 func (r *WorkflowTransferResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -91,6 +95,7 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 	var plan WorkflowTransferResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -101,15 +106,18 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 	// Execute transfer
 	httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdTransferPut(ctx, plan.WorkflowID.ValueString()).
 		WorkflowsIdTransferPutRequest(*transferReq).Execute()
+		// Check for non-nil value.
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error transferring workflow",
 			fmt.Sprintf("Could not transfer workflow %s to project %s: %s\nHTTP Response: %v",
 				plan.WorkflowID.ValueString(), plan.DestinationProjectID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -125,6 +133,7 @@ func (r *WorkflowTransferResource) Read(ctx context.Context, req resource.ReadRe
 	var state WorkflowTransferResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}

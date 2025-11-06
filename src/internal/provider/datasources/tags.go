@@ -34,6 +34,7 @@ type TagItemModel struct {
 
 // NewTagsDataSource creates a new TagsDataSource instance.
 func NewTagsDataSource() datasource.DataSource {
+ // Return result.
 	return &TagsDataSource{}
 }
 
@@ -78,16 +79,19 @@ func (d *TagsDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 
 // Configure adds the provider configured client to the data source.
 func (d *TagsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -99,29 +103,37 @@ func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	var data TagsDataSourceModel
 
 	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing tags",
 			fmt.Sprintf("Could not list tags: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
 	data.Tags = make([]TagItemModel, 0)
+	// Check for non-nil value.
 	if tagList.Data != nil {
+  // Iterate over items.
 		for _, tag := range tagList.Data {
 			item := TagItemModel{
 				Name: types.StringValue(tag.Name),
 			}
+			// Check for non-nil value.
 			if tag.Id != nil {
 				item.ID = types.StringValue(*tag.Id)
 			}
+			// Check for non-nil value.
 			if tag.CreatedAt != nil {
 				item.CreatedAt = types.StringValue(tag.CreatedAt.String())
 			}
+			// Check for non-nil value.
 			if tag.UpdatedAt != nil {
 				item.UpdatedAt = types.StringValue(tag.UpdatedAt.String())
 			}

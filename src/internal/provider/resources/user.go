@@ -38,6 +38,7 @@ type UserResourceModel struct {
 
 // NewUserResource creates a new UserResource instance.
 func NewUserResource() resource.Resource {
+ // Return result.
 	return &UserResource{}
 }
 
@@ -91,16 +92,19 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 // Configure adds the provider configured client to the resource.
 func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Check for nil value.
 	if req.ProviderData == nil {
 		return
 	}
 
 	client, ok := req.ProviderData.(*providertypes.N8nClient)
+	// Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *providertypes.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return result.
 		return
 	}
 
@@ -112,12 +116,14 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	var plan UserResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Build create request (API accepts array of users, we're creating one)
 	userReq := n8nsdk.NewUsersPostRequestInner(plan.Email.ValueString())
+	// Check condition.
 	if !plan.Role.IsNull() && !plan.Role.IsUnknown() {
 		role := plan.Role.ValueString()
 		userReq.SetRole(role)
@@ -127,14 +133,17 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Create user
 	result, httpResp, err := r.client.APIClient.UserAPI.UsersPost(ctx).UsersPostRequestInner(usersArray).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
 			fmt.Sprintf("Could not create user %s: %s\nHTTP Response: %v", plan.Email.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -144,6 +153,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 			"Error creating user",
 			"API did not return user data",
 		)
+		// Return result.
 		return
 	}
 
@@ -153,6 +163,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 			"Error creating user",
 			"API did not return user ID",
 		)
+		// Return result.
 		return
 	}
 
@@ -160,14 +171,17 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Fetch full user details using the ID
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, userID).IncludeRole(true).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading created user",
 			fmt.Sprintf("User was created but could not read full details: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -176,21 +190,27 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		plan.ID = types.StringValue(*user.Id)
 	}
 	plan.Email = types.StringValue(user.Email)
+	// Check for non-nil value.
 	if user.FirstName != nil {
 		plan.FirstName = types.StringPointerValue(user.FirstName)
 	}
+	// Check for non-nil value.
 	if user.LastName != nil {
 		plan.LastName = types.StringPointerValue(user.LastName)
 	}
+	// Check for non-nil value.
 	if user.Role != nil {
 		plan.Role = types.StringPointerValue(user.Role)
 	}
+	// Check for non-nil value.
 	if user.IsPending != nil {
 		plan.IsPending = types.BoolPointerValue(user.IsPending)
 	}
+	// Check for non-nil value.
 	if user.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
+	// Check for non-nil value.
 	if user.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}
@@ -203,20 +223,24 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	var state UserResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Fetch user by ID
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
 			fmt.Sprintf("Could not read user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -225,21 +249,27 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		state.ID = types.StringValue(*user.Id)
 	}
 	state.Email = types.StringValue(user.Email)
+	// Check for non-nil value.
 	if user.FirstName != nil {
 		state.FirstName = types.StringPointerValue(user.FirstName)
 	}
+	// Check for non-nil value.
 	if user.LastName != nil {
 		state.LastName = types.StringPointerValue(user.LastName)
 	}
+	// Check for non-nil value.
 	if user.Role != nil {
 		state.Role = types.StringPointerValue(user.Role)
 	}
+	// Check for non-nil value.
 	if user.IsPending != nil {
 		state.IsPending = types.BoolPointerValue(user.IsPending)
 	}
+	// Check for non-nil value.
 	if user.CreatedAt != nil {
 		state.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
+	// Check for non-nil value.
 	if user.UpdatedAt != nil {
 		state.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}
@@ -253,6 +283,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -263,6 +294,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			"Email Change Not Supported",
 			"The n8n API does not support changing a user's email address. Please delete and recreate the user if needed.",
 		)
+		// Return result.
 		return
 	}
 
@@ -270,33 +302,40 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	roleChanged := !plan.Role.IsNull() && !state.Role.IsNull() &&
 		!plan.Role.Equal(state.Role)
 
+	// Check condition.
 	if roleChanged {
 		// Update role
 		roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
 		httpResp, err := r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
 			UsersIdRolePatchRequest(*roleReq).Execute()
+			// Check for non-nil value.
 			if httpResp != nil && httpResp.Body != nil {
 				defer httpResp.Body.Close()
 			}
+		// Check for error.
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating user role",
 				fmt.Sprintf("Could not update role for user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 			)
+			// Return result.
 			return
 		}
 	}
 
 	// Refresh user data after update
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user after update",
 			fmt.Sprintf("Could not read user %s after update: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 
@@ -305,21 +344,27 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		plan.ID = types.StringValue(*user.Id)
 	}
 	plan.Email = types.StringValue(user.Email)
+	// Check for non-nil value.
 	if user.FirstName != nil {
 		plan.FirstName = types.StringPointerValue(user.FirstName)
 	}
+	// Check for non-nil value.
 	if user.LastName != nil {
 		plan.LastName = types.StringPointerValue(user.LastName)
 	}
+	// Check for non-nil value.
 	if user.Role != nil {
 		plan.Role = types.StringPointerValue(user.Role)
 	}
+	// Check for non-nil value.
 	if user.IsPending != nil {
 		plan.IsPending = types.BoolPointerValue(user.IsPending)
 	}
+	// Check for non-nil value.
 	if user.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
+	// Check for non-nil value.
 	if user.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}
@@ -332,20 +377,24 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	var state UserResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check condition.
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Delete user
 	httpResp, err := r.client.APIClient.UserAPI.UsersIdDelete(ctx, state.ID.ValueString()).Execute()
+	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
 	}
+	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting user",
 			fmt.Sprintf("Could not delete user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return result.
 		return
 	}
 }
