@@ -1,13 +1,13 @@
-// Package credential contains resources and datasources for credential management
-package credential
+// Package models contains data models for the credential domain.
+package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// CredentialResourceModel describes the resource data model.
+// Resource describes the resource data model.
 // Maps n8n credential attributes to Terraform schema, storing credential metadata and sensitive data.
-type CredentialResourceModel struct {
+type Resource struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`
 	Type      types.String `tfsdk:"type"`

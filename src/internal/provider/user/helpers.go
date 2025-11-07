@@ -60,7 +60,7 @@ func mapUserToItem(user *n8nsdk.User) models.Item {
 //
 // Returns:
 //   - error: Error if operation fails
-func mapUserToResourceModel(user *n8nsdk.User, data *UserResourceModel) {
+func mapUserToResourceModel(user *n8nsdk.User, data *models.Resource) {
 	// Check for non-nil value.
 	if user.Id != nil {
 		data.ID = types.StringValue(*user.Id)

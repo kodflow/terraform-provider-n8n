@@ -115,7 +115,7 @@ func mapVariableToDataSourceModel(variable *n8nsdk.Variable, data *models.DataSo
 //
 // Returns:
 //   - No return value, modifies data parameter in place
-func mapVariableToResourceModel(variable *n8nsdk.Variable, data *VariableResourceModel) {
+func mapVariableToResourceModel(variable *n8nsdk.Variable, data *models.Resource) {
 	// Check for non-nil value.
 	if variable.Id != nil {
 		data.ID = types.StringPointerValue(variable.Id)
@@ -140,7 +140,7 @@ func mapVariableToResourceModel(variable *n8nsdk.Variable, data *VariableResourc
 //
 // Returns:
 //   - n8nsdk.VariableCreate: API request structure for variable creation
-func buildVariableRequest(plan *VariableResourceModel) n8nsdk.VariableCreate {
+func buildVariableRequest(plan *models.Resource) n8nsdk.VariableCreate {
 	variableRequest := n8nsdk.VariableCreate{
 		Key:   plan.Key.ValueString(),
 		Value: plan.Value.ValueString(),

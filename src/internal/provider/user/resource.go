@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/user/models"
 )
 
 // Ensure UserResource implements required interfaces.
@@ -171,7 +172,7 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 // Returns:
 //   - (none)
 func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	plan := &UserResourceModel{}
+	plan := &models.Resource{}
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
 	// Check condition.
@@ -211,7 +212,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 //
 // Returns:
 //   - string: user ID or empty string if error occurred
-func (r *UserResource) createUser(ctx context.Context, plan *UserResourceModel, resp *resource.CreateResponse) string {
+func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) string {
 	// Build create request (API accepts array of users, we're creating one)
 	userReq := n8nsdk.NewUsersPostRequestInner(plan.Email.ValueString())
 	// Check condition.
@@ -290,7 +291,7 @@ func (r *UserResource) fetchFullUserDetails(ctx context.Context, userID string, 
 // Returns:
 //   - (none)
 func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	state := &UserResourceModel{}
+	state := &models.Resource{}
 
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
 	// Check condition.
@@ -331,8 +332,8 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 // Returns:
 //   - (none)
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	plan := &UserResourceModel{}
-	state := &UserResourceModel{}
+	plan := &models.Resource{}
+	state := &models.Resource{}
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
@@ -379,7 +380,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 //
 // Returns:
 //   - bool: true if email unchanged, false otherwise
-func (r *UserResource) validateEmailUnchanged(plan, state *UserResourceModel, resp *resource.UpdateResponse) bool {
+func (r *UserResource) validateEmailUnchanged(plan, state *models.Resource, resp *resource.UpdateResponse) bool {
 	// Check condition.
 	if !plan.Email.Equal(state.Email) {
 		resp.Diagnostics.AddError(
@@ -398,7 +399,7 @@ func (r *UserResource) validateEmailUnchanged(plan, state *UserResourceModel, re
 //   - plan: planned state
 //   - state: current state
 //   - resp: update response
-func (r *UserResource) updateRoleIfChanged(ctx context.Context, plan, state *UserResourceModel, resp *resource.UpdateResponse) {
+func (r *UserResource) updateRoleIfChanged(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) {
 	// Check if role changed
 	roleChanged := !plan.Role.IsNull() && !state.Role.IsNull() &&
 		!plan.Role.Equal(state.Role)
@@ -464,7 +465,7 @@ func (r *UserResource) refreshUserData(ctx context.Context, userID string, resp 
 // Returns:
 //   - (none)
 func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	state := &UserResourceModel{}
+	state := &models.Resource{}
 
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
 	// Check condition.

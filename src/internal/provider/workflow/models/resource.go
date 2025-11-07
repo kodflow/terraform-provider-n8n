@@ -1,12 +1,13 @@
-package workflow
+// Package models contains data models for the workflow domain.
+package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// WorkflowResourceModel describes the resource data model.
-// Maps n8n workflow attributes to Terraform schema, storing workflow configuration, nodes, connections, and metadata.
-type WorkflowResourceModel struct {
+// Resource describes the workflow resource data model.
+// Maps n8n workflow attributes to Terraform schema, including nodes, connections, and settings.
+type Resource struct {
 	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 	Active          types.Bool   `tfsdk:"active"`

@@ -22,17 +22,6 @@ go_test(
     embed = [":n8n_lib"],
     deps = [
         "//src/cmd",
-        "@com_github_hashicorp_terraform_plugin_framework//provider:go_default_library",
-        "@com_github_hashicorp_terraform_plugin_framework//providerserver:go_default_library",
-    ],
-)
-
-go_test(
-    name = "src_test",
-    srcs = ["main_test.go"],
-    embed = [":src_lib"],
-    deps = [
-        "//src/cmd",
         "@com_github_hashicorp_terraform_plugin_framework//provider",
         "@com_github_hashicorp_terraform_plugin_framework//providerserver",
     ],

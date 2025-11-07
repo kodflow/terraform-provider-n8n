@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/sourcecontrol/models"
 )
 
 // Ensure SourceControlPullResource implements required interfaces.
@@ -140,7 +141,7 @@ func (r *SourceControlPullResource) Configure(ctx context.Context, req resource.
 //   - req: resource.CreateRequest
 //   - resp: *resource.CreateResponse
 func (r *SourceControlPullResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *SourceControlPullResourceModel
+	var plan *models.PullResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -159,6 +160,10 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 
 	// Execute pull operation and get result
 	importResult, httpResp := r.executePullOperation(ctx, pullReq, resp)
+	// Ensure response body is closed
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
 	// Check for errors in diagnostics.
 	if resp.Diagnostics.HasError() {
 		// Return with error.
@@ -173,12 +178,12 @@ func (r *SourceControlPullResource) Create(ctx context.Context, req resource.Cre
 // buildPullRequest builds the pull request with plan data.
 //
 // Params:
-//   - plan: SourceControlPullResourceModel with request data
+//   - plan: models.PullResource with request data
 //   - resp: response for diagnostics
 //
 // Returns:
 //   - *n8nsdk.Pull: built pull request
-func (r *SourceControlPullResource) buildPullRequest(plan *SourceControlPullResourceModel, resp *resource.CreateResponse) *n8nsdk.Pull {
+func (r *SourceControlPullResource) buildPullRequest(plan *models.PullResource, resp *resource.CreateResponse) *n8nsdk.Pull {
 	pullReq := n8nsdk.NewPull()
 
 	// Set force flag if provided
@@ -247,6 +252,10 @@ func (r *SourceControlPullResource) executePullOperation(
 	}
 	// Check for error.
 	if err != nil {
+		// Close response body before returning on error
+		if httpResp != nil && httpResp.Body != nil {
+			httpResp.Body.Close()
+		}
 		resp.Diagnostics.AddError(
 			"Error pulling from source control",
 			fmt.Sprintf("Could not pull from source control: %s\nHTTP Response: %v", err.Error(), httpResp),
@@ -261,12 +270,12 @@ func (r *SourceControlPullResource) executePullOperation(
 // updatePlanWithResult updates the plan with result data.
 //
 // Params:
-//   - plan: SourceControlPullResourceModel to update
+//   - plan: models.PullResource to update
 //   - importResult: import result from API
 //   - httpResp: HTTP response
 //   - resp: response for diagnostics
 func (r *SourceControlPullResource) updatePlanWithResult(
-	plan *SourceControlPullResourceModel,
+	plan *models.PullResource,
 	importResult *n8nsdk.ImportResult,
 	httpResp *http.Response,
 	resp *resource.CreateResponse,
@@ -299,7 +308,7 @@ func (r *SourceControlPullResource) updatePlanWithResult(
 //   - req: resource.ReadRequest
 //   - resp: *resource.ReadResponse
 func (r *SourceControlPullResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *SourceControlPullResourceModel
+	var state *models.PullResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.

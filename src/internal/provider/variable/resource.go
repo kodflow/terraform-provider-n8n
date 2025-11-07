@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/variable/models"
 )
 
 // Ensure VariableResource implements required interfaces.
@@ -159,7 +160,7 @@ func (r *VariableResource) Configure(ctx context.Context, req resource.Configure
 //
 //	(none, modifies resp parameter in place)
 func (r *VariableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *VariableResourceModel
+	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for error.
@@ -197,7 +198,7 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 //
 // Returns:
 //   - bool: true if successful, false if error occurred
-func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *VariableResourceModel, resp *resource.CreateResponse) bool {
+func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
 	variableRequest := buildVariableRequest(plan)
 
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesPost(ctx).
@@ -229,7 +230,7 @@ func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *Vari
 //
 // Returns:
 //   - *n8nsdk.Variable: found variable or nil if not found
-func (r *VariableResource) findCreatedVariable(ctx context.Context, plan *VariableResourceModel, resp *resource.CreateResponse) *n8nsdk.Variable {
+func (r *VariableResource) findCreatedVariable(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) *n8nsdk.Variable {
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -280,7 +281,7 @@ func (r *VariableResource) findCreatedVariable(ctx context.Context, plan *Variab
 //
 //	(none, modifies resp parameter in place)
 func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *VariableResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
@@ -351,8 +352,8 @@ func (r *VariableResource) findVariableByID(variableList *n8nsdk.VariableList, i
 //
 // Params:
 //   - foundVariable: variable data from API
-//   - state: VariableResourceModel to update
-func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variable, state *VariableResourceModel) {
+//   - state: models.Resource to update
+func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variable, state *models.Resource) {
 	state.Key = types.StringValue(foundVariable.Key)
 	state.Value = types.StringValue(foundVariable.Value)
 	// Check for non-nil value.
@@ -377,7 +378,7 @@ func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variabl
 //
 //	(none, modifies resp parameter in place)
 func (r *VariableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *VariableResourceModel
+	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for error.
@@ -415,7 +416,7 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 //
 // Returns:
 //   - bool: true if successful, false if error occurred
-func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *VariableResourceModel, resp *resource.UpdateResponse) bool {
+func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
 	variableRequest := buildVariableRequest(plan)
 
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdPut(ctx, plan.ID.ValueString()).
@@ -447,7 +448,7 @@ func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *Vari
 //
 // Returns:
 //   - *n8nsdk.Variable: found variable or nil if not found
-func (r *VariableResource) findUpdatedVariable(ctx context.Context, plan *VariableResourceModel, resp *resource.UpdateResponse) *n8nsdk.Variable {
+func (r *VariableResource) findUpdatedVariable(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) *n8nsdk.Variable {
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -497,7 +498,7 @@ func (r *VariableResource) findUpdatedVariable(ctx context.Context, plan *Variab
 //
 //	(none, modifies resp parameter in place)
 func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *VariableResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.

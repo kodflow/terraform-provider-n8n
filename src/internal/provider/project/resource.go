@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/project/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
@@ -132,7 +133,7 @@ func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureR
 //   - req: create request
 //   - resp: create response
 func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan ProjectResourceModel
+	var plan models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -171,7 +172,7 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 //   - success: true if project was created successfully
 func (r *ProjectResource) createProject(
 	ctx context.Context,
-	plan *ProjectResourceModel,
+	plan *models.Resource,
 	resp *resource.CreateResponse,
 ) bool {
 	projectRequest := n8nsdk.Project{
@@ -211,7 +212,7 @@ func (r *ProjectResource) createProject(
 //   - foundProject: pointer to the created project, nil if not found
 func (r *ProjectResource) findCreatedProject(
 	ctx context.Context,
-	plan *ProjectResourceModel,
+	plan *models.Resource,
 	resp *resource.CreateResponse,
 ) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
@@ -264,7 +265,7 @@ func (r *ProjectResource) findCreatedProject(
 //   - plan: planned project configuration to update
 //   - project: created project data from API
 func (r *ProjectResource) updatePlanFromProject(
-	plan *ProjectResourceModel,
+	plan *models.Resource,
 	project *n8nsdk.Project,
 ) {
 	plan.ID = types.StringPointerValue(project.Id)
@@ -283,7 +284,7 @@ func (r *ProjectResource) updatePlanFromProject(
 //   - req: read request
 //   - resp: read response
 func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ProjectResourceModel
+	var state models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
@@ -315,7 +316,7 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 //   - foundProject: pointer to the found project, nil if not found or error
 func (r *ProjectResource) findProjectByID(
 	ctx context.Context,
-	state *ProjectResourceModel,
+	state *models.Resource,
 	resp *resource.ReadResponse,
 ) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
@@ -366,7 +367,7 @@ func (r *ProjectResource) findProjectByID(
 //   - state: current state to update
 //   - project: project data from API
 func (r *ProjectResource) updateStateFromProject(
-	state *ProjectResourceModel,
+	state *models.Resource,
 	project *n8nsdk.Project,
 ) {
 	state.Name = types.StringValue(project.Name)
@@ -384,7 +385,7 @@ func (r *ProjectResource) updateStateFromProject(
 //   - req: update request
 //   - resp: update response
 func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ProjectResourceModel
+	var plan models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -422,7 +423,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 //
 // Returns:
 //   - bool: true if successful, false if error occurred
-func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *ProjectResourceModel, resp *resource.UpdateResponse) bool {
+func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
 	projectRequest := n8nsdk.Project{
 		Name: plan.Name.ValueString(),
 	}
@@ -456,7 +457,7 @@ func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *Projec
 //
 // Returns:
 //   - *n8nsdk.Project: found project or nil if not found
-func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *ProjectResourceModel, resp *resource.UpdateResponse) *n8nsdk.Project {
+func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -506,7 +507,7 @@ func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *Proj
 // Params:
 //   - project: source project
 //   - model: target project model
-func (r *ProjectResource) updateModelFromProject(project *n8nsdk.Project, model *ProjectResourceModel) {
+func (r *ProjectResource) updateModelFromProject(project *n8nsdk.Project, model *models.Resource) {
 	model.Name = types.StringValue(project.Name)
 	// Check for non-nil value.
 	if project.Type != nil {
@@ -521,7 +522,7 @@ func (r *ProjectResource) updateModelFromProject(project *n8nsdk.Project, model 
 //   - req: delete request
 //   - resp: delete response
 func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state ProjectResourceModel
+	var state models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.

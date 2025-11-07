@@ -245,12 +245,18 @@ func TestProviderConfigure(t *testing.T) {
 			var configValue tftypes.Value
 			// Check condition.
 			if tt.isValidConfig {
-				// Create an empty object value matching the schema
+				// Create a config object value matching the schema with required fields
 				configValue = tftypes.NewValue(
 					tftypes.Object{
-						AttributeTypes: map[string]tftypes.Type{},
+						AttributeTypes: map[string]tftypes.Type{
+							"api_key":  tftypes.String,
+							"base_url": tftypes.String,
+						},
 					},
-					map[string]tftypes.Value{},
+					map[string]tftypes.Value{
+						"api_key":  tftypes.NewValue(tftypes.String, "test-api-key"),
+						"base_url": tftypes.NewValue(tftypes.String, "https://test.example.com"),
+					},
 				)
 				// Handle alternative case.
 			} else {
@@ -290,15 +296,15 @@ func TestProviderResources(t *testing.T) {
 		expectNonNil  bool
 	}{
 		{
-			name:          "returns empty resource list",
+			name:          "returns resource list",
 			version:       "1.0.0",
-			expectedCount: 0,
+			expectedCount: 11,
 			expectNonNil:  true,
 		},
 		{
-			name:          "returns consistent empty list",
+			name:          "returns consistent resource list",
 			version:       "2.0.0",
-			expectedCount: 0,
+			expectedCount: 11,
 			expectNonNil:  true,
 		},
 	}
@@ -334,15 +340,15 @@ func TestProviderDataSources(t *testing.T) {
 		expectNonNil  bool
 	}{
 		{
-			name:          "returns empty data sources list",
+			name:          "returns data sources list",
 			version:       "1.0.0",
-			expectedCount: 0,
+			expectedCount: 12,
 			expectNonNil:  true,
 		},
 		{
-			name:          "returns consistent empty list",
+			name:          "returns consistent data sources list",
 			version:       "2.0.0",
-			expectedCount: 0,
+			expectedCount: 12,
 			expectNonNil:  true,
 		},
 	}

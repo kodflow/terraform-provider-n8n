@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/credential/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
@@ -134,7 +135,7 @@ func (r *CredentialTransferResource) Configure(ctx context.Context, req resource
 //   - req: create request from Terraform with plan data
 //   - resp: create response to populate with state and errors if any
 func (r *CredentialTransferResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *CredentialTransferResourceModel
+	var plan *models.TransferResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -178,7 +179,7 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 //   - req: read request from Terraform with state data
 //   - resp: read response to populate with state and errors if any
 func (r *CredentialTransferResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *CredentialTransferResourceModel
+	var state *models.TransferResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.

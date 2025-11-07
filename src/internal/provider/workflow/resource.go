@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
 )
 
 // WORKFLOW_ATTRIBUTES_SIZE defines the initial capacity for workflow attributes map.
@@ -240,7 +241,7 @@ func (r *WorkflowResource) Configure(ctx context.Context, req resource.Configure
 // Returns:
 //   - None: Updates resp with state and error diagnostics
 func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *WorkflowResourceModel
+	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for plan parsing errors.
@@ -312,7 +313,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 // Returns:
 //   - None: Updates resp with refreshed state and error diagnostics
 func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *WorkflowResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check for state parsing errors.
@@ -356,7 +357,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 // Returns:
 //   - None: Updates resp with updated state and error diagnostics
 func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state *WorkflowResourceModel
+	var plan, state *models.Resource
 
 	// Read Terraform plan and state data.
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -435,7 +436,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 // Returns:
 //   - None: Updates resp with error diagnostics if any
 func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *WorkflowResourceModel
+	var state *models.Resource
 
 	// Read Terraform prior state data into the model.
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

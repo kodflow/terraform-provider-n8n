@@ -2,7 +2,10 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "cmd",
-    srcs = ["root.go"],
+    srcs = [
+        "cmd.go",
+        "root.go",
+    ],
     importpath = "github.com/kodflow/n8n/src/cmd",
     visibility = ["//visibility:public"],
     deps = [

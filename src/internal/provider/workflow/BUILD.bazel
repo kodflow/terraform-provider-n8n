@@ -9,6 +9,7 @@ go_library(
         "//sdk/n8nsdk",
         "//src/internal/provider/shared/client",
         "//src/internal/provider/shared/constants",
+        "//src/internal/provider/workflow/models",
         "@com_github_hashicorp_terraform_plugin_framework//datasource",
         "@com_github_hashicorp_terraform_plugin_framework//datasource/schema",
         "@com_github_hashicorp_terraform_plugin_framework//diag",

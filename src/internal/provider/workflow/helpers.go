@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
 )
 
 // parseWorkflowJSON parses the JSON fields from a workflow model.
@@ -21,7 +22,7 @@ import (
 //   - []n8nsdk.Node: Parsed workflow nodes
 //   - map[string]interface{}: Parsed workflow connections
 //   - n8nsdk.WorkflowSettings: Parsed workflow settings
-func parseWorkflowJSON(plan *WorkflowResourceModel, diags *diag.Diagnostics) ([]n8nsdk.Node, map[string]interface{}, n8nsdk.WorkflowSettings) {
+func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk.Node, map[string]interface{}, n8nsdk.WorkflowSettings) {
 	// Parse nodes
 	var nodes []n8nsdk.Node
 	// Check for non-nil value.
@@ -106,7 +107,7 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 // Params:
 //   - workflow: The n8n workflow to map from
 //   - plan: The resource model to update
-func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *WorkflowResourceModel) {
+func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	// Set active status if available.
 	if workflow.Active != nil {
 		plan.Active = types.BoolPointerValue(workflow.Active)
@@ -130,7 +131,7 @@ func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *WorkflowResourceMod
 // Params:
 //   - workflow: The n8n workflow to map from
 //   - plan: The resource model to update
-func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *WorkflowResourceModel) {
+func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	// Set creation timestamp if available.
 	if workflow.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(workflow.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
@@ -149,7 +150,7 @@ func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *WorkflowResourceMode
 //   - workflow: The workflow from SDK to map
 //   - plan: The Terraform model to update
 //   - diags: Diagnostics for error reporting
-func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *WorkflowResourceModel, diags *diag.Diagnostics) {
+func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) {
 	// Basic fields
 	plan.Name = types.StringValue(workflow.Name)
 
@@ -194,7 +195,7 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *Wo
 //
 // Returns:
 //   - None: Updates plan in-place
-func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *WorkflowResourceModel) {
+func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	// Check for non-nil value.
 	if workflow.Nodes != nil {
 		// Check for error.
@@ -242,7 +243,7 @@ func convertTagIDsToTagIdsInner(tagIDs []string) []n8nsdk.TagIdsInner {
 //
 // Returns:
 //   - None: Updates workflow via API
-func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, state *WorkflowResourceModel, diags *diag.Diagnostics) {
+func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, state *models.Resource, diags *diag.Diagnostics) {
 	activeChanged := !plan.Active.IsNull() && !state.Active.IsNull() &&
 		plan.Active.ValueBool() != state.Active.ValueBool()
 
@@ -294,7 +295,7 @@ func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, s
 //
 // Returns:
 //   - None: Updates workflow tags via API
-func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID string, plan *WorkflowResourceModel, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) {
+func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID string, plan *models.Resource, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) {
 	// Check for null value.
 	if plan.Tags.IsNull() || plan.Tags.IsUnknown() {
 		// Return success status.

@@ -1,13 +1,15 @@
-// Package user contains resources and datasources for user management
-package user
+// Package models contains data models for the user domain.
+package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// UserResourceModel describes the resource data model.
-// Maps n8n user attributes to Terraform schema, storing user identity, role, and account information.
-type UserResourceModel struct {
+// Package user contains resources and datasources for user management
+
+// Resource describes the user resource data model.
+// Maps n8n user attributes to Terraform schema for managing user accounts and roles.
+type Resource struct {
 	ID        types.String `tfsdk:"id"`
 	Email     types.String `tfsdk:"email"`
 	FirstName types.String `tfsdk:"first_name"`

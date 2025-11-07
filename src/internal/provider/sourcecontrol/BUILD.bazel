@@ -8,9 +8,7 @@ go_library(
     deps = [
         "//sdk/n8nsdk",
         "//src/internal/provider/shared/client",
-        "//src/internal/provider/shared/constants",
-        "@com_github_hashicorp_terraform_plugin_framework//datasource",
-        "@com_github_hashicorp_terraform_plugin_framework//datasource/schema",
+        "//src/internal/provider/sourcecontrol/models",
         "@com_github_hashicorp_terraform_plugin_framework//path",
         "@com_github_hashicorp_terraform_plugin_framework//resource",
         "@com_github_hashicorp_terraform_plugin_framework//resource/schema",

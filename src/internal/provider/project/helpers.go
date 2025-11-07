@@ -65,25 +65,6 @@ func mapProjectToDataSourceModel(project *n8nsdk.Project, data *models.DataSourc
 	}
 }
 
-// mapProjectToResourceModel maps an SDK project to the resource model.
-// Currently unused but kept for potential future use.
-// nolint:unused
-//
-// Params:
-//   - project: SDK project object to map
-//   - data: Target resource model to populate
-func mapProjectToResourceModel(project *n8nsdk.Project, data *ProjectResourceModel) {
-	// Check for non-nil value.
-	if project.Id != nil {
-		data.ID = types.StringValue(*project.Id)
-	}
-	data.Name = types.StringValue(project.Name)
-	// Check for non-nil value.
-	if project.Type != nil {
-		data.Type = types.StringValue(*project.Type)
-	}
-}
-
 // mapProjectToItem maps an SDK project to the project item model for datasources.
 //
 // Params:

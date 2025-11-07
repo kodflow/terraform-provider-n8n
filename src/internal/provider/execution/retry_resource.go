@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/execution/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
@@ -167,7 +168,7 @@ func (r *ExecutionRetryResource) Configure(ctx context.Context, req resource.Con
 // Returns:
 //   - void
 func (r *ExecutionRetryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ExecutionRetryResourceModel
+	var plan *models.RetryResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -219,7 +220,7 @@ func (r *ExecutionRetryResource) Create(ctx context.Context, req resource.Create
 // Returns:
 //   - void
 func (r *ExecutionRetryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *ExecutionRetryResourceModel
+	var state *models.RetryResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
@@ -276,7 +277,7 @@ func (r *ExecutionRetryResource) ImportState(ctx context.Context, req resource.I
 // Params:
 //   - execution: the execution response from the API
 //   - model: the resource model to populate
-func populateRetryExecutionData(execution *n8nsdk.Execution, model *ExecutionRetryResourceModel) {
+func populateRetryExecutionData(execution *n8nsdk.Execution, model *models.RetryResource) {
 	// Check if execution ID is available.
 	if execution.Id != nil {
 		model.NewExecutionID = types.StringValue(fmt.Sprintf("%v", *execution.Id))

@@ -163,7 +163,7 @@ func (r *CredentialResource) Configure(ctx context.Context, req resource.Configu
 //   - req: Create request with plan data
 //   - resp: Create response
 func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *CredentialResourceModel
+	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check if plan read succeeded.
@@ -228,7 +228,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 //   - req: Read request with state
 //   - resp: Read response
 func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *CredentialResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check if state read succeeded.
@@ -256,7 +256,7 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 //   - req: Update request with plan and state
 //   - resp: Update response
 func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state *CredentialResourceModel
+	var plan, state *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -330,7 +330,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 //   - req: Delete request with state
 //   - resp: Delete response
 func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *CredentialResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check if state read succeeded.

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/tag/models"
 )
 
 // Ensure TagResource implements required interfaces.
@@ -146,7 +147,7 @@ func (r *TagResource) Configure(ctx context.Context, req resource.ConfigureReque
 // Returns:
 //   - none
 func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *TagResourceModel
+	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -201,7 +202,7 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 // Returns:
 //   - none
 func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *TagResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
@@ -249,7 +250,7 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 // Returns:
 //   - none
 func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *TagResourceModel
+	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -303,7 +304,7 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 // Returns:
 //   - none
 func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *TagResourceModel
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.

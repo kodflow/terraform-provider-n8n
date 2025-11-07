@@ -26,5 +26,9 @@ KTN_VERSION=$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/l
 curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v${KTN_VERSION}/ktn-linter-linux-${KTN_ARCH}" -o "$HOME/.local/bin/ktn-linter"
 chmod +x "$HOME/.local/bin/ktn-linter"
 
+# Install golangci-lint v2 (supports Go 1.25+)
+echo "🧹 Installing golangci-lint v2..."
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$HOME/.local/bin" v2.6.1
+
 echo "✅ Development tools installed successfully!"
 echo "ℹ️  Go tools will be installed on container start..."

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/project/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
@@ -145,7 +146,7 @@ func (r *ProjectUserResource) Configure(ctx context.Context, req resource.Config
 // Returns:
 //   - none
 func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ProjectUserResourceModel
+	var plan *models.UserResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
@@ -195,7 +196,7 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 // Returns:
 //   - none
 func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *ProjectUserResourceModel
+	var state *models.UserResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
@@ -225,7 +226,7 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 //   - found: true if user was found in project
 func (r *ProjectUserResource) findUserInProject(
 	ctx context.Context,
-	state *ProjectUserResourceModel,
+	state *models.UserResource,
 	resp *resource.ReadResponse,
 ) bool {
 	userList, httpResp, err := r.client.APIClient.UserAPI.UsersGet(ctx).
@@ -272,7 +273,7 @@ func (r *ProjectUserResource) findUserInProject(
 //   - found: true if user was found in the list
 func (r *ProjectUserResource) searchUserInList(
 	userList *n8nsdk.UserList,
-	state *ProjectUserResourceModel,
+	state *models.UserResource,
 ) bool {
 	// Check for non-nil value.
 	if userList.Data == nil {
@@ -306,7 +307,7 @@ func (r *ProjectUserResource) searchUserInList(
 // Returns:
 //   - none
 func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state *ProjectUserResourceModel
+	var plan, state *models.UserResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -363,7 +364,7 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 // Returns:
 //   - none
 func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *ProjectUserResourceModel
+	var state *models.UserResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.

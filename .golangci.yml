@@ -53,6 +53,7 @@ linters:
     staticcheck:
       checks:
         - all
+        - "-ST1003" # Disabled due to conflict with ktn-linter constant naming requirements
   exclusions:
     generated: lax
     presets:
@@ -90,9 +91,11 @@ linters:
       - third_party$
       - builtin$
       - examples$
+
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+
 formatters:
   exclusions:
     generated: lax
