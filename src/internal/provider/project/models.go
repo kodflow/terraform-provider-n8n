@@ -12,4 +12,3 @@ type ProjectResourceModel struct {
 	Name types.String `tfsdk:"name"`
 	Type types.String `tfsdk:"type"`
 }
-

@@ -1,9 +1,9 @@
 package workflow
 
 import (
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 	"context"
 	"fmt"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -14,12 +14,23 @@ import (
 // Ensure WorkflowsDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &WorkflowsDataSource{}
+	_ WorkflowsDataSourceInterface       = &WorkflowsDataSource{}
 	_ datasource.DataSourceWithConfigure = &WorkflowsDataSource{}
 )
+
+// WorkflowsDataSourceInterface defines the interface for WorkflowsDataSource.
+type WorkflowsDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // WorkflowsDataSource provides a Terraform datasource for read-only access to n8n workflows.
 // It enables users to fetch and list workflows from their n8n instance through the n8n API with optional filtering.
 type WorkflowsDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
@@ -27,24 +38,19 @@ type WorkflowsDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: A new WorkflowsDataSource instance
-func NewWorkflowsDataSource() datasource.DataSource {
+func NewWorkflowsDataSource() *WorkflowsDataSource {
 	// Return result.
 	return &WorkflowsDataSource{}
 }
 
-// WorkflowsDataSourceModel maps the Terraform schema attributes for the workflows datasource.
-// It represents the complete set of workflows data returned by the n8n API with optional active status filtering.
-type WorkflowsDataSourceModel struct {
-	Workflows []WorkflowItemModel `tfsdk:"workflows"`
-	Active    types.Bool          `tfsdk:"active"`
-}
-
-// WorkflowItemModel maps individual workflow attributes within the Terraform schema.
-// Each item represents a single workflow with its identifier, name, and activation status.
-type WorkflowItemModel struct {
-	ID     types.String `tfsdk:"id"`
-	Name   types.String `tfsdk:"name"`
-	Active types.Bool   `tfsdk:"active"`
+// NewWorkflowsDataSourceWrapper creates a new WorkflowsDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped WorkflowsDataSource instance
+func NewWorkflowsDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewWorkflowsDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -53,8 +59,6 @@ type WorkflowItemModel struct {
 //   - ctx: context for the operation
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to populate with type name
-//
-// Returns:
 func (d *WorkflowsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workflows"
 }
@@ -65,8 +69,6 @@ func (d *WorkflowsDataSource) Metadata(ctx context.Context, req datasource.Metad
 //   - ctx: context for the operation
 //   - req: schema request
 //   - resp: schema response to populate with schema definition
-//
-// Returns:
 func (d *WorkflowsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n workflows",
@@ -106,11 +108,10 @@ func (d *WorkflowsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 //   - ctx: context for the operation
 //   - req: configure request containing provider data
 //   - resp: configure response for error handling
-//
-// Returns:
 func (d *WorkflowsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -134,14 +135,13 @@ func (d *WorkflowsDataSource) Configure(ctx context.Context, req datasource.Conf
 //   - ctx: context for the operation
 //   - req: read request containing configuration
 //   - resp: read response to populate with state data
-//
-// Returns:
 func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data WorkflowsDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -170,7 +170,7 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response to state
-	data.Workflows = make([]WorkflowItemModel, 0, constants.DefaultListCapacity)
+	data.Workflows = make([]WorkflowItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check for non-nil value.
 	if workflowList.Data != nil {
 		// Iterate over items.

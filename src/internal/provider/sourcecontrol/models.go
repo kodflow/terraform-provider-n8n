@@ -13,4 +13,3 @@ type SourceControlPullResourceModel struct {
 	VariablesJSON types.String `tfsdk:"variables_json"`
 	ResultJSON    types.String `tfsdk:"result_json"`
 }
-

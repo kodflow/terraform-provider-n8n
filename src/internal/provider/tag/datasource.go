@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
@@ -14,33 +13,43 @@ import (
 // Ensure TagDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &TagDataSource{}
+	_ TagDataSourceInterface             = &TagDataSource{}
 	_ datasource.DataSourceWithConfigure = &TagDataSource{}
 )
+
+// TagDataSourceInterface defines the interface for TagDataSource.
+type TagDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // TagDataSource is a Terraform datasource that provides read-only access to a single n8n tag.
 // It fetches tag details from the n8n API using ID or name-based filtering.
 type TagDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
-}
-
-// TagDataSourceModel maps the Terraform schema to a single tag from the n8n API.
-// It contains tag metadata including name and creation/update timestamps.
-type TagDataSourceModel struct {
-	ID        types.String `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	CreatedAt types.String `tfsdk:"created_at"`
-	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
 // NewTagDataSource creates a new TagDataSource instance.
 //
-// Params:
-//   - None
 // Returns:
 //   - datasource.DataSource: A new TagDataSource instance
-func NewTagDataSource() datasource.DataSource {
+func NewTagDataSource() *TagDataSource {
 	// Return result.
 	return &TagDataSource{}
+}
+
+// NewTagDataSourceWrapper creates a new TagDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped TagDataSource instance
+func NewTagDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewTagDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -104,6 +113,7 @@ func (d *TagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 func (d *TagDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil provider data.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -133,76 +143,132 @@ func (d *TagDataSource) Configure(ctx context.Context, req datasource.ConfigureR
 func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	data := &TagDataSourceModel{}
 
-	
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// If there are errors from config parsing, return early.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
 	// Validate that at least one identifier is provided.
+	if !d.validateIdentifier(data, resp) {
+		// Return result.
+		return
+	}
+
+	// Fetch tag by ID or name
+	var tag *n8nsdk.Tag
+	// Check for non-null value.
+	if !data.ID.IsNull() {
+		tag = d.fetchTagByID(ctx, data, resp)
+		// Handle alternative case.
+	} else {
+		tag = d.fetchTagByName(ctx, data, resp)
+	}
+
+	// Check if tag was found
+	if tag == nil {
+		// Return result.
+		return
+	}
+
+	// Map tag to model.
+	mapTagToDataSourceModel(tag, data)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+}
+
+// validateIdentifier ensures at least one identifier is provided.
+//
+// Params:
+//   - data: The data source model
+//   - resp: The read response
+//
+// Returns:
+//   - bool: true if valid, false otherwise
+func (d *TagDataSource) validateIdentifier(data *TagDataSourceModel, resp *datasource.ReadResponse) bool {
+	// Check for non-null value.
 	if data.ID.IsNull() && data.Name.IsNull() {
 		resp.Diagnostics.AddError(
 			"Missing Required Attribute",
 			"Either 'id' or 'name' must be specified",
 		)
-		return
+		return false
+	}
+	return true
+}
+
+// fetchTagByID retrieves a tag using the direct GET endpoint.
+//
+// Params:
+//   - ctx: The request context
+//   - data: The data source model
+//   - resp: The read response
+//
+// Returns:
+//   - *n8nsdk.Tag: The found tag or nil if error occurred
+func (d *TagDataSource) fetchTagByID(ctx context.Context, data *TagDataSourceModel, resp *datasource.ReadResponse) *n8nsdk.Tag {
+	tag, httpResp, err := d.client.APIClient.TagsAPI.TagsIdGet(ctx, data.ID.ValueString()).Execute()
+	// Close HTTP response body if present.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	// Check if API call returned an error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error retrieving tag",
+			fmt.Sprintf("Could not retrieve tag with ID %s: %s\nHTTP Response: %v", data.ID.ValueString(), err.Error(), httpResp),
+		)
+		// Return with error.
+		return nil
+	}
+	// Return result.
+	return tag
+}
+
+// fetchTagByName retrieves a tag by listing and filtering by name.
+//
+// Params:
+//   - ctx: The request context
+//   - data: The data source model
+//   - resp: The read response
+//
+// Returns:
+//   - *n8nsdk.Tag: The found tag or nil if error occurred
+func (d *TagDataSource) fetchTagByName(ctx context.Context, data *TagDataSourceModel, resp *datasource.ReadResponse) *n8nsdk.Tag {
+	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
+	// Close HTTP response body if present.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	// Check if API call returned an error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error listing tags",
+			fmt.Sprintf("Could not list tags: %s\nHTTP Response: %v", err.Error(), httpResp),
+		)
+		// Return with error.
+		return nil
 	}
 
-	// If ID is provided, use the direct GET endpoint.
-	if !data.ID.IsNull() {
-		tag, httpResp, err := d.client.APIClient.TagsAPI.TagsIdGet(ctx, data.ID.ValueString()).Execute()
-		// Close HTTP response body if present.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
-		// Check if API call returned an error.
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error retrieving tag",
-				fmt.Sprintf("Could not retrieve tag with ID %s: %s\nHTTP Response: %v", data.ID.ValueString(), err.Error(), httpResp),
-			)
-			return
-		}
-
-		// Map tag to model.
-		mapTagToDataSourceModel(tag, data)
-	} else {
-		// If only name is provided, list all tags and filter client-side.
-		tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
-		// Close HTTP response body if present.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
-		// Check if API call returned an error.
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error listing tags",
-				fmt.Sprintf("Could not list tags: %s\nHTTP Response: %v", err.Error(), httpResp),
-			)
-			return
-		}
-
-		// Find tag by name in the response data.
-		var tag *n8nsdk.Tag
-		var found bool
-		// Check if tag list data is not empty.
-		if tagList.Data != nil {
-			tag, found = findTagByName(tagList.Data, data.Name.ValueString())
-		}
-
-		// Return error if tag was not found.
-		if !found {
-			resp.Diagnostics.AddError(
-				"Tag Not Found",
-				fmt.Sprintf("Could not find tag with name: %s", data.Name.ValueString()),
-			)
-			return
-		}
-
-		// Map tag to model.
-		mapTagToDataSourceModel(tag, data)
+	// Find tag by name in the response data.
+	var tag *n8nsdk.Tag
+	var found bool
+	// Check if tag list data is not empty.
+	if tagList.Data != nil {
+		tag, found = findTagByName(tagList.Data, data.Name.ValueString())
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	// Return error if tag was not found.
+	if !found {
+		resp.Diagnostics.AddError(
+			"Tag Not Found",
+			fmt.Sprintf("Could not find tag with name: %s", data.Name.ValueString()),
+		)
+		// Return with error.
+		return nil
+	}
+
+	// Return result.
+	return tag
 }

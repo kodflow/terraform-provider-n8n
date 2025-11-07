@@ -15,4 +15,3 @@ type CredentialResourceModel struct {
 	CreatedAt types.String `tfsdk:"created_at"`
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
-

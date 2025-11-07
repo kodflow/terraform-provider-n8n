@@ -101,6 +101,46 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 	return emptyList
 }
 
+// mapWorkflowBasicFields maps basic workflow fields to the model.
+//
+// Params:
+//   - workflow: The n8n workflow to map from
+//   - plan: The resource model to update
+func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *WorkflowResourceModel) {
+	// Set active status if available.
+	if workflow.Active != nil {
+		plan.Active = types.BoolPointerValue(workflow.Active)
+	}
+	// Set version ID if available.
+	if workflow.VersionId != nil {
+		plan.VersionID = types.StringPointerValue(workflow.VersionId)
+	}
+	// Set archived status if available.
+	if workflow.IsArchived != nil {
+		plan.IsArchived = types.BoolPointerValue(workflow.IsArchived)
+	}
+	// Set trigger count if available.
+	if workflow.TriggerCount != nil {
+		plan.TriggerCount = types.Int64Value(int64(*workflow.TriggerCount))
+	}
+}
+
+// mapWorkflowTimestamps maps workflow timestamps to the model.
+//
+// Params:
+//   - workflow: The n8n workflow to map from
+//   - plan: The resource model to update
+func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *WorkflowResourceModel) {
+	// Set creation timestamp if available.
+	if workflow.CreatedAt != nil {
+		plan.CreatedAt = types.StringValue(workflow.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
+	}
+	// Set update timestamp if available.
+	if workflow.UpdatedAt != nil {
+		plan.UpdatedAt = types.StringValue(workflow.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
+	}
+}
+
 // mapWorkflowToModel maps a workflow from the SDK to the Terraform model.
 // This updates computed fields like timestamps, version, metadata, etc.
 //
@@ -109,41 +149,18 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 //   - workflow: The workflow from SDK to map
 //   - plan: The Terraform model to update
 //   - diags: Diagnostics for error reporting
-//
-// Returns:
-//   - None: Updates plan in-place
 func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *WorkflowResourceModel, diags *diag.Diagnostics) {
 	// Basic fields
 	plan.Name = types.StringValue(workflow.Name)
-	// Check for non-nil value.
-	if workflow.Active != nil {
-		plan.Active = types.BoolPointerValue(workflow.Active)
-	}
+
+	// Map simple fields
+	mapWorkflowBasicFields(workflow, plan)
 
 	// Tags
 	plan.Tags = mapTagsFromWorkflow(ctx, workflow, diags)
 
-	// Timestamps and metadata
-	// Check for non-nil value.
-	if workflow.CreatedAt != nil {
-		plan.CreatedAt = types.StringValue(workflow.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
-	}
-	// Check for non-nil value.
-	if workflow.UpdatedAt != nil {
-		plan.UpdatedAt = types.StringValue(workflow.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
-	}
-	// Check for non-nil value.
-	if workflow.VersionId != nil {
-		plan.VersionID = types.StringPointerValue(workflow.VersionId)
-	}
-	// Check for non-nil value.
-	if workflow.IsArchived != nil {
-		plan.IsArchived = types.BoolPointerValue(workflow.IsArchived)
-	}
-	// Check for non-nil value.
-	if workflow.TriggerCount != nil {
-		plan.TriggerCount = types.Int64Value(int64(*workflow.TriggerCount))
-	}
+	// Map timestamps
+	mapWorkflowTimestamps(workflow, plan)
 
 	// Map objects
 	// Check for non-nil value.
@@ -243,6 +260,7 @@ func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, s
 	if plan.Active.ValueBool() {
 		_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdActivatePost(ctx, plan.ID.ValueString()).Execute()
 	} else {
+		// Deactivate workflow when Active is false
 		_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdDeactivatePost(ctx, plan.ID.ValueString()).Execute()
 	}
 

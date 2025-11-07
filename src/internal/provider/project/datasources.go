@@ -1,53 +1,55 @@
 package project
 
 import (
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 	"context"
 	"fmt"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
 // Ensure ProjectsDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &ProjectsDataSource{}
+	_ ProjectsDataSourceInterface        = &ProjectsDataSource{}
 	_ datasource.DataSourceWithConfigure = &ProjectsDataSource{}
 )
+
+// ProjectsDataSourceInterface defines the interface for ProjectsDataSource.
+type ProjectsDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // ProjectsDataSource is a Terraform datasource that provides read-only access to all n8n projects.
 // It enables querying and iterating through all available projects from the n8n API.
 type ProjectsDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
-}
-
-// ProjectsDataSourceModel maps the Terraform schema to the datasource response.
-// It represents a list of projects retrieved from the n8n API with all project details.
-type ProjectsDataSourceModel struct {
-	Projects []ProjectItemModel `tfsdk:"projects"`
-}
-
-// ProjectItemModel represents a single project in the list returned from the n8n API.
-// It contains project metadata including name, type, timestamps, and descriptive information.
-type ProjectItemModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Type        types.String `tfsdk:"type"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	UpdatedAt   types.String `tfsdk:"updated_at"`
-	Icon        types.String `tfsdk:"icon"`
-	Description types.String `tfsdk:"description"`
 }
 
 // NewProjectsDataSource creates a new ProjectsDataSource instance.
 //
 // Returns:
 //   - datasource.DataSource: a new ProjectsDataSource instance configured for accessing n8n projects
-func NewProjectsDataSource() datasource.DataSource {
+func NewProjectsDataSource() *ProjectsDataSource {
 	// Return result.
 	return &ProjectsDataSource{}
+}
+
+// NewProjectsDataSourceWrapper creates a new ProjectsDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped ProjectsDataSource instance
+func NewProjectsDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewProjectsDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -56,8 +58,6 @@ func NewProjectsDataSource() datasource.DataSource {
 //   - ctx: context for the request
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to populate
-//
-// Returns:
 func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_projects"
 }
@@ -68,49 +68,64 @@ func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.Metada
 //   - ctx: context for the request
 //   - req: schema request from the framework
 //   - resp: schema response to populate with schema definition
-//
-// Returns:
 func (d *ProjectsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n projects",
+		Attributes:          d.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"projects": schema.ListNestedAttribute{
-				MarkdownDescription: "List of projects",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							MarkdownDescription: "Project identifier",
-							Computed:            true,
-						},
-						"name": schema.StringAttribute{
-							MarkdownDescription: "Project name",
-							Computed:            true,
-						},
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Project type (e.g., 'team', 'personal')",
-							Computed:            true,
-						},
-						"created_at": schema.StringAttribute{
-							MarkdownDescription: "Timestamp when the project was created",
-							Computed:            true,
-						},
-						"updated_at": schema.StringAttribute{
-							MarkdownDescription: "Timestamp when the project was last updated",
-							Computed:            true,
-						},
-						"icon": schema.StringAttribute{
-							MarkdownDescription: "Project icon",
-							Computed:            true,
-						},
-						"description": schema.StringAttribute{
-							MarkdownDescription: "Project description",
-							Computed:            true,
-						},
-					},
-				},
+// schemaAttributes returns the attribute definitions for this datasource.
+//
+// Returns:
+//   - map[string]schema.Attribute: the datasource attribute definitions
+func (d *ProjectsDataSource) schemaAttributes() map[string]schema.Attribute {
+	// Return schema attributes.
+	return map[string]schema.Attribute{
+		"projects": schema.ListNestedAttribute{
+			MarkdownDescription: "List of projects",
+			Computed:            true,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: d.projectAttributes(),
 			},
+		},
+	}
+}
+
+// projectAttributes returns the attribute definitions for a project item.
+//
+// Returns:
+//   - map[string]schema.Attribute: the project item attribute definitions
+func (d *ProjectsDataSource) projectAttributes() map[string]schema.Attribute {
+	// Return schema attributes.
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Project identifier",
+			Computed:            true,
+		},
+		"name": schema.StringAttribute{
+			MarkdownDescription: "Project name",
+			Computed:            true,
+		},
+		"type": schema.StringAttribute{
+			MarkdownDescription: "Project type (e.g., 'team', 'personal')",
+			Computed:            true,
+		},
+		"created_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the project was created",
+			Computed:            true,
+		},
+		"updated_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the project was last updated",
+			Computed:            true,
+		},
+		"icon": schema.StringAttribute{
+			MarkdownDescription: "Project icon",
+			Computed:            true,
+		},
+		"description": schema.StringAttribute{
+			MarkdownDescription: "Project description",
+			Computed:            true,
 		},
 	}
 }
@@ -121,11 +136,10 @@ func (d *ProjectsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 //   - ctx: context for the request
 //   - req: configure request containing provider data
 //   - resp: configure response to report errors
-//
-// Returns:
 func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -149,8 +163,6 @@ func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.Confi
 //   - ctx: context for the request
 //   - req: read request from Terraform
 //   - resp: read response to populate with data
-//
-// Returns:
 func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ProjectsDataSourceModel
 
@@ -169,7 +181,7 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	data.Projects = make([]ProjectItemModel, 0, constants.DefaultListCapacity)
+	data.Projects = make([]ProjectItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Iterate through all projects and convert them to the model format.
 	if projectList.Data != nil {
 		// Convert each project from the API response to the ProjectItemModel format.

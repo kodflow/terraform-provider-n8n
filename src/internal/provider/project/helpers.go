@@ -36,8 +36,6 @@ func findProjectByIDOrName(projects []n8nsdk.Project, id, name types.String) (*n
 // Params:
 //   - project: SDK project object to map
 //   - data: Target datasource model to populate
-//
-// Returns:
 func mapProjectToDataSourceModel(project *n8nsdk.Project, data *ProjectDataSourceModel) {
 	// Check for non-nil value.
 	if project.Id != nil {
@@ -73,8 +71,6 @@ func mapProjectToDataSourceModel(project *n8nsdk.Project, data *ProjectDataSourc
 // Params:
 //   - project: SDK project object to map
 //   - data: Target resource model to populate
-//
-// Returns:
 func mapProjectToResourceModel(project *n8nsdk.Project, data *ProjectResourceModel) {
 	// Check for non-nil value.
 	if project.Id != nil {
@@ -95,7 +91,7 @@ func mapProjectToResourceModel(project *n8nsdk.Project, data *ProjectResourceMod
 // Returns:
 //   - ProjectItemModel: Mapped project item model
 func mapProjectToProjectItemModel(project *n8nsdk.Project) ProjectItemModel {
-	item := ProjectItemModel{
+	item := &ProjectItemModel{
 		Name: types.StringValue(project.Name),
 	}
 
@@ -125,5 +121,5 @@ func mapProjectToProjectItemModel(project *n8nsdk.Project) ProjectItemModel {
 	}
 
 	// Return result.
-	return item
+	return *item
 }

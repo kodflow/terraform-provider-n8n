@@ -3,23 +3,35 @@ package variable
 import (
 	"context"
 	"fmt"
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
 
 // Ensure VariablesDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &VariablesDataSource{}
+	_ VariablesDataSourceInterface       = &VariablesDataSource{}
 	_ datasource.DataSourceWithConfigure = &VariablesDataSource{}
 )
+
+// VariablesDataSourceInterface defines the interface for VariablesDataSource.
+type VariablesDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // VariablesDataSource provides a Terraform datasource for read-only access to n8n variables.
 // It enables users to fetch and list variables from their n8n instance through the n8n API.
 type VariablesDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
@@ -27,27 +39,19 @@ type VariablesDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: a new VariablesDataSource instance
-func NewVariablesDataSource() datasource.DataSource {
+func NewVariablesDataSource() *VariablesDataSource {
 	// Return result.
 	return &VariablesDataSource{}
 }
 
-// VariablesDataSourceModel maps the Terraform schema attributes for the variables datasource.
-// It represents the complete set of variables data returned by the n8n API with optional filtering.
-type VariablesDataSourceModel struct {
-	ProjectID types.String        `tfsdk:"project_id"`
-	State     types.String        `tfsdk:"state"`
-	Variables []VariableItemModel `tfsdk:"variables"`
-}
-
-// VariableItemModel maps individual variable attributes within the Terraform schema.
-// Each item represents a single variable with its ID, key, value, type, and associated project.
-type VariableItemModel struct {
-	ID        types.String `tfsdk:"id"`
-	Key       types.String `tfsdk:"key"`
-	Value     types.String `tfsdk:"value"`
-	Type      types.String `tfsdk:"type"`
-	ProjectID types.String `tfsdk:"project_id"`
+// NewVariablesDataSourceWrapper creates a new VariablesDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped VariablesDataSource instance
+func NewVariablesDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewVariablesDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -75,45 +79,60 @@ func (d *VariablesDataSource) Metadata(ctx context.Context, req datasource.Metad
 func (d *VariablesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n variables with optional filtering",
+		Attributes:          d.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"project_id": schema.StringAttribute{
-				MarkdownDescription: "Filter variables by project ID",
-				Optional:            true,
-			},
-			"state": schema.StringAttribute{
-				MarkdownDescription: "Filter variables by state (e.g., 'empty')",
-				Optional:            true,
-			},
-			"variables": schema.ListNestedAttribute{
-				MarkdownDescription: "List of variables",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							MarkdownDescription: "Variable identifier",
-							Computed:            true,
-						},
-						"key": schema.StringAttribute{
-							MarkdownDescription: "Variable key",
-							Computed:            true,
-						},
-						"value": schema.StringAttribute{
-							MarkdownDescription: "Variable value",
-							Computed:            true,
-							Sensitive:           true,
-						},
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Variable type",
-							Computed:            true,
-						},
-						"project_id": schema.StringAttribute{
-							MarkdownDescription: "Project ID the variable belongs to",
-							Computed:            true,
-						},
-					},
-				},
-			},
+// schemaAttributes returns the attribute definitions for the variables data source schema.
+//
+// Returns:
+//   - map[string]schema.Attribute: the data source attribute definitions
+func (d *VariablesDataSource) schemaAttributes() map[string]schema.Attribute {
+	// Return schema attributes.
+	return map[string]schema.Attribute{
+		"project_id": schema.StringAttribute{
+			MarkdownDescription: "Filter variables by project ID",
+			Optional:            true,
+		},
+		"state": schema.StringAttribute{
+			MarkdownDescription: "Filter variables by state (e.g., 'empty')",
+			Optional:            true,
+		},
+		"variables": schema.ListNestedAttribute{
+			MarkdownDescription: "List of variables",
+			Computed:            true,
+			NestedObject:        schema.NestedAttributeObject{Attributes: d.variableItemAttributes()},
+		},
+	}
+}
+
+// variableItemAttributes returns the nested attribute definitions for individual variable items.
+//
+// Returns:
+//   - map[string]schema.Attribute: the variable item attribute definitions
+func (d *VariablesDataSource) variableItemAttributes() map[string]schema.Attribute {
+	// Return schema attributes.
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Variable identifier",
+			Computed:            true,
+		},
+		"key": schema.StringAttribute{
+			MarkdownDescription: "Variable key",
+			Computed:            true,
+		},
+		"value": schema.StringAttribute{
+			MarkdownDescription: "Variable value",
+			Computed:            true,
+			Sensitive:           true,
+		},
+		"type": schema.StringAttribute{
+			MarkdownDescription: "Variable type",
+			Computed:            true,
+		},
+		"project_id": schema.StringAttribute{
+			MarkdownDescription: "Project ID the variable belongs to",
+			Computed:            true,
 		},
 	}
 }
@@ -130,6 +149,7 @@ func (d *VariablesDataSource) Schema(ctx context.Context, req datasource.SchemaR
 func (d *VariablesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// If no provider data is available, exit early
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -162,20 +182,12 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// If there are errors in loading the config, return early
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
 	// Build API request with optional filters
-	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
-
-	// If a project ID filter is specified, add it to the API request
-	if !data.ProjectID.IsNull() {
-		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
-	}
-	// If a state filter is specified, add it to the API request
-	if !data.State.IsNull() {
-		apiReq = apiReq.State(data.State.ValueString())
-	}
+	apiReq := d.buildAPIRequestWithFilters(ctx, &data)
 
 	variableList, httpResp, err := apiReq.Execute()
 	// Ensure the HTTP response body is properly closed to prevent resource leaks
@@ -188,33 +200,81 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 			"Error listing variables",
 			fmt.Sprintf("Could not list variables: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return early on API error
+		// Return with error.
 		return
 	}
 
-	data.Variables = make([]VariableItemModel, 0, constants.DefaultListCapacity)
-	// If the API returned variable data, process each variable
-	if variableList.Data != nil {
-		// For each variable returned from the API, map it to the Terraform model
-		for _, variable := range variableList.Data {
-			item := VariableItemModel{}
-			// If the variable has an ID, include it in the model
-			if variable.Id != nil {
-				item.ID = types.StringValue(*variable.Id)
-			}
-			item.Key = types.StringValue(variable.Key)
-			item.Value = types.StringValue(variable.Value)
-			// If the variable has a type, include it in the model
-			if variable.Type != nil {
-				item.Type = types.StringPointerValue(variable.Type)
-			}
-			// Extract project ID if the project object and its ID are present
-			if variable.Project != nil && variable.Project.Id != nil {
-				item.ProjectID = types.StringPointerValue(variable.Project.Id)
-			}
-			data.Variables = append(data.Variables, item)
-		}
+	d.populateVariables(&data, variableList)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// buildAPIRequestWithFilters builds the API request with optional filters.
+//
+// Params:
+//   - ctx: context for the request
+//   - data: VariablesDataSourceModel with filter values
+//
+// Returns:
+//   - n8nsdk.VariablesAPIVariablesGetRequest: API request with filters applied
+func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, data *VariablesDataSourceModel) n8nsdk.VariablesAPIVariablesGetRequest {
+	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
+
+	// If a project ID filter is specified, add it to the API request
+	if !data.ProjectID.IsNull() {
+		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
+	}
+	// If a state filter is specified, add it to the API request
+	if !data.State.IsNull() {
+		apiReq = apiReq.State(data.State.ValueString())
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Return result.
+	return apiReq
+}
+
+// populateVariables populates the variables list from the API response.
+//
+// Params:
+//   - data: VariablesDataSourceModel to populate
+//   - variableList: API response with variable data
+func (d *VariablesDataSource) populateVariables(data *VariablesDataSourceModel, variableList *n8nsdk.VariableList) {
+	data.Variables = make([]VariableItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+	// If the API returned variable data, process each variable
+	if variableList.Data == nil {
+		// Return result.
+		return
+	}
+
+	// For each variable returned from the API, map it to the Terraform model
+	for _, variable := range variableList.Data {
+		item := d.mapVariableToItem(&variable)
+		data.Variables = append(data.Variables, *item)
+	}
+}
+
+// mapVariableToItem maps a variable from the API to a VariableItemModel.
+//
+// Params:
+//   - variable: variable from API response
+//
+// Returns:
+//   - *VariableItemModel: pointer to mapped variable item
+func (d *VariablesDataSource) mapVariableToItem(variable *n8nsdk.Variable) *VariableItemModel {
+	item := &VariableItemModel{}
+	// If the variable has an ID, include it in the model
+	if variable.Id != nil {
+		item.ID = types.StringValue(*variable.Id)
+	}
+	item.Key = types.StringValue(variable.Key)
+	item.Value = types.StringValue(variable.Value)
+	// If the variable has a type, include it in the model
+	if variable.Type != nil {
+		item.Type = types.StringPointerValue(variable.Type)
+	}
+	// Extract project ID if the project object and its ID are present
+	if variable.Project != nil && variable.Project.Id != nil {
+		item.ProjectID = types.StringPointerValue(variable.Project.Id)
+	}
+	// Return pointer to avoid copying large struct.
+	return item
 }

@@ -15,13 +15,28 @@ import (
 // Ensure TagResource implements required interfaces.
 var (
 	_ resource.Resource                = &TagResource{}
+	_ TagResourceInterface             = &TagResource{}
 	_ resource.ResourceWithConfigure   = &TagResource{}
 	_ resource.ResourceWithImportState = &TagResource{}
 )
 
+// TagResourceInterface defines the interface for TagResource.
+type TagResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
+
 // TagResource defines the resource implementation for n8n tags.
 // Terraform resource that manages CRUD operations for n8n tags via the n8n API.
 type TagResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
@@ -29,9 +44,19 @@ type TagResource struct {
 //
 // Returns:
 //   - resource.Resource: new TagResource instance
-func NewTagResource() resource.Resource {
+func NewTagResource() *TagResource {
 	// Return result.
 	return &TagResource{}
+}
+
+// NewTagResourceWrapper creates a new TagResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped TagResource instance
+func NewTagResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewTagResource()
 }
 
 // Metadata returns the resource type name.
@@ -93,6 +118,7 @@ func (r *TagResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 func (r *TagResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -125,6 +151,7 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -179,6 +206,7 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -226,6 +254,7 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -279,6 +308,7 @@ func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 

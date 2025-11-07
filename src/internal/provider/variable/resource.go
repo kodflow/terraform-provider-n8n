@@ -15,21 +15,49 @@ import (
 // Ensure VariableResource implements required interfaces.
 var (
 	_ resource.Resource                = &VariableResource{}
+	_ VariableResourceInterface        = &VariableResource{}
 	_ resource.ResourceWithConfigure   = &VariableResource{}
 	_ resource.ResourceWithImportState = &VariableResource{}
 )
+
+// VariableResourceInterface defines the interface for VariableResource.
+type VariableResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
 
 // VariableResource defines the resource implementation for n8n variables.
 // Note: n8n API has limitations - POST returns 201 with no body, no GET by ID endpoint.
 // We work around this by using the LIST endpoint and filtering.
 type VariableResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
 // NewVariableResource creates and returns a new VariableResource instance.
-func NewVariableResource() resource.Resource {
+//
+// Returns:
+//   - resource.Resource: A new VariableResource instance
+func NewVariableResource() *VariableResource {
 	// Return result.
 	return &VariableResource{}
+}
+
+// NewVariableResourceWrapper creates a new VariableResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped VariableResource instance
+func NewVariableResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewVariableResource()
 }
 
 // Metadata returns the resource type name.
@@ -101,6 +129,7 @@ func (r *VariableResource) Schema(ctx context.Context, req resource.SchemaReques
 func (r *VariableResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -135,13 +164,42 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for error.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Build variable request
+	// Execute create operation
+	if !r.executeVariableCreate(ctx, plan, resp) {
+		// Return result.
+		return
+	}
+
+	// Find created variable
+	foundVariable := r.findCreatedVariable(ctx, plan, resp)
+	// Return early if variable not found.
+	if foundVariable == nil {
+		// Return result.
+		return
+	}
+
+	// Map variable to model
+	mapVariableToResourceModel(foundVariable, plan)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeVariableCreate performs the API call to create a variable.
+//
+// Params:
+//   - ctx: context for operation
+//   - plan: variable resource model
+//   - resp: create response
+//
+// Returns:
+//   - bool: true if successful, false if error occurred
+func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *VariableResourceModel, resp *resource.CreateResponse) bool {
 	variableRequest := buildVariableRequest(plan)
 
-	// POST returns 201 with no body
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesPost(ctx).
 		VariableCreate(variableRequest).
 		Execute()
@@ -156,10 +214,22 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 			"Error creating variable",
 			fmt.Sprintf("Could not create variable: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		return
+		return false
 	}
 
-	// Workaround: List all variables to find the one we just created
+	return true
+}
+
+// findCreatedVariable retrieves and finds the created variable from the list.
+//
+// Params:
+//   - ctx: context for operation
+//   - plan: variable resource model
+//   - resp: create response
+//
+// Returns:
+//   - *n8nsdk.Variable: found variable or nil if not found
+func (r *VariableResource) findCreatedVariable(ctx context.Context, plan *VariableResourceModel, resp *resource.CreateResponse) *n8nsdk.Variable {
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -172,7 +242,8 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 			"Error reading variable after creation",
 			fmt.Sprintf("Variable was created but could not retrieve ID: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		return
+		// Return with error.
+		return nil
 	}
 
 	// Find our variable by key
@@ -189,13 +260,12 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 			"Error finding created variable",
 			fmt.Sprintf("Variable with key '%s' was created but not found in list", plan.Key.ValueString()),
 		)
-		return
+		// Return with error.
+		return nil
 	}
 
-	// Map variable to model
-	mapVariableToResourceModel(foundVariable, plan)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return result.
+	return foundVariable
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -215,10 +285,11 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Workaround: No GET by ID, use LIST and filter
+	// Fetch variable list from API
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -231,24 +302,12 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 			"Error reading variable",
 			fmt.Sprintf("Could not read variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
+		// Return with error.
 		return
 	}
 
-	// Find our variable by ID
-	var foundVariable *n8nsdk.Variable
-	// Check for non-nil value.
-	if variableList.Data != nil {
-		// Iterate over items.
-		for _, v := range variableList.Data {
-			// Check for non-nil value.
-			if v.Id != nil && *v.Id == state.ID.ValueString() {
-				foundVariable = &v
-				break
-			}
-		}
-	}
-
+	// Find variable by ID
+	foundVariable := r.findVariableByID(variableList, state.ID.ValueString())
 	// Check condition.
 	if foundVariable == nil {
 		// Variable not found = deleted outside Terraform
@@ -257,6 +316,43 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
+	// Update state with found variable data
+	r.updateStateFromVariable(foundVariable, state)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+}
+
+// findVariableByID finds a variable in the list by ID.
+//
+// Params:
+//   - variableList: list of variables from API
+//   - id: variable ID to find
+//
+// Returns:
+//   - *n8nsdk.Variable: found variable or nil if not found
+func (r *VariableResource) findVariableByID(variableList *n8nsdk.VariableList, id string) *n8nsdk.Variable {
+	// Check for non-nil value.
+	if variableList.Data == nil {
+		// Return result.
+		return nil
+	}
+	// Iterate over items.
+	for _, v := range variableList.Data {
+		// Check for non-nil value.
+		if v.Id != nil && *v.Id == id {
+			// Return matching variable.
+			return &v
+		}
+	}
+	// Return result.
+	return nil
+}
+
+// updateStateFromVariable updates the state model with data from the found variable.
+//
+// Params:
+//   - foundVariable: variable data from API
+//   - state: VariableResourceModel to update
+func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variable, state *VariableResourceModel) {
 	state.Key = types.StringValue(foundVariable.Key)
 	state.Value = types.StringValue(foundVariable.Value)
 	// Check for non-nil value.
@@ -267,8 +363,6 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if foundVariable.Project != nil && foundVariable.Project.Id != nil {
 		state.ProjectID = types.StringPointerValue(foundVariable.Project.Id)
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -288,13 +382,42 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for error.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Build variable request
+	// Execute the update API call
+	if !r.executeVariableUpdate(ctx, plan, resp) {
+		// Return result.
+		return
+	}
+
+	// Verify the update by listing variables
+	foundVariable := r.findUpdatedVariable(ctx, plan, resp)
+	// Return early if variable not found.
+	if foundVariable == nil {
+		// Return result.
+		return
+	}
+
+	// Map variable to model (only updates non-ID fields)
+	mapVariableToResourceModel(foundVariable, plan)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeVariableUpdate performs the API call to update a variable.
+//
+// Params:
+//   - ctx: context for operation
+//   - plan: variable resource model
+//   - resp: update response
+//
+// Returns:
+//   - bool: true if successful, false if error occurred
+func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *VariableResourceModel, resp *resource.UpdateResponse) bool {
 	variableRequest := buildVariableRequest(plan)
 
-	// PUT returns 204 with no body
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdPut(ctx, plan.ID.ValueString()).
 		VariableCreate(variableRequest).
 		Execute()
@@ -309,10 +432,22 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 			"Error updating variable",
 			fmt.Sprintf("Could not update variable ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
-		return
+		return false
 	}
 
-	// Workaround: List all variables to verify the update
+	return true
+}
+
+// findUpdatedVariable retrieves and finds the updated variable from the list.
+//
+// Params:
+//   - ctx: context for operation
+//   - plan: variable resource model
+//   - resp: update response
+//
+// Returns:
+//   - *n8nsdk.Variable: found variable or nil if not found
+func (r *VariableResource) findUpdatedVariable(ctx context.Context, plan *VariableResourceModel, resp *resource.UpdateResponse) *n8nsdk.Variable {
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -325,7 +460,8 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 			"Error reading variable after update",
 			fmt.Sprintf("Variable was updated but could not verify: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		return
+		// Return with error.
+		return nil
 	}
 
 	// Find our variable by ID
@@ -342,13 +478,12 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 			"Error verifying updated variable",
 			fmt.Sprintf("Variable with ID '%s' was updated but not found in list", plan.ID.ValueString()),
 		)
-		return
+		// Return with error.
+		return nil
 	}
 
-	// Map variable to model (only updates non-ID fields)
-	mapVariableToResourceModel(foundVariable, plan)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return the found variable.
+	return foundVariable
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -367,6 +502,7 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 

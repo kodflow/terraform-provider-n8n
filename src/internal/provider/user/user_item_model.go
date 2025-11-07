@@ -1,19 +1,18 @@
-// Package user contains resources and datasources for user management
 package user
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// UserResourceModel describes the resource data model.
-// Maps n8n user attributes to Terraform schema, storing user identity, role, and account information.
-type UserResourceModel struct {
+// UserItemModel represents a single user in the list.
+// It maps individual user attributes from the n8n API to Terraform schema.
+type UserItemModel struct {
 	ID        types.String `tfsdk:"id"`
 	Email     types.String `tfsdk:"email"`
 	FirstName types.String `tfsdk:"first_name"`
 	LastName  types.String `tfsdk:"last_name"`
-	Role      types.String `tfsdk:"role"`
 	IsPending types.Bool   `tfsdk:"is_pending"`
 	CreatedAt types.String `tfsdk:"created_at"`
 	UpdatedAt types.String `tfsdk:"updated_at"`
+	Role      types.String `tfsdk:"role"`
 }

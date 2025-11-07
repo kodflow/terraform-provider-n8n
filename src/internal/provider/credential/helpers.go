@@ -125,7 +125,7 @@ func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affect
 		// Throttle to avoid rate limiting
 		// Skip sleep for first iteration.
 		if i > 0 {
-			time.Sleep(time.Duration(RotationThrottleMilliseconds) * time.Millisecond)
+			time.Sleep(time.Duration(ROTATION_THROTTLE_MILLISECONDS) * time.Millisecond)
 		}
 
 		// Get fresh workflow data

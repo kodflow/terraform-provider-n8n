@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
@@ -14,35 +13,43 @@ import (
 // Ensure VariableDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &VariableDataSource{}
+	_ VariableDataSourceInterface        = &VariableDataSource{}
 	_ datasource.DataSourceWithConfigure = &VariableDataSource{}
 )
+
+// VariableDataSourceInterface defines the interface for VariableDataSource.
+type VariableDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // VariableDataSource is a Terraform datasource implementation for retrieving a single variable.
 // It provides read-only access to n8n variable details through the n8n API.
 type VariableDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
-}
-
-// VariableDataSourceModel maps Terraform schema attributes for variable data.
-// It represents a single variable with all related attributes from the n8n API.
-type VariableDataSourceModel struct {
-	ID        types.String `tfsdk:"id"`
-	Key       types.String `tfsdk:"key"`
-	Value     types.String `tfsdk:"value"`
-	Type      types.String `tfsdk:"type"`
-	ProjectID types.String `tfsdk:"project_id"`
 }
 
 // NewVariableDataSource creates a new VariableDataSource instance.
 //
-// Params:
-//   - (no parameters)
-//
 // Returns:
 //   - datasource.DataSource: New VariableDataSource instance
-func NewVariableDataSource() datasource.DataSource {
+func NewVariableDataSource() *VariableDataSource {
 	// Return result.
 	return &VariableDataSource{}
+}
+
+// NewVariableDataSourceWrapper creates a new VariableDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped VariableDataSource instance
+func NewVariableDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewVariableDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -112,6 +119,7 @@ func (d *VariableDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 func (d *VariableDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -141,25 +149,64 @@ func (d *VariableDataSource) Configure(ctx context.Context, req datasource.Confi
 func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	data := &VariableDataSourceModel{}
 
-	// Initialize pointer to empty model
-	
-
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check if diagnostics have errors
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Validate that at least one identifier is provided
+	// Validate identifiers
+	// Return early if validation failed.
+	if !d.validateIdentifiers(data, resp) {
+		// Return result.
+		return
+	}
+
+	// Fetch variable from API
+	variable := d.fetchVariable(ctx, data, resp)
+	// Return early if fetch failed.
+	if variable == nil {
+		// Return result.
+		return
+	}
+
+	// Map variable to model
+	mapVariableToDataSourceModel(variable, data)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+}
+
+// validateIdentifiers ensures at least one identifier is provided.
+//
+// Params:
+//   - data: variable data source model
+//   - resp: read response
+//
+// Returns:
+//   - bool: true if valid, false otherwise
+func (d *VariableDataSource) validateIdentifiers(data *VariableDataSourceModel, resp *datasource.ReadResponse) bool {
+	// Check for non-null value.
 	if data.ID.IsNull() && data.Key.IsNull() {
 		resp.Diagnostics.AddError(
 			"Missing Required Attribute",
 			"Either 'id' or 'key' must be specified",
 		)
-		// Return early
-		return
+		return false
 	}
+	return true
+}
 
+// fetchVariable retrieves a variable from the API by listing and filtering.
+//
+// Params:
+//   - ctx: context for operation
+//   - data: variable data source model
+//   - resp: read response
+//
+// Returns:
+//   - *n8nsdk.Variable: the variable or nil if error occurred
+func (d *VariableDataSource) fetchVariable(ctx context.Context, data *VariableDataSourceModel, resp *datasource.ReadResponse) *n8nsdk.Variable {
 	// Build API request
 	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
 
@@ -180,7 +227,8 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 			"Error listing variables",
 			fmt.Sprintf("Could not list variables: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		return
+		// Return with error.
+		return nil
 	}
 
 	// Find variable by ID or key
@@ -202,11 +250,10 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 			"Variable Not Found",
 			fmt.Sprintf("Could not find variable with identifier: %s", identifier),
 		)
-		return
+		// Return with error.
+		return nil
 	}
 
-	// Map variable to model
-	mapVariableToDataSourceModel(variable, data)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	// Return result.
+	return variable
 }

@@ -1,22 +1,31 @@
 package execution
 
 import (
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
-
 
 // Ensure ExecutionsDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &ExecutionsDataSource{}
+	_ ExecutionsDataSourceInterface      = &ExecutionsDataSource{}
 	_ datasource.DataSourceWithConfigure = &ExecutionsDataSource{}
 )
+
+// ExecutionsDataSourceInterface defines the interface for ExecutionsDataSource.
+type ExecutionsDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // ExecutionsDataSource is a Terraform datasource that provides read-only access to n8n executions.
 // It enables querying and filtering workflow executions from the n8n API.
@@ -26,36 +35,21 @@ type ExecutionsDataSource struct {
 
 // NewExecutionsDataSource creates a new ExecutionsDataSource instance.
 //
-// Params:
-//   - none
-//
 // Returns:
 //   - datasource.DataSource: new ExecutionsDataSource instance
-func NewExecutionsDataSource() datasource.DataSource {
+func NewExecutionsDataSource() *ExecutionsDataSource {
 	// Return result.
 	return &ExecutionsDataSource{}
 }
 
-// ExecutionsDataSourceModel maps the Terraform schema to the datasource response.
-// It represents the filtered execution list with workflow and execution details from the n8n API.
-type ExecutionsDataSourceModel struct {
-	WorkflowID  types.String         `tfsdk:"workflow_id"`
-	ProjectID   types.String         `tfsdk:"project_id"`
-	Status      types.String         `tfsdk:"status"`
-	IncludeData types.Bool           `tfsdk:"include_data"`
-	Executions  []ExecutionItemModel `tfsdk:"executions"`
-}
-
-// ExecutionItemModel represents a single execution in the list returned from the n8n API.
-// It contains the execution metadata including timestamps, status, and workflow reference.
-type ExecutionItemModel struct {
-	ID         types.String `tfsdk:"id"`
-	WorkflowID types.String `tfsdk:"workflow_id"`
-	Finished   types.Bool   `tfsdk:"finished"`
-	Mode       types.String `tfsdk:"mode"`
-	StartedAt  types.String `tfsdk:"started_at"`
-	StoppedAt  types.String `tfsdk:"stopped_at"`
-	Status     types.String `tfsdk:"status"`
+// NewExecutionsDataSourceWrapper creates a new ExecutionsDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped ExecutionsDataSource instance
+func NewExecutionsDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewExecutionsDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -64,8 +58,6 @@ type ExecutionItemModel struct {
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.MetadataRequest containing provider type name
 //   - resp: datasource.MetadataResponse to populate with metadata
-//
-// Returns:
 func (d *ExecutionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_executions"
 }
@@ -76,65 +68,80 @@ func (d *ExecutionsDataSource) Metadata(ctx context.Context, req datasource.Meta
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.SchemaRequest for schema definition
 //   - resp: datasource.SchemaResponse to populate with schema
-//
-// Returns:
 func (d *ExecutionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n workflow executions with optional filtering",
+		Attributes:          d.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"workflow_id": schema.StringAttribute{
-				MarkdownDescription: "Filter executions by workflow ID",
-				Optional:            true,
+// schemaAttributes returns the attribute definitions for the executions datasource schema.
+//
+// Returns:
+//   - map[string]schema.Attribute: the datasource attribute definitions
+func (d *ExecutionsDataSource) schemaAttributes() map[string]schema.Attribute {
+	// Return executions datasource schema attributes.
+	return map[string]schema.Attribute{
+		"workflow_id": schema.StringAttribute{
+			MarkdownDescription: "Filter executions by workflow ID",
+			Optional:            true,
+		},
+		"project_id": schema.StringAttribute{
+			MarkdownDescription: "Filter executions by project ID",
+			Optional:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "Filter executions by status (e.g., 'success', 'error', 'running')",
+			Optional:            true,
+		},
+		"include_data": schema.BoolAttribute{
+			MarkdownDescription: "Whether to include execution data in the response",
+			Optional:            true,
+		},
+		"executions": schema.ListNestedAttribute{
+			MarkdownDescription: "List of executions",
+			Computed:            true,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: d.executionItemAttributes(),
 			},
-			"project_id": schema.StringAttribute{
-				MarkdownDescription: "Filter executions by project ID",
-				Optional:            true,
-			},
-			"status": schema.StringAttribute{
-				MarkdownDescription: "Filter executions by status (e.g., 'success', 'error', 'running')",
-				Optional:            true,
-			},
-			"include_data": schema.BoolAttribute{
-				MarkdownDescription: "Whether to include execution data in the response",
-				Optional:            true,
-			},
-			"executions": schema.ListNestedAttribute{
-				MarkdownDescription: "List of executions",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							MarkdownDescription: "Execution identifier",
-							Computed:            true,
-						},
-						"workflow_id": schema.StringAttribute{
-							MarkdownDescription: "ID of the workflow that was executed",
-							Computed:            true,
-						},
-						"finished": schema.BoolAttribute{
-							MarkdownDescription: "Whether the execution finished",
-							Computed:            true,
-						},
-						"mode": schema.StringAttribute{
-							MarkdownDescription: "Execution mode",
-							Computed:            true,
-						},
-						"started_at": schema.StringAttribute{
-							MarkdownDescription: "Timestamp when the execution started",
-							Computed:            true,
-						},
-						"stopped_at": schema.StringAttribute{
-							MarkdownDescription: "Timestamp when the execution stopped",
-							Computed:            true,
-						},
-						"status": schema.StringAttribute{
-							MarkdownDescription: "Execution status",
-							Computed:            true,
-						},
-					},
-				},
-			},
+		},
+	}
+}
+
+// executionItemAttributes returns the nested attribute definitions for execution items.
+//
+// Returns:
+//   - map[string]schema.Attribute: the execution item attribute definitions
+func (d *ExecutionsDataSource) executionItemAttributes() map[string]schema.Attribute {
+	// Return execution item schema attributes.
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Execution identifier",
+			Computed:            true,
+		},
+		"workflow_id": schema.StringAttribute{
+			MarkdownDescription: "ID of the workflow that was executed",
+			Computed:            true,
+		},
+		"finished": schema.BoolAttribute{
+			MarkdownDescription: "Whether the execution finished",
+			Computed:            true,
+		},
+		"mode": schema.StringAttribute{
+			MarkdownDescription: "Execution mode",
+			Computed:            true,
+		},
+		"started_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the execution started",
+			Computed:            true,
+		},
+		"stopped_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the execution stopped",
+			Computed:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "Execution status",
+			Computed:            true,
 		},
 	}
 }
@@ -145,11 +152,10 @@ func (d *ExecutionsDataSource) Schema(ctx context.Context, req datasource.Schema
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.ConfigureRequest containing provider data
 //   - resp: datasource.ConfigureResponse to populate with diagnostics
-//
-// Returns:
 func (d *ExecutionsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -173,8 +179,6 @@ func (d *ExecutionsDataSource) Configure(ctx context.Context, req datasource.Con
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.ReadRequest containing configuration data
 //   - resp: datasource.ReadResponse to populate with state and diagnostics
-//
-// Returns:
 func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// Initialize data model
 	data := &ExecutionsDataSourceModel{}
@@ -182,10 +186,44 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// Check for errors in diagnostics
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Build API request with optional filters
+	apiReq := d.buildExecutionsAPIRequest(ctx, data)
+
+	executionList, httpResp, err := apiReq.Execute()
+	// Close HTTP response body if present
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	// Check for API execution errors
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error listing executions",
+			fmt.Sprintf("Could not list executions: %s\nHTTP Response: %v", err.Error(), httpResp),
+		)
+		// Return with error.
+		return
+	}
+
+	d.populateExecutionsList(data, executionList)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// buildExecutionsAPIRequest builds the API request with optional filters.
+//
+// Params:
+//   - ctx: context.Context for cancellation
+//   - data: ExecutionsDataSourceModel containing filter parameters
+//
+// Returns:
+//   - apiReq: Configured API request
+func (d *ExecutionsDataSource) buildExecutionsAPIRequest(
+	ctx context.Context,
+	data *ExecutionsDataSourceModel,
+) n8nsdk.ExecutionAPIExecutionsGetRequest {
 	apiReq := d.client.APIClient.ExecutionAPI.ExecutionsGet(ctx)
 	// Filter by workflow ID if provided
 	if !data.WorkflowID.IsNull() {
@@ -203,22 +241,20 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if !data.IncludeData.IsNull() {
 		apiReq = apiReq.IncludeData(data.IncludeData.ValueBool())
 	}
+	// Return configured API request.
+	return apiReq
+}
 
-	executionList, httpResp, err := apiReq.Execute()
-	// Close HTTP response body if present
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-	// Check for API execution errors
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error listing executions",
-			fmt.Sprintf("Could not list executions: %s\nHTTP Response: %v", err.Error(), httpResp),
-		)
-		return
-	}
-
-	data.Executions = make([]ExecutionItemModel, 0, constants.DefaultListCapacity)
+// populateExecutionsList populates the executions list from API response.
+//
+// Params:
+//   - data: ExecutionsDataSourceModel to populate
+//   - executionList: API response containing execution data
+func (d *ExecutionsDataSource) populateExecutionsList(
+	data *ExecutionsDataSourceModel,
+	executionList *n8nsdk.ExecutionList,
+) {
+	data.Executions = make([]ExecutionItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check if execution data is available and populate executions
 	if executionList.Data != nil {
 		// Process each execution and add to the executions list
@@ -227,6 +263,4 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 			data.Executions = append(data.Executions, item)
 		}
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

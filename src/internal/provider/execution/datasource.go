@@ -1,7 +1,6 @@
 package execution
 
 import (
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 	"context"
 	"fmt"
 	"strconv"
@@ -9,47 +8,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
-
 
 // Ensure ExecutionDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &ExecutionDataSource{}
+	_ ExecutionDataSourceInterface       = &ExecutionDataSource{}
 	_ datasource.DataSourceWithConfigure = &ExecutionDataSource{}
 )
+
+// ExecutionDataSourceInterface defines the interface for ExecutionDataSource.
+type ExecutionDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // ExecutionDataSource defines the data source implementation for a single execution.
 // It provides read-only access to workflow execution details in n8n, including
 // status, timing information, and execution mode via the n8n API.
 type ExecutionDataSource struct {
+	// client is the N8n API client used for execution operations.
 	client *client.N8nClient
-}
-
-// ExecutionDataSourceModel describes the data source data model.
-// It maps the Terraform schema attributes for reading a single execution,
-// including workflow ID, execution status, timestamps, and optional data inclusion.
-type ExecutionDataSourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	WorkflowID  types.String `tfsdk:"workflow_id"`
-	Finished    types.Bool   `tfsdk:"finished"`
-	Mode        types.String `tfsdk:"mode"`
-	StartedAt   types.String `tfsdk:"started_at"`
-	StoppedAt   types.String `tfsdk:"stopped_at"`
-	Status      types.String `tfsdk:"status"`
-	IncludeData types.Bool   `tfsdk:"include_data"`
 }
 
 // NewExecutionDataSource creates a new ExecutionDataSource instance.
 //
-// Params:
-//   - none
-//
 // Returns:
 //   - datasource.DataSource: new ExecutionDataSource instance
-func NewExecutionDataSource() datasource.DataSource {
+func NewExecutionDataSource() *ExecutionDataSource {
 	// Return result.
 	return &ExecutionDataSource{}
+}
+
+// NewExecutionDataSourceWrapper creates a new ExecutionDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped ExecutionDataSource instance
+func NewExecutionDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewExecutionDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -58,8 +62,6 @@ func NewExecutionDataSource() datasource.DataSource {
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.MetadataRequest containing provider type name
 //   - resp: datasource.MetadataResponse to populate with metadata
-//
-// Returns:
 func (d *ExecutionDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_execution"
 }
@@ -70,45 +72,51 @@ func (d *ExecutionDataSource) Metadata(ctx context.Context, req datasource.Metad
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.SchemaRequest for schema definition
 //   - resp: datasource.SchemaResponse to populate with schema
-//
-// Returns:
 func (d *ExecutionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n workflow execution by ID.",
+		Attributes:          d.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				MarkdownDescription: "Execution identifier",
-				Required:            true,
-			},
-			"workflow_id": schema.StringAttribute{
-				MarkdownDescription: "ID of the workflow that was executed",
-				Computed:            true,
-			},
-			"finished": schema.BoolAttribute{
-				MarkdownDescription: "Whether the execution finished",
-				Computed:            true,
-			},
-			"mode": schema.StringAttribute{
-				MarkdownDescription: "Execution mode (e.g., 'manual', 'trigger', 'webhook')",
-				Computed:            true,
-			},
-			"started_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the execution started",
-				Computed:            true,
-			},
-			"stopped_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the execution stopped",
-				Computed:            true,
-			},
-			"status": schema.StringAttribute{
-				MarkdownDescription: "Execution status (e.g., 'success', 'error', 'running')",
-				Computed:            true,
-			},
-			"include_data": schema.BoolAttribute{
-				MarkdownDescription: "Whether to include execution data in the response",
-				Optional:            true,
-			},
+// schemaAttributes returns the attribute definitions for the execution datasource schema.
+//
+// Returns:
+//   - map[string]schema.Attribute: the datasource attribute definitions
+func (d *ExecutionDataSource) schemaAttributes() map[string]schema.Attribute {
+	// Return execution datasource schema attributes.
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Execution identifier",
+			Required:            true,
+		},
+		"workflow_id": schema.StringAttribute{
+			MarkdownDescription: "ID of the workflow that was executed",
+			Computed:            true,
+		},
+		"finished": schema.BoolAttribute{
+			MarkdownDescription: "Whether the execution finished",
+			Computed:            true,
+		},
+		"mode": schema.StringAttribute{
+			MarkdownDescription: "Execution mode (e.g., 'manual', 'trigger', 'webhook')",
+			Computed:            true,
+		},
+		"started_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the execution started",
+			Computed:            true,
+		},
+		"stopped_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the execution stopped",
+			Computed:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "Execution status (e.g., 'success', 'error', 'running')",
+			Computed:            true,
+		},
+		"include_data": schema.BoolAttribute{
+			MarkdownDescription: "Whether to include execution data in the response",
+			Optional:            true,
 		},
 	}
 }
@@ -119,11 +127,10 @@ func (d *ExecutionDataSource) Schema(ctx context.Context, req datasource.SchemaR
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.ConfigureRequest containing provider data
 //   - resp: datasource.ConfigureResponse to populate with diagnostics
-//
-// Returns:
 func (d *ExecutionDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -147,8 +154,6 @@ func (d *ExecutionDataSource) Configure(ctx context.Context, req datasource.Conf
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.ReadRequest containing configuration data
 //   - resp: datasource.ReadResponse to populate with state and diagnostics
-//
-// Returns:
 func (d *ExecutionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// Initialize data model
 	data := &ExecutionDataSourceModel{}
@@ -156,11 +161,12 @@ func (d *ExecutionDataSource) Read(ctx context.Context, req datasource.ReadReque
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
 	// Convert ID string to float32 as required by the API
-	executionID, err := strconv.ParseFloat(data.ID.ValueString(), constants.Float32BitSize)
+	executionID, err := strconv.ParseFloat(data.ID.ValueString(), constants.FLOAT32_BIT_SIZE)
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -187,37 +193,47 @@ func (d *ExecutionDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Populate data model
+	populateExecutionData(execution, data)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+}
+
+// populateExecutionData populates the execution data model from the API response.
+//
+// Params:
+//   - execution: the execution response from the API
+//   - data: the data model to populate
+func populateExecutionData(execution *n8nsdk.Execution, data *ExecutionDataSourceModel) {
+	// Check if execution ID is available.
 	if execution.Id != nil {
 		data.ID = types.StringValue(fmt.Sprintf("%v", *execution.Id))
 	}
-	// Check for non-nil value.
+	// Check if workflow ID is available.
 	if execution.WorkflowId != nil {
 		data.WorkflowID = types.StringValue(fmt.Sprintf("%v", *execution.WorkflowId))
 	}
-	// Check for non-nil value.
+	// Check if finished status is available.
 	if execution.Finished != nil {
 		data.Finished = types.BoolPointerValue(execution.Finished)
 	}
-	// Check for non-nil value.
+	// Check if execution mode is available.
 	if execution.Mode != nil {
 		data.Mode = types.StringPointerValue(execution.Mode)
 	}
-	// Check for non-nil value.
+	// Check if started timestamp is available.
 	if execution.StartedAt != nil {
 		data.StartedAt = types.StringValue(execution.StartedAt.String())
 	}
-	// Check condition.
+	// Check if stopped timestamp is available.
 	if execution.StoppedAt.IsSet() {
 		stoppedAt := execution.StoppedAt.Get()
-		// Check for non-nil value.
+		// Check if stopped timestamp value is not nil.
 		if stoppedAt != nil {
 			data.StoppedAt = types.StringValue(stoppedAt.String())
 		}
 	}
-	// Check for non-nil value.
+	// Check if execution status is available.
 	if execution.Status != nil {
 		data.Status = types.StringPointerValue(execution.Status)
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }

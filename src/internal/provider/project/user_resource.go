@@ -13,29 +13,53 @@ import (
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
-// CompositeIDParts is the expected number of parts in a composite ID (project_id/user_id).
-const CompositeIDParts int = 2
+// COMPOSITE_ID_PARTS is the expected number of parts in a composite ID (project_id/user_id).
+const COMPOSITE_ID_PARTS int = 2
 
 // Ensure ProjectUserResource implements required interfaces.
 var (
 	_ resource.Resource                = &ProjectUserResource{}
+	_ ProjectUserResourceInterface     = &ProjectUserResource{}
 	_ resource.ResourceWithConfigure   = &ProjectUserResource{}
 	_ resource.ResourceWithImportState = &ProjectUserResource{}
 )
 
+// ProjectUserResourceInterface defines the interface for ProjectUserResource.
+type ProjectUserResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
+
 // ProjectUserResource defines the resource implementation for project-user relationships.
 // Terraform resource that manages CRUD operations for user memberships in n8n projects via the n8n API.
 type ProjectUserResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
-
 // NewProjectUserResource creates a new ProjectUserResource instance.
 // Returns:
-//   - resource.Resource: new ProjectUserResource instance
-func NewProjectUserResource() resource.Resource {
+//   - *ProjectUserResource: new ProjectUserResource instance
+func NewProjectUserResource() *ProjectUserResource {
 	// Return result.
 	return &ProjectUserResource{}
+}
+
+// NewProjectUserResourceWrapper creates a new ProjectUserResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped ProjectUserResource instance
+func NewProjectUserResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewProjectUserResource()
 }
 
 // Metadata returns the resource type name.
@@ -43,6 +67,7 @@ func NewProjectUserResource() resource.Resource {
 //   - ctx: context
 //   - req: metadata request
 //   - resp: metadata response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -54,6 +79,7 @@ func (r *ProjectUserResource) Metadata(ctx context.Context, req resource.Metadat
 //   - ctx: context
 //   - req: schema request
 //   - resp: schema response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -86,11 +112,13 @@ func (r *ProjectUserResource) Schema(ctx context.Context, req resource.SchemaReq
 //   - ctx: context
 //   - req: configure request
 //   - resp: configure response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -113,6 +141,7 @@ func (r *ProjectUserResource) Configure(ctx context.Context, req resource.Config
 //   - ctx: context
 //   - req: create request
 //   - resp: create response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -121,6 +150,7 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -161,6 +191,7 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 //   - ctx: context
 //   - req: read request
 //   - resp: read response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -169,10 +200,34 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Use users API with project filter to check if user is in project.
+	found := r.findUserInProject(ctx, state, resp)
+	// Check condition.
+	if !found {
+		// Return result.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// findUserInProject checks if the user is in the project and updates the state.
+//
+// Params:
+//   - ctx: context
+//   - state: current resource state
+//   - resp: read response
+//
+// Returns:
+//   - found: true if user was found in project
+func (r *ProjectUserResource) findUserInProject(
+	ctx context.Context,
+	state *ProjectUserResourceModel,
+	resp *resource.ReadResponse,
+) bool {
 	userList, httpResp, err := r.client.APIClient.UserAPI.UsersGet(ctx).
 		ProjectId(state.ProjectID.ValueString()).
 		IncludeRole(true).
@@ -188,37 +243,58 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 			fmt.Sprintf("Could not read users for project %s: %s\nHTTP Response: %v",
 				state.ProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return false to indicate failure.
+		return false
 	}
 
 	// Find the user in the project.
-	found := false
-	// Check for non-nil value.
-	if userList.Data != nil {
-		// Iterate over items.
-		for _, user := range userList.Data {
-			// Check for non-nil value.
-			if user.Id != nil && *user.Id == state.UserID.ValueString() {
-				found = true
-				// Update role if available.
-				if user.Role != nil {
-					state.Role = types.StringPointerValue(user.Role)
-				}
-				break
-			}
-		}
-	}
+	found := r.searchUserInList(userList, state)
 
 	// Check condition.
 	if !found {
 		// User not found in project - resource has been deleted outside Terraform.
 		resp.State.RemoveResource(ctx)
-		// Return result.
-		return
+		// Return false to indicate resource was removed.
+		return false
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Return true to indicate user was found.
+	return true
+}
+
+// searchUserInList searches for the user in the user list and updates state.
+//
+// Params:
+//   - userList: list of users from API
+//   - state: current resource state to update
+//
+// Returns:
+//   - found: true if user was found in the list
+func (r *ProjectUserResource) searchUserInList(
+	userList *n8nsdk.UserList,
+	state *ProjectUserResourceModel,
+) bool {
+	// Check for non-nil value.
+	if userList.Data == nil {
+		// Return false if no data available.
+		return false
+	}
+
+	// Iterate over items.
+	for _, user := range userList.Data {
+		// Check for non-nil value.
+		if user.Id != nil && *user.Id == state.UserID.ValueString() {
+			// Update role if available.
+			if user.Role != nil {
+				state.Role = types.StringPointerValue(user.Role)
+			}
+			// Return true to indicate user was found.
+			return true
+		}
+	}
+
+	// Return false if user was not found.
+	return false
 }
 
 // Update changes the user's role in the project.
@@ -226,6 +302,7 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 //   - ctx: context
 //   - req: update request
 //   - resp: update response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -235,6 +312,7 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -281,6 +359,7 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 //   - ctx: context
 //   - req: delete request
 //   - resp: delete response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -289,6 +368,7 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -320,13 +400,14 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 //   - ctx: context
 //   - req: import state request
 //   - resp: import state response
+//
 // Returns:
 //   - none
 func (r *ProjectUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Split composite ID.
 	parts := strings.Split(req.ID, "/")
 	// Check condition.
-	if len(parts) != CompositeIDParts {
+	if len(parts) != COMPOSITE_ID_PARTS {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
 			fmt.Sprintf("Expected import ID in format 'project_id/user_id', got: %s", req.ID),

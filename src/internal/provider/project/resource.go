@@ -15,25 +15,49 @@ import (
 // Ensure ProjectResource implements required interfaces.
 var (
 	_ resource.Resource                = &ProjectResource{}
+	_ ProjectResourceInterface         = &ProjectResource{}
 	_ resource.ResourceWithConfigure   = &ProjectResource{}
 	_ resource.ResourceWithImportState = &ProjectResource{}
 )
+
+// ProjectResourceInterface defines the interface for ProjectResource.
+type ProjectResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
 
 // ProjectResource defines the resource implementation for n8n projects.
 // Note: n8n API has limitations - POST returns 201 with no body, no GET by ID endpoint.
 // We work around this by using the LIST endpoint and filtering.
 type ProjectResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
-
 
 // NewProjectResource creates a new ProjectResource instance.
 //
 // Returns:
 //   - resource.Resource: new ProjectResource instance
-func NewProjectResource() resource.Resource {
+func NewProjectResource() *ProjectResource {
 	// Return result.
 	return &ProjectResource{}
+}
+
+// NewProjectResourceWrapper creates a new ProjectResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped ProjectResource instance
+func NewProjectResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewProjectResource()
 }
 
 // Metadata returns the resource type name.
@@ -82,6 +106,7 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -112,14 +137,47 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
+	// Create project via API
+	if !r.createProject(ctx, &plan, resp) {
+		// Return result.
+		return
+	}
+
+	// Retrieve created project details
+	foundProject := r.findCreatedProject(ctx, &plan, resp)
+	// Check for nil value.
+	if foundProject == nil {
+		// Return result.
+		return
+	}
+
+	r.updatePlanFromProject(&plan, foundProject)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// createProject sends the project creation request to the API.
+//
+// Params:
+//   - ctx: context for request cancellation
+//   - plan: planned project configuration
+//   - resp: create response
+//
+// Returns:
+//   - success: true if project was created successfully
+func (r *ProjectResource) createProject(
+	ctx context.Context,
+	plan *ProjectResourceModel,
+	resp *resource.CreateResponse,
+) bool {
 	projectRequest := n8nsdk.Project{
 		Name: plan.Name.ValueString(),
 	}
 
-	// POST returns 201 with no body
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsPost(ctx).
 		Project(projectRequest).
 		Execute()
@@ -134,11 +192,28 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 			"Error creating project",
 			fmt.Sprintf("Could not create project: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure status.
+		return false
 	}
 
-	// Workaround: List all projects to find the one we just created
+	// Return success status.
+	return true
+}
+
+// findCreatedProject finds the newly created project by listing all projects.
+//
+// Params:
+//   - ctx: context for request cancellation
+//   - plan: planned project configuration
+//   - resp: create response
+//
+// Returns:
+//   - foundProject: pointer to the created project, nil if not found
+func (r *ProjectResource) findCreatedProject(
+	ctx context.Context,
+	plan *ProjectResourceModel,
+	resp *resource.CreateResponse,
+) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -151,8 +226,8 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 			"Error reading project after creation",
 			fmt.Sprintf("Project was created but could not retrieve ID: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return nil to indicate failure.
+		return nil
 	}
 
 	// Find our project by name
@@ -175,18 +250,29 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 			"Error finding created project",
 			fmt.Sprintf("Project with name '%s' was created but not found in list", plan.Name.ValueString()),
 		)
-		// Return result.
-		return
+		// Return nil to indicate failure.
+		return nil
 	}
 
-	plan.ID = types.StringPointerValue(foundProject.Id)
-	plan.Name = types.StringValue(foundProject.Name)
+	// Return found project.
+	return foundProject
+}
+
+// updatePlanFromProject updates the plan model with data from the created project.
+//
+// Params:
+//   - plan: planned project configuration to update
+//   - project: created project data from API
+func (r *ProjectResource) updatePlanFromProject(
+	plan *ProjectResourceModel,
+	project *n8nsdk.Project,
+) {
+	plan.ID = types.StringPointerValue(project.Id)
+	plan.Name = types.StringValue(project.Name)
 	// Check for non-nil value.
-	if foundProject.Type != nil {
-		plan.Type = types.StringPointerValue(foundProject.Type)
+	if project.Type != nil {
+		plan.Type = types.StringPointerValue(project.Type)
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -202,10 +288,36 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Workaround: No GET by ID, use LIST and filter
+	foundProject := r.findProjectByID(ctx, &state, resp)
+	// Check for nil value.
+	if foundProject == nil {
+		// Return result.
+		return
+	}
+
+	r.updateStateFromProject(&state, foundProject)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// findProjectByID finds a project by ID using the list endpoint.
+//
+// Params:
+//   - ctx: context for request cancellation
+//   - state: current state containing project ID
+//   - resp: read response
+//
+// Returns:
+//   - foundProject: pointer to the found project, nil if not found or error
+func (r *ProjectResource) findProjectByID(
+	ctx context.Context,
+	state *ProjectResourceModel,
+	resp *resource.ReadResponse,
+) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -218,8 +330,8 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 			"Error reading project",
 			fmt.Sprintf("Could not read project ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return nil to indicate failure.
+		return nil
 	}
 
 	// Find our project by ID
@@ -240,17 +352,28 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if foundProject == nil {
 		// Project not found = deleted outside Terraform
 		resp.State.RemoveResource(ctx)
-		// Return result.
-		return
+		// Return nil to indicate resource was removed.
+		return nil
 	}
 
-	state.Name = types.StringValue(foundProject.Name)
+	// Return found project.
+	return foundProject
+}
+
+// updateStateFromProject updates the state model with data from the found project.
+//
+// Params:
+//   - state: current state to update
+//   - project: project data from API
+func (r *ProjectResource) updateStateFromProject(
+	state *ProjectResourceModel,
+	project *n8nsdk.Project,
+) {
+	state.Name = types.StringValue(project.Name)
 	// Check for non-nil value.
-	if foundProject.Type != nil {
-		state.Type = types.StringPointerValue(foundProject.Type)
+	if project.Type != nil {
+		state.Type = types.StringPointerValue(project.Type)
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -266,14 +389,44 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
+	// Execute the update API call
+	if !r.executeProjectUpdate(ctx, &plan, resp) {
+		// Return result.
+		return
+	}
+
+	// Verify the update by listing projects
+	foundProject := r.findProjectAfterUpdate(ctx, &plan, resp)
+	// Check for nil value.
+	if foundProject == nil {
+		// Return result.
+		return
+	}
+
+	// Update model with found project data
+	r.updateModelFromProject(foundProject, &plan)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeProjectUpdate performs the API call to update a project.
+//
+// Params:
+//   - ctx: context for request cancellation
+//   - plan: planned project model
+//   - resp: update response
+//
+// Returns:
+//   - bool: true if successful, false if error occurred
+func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *ProjectResourceModel, resp *resource.UpdateResponse) bool {
 	projectRequest := n8nsdk.Project{
 		Name: plan.Name.ValueString(),
 	}
 
-	// PUT returns 204 with no body
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdPut(ctx, plan.ID.ValueString()).
 		Project(projectRequest).
 		Execute()
@@ -288,11 +441,22 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 			"Error updating project",
 			fmt.Sprintf("Could not update project ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		return false
 	}
 
-	// Workaround: List all projects to verify the update
+	return true
+}
+
+// findProjectAfterUpdate retrieves and finds the updated project from the list.
+//
+// Params:
+//   - ctx: context for request cancellation
+//   - plan: planned project model
+//   - resp: update response
+//
+// Returns:
+//   - *n8nsdk.Project: found project or nil if not found
+func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *ProjectResourceModel, resp *resource.UpdateResponse) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -305,8 +469,8 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 			"Error reading project after update",
 			fmt.Sprintf("Project was updated but could not verify: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return with error.
+		return nil
 	}
 
 	// Find our project by ID
@@ -329,17 +493,25 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 			"Error verifying updated project",
 			fmt.Sprintf("Project with ID '%s' was updated but not found in list", plan.ID.ValueString()),
 		)
-		// Return result.
-		return
+		// Return with error.
+		return nil
 	}
 
-	plan.Name = types.StringValue(foundProject.Name)
+	// Return result.
+	return foundProject
+}
+
+// updateModelFromProject updates the model with data from the project.
+//
+// Params:
+//   - project: source project
+//   - model: target project model
+func (r *ProjectResource) updateModelFromProject(project *n8nsdk.Project, model *ProjectResourceModel) {
+	model.Name = types.StringValue(project.Name)
 	// Check for non-nil value.
-	if foundProject.Type != nil {
-		plan.Type = types.StringPointerValue(foundProject.Type)
+	if project.Type != nil {
+		model.Type = types.StringPointerValue(project.Type)
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -354,6 +526,7 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 

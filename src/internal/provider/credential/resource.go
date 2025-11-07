@@ -13,37 +13,54 @@ import (
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
-// RotationThrottleMilliseconds is the delay between workflow updates during credential rotation.
-const RotationThrottleMilliseconds int = 100
+// ROTATION_THROTTLE_MILLISECONDS is the delay between workflow updates during credential rotation.
+const ROTATION_THROTTLE_MILLISECONDS int = 100
 
 // Ensure CredentialResource implements required interfaces.
 var (
 	_ resource.Resource                = &CredentialResource{}
+	_ CredentialResourceInterface      = &CredentialResource{}
 	_ resource.ResourceWithConfigure   = &CredentialResource{}
 	_ resource.ResourceWithImportState = &CredentialResource{}
 )
 
+// CredentialResourceInterface defines the interface for CredentialResource.
+type CredentialResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
+
 // CredentialResource defines the resource implementation for n8n credentials.
 // Note: Uses rotation strategy for updates (CREATE new, UPDATE workflows, DELETE old).
 type CredentialResource struct {
+	// client is the N8n API client used for credential operations.
 	client *client.N8nClient
-}
-
-
-// CredentialWorkflowBackup stores workflow state for rollback during credential rotation.
-// Captures original workflow data during credential rotation to enable recovery if the operation fails.
-type CredentialWorkflowBackup struct {
-	ID       string
-	Original *n8nsdk.Workflow
 }
 
 // NewCredentialResource creates a new CredentialResource instance.
 //
 // Returns:
-//   - resource.Resource: A new CredentialResource instance
-func NewCredentialResource() resource.Resource {
+//   - *CredentialResource: A new CredentialResource instance
+func NewCredentialResource() *CredentialResource {
 	// Return result.
 	return &CredentialResource{}
+}
+
+// NewCredentialResourceWrapper creates a new CredentialResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped CredentialResource instance
+func NewCredentialResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewCredentialResource()
 }
 
 // Metadata returns the resource type name.
@@ -71,34 +88,42 @@ func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"3. Old credential is deleted\n" +
 			"4. If any step fails, automatic rollback is performed\n\n" +
 			"**Note**: The credential ID will change after an update, but this is handled automatically.",
+		Attributes: r.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				MarkdownDescription: "Credential identifier",
-				Computed:            true,
-			},
-			"name": schema.StringAttribute{
-				MarkdownDescription: "Credential name",
-				Required:            true,
-			},
-			"type": schema.StringAttribute{
-				MarkdownDescription: "Credential type (e.g., httpHeaderAuth, httpBasicAuth)",
-				Required:            true,
-			},
-			"data": schema.MapAttribute{
-				MarkdownDescription: "Credential data (secrets, passwords, API keys, etc.)",
-				ElementType:         types.StringType,
-				Required:            true,
-				Sensitive:           true,
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the credential was created",
-				Computed:            true,
-			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the credential was last updated",
-				Computed:            true,
-			},
+// schemaAttributes returns the attribute definitions for the credential resource schema.
+//
+// Returns:
+//   - map[string]schema.Attribute: the resource attribute definitions
+func (r *CredentialResource) schemaAttributes() map[string]schema.Attribute {
+	// Return credential schema attributes.
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Credential identifier",
+			Computed:            true,
+		},
+		"name": schema.StringAttribute{
+			MarkdownDescription: "Credential name",
+			Required:            true,
+		},
+		"type": schema.StringAttribute{
+			MarkdownDescription: "Credential type (e.g., httpHeaderAuth, httpBasicAuth)",
+			Required:            true,
+		},
+		"data": schema.MapAttribute{
+			MarkdownDescription: "Credential data (secrets, passwords, API keys, etc.)",
+			ElementType:         types.StringType,
+			Required:            true,
+			Sensitive:           true,
+		},
+		"created_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the credential was created",
+			Computed:            true,
+		},
+		"updated_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the credential was last updated",
+			Computed:            true,
 		},
 	}
 }
@@ -112,6 +137,7 @@ func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequ
 func (r *CredentialResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -141,6 +167,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check if plan read succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -149,6 +176,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -204,6 +232,7 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check if state read succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -232,6 +261,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check if plan and state read succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -243,6 +273,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -250,6 +281,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData, &resp.Diagnostics)
 	// Check if new credential creation succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -260,6 +292,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	affectedWorkflows, success := r.scanAffectedWorkflows(ctx, oldCredID, newCredID, &resp.Diagnostics)
 	// Check if workflow scan succeeded.
 	if !success {
+		// Return with error.
 		return
 	}
 
@@ -267,6 +300,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	updatedWorkflows, success := r.updateAffectedWorkflows(ctx, affectedWorkflows, oldCredID, newCredID, &resp.Diagnostics)
 	// Check if all workflow updates succeeded.
 	if !success {
+		// Return with error.
 		return
 	}
 
@@ -300,6 +334,7 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check if state read succeeded.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -354,7 +389,18 @@ func (r *CredentialResource) rollbackRotation(
 ) {
 	tflog.Error(ctx, "Rolling back credential rotation")
 
-	// Delete new credential
+	r.deleteNewCredential(ctx, newCredID)
+	restoredCount := r.restoreWorkflows(ctx, affectedWorkflows, updatedWorkflows)
+
+	tflog.Info(ctx, fmt.Sprintf("Rollback complete: restored %d/%d workflows", restoredCount, len(updatedWorkflows)))
+}
+
+// deleteNewCredential deletes the newly created credential during rollback.
+//
+// Params:
+//   - ctx: Context for the operation
+//   - newCredID: ID of the new credential to delete
+func (r *CredentialResource) deleteNewCredential(ctx context.Context, newCredID string) {
 	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
 	// Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {
@@ -367,22 +413,26 @@ func (r *CredentialResource) rollbackRotation(
 	} else {
 		tflog.Info(ctx, fmt.Sprintf("Deleted new credential %s during rollback", newCredID))
 	}
+}
 
-	// Restore updated workflows
+// restoreWorkflows restores workflows to their original state during rollback.
+//
+// Params:
+//   - ctx: Context for the operation
+//   - affectedWorkflows: List of workflow backups for restoration
+//   - updatedWorkflows: List of workflows that were updated
+//
+// Returns:
+//   - restoredCount: Number of workflows successfully restored
+func (r *CredentialResource) restoreWorkflows(
+	ctx context.Context,
+	affectedWorkflows []CredentialWorkflowBackup,
+	updatedWorkflows []string,
+) int {
 	restoredCount := 0
 	// Iterate through each updated workflow to restore it.
 	for _, workflowID := range updatedWorkflows {
-		// Find original workflow backup.
-		var original *n8nsdk.Workflow
-		// Iterate through backups to find matching workflow.
-		for _, backup := range affectedWorkflows {
-			// Check if this backup matches the workflow being restored.
-			if backup.ID == workflowID {
-				original = backup.Original
-				break
-			}
-		}
-
+		original := r.findWorkflowBackup(affectedWorkflows, workflowID)
 		// Check if workflow backup was found.
 		if original == nil {
 			tflog.Error(ctx, fmt.Sprintf("Cannot find original for workflow %s", workflowID))
@@ -390,26 +440,71 @@ func (r *CredentialResource) rollbackRotation(
 		}
 
 		// Restore workflow to original state.
-		_, httpRespRestore, errRestore := r.client.APIClient.WorkflowAPI.
-			WorkflowsIdPut(ctx, workflowID).
-			Workflow(*original).
-			Execute()
-		// Close HTTP response body if present.
-		if httpRespRestore != nil && httpRespRestore.Body != nil {
-			defer httpRespRestore.Body.Close()
+		if r.restoreWorkflow(ctx, workflowID, original) {
+			restoredCount++
 		}
+	}
+	// Return count of successfully restored workflows.
+	return restoredCount
+}
 
-		// Check if workflow restoration failed.
-		if errRestore != nil {
-			tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, errRestore.Error()))
-			continue
+// findWorkflowBackup finds the original workflow from backups.
+//
+// Params:
+//   - affectedWorkflows: List of workflow backups
+//   - workflowID: ID of the workflow to find
+//
+// Returns:
+//   - original: Pointer to the original workflow, nil if not found
+func (r *CredentialResource) findWorkflowBackup(
+	affectedWorkflows []CredentialWorkflowBackup,
+	workflowID string,
+) *n8nsdk.Workflow {
+	// Iterate through backups to find matching workflow.
+	for _, backup := range affectedWorkflows {
+		// Check if this backup matches the workflow being restored.
+		if backup.ID == workflowID {
+			// Return the original workflow from backup.
+			return backup.Original
 		}
+	}
+	// Return nil if no backup found.
+	return nil
+}
 
-		restoredCount++
-		tflog.Debug(ctx, fmt.Sprintf("Restored workflow %s", workflowID))
+// restoreWorkflow restores a single workflow to its original state.
+//
+// Params:
+//   - ctx: Context for the operation
+//   - workflowID: ID of the workflow to restore
+//   - original: Original workflow state
+//
+// Returns:
+//   - success: True if workflow was restored successfully
+func (r *CredentialResource) restoreWorkflow(
+	ctx context.Context,
+	workflowID string,
+	original *n8nsdk.Workflow,
+) bool {
+	_, httpRespRestore, errRestore := r.client.APIClient.WorkflowAPI.
+		WorkflowsIdPut(ctx, workflowID).
+		Workflow(*original).
+		Execute()
+	// Close HTTP response body if present.
+	if httpRespRestore != nil && httpRespRestore.Body != nil {
+		defer httpRespRestore.Body.Close()
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("Rollback complete: restored %d/%d workflows", restoredCount, len(updatedWorkflows)))
+	// Check if workflow restoration failed.
+	if errRestore != nil {
+		tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, errRestore.Error()))
+		// Return failure status.
+		return false
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Restored workflow %s", workflowID))
+	// Return success status.
+	return true
 }
 
 // usesCredential checks if a workflow uses a specific credential.

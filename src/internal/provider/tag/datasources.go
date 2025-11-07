@@ -1,9 +1,9 @@
 package tag
 
 import (
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 	"context"
 	"fmt"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -14,37 +14,43 @@ import (
 // Ensure TagsDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &TagsDataSource{}
+	_ TagsDataSourceInterface            = &TagsDataSource{}
 	_ datasource.DataSourceWithConfigure = &TagsDataSource{}
 )
+
+// TagsDataSourceInterface defines the interface for TagsDataSource.
+type TagsDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // TagsDataSource is a Terraform datasource implementation for listing tags.
 // It provides read-only access to all n8n tags through the n8n API.
 type TagsDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
-}
-
-// TagsDataSourceModel maps Terraform schema attributes for tag list data.
-// It represents the complete data structure returned from the n8n tags API.
-type TagsDataSourceModel struct {
-	Tags []TagItemModel `tfsdk:"tags"`
-}
-
-// TagItemModel represents a single tag in the list.
-// It maps individual tag attributes from the n8n API to Terraform schema.
-type TagItemModel struct {
-	ID        types.String `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	CreatedAt types.String `tfsdk:"created_at"`
-	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
 // NewTagsDataSource creates a new TagsDataSource instance.
 //
 // Returns:
 //   - datasource.DataSource: une nouvelle instance de TagsDataSource
-func NewTagsDataSource() datasource.DataSource {
+func NewTagsDataSource() *TagsDataSource {
 	// Return result.
 	return &TagsDataSource{}
+}
+
+// NewTagsDataSourceWrapper creates a new TagsDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped TagsDataSource instance
+func NewTagsDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewTagsDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -53,8 +59,6 @@ func NewTagsDataSource() datasource.DataSource {
 //   - ctx: contexte de la requête
 //   - req: requête de métadonnées
 //   - resp: réponse de métadonnées
-//
-// Returns:
 func (d *TagsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_tags"
 }
@@ -65,8 +69,6 @@ func (d *TagsDataSource) Metadata(ctx context.Context, req datasource.MetadataRe
 //   - ctx: contexte de la requête
 //   - req: requête de schéma
 //   - resp: réponse de schéma
-//
-// Returns:
 func (d *TagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n tags",
@@ -106,11 +108,10 @@ func (d *TagsDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 //   - ctx: contexte de la requête
 //   - req: requête de configuration
 //   - resp: réponse de configuration
-//
-// Returns:
 func (d *TagsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -134,8 +135,6 @@ func (d *TagsDataSource) Configure(ctx context.Context, req datasource.Configure
 //   - ctx: contexte de la requête
 //   - req: requête de lecture
 //   - resp: réponse de lecture
-//
-// Returns:
 func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data TagsDataSourceModel
 
@@ -154,7 +153,7 @@ func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	data.Tags = make([]TagItemModel, 0, constants.DefaultListCapacity)
+	data.Tags = make([]TagItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check for non-nil value.
 	if tagList.Data != nil {
 		// Iterate over items.

@@ -15,7 +15,7 @@ import (
 // Returns:
 //   - ExecutionItemModel: Mapped execution item model
 func mapExecutionToItem(execution *n8nsdk.Execution) ExecutionItemModel {
-	item := ExecutionItemModel{}
+	item := &ExecutionItemModel{}
 
 	// Check for non-nil value.
 	if execution.Id != nil {
@@ -51,5 +51,5 @@ func mapExecutionToItem(execution *n8nsdk.Execution) ExecutionItemModel {
 	}
 
 	// Return result.
-	return item
+	return *item
 }

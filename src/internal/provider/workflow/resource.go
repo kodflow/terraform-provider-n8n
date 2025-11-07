@@ -12,9 +12,13 @@ import (
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
+// WORKFLOW_ATTRIBUTES_SIZE defines the initial capacity for workflow attributes map.
+const WORKFLOW_ATTRIBUTES_SIZE int = 11
+
 // Ensure WorkflowResource implements required interfaces.
 var (
 	_ resource.Resource                = &WorkflowResource{}
+	_ WorkflowResourceInterface        = &WorkflowResource{}
 	_ resource.ResourceWithConfigure   = &WorkflowResource{}
 	_ resource.ResourceWithImportState = &WorkflowResource{}
 )
@@ -27,7 +31,25 @@ var (
 //
 // Returns:
 //   - None: This is a struct, not a function
+//
+// WorkflowResourceInterface defines the interface for WorkflowResource.
+type WorkflowResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
+
+// WorkflowResource defines the resource implementation for workflows.
+// Terraform resource that manages CRUD operations for n8n workflows via the n8n API.
+// It handles workflow lifecycle including creation, updates, deletion, and import operations.
 type WorkflowResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
@@ -35,9 +57,19 @@ type WorkflowResource struct {
 //
 // Returns:
 //   - resource.Resource: A new WorkflowResource instance
-func NewWorkflowResource() resource.Resource {
+func NewWorkflowResource() *WorkflowResource {
 	// Return result.
 	return &WorkflowResource{}
+}
+
+// NewWorkflowResourceWrapper creates a new WorkflowResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped WorkflowResource instance
+func NewWorkflowResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewWorkflowResource()
 }
 
 // Metadata returns the resource type name.
@@ -65,72 +97,106 @@ func (r *WorkflowResource) Metadata(ctx context.Context, req resource.MetadataRe
 func (r *WorkflowResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n workflow resource using generated SDK",
+		Attributes:          r.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				MarkdownDescription: "Workflow identifier",
-				Computed:            true,
-			},
-			"name": schema.StringAttribute{
-				MarkdownDescription: "Workflow name",
-				Required:            true,
-			},
-			"active": schema.BoolAttribute{
-				MarkdownDescription: "Whether the workflow is active",
-				Optional:            true,
-				Computed:            true,
-			},
-			"tags": schema.ListAttribute{
-				MarkdownDescription: "List of tag IDs associated with this workflow",
-				ElementType:         types.StringType,
-				Optional:            true,
-			},
-			"nodes_json": schema.StringAttribute{
-				MarkdownDescription: "Workflow nodes as JSON string. Must be valid JSON array of node objects.",
-				Optional:            true,
-				Computed:            true,
-			},
-			"connections_json": schema.StringAttribute{
-				MarkdownDescription: "Workflow connections as JSON string. Must be valid JSON object mapping node connections.",
-				Optional:            true,
-				Computed:            true,
-			},
-			"settings_json": schema.StringAttribute{
-				MarkdownDescription: "Workflow settings as JSON string. Must be valid JSON object.",
-				Optional:            true,
-				Computed:            true,
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the workflow was created",
-				Computed:            true,
-			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the workflow was last updated",
-				Computed:            true,
-			},
-			"version_id": schema.StringAttribute{
-				MarkdownDescription: "Version identifier of the workflow",
-				Computed:            true,
-			},
-			"is_archived": schema.BoolAttribute{
-				MarkdownDescription: "Whether the workflow is archived",
-				Computed:            true,
-			},
-			"trigger_count": schema.Int64Attribute{
-				MarkdownDescription: "Number of triggers in the workflow",
-				Computed:            true,
-			},
-			"meta": schema.MapAttribute{
-				MarkdownDescription: "Workflow metadata",
-				ElementType:         types.StringType,
-				Computed:            true,
-			},
-			"pin_data": schema.MapAttribute{
-				MarkdownDescription: "Pinned test data for the workflow",
-				ElementType:         types.StringType,
-				Computed:            true,
-			},
-		},
+// schemaAttributes returns the attribute definitions for the workflow resource schema.
+//
+// Returns:
+//   - map[string]schema.Attribute: the resource attribute definitions
+func (r *WorkflowResource) schemaAttributes() map[string]schema.Attribute {
+	attrs := make(map[string]schema.Attribute, WORKFLOW_ATTRIBUTES_SIZE)
+
+	r.addCoreAttributes(attrs)
+	r.addJSONAttributes(attrs)
+	r.addMetadataAttributes(attrs)
+
+	// Return schema attributes.
+	return attrs
+}
+
+// addCoreAttributes adds the core workflow attributes to the schema.
+//
+// Params:
+//   - attrs: attribute map to populate
+func (r *WorkflowResource) addCoreAttributes(attrs map[string]schema.Attribute) {
+	attrs["id"] = schema.StringAttribute{
+		MarkdownDescription: "Workflow identifier",
+		Computed:            true,
+	}
+	attrs["name"] = schema.StringAttribute{
+		MarkdownDescription: "Workflow name",
+		Required:            true,
+	}
+	attrs["active"] = schema.BoolAttribute{
+		MarkdownDescription: "Whether the workflow is active",
+		Optional:            true,
+		Computed:            true,
+	}
+	attrs["tags"] = schema.ListAttribute{
+		MarkdownDescription: "List of tag IDs associated with this workflow",
+		ElementType:         types.StringType,
+		Optional:            true,
+	}
+}
+
+// addJSONAttributes adds the JSON-based workflow attributes to the schema.
+//
+// Params:
+//   - attrs: attribute map to populate
+func (r *WorkflowResource) addJSONAttributes(attrs map[string]schema.Attribute) {
+	attrs["nodes_json"] = schema.StringAttribute{
+		MarkdownDescription: "Workflow nodes as JSON string. Must be valid JSON array of node objects.",
+		Optional:            true,
+		Computed:            true,
+	}
+	attrs["connections_json"] = schema.StringAttribute{
+		MarkdownDescription: "Workflow connections as JSON string. Must be valid JSON object mapping node connections.",
+		Optional:            true,
+		Computed:            true,
+	}
+	attrs["settings_json"] = schema.StringAttribute{
+		MarkdownDescription: "Workflow settings as JSON string. Must be valid JSON object.",
+		Optional:            true,
+		Computed:            true,
+	}
+}
+
+// addMetadataAttributes adds the metadata workflow attributes to the schema.
+//
+// Params:
+//   - attrs: attribute map to populate
+func (r *WorkflowResource) addMetadataAttributes(attrs map[string]schema.Attribute) {
+	attrs["created_at"] = schema.StringAttribute{
+		MarkdownDescription: "Timestamp when the workflow was created",
+		Computed:            true,
+	}
+	attrs["updated_at"] = schema.StringAttribute{
+		MarkdownDescription: "Timestamp when the workflow was last updated",
+		Computed:            true,
+	}
+	attrs["version_id"] = schema.StringAttribute{
+		MarkdownDescription: "Version identifier of the workflow",
+		Computed:            true,
+	}
+	attrs["is_archived"] = schema.BoolAttribute{
+		MarkdownDescription: "Whether the workflow is archived",
+		Computed:            true,
+	}
+	attrs["trigger_count"] = schema.Int64Attribute{
+		MarkdownDescription: "Number of triggers in the workflow",
+		Computed:            true,
+	}
+	attrs["meta"] = schema.MapAttribute{
+		MarkdownDescription: "Workflow metadata",
+		ElementType:         types.StringType,
+		Computed:            true,
+	}
+	attrs["pin_data"] = schema.MapAttribute{
+		MarkdownDescription: "Pinned test data for the workflow",
+		ElementType:         types.StringType,
+		Computed:            true,
 	}
 }
 
@@ -146,6 +212,7 @@ func (r *WorkflowResource) Schema(ctx context.Context, req resource.SchemaReques
 func (r *WorkflowResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -178,6 +245,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for plan parsing errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -185,6 +253,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	nodes, connections, settings := parseWorkflowJSON(plan, &resp.Diagnostics)
 	// Check for JSON parsing errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -211,6 +280,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 			"Error creating workflow",
 			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return with error.
 		return
 	}
 
@@ -219,6 +289,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, &resp.Diagnostics)
 		// Check for tag update errors.
 		if resp.Diagnostics.HasError() {
+			// Return with error.
 			return
 		}
 	}
@@ -230,6 +301,7 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	// Save data into Terraform state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
+
 // Read refreshes the Terraform state with the latest data.
 //
 // Params:
@@ -245,6 +317,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check for state parsing errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -262,6 +335,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 			"Error reading workflow",
 			fmt.Sprintf("Could not read workflow ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return with error.
 		return
 	}
 
@@ -271,6 +345,7 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 	// Save updated data into Terraform state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
+
 // Update updates the resource and sets the updated Terraform state on success.
 //
 // Params:
@@ -288,6 +363,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check for plan/state parsing errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -295,6 +371,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	nodes, connections, settings := parseWorkflowJSON(plan, &resp.Diagnostics)
 	// Check for JSON parsing errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -302,6 +379,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	r.handleWorkflowActivation(ctx, plan, state, &resp.Diagnostics)
 	// Check for activation change errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -328,6 +406,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 			"Error updating workflow",
 			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
+		// Return with error.
 		return
 	}
 
@@ -335,6 +414,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	r.updateWorkflowTags(ctx, plan.ID.ValueString(), plan, workflow, &resp.Diagnostics)
 	// Check for tag update errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -344,6 +424,7 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 	// Save updated data into Terraform state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
+
 // Delete deletes the resource and removes the Terraform state on success.
 //
 // Params:
@@ -360,6 +441,7 @@ func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteReques
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check for state parsing errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 

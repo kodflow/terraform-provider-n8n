@@ -13,30 +13,43 @@ import (
 // Ensure WorkflowDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &WorkflowDataSource{}
+	_ WorkflowDataSourceInterface        = &WorkflowDataSource{}
 	_ datasource.DataSourceWithConfigure = &WorkflowDataSource{}
 )
+
+// WorkflowDataSourceInterface defines the interface for WorkflowDataSource.
+type WorkflowDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // WorkflowDataSource provides a Terraform datasource for read-only access to individual n8n workflows.
 // It enables users to fetch workflow details by ID from their n8n instance through the n8n API.
 type WorkflowDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
-}
-
-// WorkflowDataSourceModel maps the Terraform schema attributes for a single workflow datasource.
-// It represents workflow metadata including its identifier, name, and activation status.
-type WorkflowDataSourceModel struct {
-	ID     types.String `tfsdk:"id"`
-	Name   types.String `tfsdk:"name"`
-	Active types.Bool   `tfsdk:"active"`
 }
 
 // NewWorkflowDataSource creates and returns a new WorkflowDataSource instance.
 //
 // Returns:
 //   - datasource.DataSource: a new WorkflowDataSource instance
-func NewWorkflowDataSource() datasource.DataSource {
+func NewWorkflowDataSource() *WorkflowDataSource {
 	// Return result.
 	return &WorkflowDataSource{}
+}
+
+// NewWorkflowDataSourceWrapper creates a new WorkflowDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped WorkflowDataSource instance
+func NewWorkflowDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewWorkflowDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -45,8 +58,6 @@ func NewWorkflowDataSource() datasource.DataSource {
 //   - ctx: context for the operation
 //   - req: metadata request from Terraform
 //   - resp: metadata response to populate
-//
-// Returns:
 func (d *WorkflowDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workflow"
 }
@@ -57,8 +68,6 @@ func (d *WorkflowDataSource) Metadata(ctx context.Context, req datasource.Metada
 //   - ctx: context for the operation
 //   - req: schema request from Terraform
 //   - resp: schema response to populate
-//
-// Returns:
 func (d *WorkflowDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n workflow by ID",
@@ -86,11 +95,10 @@ func (d *WorkflowDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 //   - ctx: context for the operation
 //   - req: configure request from Terraform
 //   - resp: configure response to populate
-//
-// Returns:
 func (d *WorkflowDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -114,14 +122,13 @@ func (d *WorkflowDataSource) Configure(ctx context.Context, req datasource.Confi
 //   - ctx: context for the operation
 //   - req: read request from Terraform
 //   - resp: read response to populate
-//
-// Returns:
 func (d *WorkflowDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data WorkflowDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 

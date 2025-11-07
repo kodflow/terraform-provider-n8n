@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
@@ -14,34 +13,43 @@ import (
 // Ensure ProjectDataSource implements required interfaces.
 var (
 	_ datasource.DataSource              = &ProjectDataSource{}
+	_ ProjectDataSourceInterface         = &ProjectDataSource{}
 	_ datasource.DataSourceWithConfigure = &ProjectDataSource{}
 )
+
+// ProjectDataSourceInterface defines the interface for ProjectDataSource.
+type ProjectDataSourceInterface interface {
+	datasource.DataSource
+	Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse)
+	Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse)
+	Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse)
+	Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse)
+}
 
 // ProjectDataSource is a Terraform datasource that provides read-only access to a single n8n project.
 // It fetches project details from the n8n API using ID or name-based filtering.
 type ProjectDataSource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
-}
-
-// ProjectDataSourceModel maps the Terraform schema to a single project from the n8n API.
-// It contains project metadata including timestamps, type, and descriptive information.
-type ProjectDataSourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Type        types.String `tfsdk:"type"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	UpdatedAt   types.String `tfsdk:"updated_at"`
-	Icon        types.String `tfsdk:"icon"`
-	Description types.String `tfsdk:"description"`
 }
 
 // NewProjectDataSource creates a new ProjectDataSource instance.
 //
 // Returns:
 //   - datasource.DataSource: New ProjectDataSource instance
-func NewProjectDataSource() datasource.DataSource {
+func NewProjectDataSource() *ProjectDataSource {
 	// Return result.
 	return &ProjectDataSource{}
+}
+
+// NewProjectDataSourceWrapper creates a new ProjectDataSource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - datasource.DataSource: the wrapped ProjectDataSource instance
+func NewProjectDataSourceWrapper() datasource.DataSource {
+	// Return the wrapped datasource instance.
+	return NewProjectDataSource()
 }
 
 // Metadata returns the data source type name.
@@ -50,8 +58,6 @@ func NewProjectDataSource() datasource.DataSource {
 //   - ctx: Context for the request
 //   - req: Metadata request
 //   - resp: Metadata response to populate
-//
-// Returns:
 func (d *ProjectDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_project"
 }
@@ -62,8 +68,6 @@ func (d *ProjectDataSource) Metadata(ctx context.Context, req datasource.Metadat
 //   - ctx: Context for the request
 //   - req: Schema request
 //   - resp: Schema response to populate
-//
-// Returns:
 func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n project by ID or name. Since the n8n API doesn't provide a GET /projects/{id} endpoint, this datasource uses the LIST endpoint with client-side filtering.",
@@ -109,11 +113,10 @@ func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 //   - ctx: Context for the request
 //   - req: Configure request
 //   - resp: Configure response to populate
-//
-// Returns:
 func (d *ProjectDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -137,14 +140,13 @@ func (d *ProjectDataSource) Configure(ctx context.Context, req datasource.Config
 //   - ctx: Context for the request
 //   - req: Read request
 //   - resp: Read response to populate
-//
-// Returns:
 func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	data := &ProjectDataSourceModel{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check for diagnostics errors.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -154,6 +156,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			"Missing Required Attribute",
 			"Either 'id' or 'name' must be specified",
 		)
+		// Return with error.
 		return
 	}
 
@@ -169,6 +172,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			"Error listing projects",
 			fmt.Sprintf("Could not list projects: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		// Return with error.
 		return
 	}
 
@@ -191,6 +195,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			"Project Not Found",
 			fmt.Sprintf("Could not find project with identifier: %s", identifier),
 		)
+		// Return with error.
 		return
 	}
 

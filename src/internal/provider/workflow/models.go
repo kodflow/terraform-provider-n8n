@@ -22,13 +22,3 @@ type WorkflowResourceModel struct {
 	Meta            types.Map    `tfsdk:"meta"`
 	PinData         types.Map    `tfsdk:"pin_data"`
 }
-
-// WorkflowTransferResourceModel describes the resource data model.
-// It represents the Terraform schema mapping for workflow transfer operations,
-// tracking the workflow ID, destination project, and transfer metadata.
-type WorkflowTransferResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	WorkflowID           types.String `tfsdk:"workflow_id"`
-	DestinationProjectID types.String `tfsdk:"destination_project_id"`
-	TransferredAt        types.String `tfsdk:"transferred_at"`
-}

@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -15,24 +14,48 @@ import (
 // Ensure UserResource implements required interfaces.
 var (
 	_ resource.Resource                = &UserResource{}
+	_ UserResourceInterface            = &UserResource{}
 	_ resource.ResourceWithConfigure   = &UserResource{}
 	_ resource.ResourceWithImportState = &UserResource{}
 )
 
+// UserResourceInterface defines the interface for UserResource.
+type UserResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
+
 // UserResource defines the resource implementation for user management.
 // Terraform resource that manages CRUD operations for n8n users via the n8n API.
 type UserResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
-
 
 // NewUserResource creates a new UserResource instance.
 //
 // Returns:
 //   - resource.Resource: A new UserResource configured for Terraform
-func NewUserResource() resource.Resource {
+func NewUserResource() *UserResource {
 	// Return result.
 	return &UserResource{}
+}
+
+// NewUserResourceWrapper creates a new UserResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped UserResource instance
+func NewUserResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewUserResource()
 }
 
 // Metadata returns the resource type name.
@@ -61,41 +84,49 @@ func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataReques
 func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages n8n users. Only available for the instance owner. Note: The API only supports updating the user's role, not other fields.",
+		Attributes:          r.schemaAttributes(),
+	}
+}
 
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				MarkdownDescription: "User identifier",
-				Computed:            true,
-			},
-			"email": schema.StringAttribute{
-				MarkdownDescription: "User's email address",
-				Required:            true,
-			},
-			"first_name": schema.StringAttribute{
-				MarkdownDescription: "User's first name",
-				Computed:            true,
-			},
-			"last_name": schema.StringAttribute{
-				MarkdownDescription: "User's last name",
-				Computed:            true,
-			},
-			"role": schema.StringAttribute{
-				MarkdownDescription: "User's global role (e.g., 'global:admin', 'global:member')",
-				Optional:            true,
-				Computed:            true,
-			},
-			"is_pending": schema.BoolAttribute{
-				MarkdownDescription: "Whether the user has finished setting up their account",
-				Computed:            true,
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the user was created",
-				Computed:            true,
-			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the user was last updated",
-				Computed:            true,
-			},
+// schemaAttributes returns the attribute definitions for the user resource schema.
+//
+// Returns:
+//   - map[string]schema.Attribute: the resource attribute definitions
+func (r *UserResource) schemaAttributes() map[string]schema.Attribute {
+	// Return schema attributes.
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "User identifier",
+			Computed:            true,
+		},
+		"email": schema.StringAttribute{
+			MarkdownDescription: "User's email address",
+			Required:            true,
+		},
+		"first_name": schema.StringAttribute{
+			MarkdownDescription: "User's first name",
+			Computed:            true,
+		},
+		"last_name": schema.StringAttribute{
+			MarkdownDescription: "User's last name",
+			Computed:            true,
+		},
+		"role": schema.StringAttribute{
+			MarkdownDescription: "User's global role (e.g., 'global:admin', 'global:member')",
+			Optional:            true,
+			Computed:            true,
+		},
+		"is_pending": schema.BoolAttribute{
+			MarkdownDescription: "Whether the user has finished setting up their account",
+			Computed:            true,
+		},
+		"created_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the user was created",
+			Computed:            true,
+		},
+		"updated_at": schema.StringAttribute{
+			MarkdownDescription: "Timestamp when the user was last updated",
+			Computed:            true,
 		},
 	}
 }
@@ -112,6 +143,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return result.
 		return
 	}
 
@@ -144,9 +176,42 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
+	// Create user and get ID
+	userID := r.createUser(ctx, plan, resp)
+	// Check condition.
+	if userID == "" {
+		// Return result.
+		return
+	}
+
+	// Fetch full user details
+	user := r.fetchFullUserDetails(ctx, userID, resp)
+	// Check for nil value.
+	if user == nil {
+		// Return result.
+		return
+	}
+
+	// Map user to model
+	mapUserToResourceModel(user, plan)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// createUser creates a user and returns the user ID.
+//
+// Params:
+//   - ctx: context for operation
+//   - plan: user resource model
+//   - resp: create response
+//
+// Returns:
+//   - string: user ID or empty string if error occurred
+func (r *UserResource) createUser(ctx context.Context, plan *UserResourceModel, resp *resource.CreateResponse) string {
 	// Build create request (API accepts array of users, we're creating one)
 	userReq := n8nsdk.NewUsersPostRequestInner(plan.Email.ValueString())
 	// Check condition.
@@ -169,33 +234,34 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 			"Error creating user",
 			fmt.Sprintf("Could not create user %s: %s\nHTTP Response: %v", plan.Email.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return empty string on error.
+		return ""
 	}
 
-	// API returns UsersPost200Response with limited user data
-	if result.User == nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			"API did not return user data",
-		)
-		// Return result.
-		return
-	}
-
-	// Get user ID from creation response
-	if result.User.Id == nil {
+	// Validate response
+	if result.User == nil || result.User.Id == nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
 			"API did not return user ID",
 		)
-		// Return result.
-		return
+		// Return empty string on validation error.
+		return ""
 	}
 
-	userID := *result.User.Id
+	// Return the user ID.
+	return *result.User.Id
+}
 
-	// Fetch full user details using the ID
+// fetchFullUserDetails retrieves full user details by ID.
+//
+// Params:
+//   - ctx: context for operation
+//   - userID: user identifier
+//   - resp: create response
+//
+// Returns:
+//   - *n8nsdk.User: user object or nil if error occurred
+func (r *UserResource) fetchFullUserDetails(ctx context.Context, userID string, resp *resource.CreateResponse) *n8nsdk.User {
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, userID).IncludeRole(true).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -207,14 +273,11 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 			"Error reading created user",
 			fmt.Sprintf("User was created but could not read full details: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return nil on error.
+		return nil
 	}
-
-	// Map user to model
-	mapUserToResourceModel(user, plan)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return the user details.
+	return user
 }
 
 // Read refreshes the resource state with the latest data.
@@ -232,6 +295,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -269,64 +333,33 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	plan := &UserResourceModel{}
 	state := &UserResourceModel{}
-	var err error
-	var httpResp *http.Response
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
-	// Check if email changed - not supported
-	if !plan.Email.Equal(state.Email) {
-		resp.Diagnostics.AddError(
-			"Email Change Not Supported",
-			"The n8n API does not support changing a user's email address. Please delete and recreate the user if needed.",
-		)
+	// Validate email hasn't changed
+	if !r.validateEmailUnchanged(plan, state, resp) {
 		// Return result.
 		return
 	}
 
-	// Check if role changed
-	roleChanged := !plan.Role.IsNull() && !state.Role.IsNull() &&
-		!plan.Role.Equal(state.Role)
-
-	// Check condition.
-	if roleChanged {
-		// Update role
-		roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
-		httpResp, err = r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
-			UsersIdRolePatchRequest(*roleReq).Execute()
-		// Check for non-nil value.
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
-		// Check for error.
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating user role",
-				fmt.Sprintf("Could not update role for user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
-			)
-			// Return result.
-			return
-		}
+	// Update role if changed
+	r.updateRoleIfChanged(ctx, plan, state, resp)
+	// Check for errors in diagnostics.
+	if resp.Diagnostics.HasError() {
+		// Return with error.
+		return
 	}
 
-	// Refresh user data after update
-	var user *n8nsdk.User
-	user, httpResp, err = r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
-	// Check for non-nil value.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-	// Check for error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading user after update",
-			fmt.Sprintf("Could not read user %s after update: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
-		)
+	// Refresh user data
+	user := r.refreshUserData(ctx, state.ID.ValueString(), resp)
+	// Check for nil value.
+	if user == nil {
 		// Return result.
 		return
 	}
@@ -335,6 +368,90 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	mapUserToResourceModel(user, plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// validateEmailUnchanged checks if email has changed and reports error.
+//
+// Params:
+//   - plan: planned state
+//   - state: current state
+//   - resp: update response
+//
+// Returns:
+//   - bool: true if email unchanged, false otherwise
+func (r *UserResource) validateEmailUnchanged(plan, state *UserResourceModel, resp *resource.UpdateResponse) bool {
+	// Check condition.
+	if !plan.Email.Equal(state.Email) {
+		resp.Diagnostics.AddError(
+			"Email Change Not Supported",
+			"The n8n API does not support changing a user's email address. Please delete and recreate the user if needed.",
+		)
+		return false
+	}
+	return true
+}
+
+// updateRoleIfChanged updates the user role if it has changed.
+//
+// Params:
+//   - ctx: context for operation
+//   - plan: planned state
+//   - state: current state
+//   - resp: update response
+func (r *UserResource) updateRoleIfChanged(ctx context.Context, plan, state *UserResourceModel, resp *resource.UpdateResponse) {
+	// Check if role changed
+	roleChanged := !plan.Role.IsNull() && !state.Role.IsNull() &&
+		!plan.Role.Equal(state.Role)
+
+	// Check condition.
+	if !roleChanged {
+		// Return result.
+		return
+	}
+
+	// Update role
+	roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
+	httpResp, err := r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
+		UsersIdRolePatchRequest(*roleReq).Execute()
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating user role",
+			fmt.Sprintf("Could not update role for user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
+		)
+	}
+}
+
+// refreshUserData retrieves updated user data from the API.
+//
+// Params:
+//   - ctx: context for operation
+//   - userID: user identifier
+//   - resp: update response
+//
+// Returns:
+//   - *n8nsdk.User: user object or nil if error occurred
+func (r *UserResource) refreshUserData(ctx context.Context, userID string, resp *resource.UpdateResponse) *n8nsdk.User {
+	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, userID).IncludeRole(true).Execute()
+	// Check for non-nil value.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading user after update",
+			fmt.Sprintf("Could not read user %s after update: %s\nHTTP Response: %v", userID, err.Error(), httpResp),
+		)
+		// Return nil on error.
+		return nil
+	}
+	// Return the user details.
+	return user
 }
 
 // Delete deletes the user.
@@ -352,6 +469,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 

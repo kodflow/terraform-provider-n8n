@@ -17,4 +17,3 @@ type ExecutionRetryResourceModel struct {
 	StoppedAt      types.String `tfsdk:"stopped_at"`
 	Status         types.String `tfsdk:"status"`
 }
-

@@ -3,11 +3,19 @@ set -e
 
 echo "🚀 Starting post-start configuration..."
 
+# Clean up old or duplicate binaries from previous builds
+echo "🧹 Cleaning up old binaries..."
+rm -f "$HOME/.cache/go/bin/golangci-lint-real" # Old golangci-lint wrapper
+rm -f "$HOME/.cache/go/bin/ktn-linter"         # Duplicate (should be in .local/bin)
+
 # Install Go tools (now that Go is available in PATH)
 if command -v go &>/dev/null; then
   # Check if tools are already installed to avoid reinstalling every time
-  if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ]; then
+  if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null; then
     echo "🔨 Installing Go tools..."
+
+    # Clean up any corrupted golangci-lint binary
+    rm -f "$HOME/.cache/go/bin/golangci-lint"
 
     # Install golangci-lint v2.6.1 from GitHub releases
     echo "📦 Installing golangci-lint v2.6.1..."

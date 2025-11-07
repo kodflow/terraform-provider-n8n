@@ -149,24 +149,24 @@ func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource 
 	// Return result.
 	return []func() resource.Resource{
 		// Workflow domain
-		workflow.NewWorkflowResource,
-		workflow.NewWorkflowTransferResource,
+		workflow.NewWorkflowResourceWrapper,
+		workflow.NewWorkflowTransferResourceWrapper,
 		// Project domain
-		project.NewProjectResource,
-		project.NewProjectUserResource,
+		project.NewProjectResourceWrapper,
+		project.NewProjectUserResourceWrapper,
 		// Credential domain
-		credential.NewCredentialResource,
-		credential.NewCredentialTransferResource,
+		credential.NewCredentialResourceWrapper,
+		credential.NewCredentialTransferResourceWrapper,
 		// Execution domain
-		execution.NewExecutionRetryResource,
+		execution.NewExecutionRetryResourceWrapper,
 		// Tag domain
-		tag.NewTagResource,
+		tag.NewTagResourceWrapper,
 		// Variable domain
-		variable.NewVariableResource,
+		variable.NewVariableResourceWrapper,
 		// User domain
-		user.NewUserResource,
+		user.NewUserResourceWrapper,
 		// Source control domain
-		sourcecontrol.NewSourceControlPullResource,
+		sourcecontrol.NewSourceControlPullResourceWrapper,
 	}
 }
 
@@ -182,23 +182,23 @@ func (p *N8nProvider) DataSources(ctx context.Context) []func() datasource.DataS
 	// Return result.
 	return []func() datasource.DataSource{
 		// Workflow domain
-		workflow.NewWorkflowDataSource,
-		workflow.NewWorkflowsDataSource,
+		workflow.NewWorkflowDataSourceWrapper,
+		workflow.NewWorkflowsDataSourceWrapper,
 		// Project domain
-		project.NewProjectDataSource,
-		project.NewProjectsDataSource,
+		project.NewProjectDataSourceWrapper,
+		project.NewProjectsDataSourceWrapper,
 		// Execution domain
-		execution.NewExecutionDataSource,
-		execution.NewExecutionsDataSource,
+		execution.NewExecutionDataSourceWrapper,
+		execution.NewExecutionsDataSourceWrapper,
 		// Tag domain
-		tag.NewTagDataSource,
-		tag.NewTagsDataSource,
+		tag.NewTagDataSourceWrapper,
+		tag.NewTagsDataSourceWrapper,
 		// Variable domain
-		variable.NewVariableDataSource,
-		variable.NewVariablesDataSource,
+		variable.NewVariableDataSourceWrapper,
+		variable.NewVariablesDataSourceWrapper,
 		// User domain
-		user.NewUserDataSource,
-		user.NewUsersDataSource,
+		user.NewUserDataSourceWrapper,
+		user.NewUsersDataSourceWrapper,
 	}
 }
 

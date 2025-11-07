@@ -14,27 +14,49 @@ import (
 
 // Ensure CredentialTransferResource implements required interfaces.
 var (
-	_ resource.Resource                = &CredentialTransferResource{}
-	_ resource.ResourceWithConfigure   = &CredentialTransferResource{}
-	_ resource.ResourceWithImportState = &CredentialTransferResource{}
+	_ resource.Resource                   = &CredentialTransferResource{}
+	_ CredentialTransferResourceInterface = &CredentialTransferResource{}
+	_ resource.ResourceWithConfigure      = &CredentialTransferResource{}
+	_ resource.ResourceWithImportState    = &CredentialTransferResource{}
 )
+
+// CredentialTransferResourceInterface defines the interface for CredentialTransferResource.
+type CredentialTransferResourceInterface interface {
+	resource.Resource
+	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
+	Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse)
+	Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse)
+	Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse)
+	ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse)
+}
 
 // CredentialTransferResource defines the resource implementation for transferring a credential to a project.
 // Terraform resource that manages CRUD operations for credential transfers to n8n projects via the n8n API.
 type CredentialTransferResource struct {
+	// client is the N8n API client used for credential transfer operations.
 	client *client.N8nClient
 }
 
-
 // NewCredentialTransferResource creates a new CredentialTransferResource instance.
-//
-// Params:
 //
 // Returns:
 //   - resource.Resource: the new CredentialTransferResource instance
-func NewCredentialTransferResource() resource.Resource {
+func NewCredentialTransferResource() *CredentialTransferResource {
 	// Return result.
 	return &CredentialTransferResource{}
+}
+
+// NewCredentialTransferResourceWrapper creates a new CredentialTransferResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped CredentialTransferResource instance
+func NewCredentialTransferResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewCredentialTransferResource()
 }
 
 // Metadata returns the resource type name.
@@ -43,8 +65,6 @@ func NewCredentialTransferResource() resource.Resource {
 //   - ctx: context for cancellation and timeouts
 //   - req: metadata request from Terraform
 //   - resp: metadata response to populate
-//
-// Returns:
 func (r *CredentialTransferResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_credential_transfer"
 }
@@ -55,8 +75,6 @@ func (r *CredentialTransferResource) Metadata(ctx context.Context, req resource.
 //   - ctx: context for cancellation and timeouts
 //   - req: schema request from Terraform
 //   - resp: schema response to populate
-//
-// Returns:
 func (r *CredentialTransferResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Transfers a credential to another project. This is a one-time operation resource that triggers the transfer when created.",
@@ -88,11 +106,10 @@ func (r *CredentialTransferResource) Schema(ctx context.Context, req resource.Sc
 //   - ctx: context for cancellation and timeouts
 //   - req: configure request from Terraform with provider data
 //   - resp: configure response to populate with errors if any
-//
-// Returns:
 func (r *CredentialTransferResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -116,14 +133,13 @@ func (r *CredentialTransferResource) Configure(ctx context.Context, req resource
 //   - ctx: context for cancellation and timeouts
 //   - req: create request from Terraform with plan data
 //   - resp: create response to populate with state and errors if any
-//
-// Returns:
 func (r *CredentialTransferResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan *CredentialTransferResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -161,14 +177,13 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 //   - ctx: context for cancellation and timeouts
 //   - req: read request from Terraform with state data
 //   - resp: read response to populate with state and errors if any
-//
-// Returns:
 func (r *CredentialTransferResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state *CredentialTransferResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -182,8 +197,6 @@ func (r *CredentialTransferResource) Read(ctx context.Context, req resource.Read
 //   - ctx: context for cancellation and timeouts
 //   - req: update request from Terraform with plan and state data
 //   - resp: update response to populate with errors
-//
-// Returns:
 func (r *CredentialTransferResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	resp.Diagnostics.AddError(
 		"Update Not Supported",
@@ -197,8 +210,6 @@ func (r *CredentialTransferResource) Update(ctx context.Context, req resource.Up
 //   - ctx: context for cancellation and timeouts
 //   - req: delete request from Terraform with state data
 //   - resp: delete response to populate with errors if any
-//
-// Returns:
 func (r *CredentialTransferResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Transfer operations cannot be undone, so we just remove from state
 }
@@ -209,8 +220,6 @@ func (r *CredentialTransferResource) Delete(ctx context.Context, req resource.De
 //   - ctx: context for cancellation and timeouts
 //   - req: import state request from Terraform with ID data
 //   - resp: import state response to populate with state and errors if any
-//
-// Returns:
 func (r *CredentialTransferResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

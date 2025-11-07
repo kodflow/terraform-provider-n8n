@@ -40,16 +40,27 @@ var (
 // This resource manages one-time workflow transfer operations in n8n, moving workflows between projects
 // via the n8n API. The transfer operation is triggered on resource creation.
 type WorkflowTransferResource struct {
+	// client is the N8n API client used for operations.
 	client *client.N8nClient
 }
 
 // NewWorkflowTransferResource creates a new WorkflowTransferResource instance.
 //
 // Returns:
-//   - resource.Resource: a new workflow transfer resource ready for use
-func NewWorkflowTransferResource() resource.Resource {
+//   - *WorkflowTransferResource: a new workflow transfer resource ready for use
+func NewWorkflowTransferResource() *WorkflowTransferResource {
 	// Initialize and return new WorkflowTransferResource instance
 	return &WorkflowTransferResource{}
+}
+
+// NewWorkflowTransferResourceWrapper creates a new WorkflowTransferResource instance for Terraform.
+// This wrapper function is used by the provider to maintain compatibility with the framework.
+//
+// Returns:
+//   - resource.Resource: the wrapped WorkflowTransferResource instance
+func NewWorkflowTransferResourceWrapper() resource.Resource {
+	// Return the wrapped resource instance.
+	return NewWorkflowTransferResource()
 }
 
 // Metadata returns the resource type name.
@@ -111,6 +122,7 @@ func (r *WorkflowTransferResource) Schema(ctx context.Context, req resource.Sche
 func (r *WorkflowTransferResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Early return if no provider data is configured
 	if req.ProviderData == nil {
+		// Return with error.
 		return
 	}
 
@@ -122,6 +134,7 @@ func (r *WorkflowTransferResource) Configure(ctx context.Context, req resource.C
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
+		// Return with error.
 		return
 	}
 
@@ -146,6 +159,7 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
 	// Return early if plan parsing failed
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
@@ -166,6 +180,7 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 			fmt.Sprintf("Could not transfer workflow %s to project %s: %s\nHTTP Response: %v",
 				plan.WorkflowID.ValueString(), plan.DestinationProjectID.ValueString(), err.Error(), httpResp),
 		)
+		// Return with error.
 		return
 	}
 
@@ -194,6 +209,7 @@ func (r *WorkflowTransferResource) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
 	// Return early if state read failed
 	if resp.Diagnostics.HasError() {
+		// Return with error.
 		return
 	}
 
