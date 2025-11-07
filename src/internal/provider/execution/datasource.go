@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/execution/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
@@ -156,7 +157,7 @@ func (d *ExecutionDataSource) Configure(ctx context.Context, req datasource.Conf
 //   - resp: datasource.ReadResponse to populate with state and diagnostics
 func (d *ExecutionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// Initialize data model
-	data := &ExecutionDataSourceModel{}
+	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check condition.
@@ -203,7 +204,7 @@ func (d *ExecutionDataSource) Read(ctx context.Context, req datasource.ReadReque
 // Params:
 //   - execution: the execution response from the API
 //   - data: the data model to populate
-func populateExecutionData(execution *n8nsdk.Execution, data *ExecutionDataSourceModel) {
+func populateExecutionData(execution *n8nsdk.Execution, data *models.DataSource) {
 	// Check if execution ID is available.
 	if execution.Id != nil {
 		data.ID = types.StringValue(fmt.Sprintf("%v", *execution.Id))

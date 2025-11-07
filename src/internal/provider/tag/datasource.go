@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/tag/models"
 )
 
 // Ensure TagDataSource implements required interfaces.
@@ -141,7 +142,7 @@ func (d *TagDataSource) Configure(ctx context.Context, req datasource.ConfigureR
 // Returns:
 //   - None
 func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	data := &TagDataSourceModel{}
+	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// If there are errors from config parsing, return early.
@@ -186,7 +187,7 @@ func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 //
 // Returns:
 //   - bool: true if valid, false otherwise
-func (d *TagDataSource) validateIdentifier(data *TagDataSourceModel, resp *datasource.ReadResponse) bool {
+func (d *TagDataSource) validateIdentifier(data *models.DataSource, resp *datasource.ReadResponse) bool {
 	// Check for non-null value.
 	if data.ID.IsNull() && data.Name.IsNull() {
 		resp.Diagnostics.AddError(
@@ -207,7 +208,7 @@ func (d *TagDataSource) validateIdentifier(data *TagDataSourceModel, resp *datas
 //
 // Returns:
 //   - *n8nsdk.Tag: The found tag or nil if error occurred
-func (d *TagDataSource) fetchTagByID(ctx context.Context, data *TagDataSourceModel, resp *datasource.ReadResponse) *n8nsdk.Tag {
+func (d *TagDataSource) fetchTagByID(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) *n8nsdk.Tag {
 	tag, httpResp, err := d.client.APIClient.TagsAPI.TagsIdGet(ctx, data.ID.ValueString()).Execute()
 	// Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {
@@ -235,7 +236,7 @@ func (d *TagDataSource) fetchTagByID(ctx context.Context, data *TagDataSourceMod
 //
 // Returns:
 //   - *n8nsdk.Tag: The found tag or nil if error occurred
-func (d *TagDataSource) fetchTagByName(ctx context.Context, data *TagDataSourceModel, resp *datasource.ReadResponse) *n8nsdk.Tag {
+func (d *TagDataSource) fetchTagByName(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) *n8nsdk.Tag {
 	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
 	// Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
 )
 
 // Ensure WorkflowsDataSource implements required interfaces.
@@ -136,7 +137,7 @@ func (d *WorkflowsDataSource) Configure(ctx context.Context, req datasource.Conf
 //   - req: read request containing configuration
 //   - resp: read response to populate with state data
 func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data WorkflowsDataSourceModel
+	var data models.DataSources
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// Check condition.
@@ -170,12 +171,12 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response to state
-	data.Workflows = make([]WorkflowItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+	data.Workflows = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check for non-nil value.
 	if workflowList.Data != nil {
 		// Iterate over items.
 		for _, workflow := range workflowList.Data {
-			workflowModel := WorkflowItemModel{
+			workflowModel := models.Item{
 				ID:   types.StringPointerValue(workflow.Id),
 				Name: types.StringValue(workflow.Name),
 			}

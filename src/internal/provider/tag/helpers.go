@@ -3,17 +3,18 @@ package tag
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/tag/models"
 )
 
 // mapTagToDataSourceModel maps an SDK tag to the datasource model.
 //
 // Params:
 //   - tag: The n8n SDK tag to map
-//   - data: The TagDataSourceModel to populate
+//   - data: The models.DataSource to populate
 //
 // Returns:
 //   - None
-func mapTagToDataSourceModel(tag *n8nsdk.Tag, data *TagDataSourceModel) {
+func mapTagToDataSourceModel(tag *n8nsdk.Tag, data *models.DataSource) {
 	// Check for non-nil value.
 	if tag.Id != nil {
 		data.ID = types.StringValue(*tag.Id)

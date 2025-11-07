@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/execution/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
@@ -181,7 +182,7 @@ func (d *ExecutionsDataSource) Configure(ctx context.Context, req datasource.Con
 //   - resp: datasource.ReadResponse to populate with state and diagnostics
 func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// Initialize data model
-	data := &ExecutionsDataSourceModel{}
+	data := &models.DataSources{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// Check for errors in diagnostics
@@ -216,13 +217,13 @@ func (d *ExecutionsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 //
 // Params:
 //   - ctx: context.Context for cancellation
-//   - data: ExecutionsDataSourceModel containing filter parameters
+//   - data: models.DataSources containing filter parameters
 //
 // Returns:
 //   - apiReq: Configured API request
 func (d *ExecutionsDataSource) buildExecutionsAPIRequest(
 	ctx context.Context,
-	data *ExecutionsDataSourceModel,
+	data *models.DataSources,
 ) n8nsdk.ExecutionAPIExecutionsGetRequest {
 	apiReq := d.client.APIClient.ExecutionAPI.ExecutionsGet(ctx)
 	// Filter by workflow ID if provided
@@ -248,13 +249,13 @@ func (d *ExecutionsDataSource) buildExecutionsAPIRequest(
 // populateExecutionsList populates the executions list from API response.
 //
 // Params:
-//   - data: ExecutionsDataSourceModel to populate
+//   - data: models.DataSources to populate
 //   - executionList: API response containing execution data
 func (d *ExecutionsDataSource) populateExecutionsList(
-	data *ExecutionsDataSourceModel,
+	data *models.DataSources,
 	executionList *n8nsdk.ExecutionList,
 ) {
-	data.Executions = make([]ExecutionItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+	data.Executions = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check if execution data is available and populate executions
 	if executionList.Data != nil {
 		// Process each execution and add to the executions list

@@ -1,12 +1,12 @@
-package workflow
+package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// WorkflowTransferResourceModel describes the workflow transfer resource data model.
+// Transfer describes the workflow transfer resource data model.
 // Captures the workflow ID and destination project ID for transfer operations.
-type WorkflowTransferResourceModel struct {
+type Transfer struct {
 	ID                   types.String `tfsdk:"id"`
 	WorkflowID           types.String `tfsdk:"workflow_id"`
 	DestinationProjectID types.String `tfsdk:"destination_project_id"`

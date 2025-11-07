@@ -3,11 +3,12 @@ package project
 import (
 	"context"
 	"fmt"
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/kodflow/n8n/src/internal/provider/project/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
 )
 
 // Ensure ProjectsDataSource implements required interfaces.
@@ -164,7 +165,7 @@ func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.Confi
 //   - req: read request from Terraform
 //   - resp: read response to populate with data
 func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ProjectsDataSourceModel
+	var data models.DataSources
 
 	projectList, httpResp, err := d.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
 	// Close the HTTP response body if it is not nil to prevent resource leaks.
@@ -181,12 +182,12 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	data.Projects = make([]ProjectItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+	data.Projects = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Iterate through all projects and convert them to the model format.
 	if projectList.Data != nil {
-		// Convert each project from the API response to the ProjectItemModel format.
+		// Convert each project from the API response to the Item format.
 		for _, project := range projectList.Data {
-			item := mapProjectToProjectItemModel(&project)
+			item := mapProjectToItem(&project)
 			data.Projects = append(data.Projects, item)
 		}
 	}

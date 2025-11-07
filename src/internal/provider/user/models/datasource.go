@@ -1,12 +1,12 @@
-package user
+package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// UserItemModel represents a single user in the list.
-// It maps individual user attributes from the n8n API to Terraform schema.
-type UserItemModel struct {
+// DataSource maps Terraform schema attributes for user data.
+// It represents a single user with all related attributes from the n8n API.
+type DataSource struct {
 	ID        types.String `tfsdk:"id"`
 	Email     types.String `tfsdk:"email"`
 	FirstName types.String `tfsdk:"first_name"`

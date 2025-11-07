@@ -3,6 +3,7 @@ package variable
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/variable/models"
 )
 
 // findVariableByIDOrKey searches for a variable by ID or key in a variable list.
@@ -88,7 +89,7 @@ func findVariableByKey(variables []n8nsdk.Variable, key string) (*n8nsdk.Variabl
 //
 // Returns:
 //   - No return value, modifies data parameter in place
-func mapVariableToDataSourceModel(variable *n8nsdk.Variable, data *VariableDataSourceModel) {
+func mapVariableToDataSourceModel(variable *n8nsdk.Variable, data *models.DataSource) {
 	// Check for non-nil value.
 	if variable.Id != nil {
 		data.ID = types.StringValue(*variable.Id)

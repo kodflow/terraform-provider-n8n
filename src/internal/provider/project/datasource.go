@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/project/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
@@ -141,7 +142,7 @@ func (d *ProjectDataSource) Configure(ctx context.Context, req datasource.Config
 //   - req: Read request
 //   - resp: Read response to populate
 func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	data := &ProjectDataSourceModel{}
+	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check for diagnostics errors.

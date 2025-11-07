@@ -1,13 +1,13 @@
-package execution
+package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// ExecutionDataSourceModel describes the data source data model.
+// DataSource describes the data source data model.
 // It maps the Terraform schema attributes for reading a single execution,
 // including workflow ID, execution status, timestamps, and optional data inclusion.
-type ExecutionDataSourceModel struct {
+type DataSource struct {
 	ID          types.String `tfsdk:"id"`
 	WorkflowID  types.String `tfsdk:"workflow_id"`
 	Finished    types.Bool   `tfsdk:"finished"`

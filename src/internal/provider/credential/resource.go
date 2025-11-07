@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/credential/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 )
 
@@ -384,7 +385,7 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 func (r *CredentialResource) rollbackRotation(
 	ctx context.Context,
 	newCredID string,
-	affectedWorkflows []CredentialWorkflowBackup,
+	affectedWorkflows []models.WorkflowBackup,
 	updatedWorkflows []string,
 ) {
 	tflog.Error(ctx, "Rolling back credential rotation")
@@ -426,7 +427,7 @@ func (r *CredentialResource) deleteNewCredential(ctx context.Context, newCredID 
 //   - restoredCount: Number of workflows successfully restored
 func (r *CredentialResource) restoreWorkflows(
 	ctx context.Context,
-	affectedWorkflows []CredentialWorkflowBackup,
+	affectedWorkflows []models.WorkflowBackup,
 	updatedWorkflows []string,
 ) int {
 	restoredCount := 0
@@ -457,7 +458,7 @@ func (r *CredentialResource) restoreWorkflows(
 // Returns:
 //   - original: Pointer to the original workflow, nil if not found
 func (r *CredentialResource) findWorkflowBackup(
-	affectedWorkflows []CredentialWorkflowBackup,
+	affectedWorkflows []models.WorkflowBackup,
 	workflowID string,
 ) *n8nsdk.Workflow {
 	// Iterate through backups to find matching workflow.

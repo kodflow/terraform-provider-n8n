@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/user/models"
 )
 
 // Ensure UsersDataSource implements required interfaces.
@@ -162,7 +163,7 @@ func (d *UsersDataSource) Configure(ctx context.Context, req datasource.Configur
 //   - req: read request containing current state
 //   - resp: read response to be populated with latest data
 func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data UsersDataSourceModel
+	var data models.DataSources
 
 	userList, httpResp, err := d.client.APIClient.UserAPI.UsersGet(ctx).Execute()
 	// Check for non-nil value.
@@ -179,7 +180,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	data.Users = make([]UserItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+	data.Users = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check if user data is present.
 	if userList.Data != nil {
 		// Iterate through each user in the list and map to item model.

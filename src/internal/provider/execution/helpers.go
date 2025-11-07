@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/execution/models"
 )
 
 // mapExecutionToItem maps an SDK execution to the execution item model.
@@ -13,9 +14,9 @@ import (
 //   - execution: SDK execution to map
 //
 // Returns:
-//   - ExecutionItemModel: Mapped execution item model
-func mapExecutionToItem(execution *n8nsdk.Execution) ExecutionItemModel {
-	item := &ExecutionItemModel{}
+//   - models.Item: Mapped execution item model
+func mapExecutionToItem(execution *n8nsdk.Execution) models.Item {
+	item := &models.Item{}
 
 	// Check for non-nil value.
 	if execution.Id != nil {

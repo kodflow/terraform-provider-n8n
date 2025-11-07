@@ -3,6 +3,7 @@ package project
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/project/models"
 )
 
 // findProjectByIDOrName searches for a project by ID or name in a project list.
@@ -36,7 +37,7 @@ func findProjectByIDOrName(projects []n8nsdk.Project, id, name types.String) (*n
 // Params:
 //   - project: SDK project object to map
 //   - data: Target datasource model to populate
-func mapProjectToDataSourceModel(project *n8nsdk.Project, data *ProjectDataSourceModel) {
+func mapProjectToDataSourceModel(project *n8nsdk.Project, data *models.DataSource) {
 	// Check for non-nil value.
 	if project.Id != nil {
 		data.ID = types.StringValue(*project.Id)
@@ -83,15 +84,15 @@ func mapProjectToResourceModel(project *n8nsdk.Project, data *ProjectResourceMod
 	}
 }
 
-// mapProjectToProjectItemModel maps an SDK project to the project item model for datasources.
+// mapProjectToItem maps an SDK project to the project item model for datasources.
 //
 // Params:
 //   - project: SDK project object to map
 //
 // Returns:
-//   - ProjectItemModel: Mapped project item model
-func mapProjectToProjectItemModel(project *n8nsdk.Project) ProjectItemModel {
-	item := &ProjectItemModel{
+//   - models.Item: Mapped project item model
+func mapProjectToItem(project *n8nsdk.Project) models.Item {
+	item := &models.Item{
 		Name: types.StringValue(project.Name),
 	}
 

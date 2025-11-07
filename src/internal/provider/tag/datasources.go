@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/tag/models"
 )
 
 // Ensure TagsDataSource implements required interfaces.
@@ -136,7 +137,7 @@ func (d *TagsDataSource) Configure(ctx context.Context, req datasource.Configure
 //   - req: requête de lecture
 //   - resp: réponse de lecture
 func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data TagsDataSourceModel
+	var data models.DataSources
 
 	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
 	// Check for non-nil value.
@@ -153,12 +154,12 @@ func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	data.Tags = make([]TagItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+	data.Tags = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
 	// Check for non-nil value.
 	if tagList.Data != nil {
 		// Iterate over items.
 		for _, tag := range tagList.Data {
-			item := TagItemModel{
+			item := models.Item{
 				Name: types.StringValue(tag.Name),
 			}
 			// Check for non-nil value.

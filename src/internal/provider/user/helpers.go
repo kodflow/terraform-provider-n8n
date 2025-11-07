@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/user/models"
 )
 
 // mapUserToItem maps an SDK user to the user item model.
@@ -11,10 +12,10 @@ import (
 //   - user: The SDK user to map
 //
 // Returns:
-//   - UserItemModel: The mapped user item model
-func mapUserToItem(user *n8nsdk.User) UserItemModel {
+//   - models.Item: The mapped user item model
+func mapUserToItem(user *n8nsdk.User) models.Item {
 	// Initialize model with pointer.
-	item := &UserItemModel{
+	item := &models.Item{
 		Email: types.StringValue(user.Email),
 	}
 

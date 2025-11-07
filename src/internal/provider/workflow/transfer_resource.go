@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
 )
 
 // WorkflowTransferResourceInterface defines the complete interface for workflow transfer resource.
@@ -153,7 +154,7 @@ func (r *WorkflowTransferResource) Configure(ctx context.Context, req resource.C
 //   - void: modifies resp in place, populates resp.State or resp.Diagnostics on error
 func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Initialize model from plan
-	plan := &WorkflowTransferResourceModel{}
+	plan := &models.Transfer{}
 
 	// Parse plan into model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
@@ -203,7 +204,7 @@ func (r *WorkflowTransferResource) Create(ctx context.Context, req resource.Crea
 //   - void: modifies resp in place, populates resp.State or resp.Diagnostics on error
 func (r *WorkflowTransferResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Initialize state model
-	state := &WorkflowTransferResourceModel{}
+	state := &models.Transfer{}
 
 	// Read state from Terraform
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)

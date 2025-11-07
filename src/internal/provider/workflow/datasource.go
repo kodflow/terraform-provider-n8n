@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
 )
 
 // Ensure WorkflowDataSource implements required interfaces.
@@ -123,7 +124,7 @@ func (d *WorkflowDataSource) Configure(ctx context.Context, req datasource.Confi
 //   - req: read request from Terraform
 //   - resp: read response to populate
 func (d *WorkflowDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data WorkflowDataSourceModel
+	var data models.DataSource
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// Check condition.

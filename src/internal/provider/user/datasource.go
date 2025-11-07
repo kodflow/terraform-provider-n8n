@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/user/models"
 )
 
 // Ensure UserDataSource implements required interfaces.
@@ -154,7 +155,7 @@ func (d *UserDataSource) Configure(ctx context.Context, req datasource.Configure
 //   - req: datasource.ReadRequest containing configuration
 //   - resp: datasource.ReadResponse to set state
 func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	data := &UserDataSourceModel{}
+	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check condition.
@@ -193,7 +194,7 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 //
 // Returns:
 //   - string: the identifier (ID or email)
-func (d *UserDataSource) getIdentifier(data *UserDataSourceModel, resp *datasource.ReadResponse) string {
+func (d *UserDataSource) getIdentifier(data *models.DataSource, resp *datasource.ReadResponse) string {
 	// Validate that at least one identifier is provided
 	if data.ID.IsNull() && data.Email.IsNull() {
 		resp.Diagnostics.AddError(
@@ -247,7 +248,7 @@ func (d *UserDataSource) fetchUser(ctx context.Context, identifier string, resp 
 // Params:
 //   - user: source user
 //   - data: target data model
-func (d *UserDataSource) populateUserData(user *n8nsdk.User, data *UserDataSourceModel) {
+func (d *UserDataSource) populateUserData(user *n8nsdk.User, data *models.DataSource) {
 	// Check condition.
 	if user.Id != nil {
 		data.ID = types.StringValue(*user.Id)

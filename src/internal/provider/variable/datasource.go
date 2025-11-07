@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/n8n/src/internal/provider/variable/models"
 )
 
 // Ensure VariableDataSource implements required interfaces.
@@ -147,7 +148,7 @@ func (d *VariableDataSource) Configure(ctx context.Context, req datasource.Confi
 // Returns:
 //   - None
 func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	data := &VariableDataSourceModel{}
+	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
 	// Check if diagnostics have errors
@@ -185,7 +186,7 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 //
 // Returns:
 //   - bool: true if valid, false otherwise
-func (d *VariableDataSource) validateIdentifiers(data *VariableDataSourceModel, resp *datasource.ReadResponse) bool {
+func (d *VariableDataSource) validateIdentifiers(data *models.DataSource, resp *datasource.ReadResponse) bool {
 	// Check for non-null value.
 	if data.ID.IsNull() && data.Key.IsNull() {
 		resp.Diagnostics.AddError(
@@ -206,7 +207,7 @@ func (d *VariableDataSource) validateIdentifiers(data *VariableDataSourceModel, 
 //
 // Returns:
 //   - *n8nsdk.Variable: the variable or nil if error occurred
-func (d *VariableDataSource) fetchVariable(ctx context.Context, data *VariableDataSourceModel, resp *datasource.ReadResponse) *n8nsdk.Variable {
+func (d *VariableDataSource) fetchVariable(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) *n8nsdk.Variable {
 	// Build API request
 	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
 

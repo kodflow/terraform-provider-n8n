@@ -10,6 +10,7 @@ import (
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
+	"github.com/kodflow/n8n/src/internal/provider/variable/models"
 )
 
 // Ensure VariablesDataSource implements required interfaces.
@@ -177,7 +178,7 @@ func (d *VariablesDataSource) Configure(ctx context.Context, req datasource.Conf
 // Returns:
 //   - (none)
 func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VariablesDataSourceModel
+	var data models.DataSources
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	// If there are errors in loading the config, return early
@@ -212,11 +213,11 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 //
 // Params:
 //   - ctx: context for the request
-//   - data: VariablesDataSourceModel with filter values
+//   - data: DataSources model with filter values
 //
 // Returns:
 //   - n8nsdk.VariablesAPIVariablesGetRequest: API request with filters applied
-func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, data *VariablesDataSourceModel) n8nsdk.VariablesAPIVariablesGetRequest {
+func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, data *models.DataSources) n8nsdk.VariablesAPIVariablesGetRequest {
 	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
 
 	// If a project ID filter is specified, add it to the API request
@@ -235,10 +236,10 @@ func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, da
 // populateVariables populates the variables list from the API response.
 //
 // Params:
-//   - data: VariablesDataSourceModel to populate
+//   - data: DataSources model to populate
 //   - variableList: API response with variable data
-func (d *VariablesDataSource) populateVariables(data *VariablesDataSourceModel, variableList *n8nsdk.VariableList) {
-	data.Variables = make([]VariableItemModel, 0, constants.DEFAULT_LIST_CAPACITY)
+func (d *VariablesDataSource) populateVariables(data *models.DataSources, variableList *n8nsdk.VariableList) {
+	data.Variables = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
 	// If the API returned variable data, process each variable
 	if variableList.Data == nil {
 		// Return result.
@@ -252,15 +253,15 @@ func (d *VariablesDataSource) populateVariables(data *VariablesDataSourceModel, 
 	}
 }
 
-// mapVariableToItem maps a variable from the API to a VariableItemModel.
+// mapVariableToItem maps a variable from the API to a Item.
 //
 // Params:
 //   - variable: variable from API response
 //
 // Returns:
-//   - *VariableItemModel: pointer to mapped variable item
-func (d *VariablesDataSource) mapVariableToItem(variable *n8nsdk.Variable) *VariableItemModel {
-	item := &VariableItemModel{}
+//   - *models.Item: pointer to mapped variable item
+func (d *VariablesDataSource) mapVariableToItem(variable *n8nsdk.Variable) *models.Item {
+	item := &models.Item{}
 	// If the variable has an ID, include it in the model
 	if variable.Id != nil {
 		item.ID = types.StringValue(*variable.Id)
