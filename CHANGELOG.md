@@ -41,7 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
-- add CLAUDE.md configuration for AI development (`a66f870`)
+- add AI assistant configuration document (`9d0c27d`)
 - add coverage report (`f200924`)
 - enhance code documentation and test coverage (`f41642a`)
 
@@ -87,4 +87,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 17:02:43*
+*Changelog generated automatically on 2025-11-08 17:09:57*

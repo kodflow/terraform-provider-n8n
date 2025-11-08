@@ -14,12 +14,12 @@ The configuration establishes three critical prohibitions:
 Each development iteration requires:
 1. Write/modify code
 2. Run `make fmt` to format all files (goimports, go fmt, gazelle, buildifier, etc.)
-3. Run `make test` to execute all tests
-4. Run `make lint` and fix all warnings, errors, and info messages
-5. Verify test coverage remains high (target: >70%)
+3. Run `make test` to execute all tests - ALL tests must pass
+4. Run `make lint` and fix ALL errors, warnings, and info messages - NO exceptions
+5. Verify test coverage is maintained or improved
 6. Update CHANGELOG.md using `make docs` if adding features
 7. Remove temporary files (bazel-*, *.out, *.html)
-8. Repeat until zero critical errors
+8. **Repeat until EVERYTHING is perfect** - zero errors, zero warnings
 
 ## Self-Verification Checklist
 
@@ -33,14 +33,12 @@ Before completing tasks, Claude must verify:
 
 ## Code Quality Standards
 
-All Go code must follow:
-- Maximum 35 lines per function (KTN-FUNC-001)
-- Maximum 5 parameters (KTN-FUNC-002)
-- Complete documentation with params/returns (KTN-FUNC-007)
-- Comments on all control flow blocks (KTN-FUNC-011)
-- No else after return (KTN-FUNC-012)
-- Proper error handling
-- Test coverage for all new features
+**CRITICAL: Execute `make lint` and fix ALL errors and warnings reported by ktn-linter and golangci-lint.**
+
+- **NEVER** consider any linting error as a false positive
+- **NEVER** consider any linting warning as optional
+- If ktn-linter or golangci-lint reports it, it MUST be fixed
+- No exceptions, no debates - fix everything until `make lint` is clean
 
 ## Project Structure
 
@@ -108,12 +106,20 @@ Run `make openapi` to regenerate the SDK after n8n API changes.
 - CHANGELOG.md auto-generated from commit history
 - No AI mentions or Co-Authored-By in commit messages
 
-## Current Quality Metrics
+## Autonomy and Decision Making
 
-- 22 test packages passing (0 failures)
-- 70.9% overall coverage
-- All linters passing with exceptions for test helpers
-- Provider successfully builds with Bazel (240 actions)
+**Be autonomous and make the best decisions:**
+- If you have doubts about implementation details, make the best technical decision
+- If multiple approaches exist, choose the most maintainable and performant one
+- **NEVER stop until the objective is fully satisfied**
+- **NEVER give up because of complexity or uncertainty**
+- Research, analyze, and solve problems independently
+
+**CRITICAL GIT RULES:**
+- **NEVER perform a git reset without explicit user confirmation**
+- **NEVER discard work without asking the user first**
+- **ALWAYS commit work progressively** to avoid data loss
+- If something goes wrong, ask the user before reverting changes
 
 ## Common Tasks
 
