@@ -44,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
-- improve Makefile formatting and documentation targets (`8624d4b`)
+- improve Makefile formatting and documentation targets (`353658c`)
 - reorganize models into domain subdirectories (`8ae34eb`)
 - reorganize models into dedicated subdirectories with simplified naming (`de9445d`)
 - fix all ktn-linter violations and improve code organization (`edb1c95`)
@@ -84,4 +84,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 15:29:51*
+*Changelog generated automatically on 2025-11-08 15:32:05*

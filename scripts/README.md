@@ -89,6 +89,7 @@ All notable changes to this project will be documented in this file.
 Les hooks Git sont stockés dans **`.devcontainer/hooks/`** et intégrés dans l'image Docker avec les permissions correctes.
 
 **Avantages :**
+
 - ✅ **Versionnés** : Source dans `.devcontainer/hooks/` tracké en git
 - ✅ **Maintenables** : Édition dans `.devcontainer/hooks/`, rebuild pour appliquer
 - ✅ **Synchronisés** : Toute l'équipe utilise les mêmes hooks avec les bonnes permissions

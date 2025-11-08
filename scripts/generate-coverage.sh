@@ -31,7 +31,7 @@ echo -e "${CYAN}→${RESET} Parsing package coverage..."
 REPORT_DATE=$(date +%Y-%m-%d)
 
 # Start building the markdown file
-cat > COVERAGE.MD <<EOF
+cat >COVERAGE.MD <<EOF
 # Coverage Report
 
 Rapport de couverture généré automatiquement.
@@ -49,7 +49,7 @@ Rapport de couverture généré automatiquement.
 |--------|-------|
 | **Total Coverage** | **${TOTAL_COVERAGE}** |
 | **Threshold** | **70.0%** |
-| **Status** | $(if (( $(echo "$TOTAL_VALUE >= 70.0" | bc -l) )); then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
+| **Status** | $(if (($(echo "$TOTAL_VALUE >= 70.0" | bc -l))); then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
 
 ---
 
@@ -68,20 +68,20 @@ for pkg in $PACKAGES; do
   PKG_VALUE=$(echo "$PKG_COV" | sed 's/%//')
 
   # Determine icon
-  if (( $(echo "$PKG_VALUE >= 90.0" | bc -l) )); then
+  if (($(echo "$PKG_VALUE >= 90.0" | bc -l))); then
     ICON="🟢"
-  elif (( $(echo "$PKG_VALUE >= 70.0" | bc -l) )); then
+  elif (($(echo "$PKG_VALUE >= 70.0" | bc -l))); then
     ICON="🟡"
   else
     ICON="🔴"
   fi
 
   # Add to table
-  echo "| $ICON | \`$pkg\` | $PKG_COV |" >> COVERAGE.MD
+  echo "| $ICON | \`$pkg\` | $PKG_COV |" >>COVERAGE.MD
 done
 
 # Add footer
-cat >> COVERAGE.MD <<EOF
+cat >>COVERAGE.MD <<EOF
 
 ---
 
@@ -107,7 +107,7 @@ echo -e "  ${CYAN}Total Coverage:${RESET} ${TOTAL_COVERAGE}"
 echo ""
 
 # Check if coverage meets threshold
-if (( $(echo "$TOTAL_VALUE < 70.0" | bc -l) )); then
+if (($(echo "$TOTAL_VALUE < 70.0" | bc -l))); then
   echo -e "${RED}⚠️  Warning: Coverage is below 70% threshold${RESET}"
   exit 1
 fi
