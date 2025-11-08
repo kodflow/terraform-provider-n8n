@@ -44,6 +44,13 @@ else
   echo "⚠️  Go not found in PATH, skipping Go tools installation"
 fi
 
+# Ensure git hooks are executable (in case they were reset)
+if [ -f "/workspace/scripts/install-hooks.sh" ]; then
+  echo "🪝 Ensuring git hooks are executable..."
+  chmod +x /workspace/scripts/install-hooks.sh
+  /workspace/scripts/install-hooks.sh
+fi
+
 # Setup MCP configuration
 if [ -f "/workspace/.devcontainer/setup-mcp.sh" ]; then
   echo "⚙️  Setting up MCP..."

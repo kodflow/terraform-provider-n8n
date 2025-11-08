@@ -1,0 +1,48 @@
+#!/bin/bash
+# Validate commit message with commitlint
+
+COMMIT_MSG_FILE=$1
+
+# Check if commitlint is installed
+if ! command -v commitlint &> /dev/null; then
+    echo "⚠️  commitlint not found, skipping validation"
+    echo "   Install with: npm install -g @commitlint/cli @commitlint/config-conventional"
+    exit 0
+fi
+
+# Check if config file exists
+if [ ! -f ".commitlintrc.json" ]; then
+    echo "⚠️  .commitlintrc.json not found, skipping validation"
+    exit 0
+fi
+
+# Validate commit message
+echo "🔍 Validating commit message..."
+if commitlint --edit "$COMMIT_MSG_FILE"; then
+    echo "✅ Commit message valid"
+    exit 0
+else
+    echo ""
+    echo "❌ Invalid commit message format!"
+    echo ""
+    echo "Expected format: <type>: <description>"
+    echo ""
+    echo "Valid types:"
+    echo "  feat:     New feature"
+    echo "  fix:      Bug fix"
+    echo "  docs:     Documentation changes"
+    echo "  test:     Test additions/changes"
+    echo "  refactor: Code refactoring"
+    echo "  perf:     Performance improvements"
+    echo "  build:    Build system changes"
+    echo "  ci:       CI/CD changes"
+    echo "  chore:    Maintenance tasks"
+    echo "  revert:   Revert previous commit"
+    echo ""
+    echo "Examples:"
+    echo "  feat: add workflow datasource"
+    echo "  fix: resolve null pointer in credential resource"
+    echo "  docs: update README with new examples"
+    echo ""
+    exit 1
+fi

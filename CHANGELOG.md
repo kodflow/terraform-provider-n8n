@@ -11,61 +11,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
-- comprehensive test coverage improvements (`5d3466b`)
+- comprehensive test coverage improvements (`3344c2f`)
 
 ### 🚀 Features
 
-- add automatic documentation generation system (`ce1cc5c`)
-- integrate ktn-linter with golangci-lint and VSCode (`c64ba58`)
-- implement complete SDK coverage with all datasources and resources (`389623d`)
-- achieve 100% test coverage and add OpenAPI download command (`f1477c4`)
-- integrate ktn-linter and enhance code quality standards (`3306966`)
-- add comprehensive code formatting support (`855943e`)
+- add automatic documentation generation system (`034cf4f`)
+- integrate ktn-linter with golangci-lint and VSCode (`b828914`)
+- implement complete SDK coverage with all datasources and resources (`bbec535`)
+- achieve 100% test coverage and add OpenAPI download command (`cabbb71`)
+- integrate ktn-linter and enhance code quality standards (`ad76c4a`)
+- add comprehensive code formatting support (`bd70c79`)
 - add automatic semantic versioning and translate to English (`33dc716`)
 - migration vers Bazel 9 et structure Terraform provider (`807372a`)
 
 ### 🔨 Chore
 
-- remove temporary build and analysis scripts (`2706153`)
-- upgrade Go version from 1.24 to 1.25.3 (`35756d9`)
+- remove temporary build and analysis scripts (`9eab33c`)
+- upgrade Go version from 1.24 to 1.25.3 (`6cd7cec`)
 - add CodeRabbit configuration for automated PR reviews (`4331f4f`)
 
 ### 🐛 Bug Fixes
 
-- resolve critical linter issues across provider codebase (`5abf916`)
+- resolve critical linter issues across provider codebase (`ec19363`)
 - update golangci-lint config to v2 format and integrate ktn-linter (`9f4f36d`)
 - correct Docker tag format in devcontainer workflow (`36e97fd`)
 
 ### 📚 Documentation
 
-- add coverage report (`2dd13bb`)
-- enhance code documentation and test coverage (`868bd49`)
+- add coverage report (`f200924`)
+- enhance code documentation and test coverage (`f41642a`)
 
 ### ♻️ Refactoring
 
-- reorganize models into domain subdirectories (`9868fed`)
-- reorganize models into dedicated subdirectories with simplified naming (`d407dcd`)
-- fix all ktn-linter violations and improve code organization (`442ec00`)
-- improve struct naming consistency across domains (`d7137bf`)
-- migrate to DDD architecture and improve code quality (`77c7ed3`)
-- fix all ktn-linter errors and improve code quality (`9a56942`)
-- improve code quality and documentation across provider (`a532143`)
-- consolidate SDK build pipeline and enhance Makefile formatting (`9076518`)
-- simplify OpenAPI patch workflow (`2cb717f`)
-- improve Makefile output formatting and organization (`5d6b1f4`)
+- reorganize models into domain subdirectories (`8ae34eb`)
+- reorganize models into dedicated subdirectories with simplified naming (`de9445d`)
+- fix all ktn-linter violations and improve code organization (`edb1c95`)
+- improve struct naming consistency across domains (`6b5b584`)
+- migrate to DDD architecture and improve code quality (`1a6d759`)
+- fix all ktn-linter errors and improve code quality (`0cc97c8`)
+- improve code quality and documentation across provider (`1099c8c`)
+- consolidate SDK build pipeline and enhance Makefile formatting (`0a0288d`)
+- simplify OpenAPI patch workflow (`44353ca`)
+- improve Makefile output formatting and organization (`5b8346d`)
 - remove redundant commit convention section from PR template (`aedabcd`)
 
 ### 🔧 Build
 
-- filter KTN-STRUCT-005 false positives in Makefile (`a628fcf`)
-- add ktn-linter filter script to exclude false positives (`b76b279`)
+- filter KTN-STRUCT-005 false positives in Makefile (`a50c21f`)
+- add ktn-linter filter script to exclude false positives (`9a2f112`)
 - integrate ktn-linter with golangci-lint for strict code quality enforcement (`a7febe1`)
+
+### 🤖 CI/CD
+
+- add comprehensive CI workflow and commit validation system (`a3a0c9d`)
 
 ---
 
 ### 📊 Statistics
 
-- **Total commits:** 31
+- **Total commits:** 32
 - **Features:** 8
 - **Bug fixes:** 3
 - **Tests:** 1
@@ -78,4 +82,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 14:09:56*
+*Changelog generated automatically on 2025-11-08 14:15:12*

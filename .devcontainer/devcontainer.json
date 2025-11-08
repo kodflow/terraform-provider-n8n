@@ -63,7 +63,8 @@
         "visualstudioexptteam.vscodeintellicode", // IntelliCode gratuit de Microsoft
         "golang.go", // Support Go officiel
         "hashicorp.terraform", // Support Terraform
-        "bazelbuild.vscode-bazel" // Support Bazel
+        "bazelbuild.vscode-bazel", // Support Bazel
+        "emeraldwalk.runonsave" // Exécute golangci-lint et ktn-linter à chaque sauvegarde
       ]
     }
   },

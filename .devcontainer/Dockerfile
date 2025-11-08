@@ -44,8 +44,12 @@ RUN mkdir -p /home/vscode/.cache \
     /home/vscode/.local/bin \
     /home/vscode/.claude \
     /home/vscode/.local/share/@anthropic \
+    /home/vscode/.git-hooks \
     # Set strict permissions for 1Password config directory
     && chmod 700 /home/vscode/.config/op
+
+# Copy git hooks with proper permissions
+COPY --chown=vscode:vscode --chmod=755 hooks/ /home/vscode/.git-hooks/
 
 # Install Oh My Zsh and themes in parallel (rarely changes - good for cache)
 RUN rm -rf "$HOME/.oh-my-zsh" && \

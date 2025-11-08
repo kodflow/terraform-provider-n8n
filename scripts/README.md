@@ -84,26 +84,41 @@ All notable changes to this project will be documented in this file.
 
 ## 🔄 Automatisation
 
-### Installation des Hooks Git
+### Configuration des Hooks Git
 
-Les hooks sont **automatiquement installés** lors du rebuild du devcontainer.
+Les hooks Git sont stockés dans **`.devcontainer/hooks/`** et intégrés dans l'image Docker avec les permissions correctes.
 
-Si vous avez besoin de les réinstaller manuellement :
+**Avantages :**
+- ✅ **Versionnés** : Source dans `.devcontainer/hooks/` tracké en git
+- ✅ **Maintenables** : Édition dans `.devcontainer/hooks/`, rebuild pour appliquer
+- ✅ **Synchronisés** : Toute l'équipe utilise les mêmes hooks avec les bonnes permissions
+- ✅ **Compatibles GUI** : Fonctionne avec GitKraken, SourceTree, etc. sans problème de permissions
+- ✅ **Cross-platform** : Permissions figées dans l'image Docker, pas de chmod nécessaire
+
+Les hooks sont **automatiquement configurés** lors du rebuild du devcontainer et copiés dans `$HOME/.git-hooks/`.
+
+Si vous avez besoin de les reconfigurer manuellement :
 
 ```bash
 ./scripts/install-hooks.sh
 ```
 
-Les hooks installés :
+Ou directement :
+
+```bash
+git config core.hooksPath $HOME/.git-hooks
+```
+
+Les hooks disponibles dans `$HOME/.git-hooks/` (source: `.devcontainer/hooks/`) :
 
 1. **pre-commit** : Génère automatiquement CHANGELOG.md et rapport de coverage
 2. **prepare-commit-msg** : Suggère le format conventional commits
 3. **commit-msg** : Valide le message avec commitlint
 4. **pre-push** : Bloque le push si des mentions d'IA ou Co-Authored-By sont détectées
 
-### Installation Automatique au DevContainer
+### Configuration Automatique au DevContainer
 
-Les hooks sont automatiquement installés lors du rebuild du devcontainer via `.devcontainer/post-create.sh`
+Les hooks sont automatiquement configurés lors du rebuild du devcontainer via `.devcontainer/post-create.sh` qui exécute `./scripts/install-hooks.sh`
 
 ### Dépendances
 
