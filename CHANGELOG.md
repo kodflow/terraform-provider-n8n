@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- achieve 94.3% coverage for credential package (`03d8697`)
 - comprehensive test coverage improvements (`3344c2f`)
 
 ### 🚀 Features
@@ -41,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
+- add strict testing and quality standards to CLAUDE.md (`f74ba91`)
 - improve AI assistant configuration with stricter directives (`dd4f419`)
 - add AI assistant configuration document (`9d0c27d`)
 - add coverage report (`f200924`)
@@ -75,10 +77,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 38
+- **Total commits:** 40
 - **Features:** 8
 - **Bug fixes:** 5
-- **Tests:** 1
+- **Tests:** 2
 - **Refactoring:** 12
 - **Test coverage:** N/A
 
@@ -88,4 +90,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 17:59:17*
+*Changelog generated automatically on 2025-11-08 17:59:44*

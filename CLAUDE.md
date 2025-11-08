@@ -5,6 +5,7 @@ This document provides development guidelines for the n8n terraform provider pro
 ## Key Absolute Rules
 
 The configuration establishes three critical prohibitions:
+
 - No markdown files outside `/workspace/README.md`, `/workspace/CHANGELOG.md`, `/workspace/COVERAGE.MD`, and `/workspace/CLAUDE.md`
 - No generated reports or documentation in folders (except CHANGELOG.md and COVERAGE.MD at root)
 - Documentation updates must follow Conventional Commits format
@@ -12,18 +13,20 @@ The configuration establishes three critical prohibitions:
 ## Mandatory Workflow
 
 Each development iteration requires:
+
 1. Write/modify code
 2. Run `make fmt` to format all files (goimports, go fmt, gazelle, buildifier, etc.)
 3. Run `make test` to execute all tests - ALL tests must pass
 4. Run `make lint` and fix ALL errors, warnings, and info messages - NO exceptions
 5. Verify test coverage is maintained or improved
 6. Update CHANGELOG.md using `make docs` if adding features
-7. Remove temporary files (bazel-*, *.out, *.html)
+7. Remove temporary files (bazel-_, _.out, \*.html)
 8. **Repeat until EVERYTHING is perfect** - zero errors, zero warnings
 
 ## Self-Verification Checklist
 
 Before completing tasks, Claude must verify:
+
 - All tests pass: `make test`
 - Code is properly formatted: `make fmt`
 - Linters pass: `make lint` (golangci-lint + ktn-linter)
@@ -39,6 +42,18 @@ Before completing tasks, Claude must verify:
 - **NEVER** consider any linting warning as optional
 - If ktn-linter or golangci-lint reports it, it MUST be fixed
 - No exceptions, no debates - fix everything until `make lint` is clean
+
+## Testing Standards
+
+**CRITICAL: Pure unit tests with maximum coverage**
+
+- **NEVER EVER use t.Skip()** - if a test is hard, mock everything needed
+- **ALWAYS write pure unit tests** - mock all external dependencies (HTTP, databases, APIs, etc.)
+- **ALWAYS aim for maximum coverage** - every line, every branch, every error path
+- **NEVER stop until coverage is maximized** - if coverage is not 100%, keep adding tests
+- Mock APIClient, HTTP responses, file systems, time, random - EVERYTHING
+- Test all error paths, edge cases, nil checks, boundary conditions
+- If something seems impossible to test, you're not mocking enough
 
 ## Project Structure
 
@@ -81,6 +96,7 @@ Before completing tasks, Claude must verify:
 ## SDK Generation
 
 The project uses OpenAPI Generator to create the N8N SDK:
+
 1. Downloads OpenAPI spec from GitHub
 2. Bundles YAML files
 3. Applies patches
@@ -109,6 +125,7 @@ Run `make openapi` to regenerate the SDK after n8n API changes.
 ## Autonomy and Decision Making
 
 **Be autonomous and make the best decisions:**
+
 - If you have doubts about implementation details, make the best technical decision
 - If multiple approaches exist, choose the most maintainable and performant one
 - **NEVER stop until the objective is fully satisfied**
@@ -116,6 +133,7 @@ Run `make openapi` to regenerate the SDK after n8n API changes.
 - Research, analyze, and solve problems independently
 
 **CRITICAL GIT RULES:**
+
 - **NEVER perform a git reset without explicit user confirmation**
 - **NEVER discard work without asking the user first**
 - **ALWAYS commit work progressively** to avoid data loss
@@ -124,6 +142,7 @@ Run `make openapi` to regenerate the SDK after n8n API changes.
 ## Common Tasks
 
 ### Adding a new resource
+
 1. Create resource file in `src/internal/provider/<name>/`
 2. Implement CRUD operations
 3. Add comprehensive tests
@@ -132,12 +151,14 @@ Run `make openapi` to regenerate the SDK after n8n API changes.
 6. Test with real provider: `make test/n8n`
 
 ### Fixing linting errors
+
 1. Run `make lint` to see issues
 2. Fix code quality issues (godot, thelper, unused, etc.)
 3. Re-run `make lint` until clean
 4. Run `make test` to ensure no breakage
 
 ### Updating documentation
+
 1. Make code changes with proper commit messages
 2. Run `make docs` to regenerate CHANGELOG.md and COVERAGE.MD
 3. Commit documentation updates
