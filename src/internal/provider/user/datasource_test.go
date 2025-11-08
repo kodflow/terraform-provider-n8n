@@ -333,14 +333,14 @@ func TestUserDataSource_Read(t *testing.T) {
 			if r.URL.Path == "/users/user-123" && r.Method == http.MethodGet {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"id":         "user-123",
-					"email":      "test@example.com",
-					"firstName":  "Test",
-					"lastName":   "User",
-					"isPending":  false,
-					"createdAt":  "2024-01-01T00:00:00Z",
-					"updatedAt":  "2024-01-02T00:00:00Z",
-					"role":       "global:member",
+					"id":        "user-123",
+					"email":     "test@example.com",
+					"firstName": "Test",
+					"lastName":  "User",
+					"isPending": false,
+					"createdAt": "2024-01-01T00:00:00Z",
+					"updatedAt": "2024-01-02T00:00:00Z",
+					"role":      "global:member",
 				})
 				return
 			}
@@ -399,14 +399,14 @@ func TestUserDataSource_Read(t *testing.T) {
 			if r.URL.Path == "/users/test@example.com" && r.Method == http.MethodGet {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"id":         "user-456",
-					"email":      "test@example.com",
-					"firstName":  "Test",
-					"lastName":   "User",
-					"isPending":  true,
-					"createdAt":  "2024-01-01T00:00:00Z",
-					"updatedAt":  "2024-01-02T00:00:00Z",
-					"role":       "global:admin",
+					"id":        "user-456",
+					"email":     "test@example.com",
+					"firstName": "Test",
+					"lastName":  "User",
+					"isPending": true,
+					"createdAt": "2024-01-01T00:00:00Z",
+					"updatedAt": "2024-01-02T00:00:00Z",
+					"role":      "global:admin",
 				})
 				return
 			}

@@ -381,10 +381,10 @@ func TestTagDataSource_Read(t *testing.T) {
 			if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"id":         "tag-123",
-					"name":       "Test Tag",
-					"createdAt":  "2024-01-01T00:00:00Z",
-					"updatedAt":  "2024-01-02T00:00:00Z",
+					"id":        "tag-123",
+					"name":      "Test Tag",
+					"createdAt": "2024-01-01T00:00:00Z",
+					"updatedAt": "2024-01-02T00:00:00Z",
 				})
 				return
 			}
@@ -431,10 +431,10 @@ func TestTagDataSource_Read(t *testing.T) {
 				json.NewEncoder(w).Encode(map[string]interface{}{
 					"data": []map[string]interface{}{
 						{
-							"id":         "tag-456",
-							"name":       "Test Tag By Name",
-							"createdAt":  "2024-01-01T00:00:00Z",
-							"updatedAt":  "2024-01-02T00:00:00Z",
+							"id":        "tag-456",
+							"name":      "Test Tag By Name",
+							"createdAt": "2024-01-01T00:00:00Z",
+							"updatedAt": "2024-01-02T00:00:00Z",
 						},
 					},
 				})

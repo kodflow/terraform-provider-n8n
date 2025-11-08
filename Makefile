@@ -218,7 +218,3 @@ docs: changelog coverage-report ## Generate all documentation (changelog + cover
 	@echo ""
 	@echo "$(BOLD)$(GREEN)✅ All documentation generated$(RESET)"
 	@echo ""
-
-.PHONY: install-hooks
-install-hooks: ## Install git hooks for automatic doc generation
-	@./scripts/install-hooks.sh

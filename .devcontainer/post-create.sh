@@ -12,6 +12,7 @@ export NPM_CONFIG_PREFIX="$HOME/.local/share/npm-global"
 # Install npm global packages
 echo "📦 Installing npm packages..."
 npm install -g @anthropic-ai/claude-code@latest
+npm install -g @commitlint/cli@latest @commitlint/config-conventional@latest
 
 # Install ktn-linter from GitHub releases (doesn't require Go)
 echo "🧹 Installing ktn-linter..."
@@ -29,6 +30,15 @@ chmod +x "$HOME/.local/bin/ktn-linter"
 # Install golangci-lint v2 (supports Go 1.25+)
 echo "🧹 Installing golangci-lint v2..."
 curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$HOME/.local/bin" v2.6.1
+
+# Install git hooks
+echo "🪝 Installing git hooks..."
+if [ -f "./scripts/install-hooks.sh" ]; then
+  chmod +x ./scripts/install-hooks.sh
+  ./scripts/install-hooks.sh
+else
+  echo "⚠️  scripts/install-hooks.sh not found, skipping hooks installation"
+fi
 
 echo "✅ Development tools installed successfully!"
 echo "ℹ️  Go tools will be installed on container start..."

@@ -95,9 +95,6 @@ make build
 ### Quick Start
 
 ```bash
-# First time setup - install git hooks for automatic documentation
-make install-hooks
-
 # Build and test
 make build
 make test
@@ -106,6 +103,8 @@ make test
 make docs        # Generate both CHANGELOG.md and coverage report
 make changelog   # Generate only CHANGELOG.md
 ```
+
+**Note:** Git hooks are automatically installed when rebuilding the devcontainer.
 
 ### Available Make Commands
 
@@ -123,7 +122,6 @@ make lint          # Run code linters
 # Documentation
 make docs          # Generate all documentation (CHANGELOG + coverage)
 make changelog     # Generate CHANGELOG.md from git history
-make install-hooks # Install git hooks for auto-documentation
 
 # API & SDK
 make openapi       # Download n8n OpenAPI spec and generate SDK
@@ -464,6 +462,15 @@ See `go.mod` for complete dependencies list.
 ### GitHub Actions
 
 The project uses GitHub Actions for complete automation:
+
+- **`.github/workflows/ci.yml`**: Continuous Integration for PR validation
+  - Validates conventional commits with commitlint
+  - Runs tests with 70% coverage threshold
+  - Linting (golangci-lint + ktn-linter) and format checks
+  - Multi-platform builds (Ubuntu, macOS)
+  - Documentation verification (CHANGELOG.md, COVERAGE.MD)
+  - Security scanning (Trivy + gosec)
+  - See [Branch Protection Guide](.github/BRANCH_PROTECTION.md) for GitHub configuration
 
 - **`.github/workflows/semver.yml`**: Automatic semantic versioning
   - Triggers on push to `main` (after PR merge)

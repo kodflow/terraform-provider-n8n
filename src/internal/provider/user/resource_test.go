@@ -68,14 +68,14 @@ func TestUserResource_Create(t *testing.T) {
 			case "/users/user-123":
 				if r.Method == http.MethodGet {
 					user := map[string]interface{}{
-						"id":         "user-123",
-						"email":      "test@example.com",
-						"firstName":  "Test",
-						"lastName":   "User",
-						"role":       "global:member",
-						"isPending":  false,
-						"createdAt":  "2024-01-01T00:00:00Z",
-						"updatedAt":  "2024-01-01T00:00:00Z",
+						"id":        "user-123",
+						"email":     "test@example.com",
+						"firstName": "Test",
+						"lastName":  "User",
+						"role":      "global:member",
+						"isPending": false,
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-01T00:00:00Z",
 					}
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(user)
@@ -172,14 +172,14 @@ func TestUserResource_Read(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/users/user-123" && r.Method == http.MethodGet {
 				user := map[string]interface{}{
-					"id":         "user-123",
-					"email":      "test@example.com",
-					"firstName":  "Test",
-					"lastName":   "User",
-					"role":       "global:member",
-					"isPending":  false,
-					"createdAt":  "2024-01-01T00:00:00Z",
-					"updatedAt":  "2024-01-01T00:00:00Z",
+					"id":        "user-123",
+					"email":     "test@example.com",
+					"firstName": "Test",
+					"lastName":  "User",
+					"role":      "global:member",
+					"isPending": false,
+					"createdAt": "2024-01-01T00:00:00Z",
+					"updatedAt": "2024-01-01T00:00:00Z",
 				}
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user)
@@ -275,14 +275,14 @@ func TestUserResource_Update(t *testing.T) {
 				return
 			case r.URL.Path == "/users/user-123" && r.Method == http.MethodGet:
 				user := map[string]interface{}{
-					"id":         "user-123",
-					"email":      "test@example.com",
-					"firstName":  "Test",
-					"lastName":   "User",
-					"role":       "global:admin",
-					"isPending":  false,
-					"createdAt":  "2024-01-01T00:00:00Z",
-					"updatedAt":  "2024-01-01T00:00:00Z",
+					"id":        "user-123",
+					"email":     "test@example.com",
+					"firstName": "Test",
+					"lastName":  "User",
+					"role":      "global:admin",
+					"isPending": false,
+					"createdAt": "2024-01-01T00:00:00Z",
+					"updatedAt": "2024-01-01T00:00:00Z",
 				}
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user)

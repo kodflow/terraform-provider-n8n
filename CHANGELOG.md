@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- add automatic documentation generation system (`ce1cc5c`)
 - integrate ktn-linter with golangci-lint and VSCode (`c64ba58`)
 - implement complete SDK coverage with all datasources and resources (`389623d`)
 - achieve 100% test coverage and add OpenAPI download command (`f1477c4`)
@@ -64,8 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 30
-- **Features:** 7
+- **Total commits:** 31
+- **Features:** 8
 - **Bug fixes:** 3
 - **Tests:** 1
 - **Refactoring:** 11
@@ -77,4 +78,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 13:40:46*
+*Changelog generated automatically on 2025-11-08 14:09:56*
