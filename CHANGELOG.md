@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🔨 Chore
 
+- apply formatting and gazelle updates (`a140452`)
 - remove temporary build and analysis scripts (`9eab33c`)
 - upgrade Go version from 1.24 to 1.25.3 (`6cd7cec`)
 - add CodeRabbit configuration for automated PR reviews (`4331f4f`)
@@ -71,7 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 34
+- **Total commits:** 35
 - **Features:** 8
 - **Bug fixes:** 4
 - **Tests:** 1
@@ -84,4 +85,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 15:32:05*
+*Changelog generated automatically on 2025-11-08 15:37:24*
