@@ -27,13 +27,3 @@ go_test(
         "@com_github_stretchr_testify//assert",
     ],
 )
-
-go_test(
-    name = "src_test",
-    srcs = ["main_test.go"],
-    embed = [":src_lib"],
-    deps = [
-        "//src/cmd",
-        "@com_github_stretchr_testify//assert",
-    ],
-)

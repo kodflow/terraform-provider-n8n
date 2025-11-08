@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/credential/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,14 +27,6 @@ import (
 // Helper functions
 func strPtr(s string) *string {
 	return &s
-}
-
-func boolPtr(b bool) *bool {
-	return &b
-}
-
-func timePtr(t time.Time) *time.Time {
-	return &t
 }
 
 func TestNewCredentialResource(t *testing.T) {
@@ -1145,5 +1139,612 @@ func TestCredentialResource_Delete(t *testing.T) {
 		r.Delete(context.Background(), req, &resp)
 
 		assert.True(t, resp.Diagnostics.HasError(), "Delete should have errors")
+	})
+}
+
+// TestCredentialResource_RollbackFunctions tests rollback-related helper functions.
+func TestCredentialResource_RollbackFunctions(t *testing.T) {
+	t.Run("deleteNewCredential success", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/credentials/new-cred-123" && r.Method == http.MethodDelete {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		r.deleteNewCredential(context.Background(), "new-cred-123")
+	})
+
+	t.Run("deleteNewCredential failure", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		r.deleteNewCredential(context.Background(), "new-cred-123")
+	})
+
+	t.Run("deleteCredentialBestEffort success", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/credentials/cred-123" && r.Method == http.MethodDelete {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		r.deleteCredentialBestEffort(context.Background(), "cred-123")
+	})
+
+	t.Run("deleteCredentialBestEffort failure", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		r.deleteCredentialBestEffort(context.Background(), "cred-123")
+	})
+
+	t.Run("findWorkflowBackup found", func(t *testing.T) {
+		r := &CredentialResource{}
+		workflow := &n8nsdk.Workflow{Id: strPtr("wf-123")}
+		backups := []models.WorkflowBackup{
+			{ID: "wf-456", Original: &n8nsdk.Workflow{Id: strPtr("wf-456")}},
+			{ID: "wf-123", Original: workflow},
+		}
+
+		found := r.findWorkflowBackup(backups, "wf-123")
+		assert.NotNil(t, found)
+		assert.Equal(t, "wf-123", *found.Id)
+	})
+
+	t.Run("findWorkflowBackup not found", func(t *testing.T) {
+		r := &CredentialResource{}
+		backups := []models.WorkflowBackup{
+			{ID: "wf-456", Original: &n8nsdk.Workflow{Id: strPtr("wf-456")}},
+		}
+
+		found := r.findWorkflowBackup(backups, "wf-123")
+		assert.Nil(t, found)
+	})
+
+	t.Run("restoreWorkflow success", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// SDK generates path like /workflows/{id}
+			if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          "wf-123",
+					"name":        "Test Workflow",
+					"nodes":       []any{},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		workflow := &n8nsdk.Workflow{
+			Id:          strPtr("wf-123"),
+			Name:        "Test",
+			Nodes:       []n8nsdk.Node{},
+			Connections: map[string]interface{}{},
+			Settings:    n8nsdk.WorkflowSettings{},
+		}
+		success := r.restoreWorkflow(context.Background(), "wf-123", workflow)
+		assert.True(t, success)
+	})
+
+	t.Run("restoreWorkflow failure", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		workflow := &n8nsdk.Workflow{
+			Id:          strPtr("wf-123"),
+			Name:        "Test",
+			Nodes:       []n8nsdk.Node{},
+			Connections: map[string]interface{}{},
+			Settings:    n8nsdk.WorkflowSettings{},
+		}
+		success := r.restoreWorkflow(context.Background(), "wf-123", workflow)
+		assert.False(t, success)
+	})
+
+	t.Run("restoreWorkflows with multiple workflows", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPut {
+				// Succeed for wf-123, fail for wf-456
+				if r.URL.Path == "/workflows/wf-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "WF1",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				if r.URL.Path == "/workflows/wf-456" {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-123",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-123"),
+					Name:        "WF1",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+			{
+				ID: "wf-456",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-456"),
+					Name:        "WF2",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		updatedWorkflows := []string{"wf-123", "wf-456"}
+
+		count := r.restoreWorkflows(context.Background(), backups, updatedWorkflows)
+		assert.Equal(t, 1, count)
+	})
+
+	t.Run("restoreWorkflows with missing backup", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-456" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          "wf-456",
+					"name":        "WF2",
+					"nodes":       []any{},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-456",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-456"),
+					Name:        "WF2",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		updatedWorkflows := []string{"wf-123", "wf-456"}
+
+		count := r.restoreWorkflows(context.Background(), backups, updatedWorkflows)
+		assert.Equal(t, 1, count)
+	})
+
+	t.Run("rollbackRotation complete flow", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodDelete {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          "wf-123",
+					"name":        "Test",
+					"nodes":       []any{},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-123",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-123"),
+					Name:        "Test",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		updatedWorkflows := []string{"wf-123"}
+
+		r.rollbackRotation(context.Background(), "new-cred-123", backups, updatedWorkflows)
+	})
+}
+
+// TestCredentialResource_DeleteOldCredential tests deletion of old credentials after rotation.
+func TestCredentialResource_DeleteOldCredential(t *testing.T) {
+	t.Run("deleteOldCredential failure logs warning", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Internal server error"}`))
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		r.deleteOldCredential(context.Background(), "old-cred-123", "new-cred-456")
+	})
+}
+
+// TestCredentialResource_HelperFunctions tests the helper functions for credential rotation.
+func TestCredentialResource_HelperFunctions(t *testing.T) {
+	t.Run("createNewCredential success", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":        "new-cred-123",
+					"name":      "Test Credential",
+					"type":      "testType",
+					"createdAt": "2025-01-01T00:00:00Z",
+					"updatedAt": "2025-01-01T00:00:00Z",
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		diags := &diag.Diagnostics{}
+		result := r.createNewCredential(context.Background(), "Test Credential", "testType", map[string]interface{}{"key": "value"}, diags)
+
+		assert.NotNil(t, result)
+		if result != nil {
+			assert.Equal(t, "new-cred-123", result.Id)
+		}
+		assert.False(t, diags.HasError())
+	})
+
+	t.Run("createNewCredential failure", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		diags := &diag.Diagnostics{}
+		result := r.createNewCredential(context.Background(), "Test Credential", "testType", map[string]interface{}{"key": "value"}, diags)
+
+		assert.Nil(t, result)
+		assert.True(t, diags.HasError())
+	})
+
+	t.Run("scanAffectedWorkflows success with workflows", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"data": []any{
+						map[string]any{
+							"id":          "wf-1",
+							"name":        "Workflow 1",
+							"nodes":       []any{map[string]any{"credentials": map[string]any{"testCred": map[string]any{"id": "old-cred-123"}}}},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
+						},
+						map[string]any{
+							"id":          "wf-2",
+							"name":        "Workflow 2",
+							"nodes":       []any{},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
+						},
+					},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		diags := &diag.Diagnostics{}
+		workflows, success := r.scanAffectedWorkflows(context.Background(), "old-cred-123", "new-cred-456", diags)
+
+		assert.True(t, success)
+		assert.Len(t, workflows, 1)
+		assert.Equal(t, "wf-1", workflows[0].ID)
+		assert.False(t, diags.HasError())
+	})
+
+	t.Run("scanAffectedWorkflows failure", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			if r.Method == http.MethodDelete && r.URL.Path == "/credentials/new-cred-456" {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		diags := &diag.Diagnostics{}
+		workflows, success := r.scanAffectedWorkflows(context.Background(), "old-cred-123", "new-cred-456", diags)
+
+		assert.False(t, success)
+		assert.Len(t, workflows, 0)
+		assert.True(t, diags.HasError())
+	})
+
+	t.Run("updateAffectedWorkflows success", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && r.URL.Path == "/workflows/wf-1" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          "wf-1",
+					"name":        "Workflow 1",
+					"nodes":       []any{map[string]any{"credentials": map[string]any{"testCred": map[string]any{"id": "old-cred-123"}}}},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-1" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          "wf-1",
+					"name":        "Workflow 1",
+					"nodes":       []any{},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-1",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-1"),
+					Name:        "Workflow 1",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		diags := &diag.Diagnostics{}
+		updated, success := r.updateAffectedWorkflows(context.Background(), backups, "old-cred-123", "new-cred-456", diags)
+
+		assert.True(t, success)
+		assert.Len(t, updated, 1)
+		assert.Equal(t, "wf-1", updated[0])
+		assert.False(t, diags.HasError())
+	})
+
+	t.Run("updateAffectedWorkflows failure on get", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && r.URL.Path == "/workflows/wf-1" {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			if r.Method == http.MethodDelete && r.URL.Path == "/credentials/new-cred-456" {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-1",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-1"),
+					Name:        "Workflow 1",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		diags := &diag.Diagnostics{}
+		updated, success := r.updateAffectedWorkflows(context.Background(), backups, "old-cred-123", "new-cred-456", diags)
+
+		assert.False(t, success)
+		assert.Len(t, updated, 0)
+		assert.True(t, diags.HasError())
+	})
+
+	t.Run("updateAffectedWorkflows failure on put", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && r.URL.Path == "/workflows/wf-1" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          "wf-1",
+					"name":        "Workflow 1",
+					"nodes":       []any{map[string]any{"credentials": map[string]any{"testCred": map[string]any{"id": "old-cred-123"}}}},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-1" {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			if r.Method == http.MethodDelete && r.URL.Path == "/credentials/new-cred-456" {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-1",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-1"),
+					Name:        "Workflow 1",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		diags := &diag.Diagnostics{}
+		updated, success := r.updateAffectedWorkflows(context.Background(), backups, "old-cred-123", "new-cred-456", diags)
+
+		assert.False(t, success)
+		assert.Len(t, updated, 0)
+		assert.True(t, diags.HasError())
+	})
+
+	t.Run("updateAffectedWorkflows with multiple workflows tests throttling", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && (r.URL.Path == "/workflows/wf-1" || r.URL.Path == "/workflows/wf-2") {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          r.URL.Path[len("/workflows/"):],
+					"name":        "Workflow",
+					"nodes":       []any{},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			if r.Method == http.MethodPut && (r.URL.Path == "/workflows/wf-1" || r.URL.Path == "/workflows/wf-2") {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":          r.URL.Path[len("/workflows/"):],
+					"name":        "Workflow",
+					"nodes":       []any{},
+					"connections": map[string]any{},
+					"settings":    map[string]any{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &CredentialResource{client: n8nClient}
+		backups := []models.WorkflowBackup{
+			{
+				ID: "wf-1",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-1"),
+					Name:        "Workflow 1",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+			{
+				ID: "wf-2",
+				Original: &n8nsdk.Workflow{
+					Id:          strPtr("wf-2"),
+					Name:        "Workflow 2",
+					Nodes:       []n8nsdk.Node{},
+					Connections: map[string]interface{}{},
+					Settings:    n8nsdk.WorkflowSettings{},
+				},
+			},
+		}
+		diags := &diag.Diagnostics{}
+		updated, success := r.updateAffectedWorkflows(context.Background(), backups, "old-cred-123", "new-cred-456", diags)
+
+		assert.True(t, success)
+		assert.Len(t, updated, 2)
+		assert.False(t, diags.HasError())
 	})
 }

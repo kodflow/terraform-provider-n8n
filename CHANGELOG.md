@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
+- improve AI assistant configuration with stricter directives (`dd4f419`)
 - add AI assistant configuration document (`9d0c27d`)
 - add coverage report (`f200924`)
 - enhance code documentation and test coverage (`f41642a`)
@@ -74,7 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 37
+- **Total commits:** 38
 - **Features:** 8
 - **Bug fixes:** 5
 - **Tests:** 1
@@ -87,4 +88,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 17:09:57*
+*Changelog generated automatically on 2025-11-08 17:59:17*

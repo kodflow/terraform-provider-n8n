@@ -25,14 +25,6 @@ func intPtr(i int32) *int32 {
 	return &i
 }
 
-func float32Ptr(f float32) *float32 {
-	return &f
-}
-
-func timePtr(t time.Time) *time.Time {
-	return &t
-}
-
 func TestWorkflowBackup(t *testing.T) {
 	t.Run("create with valid values", func(t *testing.T) {
 		// Test creating backup with valid workflow
