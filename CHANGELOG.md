@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- remove executable permission from README.md (`4607bcb`)
 - add hook permissions fix script for GUI clients (`46ccbe2`)
 - resolve critical linter issues across provider codebase (`ec19363`)
 - update golangci-lint config to v2 format and integrate ktn-linter (`9f4f36d`)
@@ -40,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
+- add CLAUDE.md configuration for AI development (`a66f870`)
 - add coverage report (`f200924`)
 - enhance code documentation and test coverage (`f41642a`)
 
@@ -72,9 +74,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 35
+- **Total commits:** 37
 - **Features:** 8
-- **Bug fixes:** 4
+- **Bug fixes:** 5
 - **Tests:** 1
 - **Refactoring:** 12
 - **Test coverage:** N/A
@@ -85,4 +87,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 15:37:24*
+*Changelog generated automatically on 2025-11-08 17:02:43*
