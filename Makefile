@@ -191,3 +191,34 @@ openapi: ## Download n8n OpenAPI from GitHub, patch, and generate SDK - Complete
 	@echo ""
 	@python3 codegen/build-sdk.py
 	@echo ""
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+.PHONY: changelog
+changelog: ## Generate CHANGELOG.md from git history (Conventional Commits)
+	@echo ""
+	@echo "$(BOLD)$(CYAN)📝 Generating CHANGELOG.md...$(RESET)"
+	@./scripts/generate-changelog.sh
+	@echo "$(GREEN)✅ CHANGELOG.md generated successfully$(RESET)"
+	@echo ""
+
+.PHONY: coverage-report
+coverage-report: ## Generate COVERAGE.MD report from test coverage
+	@echo ""
+	@echo "$(BOLD)$(CYAN)📊 Generating COVERAGE.MD...$(RESET)"
+	@go test -coverprofile=coverage.out ./src/internal/provider/... > /dev/null 2>&1
+	@echo "$(GREEN)✅ Coverage data collected$(RESET)"
+	@echo "$(YELLOW)ℹ️  Manual update of COVERAGE.MD recommended for detailed analysis$(RESET)"
+	@echo ""
+
+.PHONY: docs
+docs: changelog coverage-report ## Generate all documentation (changelog + coverage)
+	@echo ""
+	@echo "$(BOLD)$(GREEN)✅ All documentation generated$(RESET)"
+	@echo ""
+
+.PHONY: install-hooks
+install-hooks: ## Install git hooks for automatic doc generation
+	@./scripts/install-hooks.sh

@@ -92,15 +92,72 @@ make build
 
 ## Development
 
+### Quick Start
+
+```bash
+# First time setup - install git hooks for automatic documentation
+make install-hooks
+
+# Build and test
+make build
+make test
+
+# Generate documentation
+make docs        # Generate both CHANGELOG.md and coverage report
+make changelog   # Generate only CHANGELOG.md
+```
+
 ### Available Make Commands
 
 The `Makefile` provides essential commands:
 
 ```bash
-make help    # Display help with all available commands
-make test    # Run tests with Bazel
-make build   # Build and install provider locally
-make clean   # Clean Bazel artifacts
+# Development
+make help          # Display help with all available commands
+make test          # Run tests with Bazel
+make build         # Build and install provider locally
+make clean         # Clean Bazel artifacts
+make fmt           # Format all source files
+make lint          # Run code linters
+
+# Documentation
+make docs          # Generate all documentation (CHANGELOG + coverage)
+make changelog     # Generate CHANGELOG.md from git history
+make install-hooks # Install git hooks for auto-documentation
+
+# API & SDK
+make openapi       # Download n8n OpenAPI spec and generate SDK
+```
+
+### Automatic Documentation Generation
+
+The project uses **git hooks** to automatically generate documentation:
+
+- **CHANGELOG.md**: Auto-generated from git commits using [Conventional Commits](https://www.conventionalcommits.org/)
+- **COVERAGE.MD**: Manual coverage report (run `make docs` to update)
+
+**Commit Message Format:**
+
+```bash
+<type>: <description>
+
+# Types:
+feat:     New feature
+fix:      Bug fix
+docs:     Documentation changes
+test:     Test additions/changes
+refactor: Code refactoring
+perf:     Performance improvements
+build:    Build system changes
+ci:       CI/CD changes
+chore:    Maintenance tasks
+```
+
+**Example:**
+
+```bash
+git commit -m "feat: add workflow datasource"
+# → Automatically generates CHANGELOG.md entry under "🚀 Features"
 ```
 
 ### Bazel Configuration
