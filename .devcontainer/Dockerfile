@@ -2,7 +2,9 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 # Install HashiCorp tools and 1Password CLI
 # hadolint ignore=DL3008
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         gnupg \
@@ -28,9 +30,7 @@ RUN apt-get update \
         vault \
         consul \
         nomad \
-        1password-cli \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+        1password-cli
 
 # Switch to vscode user
 USER vscode
@@ -48,22 +48,18 @@ RUN mkdir -p /home/vscode/.cache \
     # Set strict permissions for 1Password config directory
     && chmod 700 /home/vscode/.config/op
 
-# Copy git hooks with proper permissions
-COPY --chown=vscode:vscode --chmod=755 hooks/ /home/vscode/.git-hooks/
-
-# Install Oh My Zsh and themes in parallel (rarely changes - good for cache)
-RUN rm -rf "$HOME/.oh-my-zsh" && \
+# Install Oh My Zsh and themes (rarely changes - good for cache)
+# Using single-branch clone for faster downloads
+RUN --mount=type=cache,target=/home/vscode/.cache/git,uid=1000,gid=1000 \
+    rm -rf "$HOME/.oh-my-zsh" && \
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+    git clone --depth=1 --single-branch https://github.com/romkatv/powerlevel10k.git \
         "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" & \
-    git clone --depth=1 https://github.com/dracula/zsh.git \
+    git clone --depth=1 --single-branch https://github.com/dracula/zsh.git \
         "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/dracula" & \
     wait
 
-# Copy p10k configuration (changes rarely)
-COPY --chown=vscode:vscode p10k.sh /home/vscode/.p10k.zsh
-
-# Configure zshrc (changes rarely)
+# Configure zshrc (changes rarely - done before copying files)
 RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.zshrc" && \
     { \
         echo ''; \
@@ -90,6 +86,11 @@ RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.z
         echo '# Super Claude alias'; \
         echo 'alias super-claude="claude --dangerously-skip-permissions --mcp-config /workspace/.devcontainer/mcp.json"'; \
     } >> "$HOME/.zshrc"
+
+# Copy configuration files (moved to end to improve cache hit rate)
+# These files change more frequently than system setup
+COPY --chown=vscode:vscode p10k.sh /home/vscode/.p10k.zsh
+COPY --chown=vscode:vscode --chmod=755 hooks/ /home/vscode/.git-hooks/
 
 # Set working directory
 WORKDIR /workspace

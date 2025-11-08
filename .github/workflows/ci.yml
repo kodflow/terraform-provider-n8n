@@ -216,13 +216,18 @@ jobs:
             echo "✅ CHANGELOG.md is up to date"
           fi
 
-      - name: Check COVERAGE.MD exists
+      - name: Generate and check COVERAGE.MD
         run: |
-          if [ ! -f "COVERAGE.MD" ]; then
-            echo "❌ COVERAGE.MD not found"
-            exit 1
+          chmod +x scripts/generate-coverage.sh
+          ./scripts/generate-coverage.sh
+
+          if [ -n "$(git diff COVERAGE.MD)" ]; then
+            echo "⚠️  COVERAGE.MD is out of date"
+            echo "Run 'make coverage-report' locally and commit the changes"
+            git diff COVERAGE.MD
+          else
+            echo "✅ COVERAGE.MD is up to date"
           fi
-          echo "✅ COVERAGE.MD exists"
 
   # ============================================================================
   # Security Scan

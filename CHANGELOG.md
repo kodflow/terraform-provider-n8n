@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- add hook permissions fix script for GUI clients (`46ccbe2`)
 - resolve critical linter issues across provider codebase (`ec19363`)
 - update golangci-lint config to v2 format and integrate ktn-linter (`9f4f36d`)
 - correct Docker tag format in devcontainer workflow (`36e97fd`)
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- improve Makefile formatting and documentation targets (`8624d4b`)
 - reorganize models into domain subdirectories (`8ae34eb`)
 - reorganize models into dedicated subdirectories with simplified naming (`de9445d`)
 - fix all ktn-linter violations and improve code organization (`edb1c95`)
@@ -69,12 +71,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 32
+- **Total commits:** 34
 - **Features:** 8
-- **Bug fixes:** 3
+- **Bug fixes:** 4
 - **Tests:** 1
-- **Refactoring:** 11
-- **Test coverage:** 70.9%
+- **Refactoring:** 12
+- **Test coverage:** N/A
 
 ### 👥 Contributors
 
@@ -82,4 +84,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 14:15:12*
+*Changelog generated automatically on 2025-11-08 15:29:51*

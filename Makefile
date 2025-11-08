@@ -128,15 +128,6 @@ build: ## Build and install provider
 	@echo "  $(CYAN)Location:$(RESET) $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)"
 	@echo ""
 
-.PHONY: clean
-clean: ## Remove build artifacts
-	@echo ""
-	@echo "$(BOLD)Cleaning build artifacts...$(RESET)"
-	@printf "  $(CYAN)→$(RESET) Running Bazel clean\n"
-	@bazel clean
-	@echo "$(GREEN)✓$(RESET) Cleanup completed"
-	@echo ""
-
 # ============================================================================
 # Code Quality
 # ============================================================================
@@ -145,9 +136,13 @@ clean: ## Remove build artifacts
 fmt: ## Format all source files
 	@echo ""
 	@echo "$(BOLD)Formatting source files...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Go imports\n"
+	@goimports -w $$(find . -type f -name "*.go" ! -path "./bazel-*" ! -path "./vendor/*") 2>/dev/null || true
 	@printf "  $(CYAN)→$(RESET) Go files\n"
 	@go fmt ./... > /dev/null
-	@printf "  $(CYAN)→$(RESET) Bazel files\n"
+	@printf "  $(CYAN)→$(RESET) Bazel BUILD files (gazelle)\n"
+	@bazel run //:gazelle 2>&1 | grep -E "^(ERROR|WARNING|INFO)" || true
+	@printf "  $(CYAN)→$(RESET) Bazel files (buildifier)\n"
 	@buildifier -r . 2>&1 | grep -v "^$$" || true
 	@printf "  $(CYAN)→$(RESET) Shell scripts\n"
 	@find . -name "*.sh" ! -path "./bazel-*" ! -name "p10k.sh" -exec shfmt -w -i 2 -ci -bn {} \; 2>/dev/null
@@ -191,30 +186,19 @@ openapi: ## Download n8n OpenAPI from GitHub, patch, and generate SDK - Complete
 	@echo ""
 	@python3 codegen/build-sdk.py
 	@echo ""
+	@$(MAKE) fmt
 
 # ============================================================================
 # Documentation
 # ============================================================================
 
-.PHONY: changelog
-changelog: ## Generate CHANGELOG.md from git history (Conventional Commits)
-	@echo ""
-	@echo "$(BOLD)$(CYAN)📝 Generating CHANGELOG.md...$(RESET)"
-	@./scripts/generate-changelog.sh
-	@echo "$(GREEN)✅ CHANGELOG.md generated successfully$(RESET)"
-	@echo ""
-
-.PHONY: coverage-report
-coverage-report: ## Generate COVERAGE.MD report from test coverage
-	@echo ""
-	@echo "$(BOLD)$(CYAN)📊 Generating COVERAGE.MD...$(RESET)"
-	@go test -coverprofile=coverage.out ./src/internal/provider/... > /dev/null 2>&1
-	@echo "$(GREEN)✅ Coverage data collected$(RESET)"
-	@echo "$(YELLOW)ℹ️  Manual update of COVERAGE.MD recommended for detailed analysis$(RESET)"
-	@echo ""
-
 .PHONY: docs
-docs: changelog coverage-report ## Generate all documentation (changelog + coverage)
+docs: ## Generate all documentation (changelog + coverage)
 	@echo ""
+	@echo "$(BOLD)$(CYAN)📝 Generating documentation...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Generating CHANGELOG.md\n"
+	@./scripts/generate-changelog.sh
+	@printf "  $(CYAN)→$(RESET) Generating COVERAGE.md\n"
+	@./scripts/generate-coverage.sh
 	@echo "$(BOLD)$(GREEN)✅ All documentation generated$(RESET)"
 	@echo ""
