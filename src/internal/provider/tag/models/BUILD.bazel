@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "models",
@@ -11,4 +11,14 @@ go_library(
     importpath = "github.com/kodflow/n8n/src/internal/provider/tag/models",
     visibility = ["//src:__subpackages__"],
     deps = ["@com_github_hashicorp_terraform_plugin_framework//types"],
+)
+
+go_test(
+    name = "models_test",
+    srcs = glob(["*_test.go"]),
+    embed = [":models"],
+    deps = [
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_stretchr_testify//assert",
+    ],
 )

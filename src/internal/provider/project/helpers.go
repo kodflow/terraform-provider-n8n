@@ -58,10 +58,14 @@ func mapProjectToDataSourceModel(project *n8nsdk.Project, data *models.DataSourc
 	// Check for non-nil value.
 	if project.Icon != nil {
 		data.Icon = types.StringPointerValue(project.Icon)
+	} else {
+		data.Icon = types.StringNull()
 	}
 	// Check for non-nil value.
 	if project.Description != nil {
 		data.Description = types.StringPointerValue(project.Description)
+	} else {
+		data.Description = types.StringNull()
 	}
 }
 

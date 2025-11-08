@@ -517,6 +517,11 @@ func (r *CredentialResource) restoreWorkflow(
 // Returns:
 //   - bool: True if workflow uses the credential, false otherwise
 func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
+	// Check if workflow is nil first.
+	if workflow == nil {
+		return false
+	}
+
 	// Check if workflow nodes are available.
 	if workflow.Nodes == nil {
 		// Return result.
@@ -555,6 +560,11 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 // Returns:
 //   - *n8nsdk.Workflow: The modified workflow
 func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) *n8nsdk.Workflow {
+	// Check if workflow is nil first.
+	if workflow == nil {
+		return nil
+	}
+
 	// Check if workflow nodes are available.
 	if workflow.Nodes == nil {
 		// Return result.
