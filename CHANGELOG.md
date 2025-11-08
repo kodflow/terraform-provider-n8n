@@ -42,7 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
-- add strict testing and quality standards to CLAUDE.md (`f74ba91`)
+- add strict testing and quality standards (`eac2a36`)
 - improve AI assistant configuration with stricter directives (`dd4f419`)
 - add AI assistant configuration document (`9d0c27d`)
 - add coverage report (`f200924`)
@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- optimize code for Go 1.25.4 and improve pre-push hook (`2ebf1b5`)
 - improve Makefile formatting and documentation targets (`353658c`)
 - reorganize models into domain subdirectories (`8ae34eb`)
 - reorganize models into dedicated subdirectories with simplified naming (`de9445d`)
@@ -77,11 +78,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 40
+- **Total commits:** 41
 - **Features:** 8
 - **Bug fixes:** 5
 - **Tests:** 2
-- **Refactoring:** 12
+- **Refactoring:** 13
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -90,4 +91,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 17:59:44*
+*Changelog generated automatically on 2025-11-08 18:06:37*

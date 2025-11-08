@@ -561,14 +561,14 @@ func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 
 		// Run concurrent checks
 		results := make(chan bool, 100)
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			go func() {
 				results <- usesCredential(workflow, "cred-123")
 			}()
 		}
 
 		// Collect results
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			assert.True(t, <-results)
 		}
 	})
@@ -576,7 +576,7 @@ func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 	t.Run("concurrent replacements", func(t *testing.T) {
 		// Run concurrent replacements on copies
 		results := make(chan *n8nsdk.Workflow, 100)
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			go func(idx int) {
 				// Create a copy for each goroutine
 				workflow := &n8nsdk.Workflow{
@@ -597,7 +597,7 @@ func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 		}
 
 		// Verify all replacements
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			result := <-results
 			assert.NotNil(t, result)
 		}
@@ -665,7 +665,7 @@ func BenchmarkUsesCredential(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = usesCredential(workflow, "cred-123")
 	}
 }
@@ -685,7 +685,7 @@ func BenchmarkReplaceCredentialInWorkflow(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
 	}
 }
@@ -693,14 +693,14 @@ func BenchmarkReplaceCredentialInWorkflow(b *testing.B) {
 func BenchmarkReplaceCredentialLargeWorkflow(b *testing.B) {
 	// Create a workflow with many nodes
 	nodes := make([]n8nsdk.Node, 100)
-	for i := 0; i < 100; i++ {
-		nodes[i] = n8nsdk.Node{
+	for range 100 {
+		nodes = append(nodes, n8nsdk.Node{
 			Credentials: map[string]interface{}{
-				fmt.Sprintf("api%d", i): map[string]interface{}{
+				fmt.Sprintf("api%d", len(nodes)): map[string]interface{}{
 					"id": "old-cred",
 				},
 			},
-		}
+		})
 	}
 
 	workflow := &n8nsdk.Workflow{
@@ -709,7 +709,7 @@ func BenchmarkReplaceCredentialLargeWorkflow(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
 	}
 }
