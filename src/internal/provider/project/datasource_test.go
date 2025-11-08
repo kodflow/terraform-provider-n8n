@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockProjectDataSourceInterface is a mock implementation of ProjectDataSourceInterface
+// MockProjectDataSourceInterface is a mock implementation of ProjectDataSourceInterface.
 type MockProjectDataSourceInterface struct {
 	mock.Mock
 }
@@ -67,8 +67,8 @@ func TestNewProjectDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewProjectDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 
@@ -490,8 +490,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 	})
 }
 
-// createTestDataSourceSchema creates a test schema for project datasource
+// createTestDataSourceSchema creates a test schema for project datasource.
 func createTestDataSourceSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	ds := &ProjectDataSource{}
 	req := datasource.SchemaRequest{}
 	resp := &datasource.SchemaResponse{}
@@ -499,8 +500,9 @@ func createTestDataSourceSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestDataSourceClient creates a test N8nClient with httptest server
+// setupTestDataSourceClient creates a test N8nClient with httptest server.
 func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()

@@ -24,7 +24,7 @@ import (
 
 // Note: Mock implementations are in helpers_test.go to avoid duplication
 
-// Helper functions
+// Helper functions.
 func strPtr(s string) *string {
 	return &s
 }
@@ -716,8 +716,9 @@ func BenchmarkReplaceCredentialLargeWorkflow(b *testing.B) {
 
 // Test helper functions
 
-// createTestSchema creates a test schema for credential resource
+// createTestSchema creates a test schema for credential resource.
 func createTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &CredentialResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -725,8 +726,9 @@ func createTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestClient creates a test N8nClient with httptest server
+// setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -748,7 +750,7 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestCredentialResource_Create tests credential creation
+// TestCredentialResource_Create tests credential creation.
 func TestCredentialResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -860,7 +862,7 @@ func TestCredentialResource_Create(t *testing.T) {
 	})
 }
 
-// TestCredentialResource_Read tests credential reading
+// TestCredentialResource_Read tests credential reading.
 func TestCredentialResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -953,7 +955,7 @@ func TestCredentialResource_Read(t *testing.T) {
 	})
 }
 
-// TestCredentialResource_Update tests credential update
+// TestCredentialResource_Update tests credential update.
 func TestCredentialResource_Update(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1046,7 +1048,7 @@ func TestCredentialResource_Update(t *testing.T) {
 	})
 }
 
-// TestCredentialResource_Delete tests credential deletion
+// TestCredentialResource_Delete tests credential deletion.
 func TestCredentialResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

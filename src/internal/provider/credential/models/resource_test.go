@@ -245,18 +245,18 @@ func TestResource(t *testing.T) {
 			UpdatedAt: types.StringValue("2024-01-01T00:00:00Z"),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.Name.ValueString(), copy.Name.ValueString())
-		assert.Equal(t, original.Type.ValueString(), copy.Type.ValueString())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.Name.ValueString(), copied.Name.ValueString())
+		assert.Equal(t, original.Type.ValueString(), copied.Type.ValueString())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
 
 		// Original should not be affected (value semantics)
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 	})
 
 	t.Run("pointer to struct", func(t *testing.T) {

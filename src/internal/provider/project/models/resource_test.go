@@ -76,19 +76,19 @@ func TestResource(t *testing.T) {
 			Type: types.StringValue("team"),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.Name.ValueString(), copy.Name.ValueString())
-		assert.Equal(t, original.Type.ValueString(), copy.Type.ValueString())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.Name.ValueString(), copied.Name.ValueString())
+		assert.Equal(t, original.Type.ValueString(), copied.Type.ValueString())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
-		copy.Name = types.StringValue("Modified Resource")
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
+		copied.Name = types.StringValue("Modified Resource")
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 		assert.Equal(t, "Original Resource", original.Name.ValueString())
-		assert.Equal(t, "Modified Resource", copy.Name.ValueString())
+		assert.Equal(t, "Modified Resource", copied.Name.ValueString())
 	})
 
 	t.Run("partial initialization", func(t *testing.T) {

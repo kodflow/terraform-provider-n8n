@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockWorkflowsDataSourceInterface is a mock implementation of WorkflowsDataSourceInterface
+// MockWorkflowsDataSourceInterface is a mock implementation of WorkflowsDataSourceInterface.
 type MockWorkflowsDataSourceInterface struct {
 	mock.Mock
 }
@@ -59,8 +59,8 @@ func TestNewWorkflowsDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewWorkflowsDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 

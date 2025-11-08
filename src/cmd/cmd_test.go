@@ -62,7 +62,7 @@ func TestCmdPackageIntegration(t *testing.T) {
 	})
 }
 
-// TestCmdPackageDocumentation verifies package-level documentation
+// TestCmdPackageDocumentation verifies package-level documentation.
 func TestCmdPackageDocumentation(t *testing.T) {
 	t.Run("package has clear purpose", func(t *testing.T) {
 		// The cmd package provides the command-line interface for the n8n Terraform provider

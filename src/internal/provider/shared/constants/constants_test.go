@@ -88,8 +88,8 @@ func TestConstantsPackage(t *testing.T) {
 
 	t.Run("constants have expected types", func(t *testing.T) {
 		// Both should be int type
-		var listCap int = DEFAULT_LIST_CAPACITY
-		var bitSize int = FLOAT32_BIT_SIZE
+		listCap := DEFAULT_LIST_CAPACITY
+		bitSize := FLOAT32_BIT_SIZE
 
 		assert.Equal(t, 10, listCap)
 		assert.Equal(t, 32, bitSize)

@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockVariableDataSourceInterface is a mock implementation of VariableDataSourceInterface
+// MockVariableDataSourceInterface is a mock implementation of VariableDataSourceInterface.
 type MockVariableDataSourceInterface struct {
 	mock.Mock
 }
@@ -66,8 +66,8 @@ func TestNewVariableDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewVariableDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 
@@ -554,8 +554,9 @@ func TestVariableDataSource_Read(t *testing.T) {
 	})
 }
 
-// createTestDataSourceSchema creates a test schema for variable datasource
+// createTestDataSourceSchema creates a test schema for variable datasource.
 func createTestDataSourceSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	ds := &VariableDataSource{}
 	req := datasource.SchemaRequest{}
 	resp := &datasource.SchemaResponse{}
@@ -563,8 +564,9 @@ func createTestDataSourceSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestDataSourceClient creates a test N8nClient with httptest server
+// setupTestDataSourceClient creates a test N8nClient with httptest server.
 func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()

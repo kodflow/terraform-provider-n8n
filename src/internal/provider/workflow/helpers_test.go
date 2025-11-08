@@ -12,21 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Helper functions for tests
+// Helper functions for tests.
 func strPtr(s string) *string {
 	return &s
-}
-
-func boolPtr(b bool) *bool {
-	return &b
-}
-
-func int32Ptr(i int32) *int32 {
-	return &i
-}
-
-func timePtr(t time.Time) *time.Time {
-	return &t
 }
 
 func TestParseWorkflowJSON(t *testing.T) {

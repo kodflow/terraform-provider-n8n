@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 )
@@ -310,29 +309,4 @@ func BenchmarkMapExecutionToItem(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = mapExecutionToItem(execution)
 	}
-}
-
-// Helper function to create a string pointer
-func stringPtr(s string) *string {
-	return &s
-}
-
-// Helper function to create a bool pointer
-func boolPtr(b bool) *bool {
-	return &b
-}
-
-// Helper function to create a float32 pointer
-func float32Ptr(f float32) *float32 {
-	return &f
-}
-
-// Helper function to create types.String value
-func stringValue(s string) types.String {
-	return types.StringValue(s)
-}
-
-// Helper function to create types.Bool value
-func boolValue(b bool) types.Bool {
-	return types.BoolValue(b)
 }

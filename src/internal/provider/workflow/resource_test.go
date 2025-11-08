@@ -225,8 +225,9 @@ func TestWorkflowResource_InterfaceCompliance(t *testing.T) {
 	})
 }
 
-// createTestSchema creates a test schema for workflow resource
+// createTestSchema creates a test schema for workflow resource.
 func createTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &WorkflowResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -234,8 +235,9 @@ func createTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestClient creates a test N8nClient with httptest server
+// setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -256,7 +258,7 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestWorkflowResource_Create tests workflow creation
+// TestWorkflowResource_Create tests workflow creation.
 func TestWorkflowResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -412,7 +414,7 @@ func TestWorkflowResource_Create(t *testing.T) {
 	})
 }
 
-// TestWorkflowResource_Read tests workflow reading
+// TestWorkflowResource_Read tests workflow reading.
 func TestWorkflowResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -556,7 +558,7 @@ func TestWorkflowResource_Read(t *testing.T) {
 	})
 }
 
-// TestWorkflowResource_Update tests workflow update
+// TestWorkflowResource_Update tests workflow update.
 func TestWorkflowResource_Update(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -669,7 +671,7 @@ func TestWorkflowResource_Update(t *testing.T) {
 	})
 }
 
-// TestWorkflowResource_Delete tests workflow deletion
+// TestWorkflowResource_Delete tests workflow deletion.
 func TestWorkflowResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -897,7 +899,7 @@ func BenchmarkWorkflowResource_SchemaAttributes(b *testing.B) {
 	}
 }
 
-// CRUD Tests - Focus on helper function testing
+// CRUD Tests - Focus on helper function testing.
 
 func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 	t.Run("invalid nodes json", func(t *testing.T) {
@@ -1015,7 +1017,7 @@ func TestWorkflowResource_Delete_Basic(t *testing.T) {
 	})
 }
 
-// TestWorkflowResource_CRUD is a comprehensive suite that validates CRUD operation logic
+// TestWorkflowResource_CRUD is a comprehensive suite that validates CRUD operation logic.
 func TestWorkflowResource_CRUD(t *testing.T) {
 	t.Run("workflow lifecycle validation", func(t *testing.T) {
 		// Create - validates JSON parsing (tested in TestWorkflowResource_Create_JSONParsing)

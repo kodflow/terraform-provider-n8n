@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockExecutionRetryResourceInterface is a mock implementation of ExecutionRetryResourceInterface
+// MockExecutionRetryResourceInterface is a mock implementation of ExecutionRetryResourceInterface.
 type MockExecutionRetryResourceInterface struct {
 	mock.Mock
 }
@@ -85,8 +85,8 @@ func TestNewExecutionRetryResourceWrapper(t *testing.T) {
 	t.Run("wrapper returns resource.Resource interface", func(t *testing.T) {
 		r := NewExecutionRetryResourceWrapper()
 
-		_, ok := r.(resource.Resource)
-		assert.True(t, ok)
+		// r is already of type resource.Resource, no assertion needed
+		assert.NotNil(t, r)
 	})
 }
 
@@ -474,8 +474,9 @@ func BenchmarkExecutionRetryResource_Configure(b *testing.B) {
 	}
 }
 
-// createTestRetrySchema creates a test schema for retry execution resource
+// createTestRetrySchema creates a test schema for retry execution resource.
 func createTestRetrySchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &ExecutionRetryResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -483,8 +484,9 @@ func createTestRetrySchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestRetryClient creates a test N8nClient with httptest server
+// setupTestRetryClient creates a test N8nClient with httptest server.
 func setupTestRetryClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -506,7 +508,7 @@ func setupTestRetryClient(t *testing.T, handler http.HandlerFunc) (*client.N8nCl
 	return n8nClient, server
 }
 
-// TestRetryExecutionResource_Create tests retry execution creation
+// TestRetryExecutionResource_Create tests retry execution creation.
 func TestRetryExecutionResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -653,7 +655,7 @@ func TestRetryExecutionResource_Create(t *testing.T) {
 	})
 }
 
-// TestRetryExecutionResource_Read tests retry execution reading
+// TestRetryExecutionResource_Read tests retry execution reading.
 func TestRetryExecutionResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -754,7 +756,7 @@ func TestRetryExecutionResource_Read(t *testing.T) {
 	})
 }
 
-// TestRetryExecutionResource_Delete tests retry execution deletion
+// TestRetryExecutionResource_Delete tests retry execution deletion.
 func TestRetryExecutionResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

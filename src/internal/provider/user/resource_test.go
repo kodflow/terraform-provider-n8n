@@ -16,8 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// createTestSchema creates a test schema for user resource
+// createTestSchema creates a test schema for user resource.
 func createTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &UserResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -25,8 +26,9 @@ func createTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestClient creates a test N8nClient with httptest server
+// setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -48,7 +50,7 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestUserResource_Create tests user creation
+// TestUserResource_Create tests user creation.
 func TestUserResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +168,7 @@ func TestUserResource_Create(t *testing.T) {
 	})
 }
 
-// TestUserResource_Read tests user reading
+// TestUserResource_Read tests user reading.
 func TestUserResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +267,7 @@ func TestUserResource_Read(t *testing.T) {
 	})
 }
 
-// TestUserResource_Update tests user update
+// TestUserResource_Update tests user update.
 func TestUserResource_Update(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -340,7 +342,7 @@ func TestUserResource_Update(t *testing.T) {
 	})
 }
 
-// TestUserResource_Delete tests user deletion
+// TestUserResource_Delete tests user deletion.
 func TestUserResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -422,7 +424,7 @@ func TestUserResource_Delete(t *testing.T) {
 	})
 }
 
-// TestUserResource_ImportState tests state import
+// TestUserResource_ImportState tests state import.
 func TestUserResource_ImportState(t *testing.T) {
 	r := &UserResource{}
 

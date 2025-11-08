@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockTagDataSourceInterface is a mock implementation of TagDataSourceInterface
+// MockTagDataSourceInterface is a mock implementation of TagDataSourceInterface.
 type MockTagDataSourceInterface struct {
 	mock.Mock
 }
@@ -66,8 +66,8 @@ func TestNewTagDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewTagDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 
@@ -561,8 +561,9 @@ func TestTagDataSource_Read(t *testing.T) {
 	})
 }
 
-// createTestDataSourceSchema creates a test schema for tag datasource
+// createTestDataSourceSchema creates a test schema for tag datasource.
 func createTestDataSourceSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	ds := &TagDataSource{}
 	req := datasource.SchemaRequest{}
 	resp := &datasource.SchemaResponse{}
@@ -570,8 +571,9 @@ func createTestDataSourceSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestDataSourceClient creates a test N8nClient with httptest server
+// setupTestDataSourceClient creates a test N8nClient with httptest server.
 func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()

@@ -20,8 +20,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// createTestSchema creates a test schema for variable resource
+// createTestSchema creates a test schema for variable resource.
 func createTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &VariableResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -29,8 +30,9 @@ func createTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestClient creates a test N8nClient with httptest server
+// setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -52,7 +54,7 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestVariableResource_Create tests variable creation
+// TestVariableResource_Create tests variable creation.
 func TestVariableResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +158,7 @@ func TestVariableResource_Create(t *testing.T) {
 	})
 }
 
-// TestVariableResource_Read tests variable reading
+// TestVariableResource_Read tests variable reading.
 func TestVariableResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -251,7 +253,7 @@ func TestVariableResource_Read(t *testing.T) {
 	})
 }
 
-// TestVariableResource_Update tests variable update
+// TestVariableResource_Update tests variable update.
 func TestVariableResource_Update(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -320,7 +322,7 @@ func TestVariableResource_Update(t *testing.T) {
 	})
 }
 
-// TestVariableResource_Delete tests variable deletion
+// TestVariableResource_Delete tests variable deletion.
 func TestVariableResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -396,7 +398,7 @@ func TestVariableResource_Delete(t *testing.T) {
 	})
 }
 
-// TestVariableResource_ImportState tests state import
+// TestVariableResource_ImportState tests state import.
 func TestVariableResource_ImportState(t *testing.T) {
 	r := &VariableResource{}
 
@@ -418,7 +420,7 @@ func TestVariableResource_ImportState(t *testing.T) {
 	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
 }
 
-// MockVariableResourceInterface is a mock implementation of VariableResourceInterface
+// MockVariableResourceInterface is a mock implementation of VariableResourceInterface.
 type MockVariableResourceInterface struct {
 	mock.Mock
 }
@@ -483,8 +485,8 @@ func TestNewVariableResourceWrapper(t *testing.T) {
 	t.Run("wrapper returns resource.Resource interface", func(t *testing.T) {
 		r := NewVariableResourceWrapper()
 
-		_, ok := r.(resource.Resource)
-		assert.True(t, ok)
+		// r is already of type resource.Resource, no assertion needed
+		assert.NotNil(t, r)
 	})
 }
 
@@ -985,9 +987,9 @@ func BenchmarkVariableResource_UpdateStateFromVariable(b *testing.B) {
 	}
 }
 
-// Mock request types for API testing
+// Mock request types for API testing.
 
-// MockVariablesPostRequest mocks the VariablesPost API request
+// MockVariablesPostRequest mocks the VariablesPost API request.
 type MockVariablesPostRequest struct {
 	mock.Mock
 	variableCreate n8nsdk.VariableCreate
@@ -1006,7 +1008,7 @@ func (m *MockVariablesPostRequest) Execute() (*n8nsdk.VariableList, error) {
 	return args.Get(0).(*n8nsdk.VariableList), args.Error(1)
 }
 
-// MockVariablesGetRequest mocks the VariablesGet API request
+// MockVariablesGetRequest mocks the VariablesGet API request.
 type MockVariablesGetRequest struct {
 	mock.Mock
 }
@@ -1019,7 +1021,7 @@ func (m *MockVariablesGetRequest) Execute() (*n8nsdk.VariableList, error) {
 	return args.Get(0).(*n8nsdk.VariableList), args.Error(1)
 }
 
-// MockVariablesPutRequest mocks the VariablesIdPut API request
+// MockVariablesPutRequest mocks the VariablesIdPut API request.
 type MockVariablesPutRequest struct {
 	mock.Mock
 	variableCreate n8nsdk.VariableCreate
@@ -1035,7 +1037,7 @@ func (m *MockVariablesPutRequest) Execute() error {
 	return args.Error(0)
 }
 
-// MockVariablesDeleteRequest mocks the VariablesIdDelete API request
+// MockVariablesDeleteRequest mocks the VariablesIdDelete API request.
 type MockVariablesDeleteRequest struct {
 	mock.Mock
 }
@@ -1045,13 +1047,13 @@ func (m *MockVariablesDeleteRequest) Execute() error {
 	return args.Error(0)
 }
 
-// MockAPIClient extends the basic mock to support Variables API
+// MockAPIClient extends the basic mock to support Variables API.
 type MockAPIClient struct {
 	mock.Mock
 	VariablesAPI *MockVariablesAPIWithRequests
 }
 
-// MockVariablesAPIWithRequests extends MockVariablesAPI with request mocking
+// MockVariablesAPIWithRequests extends MockVariablesAPI with request mocking.
 type MockVariablesAPIWithRequests struct {
 	mock.Mock
 }

@@ -16,8 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// createTestSchema creates a test schema for tag resource
+// createTestSchema creates a test schema for tag resource.
 func createTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &TagResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -25,8 +26,9 @@ func createTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestClient creates a test N8nClient with httptest server
+// setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -48,7 +50,7 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestTagResource_Create tests tag creation
+// TestTagResource_Create tests tag creation.
 func TestTagResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +143,7 @@ func TestTagResource_Create(t *testing.T) {
 	})
 }
 
-// TestTagResource_Read tests tag reading
+// TestTagResource_Read tests tag reading.
 func TestTagResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -226,7 +228,7 @@ func TestTagResource_Read(t *testing.T) {
 	})
 }
 
-// TestTagResource_Update tests tag update
+// TestTagResource_Update tests tag update.
 func TestTagResource_Update(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -285,7 +287,7 @@ func TestTagResource_Update(t *testing.T) {
 	})
 }
 
-// TestTagResource_Delete tests tag deletion
+// TestTagResource_Delete tests tag deletion.
 func TestTagResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -359,7 +361,7 @@ func TestTagResource_Delete(t *testing.T) {
 	})
 }
 
-// TestTagResource_ImportState tests state import
+// TestTagResource_ImportState tests state import.
 func TestTagResource_ImportState(t *testing.T) {
 	r := &TagResource{}
 

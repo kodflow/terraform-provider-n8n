@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockVariablesDataSourceInterface is a mock implementation of VariablesDataSourceInterface
+// MockVariablesDataSourceInterface is a mock implementation of VariablesDataSourceInterface.
 type MockVariablesDataSourceInterface struct {
 	mock.Mock
 }
@@ -59,8 +59,8 @@ func TestNewVariablesDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewVariablesDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 

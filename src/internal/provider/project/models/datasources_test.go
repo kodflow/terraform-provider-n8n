@@ -68,13 +68,13 @@ func TestDataSources(t *testing.T) {
 			},
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.Projects[0].ID.ValueString(), copy.Projects[0].ID.ValueString())
-		assert.Equal(t, original.Projects[0].Name.ValueString(), copy.Projects[0].Name.ValueString())
+		assert.Equal(t, original.Projects[0].ID.ValueString(), copied.Projects[0].ID.ValueString())
+		assert.Equal(t, original.Projects[0].Name.ValueString(), copied.Projects[0].Name.ValueString())
 
-		// Note: slice is shared between original and copy
-		copy.Projects[0].ID = types.StringValue("modified-proj")
+		// Note: slice is shared between original and copied
+		copied.Projects[0].ID = types.StringValue("modified-proj")
 		assert.Equal(t, "modified-proj", original.Projects[0].ID.ValueString())
 	})
 

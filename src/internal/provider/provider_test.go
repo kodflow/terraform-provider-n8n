@@ -16,6 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
+
 func TestNewN8nProvider(t *testing.T) {
 	t.Run("creates provider with version", func(t *testing.T) {
 		version := "1.2.3"
@@ -114,7 +117,7 @@ func TestMetadata(t *testing.T) {
 
 	t.Run("uses context", func(t *testing.T) {
 		p := NewN8nProvider("1.0.0")
-		ctx := context.WithValue(context.Background(), "test", "value")
+		ctx := context.WithValue(context.Background(), contextKey("test"), "value")
 
 		req := provider.MetadataRequest{}
 		resp := &provider.MetadataResponse{}
@@ -615,7 +618,7 @@ func TestN8nProviderStructure(t *testing.T) {
 func TestProviderContextUsage(t *testing.T) {
 	t.Run("all methods accept context", func(t *testing.T) {
 		p := NewN8nProvider("1.0.0")
-		ctx := context.WithValue(context.Background(), "test-key", "test-value")
+		ctx := context.WithValue(context.Background(), contextKey("test-key"), "test-value")
 
 		// Should not panic with custom context
 		assert.NotPanics(t, func() {
@@ -741,11 +744,11 @@ func TestProviderEdgeCases(t *testing.T) {
 	t.Run("handles nil context gracefully", func(t *testing.T) {
 		p := NewN8nProvider("1.0.0")
 
-		// While not recommended, the code should handle nil context
-		// Most methods don't actually use the context, so they should work
+		// Test with context.TODO() instead of nil
+		// Methods should work with any valid context
 		assert.NotPanics(t, func() {
 			resp := &provider.MetadataResponse{}
-			p.Metadata(nil, provider.MetadataRequest{}, resp)
+			p.Metadata(context.TODO(), provider.MetadataRequest{}, resp)
 		})
 	})
 

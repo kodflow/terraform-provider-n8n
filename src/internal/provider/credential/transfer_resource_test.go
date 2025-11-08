@@ -212,8 +212,9 @@ func TestCredentialTransferResource_Configure(t *testing.T) {
 	})
 }
 
-// createCredentialTransferTestSchema creates a test schema for credential transfer resource
+// createCredentialTransferTestSchema creates a test schema for credential transfer resource.
 func createCredentialTransferTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &CredentialTransferResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -221,8 +222,9 @@ func createCredentialTransferTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupCredentialTransferTestClient creates a test N8nClient with httptest server
+// setupCredentialTransferTestClient creates a test N8nClient with httptest server.
 func setupCredentialTransferTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()

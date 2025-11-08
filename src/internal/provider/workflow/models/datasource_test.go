@@ -74,23 +74,23 @@ func TestDataSource(t *testing.T) {
 			Active: types.BoolValue(true),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.Name.ValueString(), copy.Name.ValueString())
-		assert.Equal(t, original.Active.ValueBool(), copy.Active.ValueBool())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.Name.ValueString(), copied.Name.ValueString())
+		assert.Equal(t, original.Active.ValueBool(), copied.Active.ValueBool())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
-		copy.Name = types.StringValue("Modified Workflow")
-		copy.Active = types.BoolValue(false)
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
+		copied.Name = types.StringValue("Modified Workflow")
+		copied.Active = types.BoolValue(false)
 
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 		assert.Equal(t, "Original Workflow", original.Name.ValueString())
-		assert.Equal(t, "Modified Workflow", copy.Name.ValueString())
+		assert.Equal(t, "Modified Workflow", copied.Name.ValueString())
 		assert.True(t, original.Active.ValueBool())
-		assert.False(t, copy.Active.ValueBool())
+		assert.False(t, copied.Active.ValueBool())
 	})
 
 	t.Run("name variations", func(t *testing.T) {

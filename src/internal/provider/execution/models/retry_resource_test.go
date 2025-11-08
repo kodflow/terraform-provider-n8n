@@ -148,15 +148,15 @@ func TestRetryResource(t *testing.T) {
 			Finished:       types.BoolValue(true),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ExecutionID.ValueString(), copy.ExecutionID.ValueString())
-		assert.Equal(t, original.NewExecutionID.ValueString(), copy.NewExecutionID.ValueString())
+		assert.Equal(t, original.ExecutionID.ValueString(), copied.ExecutionID.ValueString())
+		assert.Equal(t, original.NewExecutionID.ValueString(), copied.NewExecutionID.ValueString())
 
-		// Modify copy
-		copy.ExecutionID = types.StringValue("exec-modified")
+		// Modify copied
+		copied.ExecutionID = types.StringValue("exec-modified")
 		assert.Equal(t, "exec-original", original.ExecutionID.ValueString())
-		assert.Equal(t, "exec-modified", copy.ExecutionID.ValueString())
+		assert.Equal(t, "exec-modified", copied.ExecutionID.ValueString())
 	})
 
 	t.Run("partial initialization", func(t *testing.T) {

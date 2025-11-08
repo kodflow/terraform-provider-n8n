@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockSourceControlPullResourceInterface is a mock implementation of SourceControlPullResourceInterface
+// MockSourceControlPullResourceInterface is a mock implementation of SourceControlPullResourceInterface.
 type MockSourceControlPullResourceInterface struct {
 	mock.Mock
 }
@@ -83,8 +83,8 @@ func TestNewSourceControlPullResourceWrapper(t *testing.T) {
 	t.Run("wrapper returns resource.Resource interface", func(t *testing.T) {
 		r := NewSourceControlPullResourceWrapper()
 
-		_, ok := r.(resource.Resource)
-		assert.True(t, ok)
+		// r is already of type resource.Resource, no assertion needed
+		assert.NotNil(t, r)
 	})
 }
 
@@ -928,17 +928,4 @@ func BenchmarkSourceControlPullResource_BuildPullRequest(b *testing.B) {
 		resp := &resource.CreateResponse{}
 		_ = r.buildPullRequest(plan, resp)
 	}
-}
-
-// Helper functions for testing
-func stringPtr(s string) *string {
-	return &s
-}
-
-func boolPtr(b bool) *bool {
-	return &b
-}
-
-func intPtr(i int) *int {
-	return &i
 }

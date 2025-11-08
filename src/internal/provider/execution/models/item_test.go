@@ -147,17 +147,17 @@ func TestItem(t *testing.T) {
 			Status:     types.StringValue("success"),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.WorkflowID.ValueString(), copy.WorkflowID.ValueString())
-		assert.Equal(t, original.Finished.ValueBool(), copy.Finished.ValueBool())
-		assert.Equal(t, original.Status.ValueString(), copy.Status.ValueString())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.WorkflowID.ValueString(), copied.WorkflowID.ValueString())
+		assert.Equal(t, original.Finished.ValueBool(), copied.Finished.ValueBool())
+		assert.Equal(t, original.Status.ValueString(), copied.Status.ValueString())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 	})
 
 	t.Run("partial initialization", func(t *testing.T) {

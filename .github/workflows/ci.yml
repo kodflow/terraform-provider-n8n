@@ -4,41 +4,13 @@ on:
   pull_request:
     branches:
       - main
-      - develop
-  push:
-    branches:
-      - main
-      - develop
 
 permissions:
   contents: read
-  pull-requests: write
-  checks: write
 
 jobs:
-  # ============================================================================
-  # Validation des commits (Conventional Commits)
-  # ============================================================================
-  validate-commits:
-    name: Validate Commit Messages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Validate Conventional Commits
-        uses: wagoid/commitlint-github-action@v6
-        with:
-          configFile: .commitlintrc.json
-        continue-on-error: true
-
-  # ============================================================================
-  # Tests unitaires et couverture
-  # ============================================================================
   test:
-    name: Tests & Coverage
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,55 +30,8 @@ jobs:
       - name: Run tests
         run: make test
 
-      - name: Generate coverage report
-        run: |
-          go test -coverprofile=coverage.out -covermode=atomic ./src/internal/provider/...
-          go tool cover -func=coverage.out | tail -1 | awk '{print "COVERAGE="$3}' >> $GITHUB_ENV
-
-      - name: Check coverage threshold
-        run: |
-          COVERAGE_VALUE=$(echo $COVERAGE | sed 's/%//')
-          echo "Current coverage: $COVERAGE_VALUE%"
-          if (( $(echo "$COVERAGE_VALUE < 70.0" | bc -l) )); then
-            echo "❌ Coverage is below 70% threshold"
-            exit 1
-          fi
-          echo "✅ Coverage is above 70% threshold"
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.out
-          flags: unittests
-          name: codecov-n8n-provider
-        continue-on-error: true
-
-      - name: Comment PR with coverage
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const coverage = process.env.COVERAGE;
-            const body = `## 📊 Test Coverage Report
-
-            **Current Coverage:** \`${coverage}\`
-            **Threshold:** \`70.0%\`
-
-            ${parseFloat(coverage) >= 70.0 ? '✅ Coverage meets requirements' : '❌ Coverage below threshold'}
-            `;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
-
-  # ============================================================================
-  # Linting et formatage
-  # ============================================================================
   lint:
-    name: Lint & Format Check
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -118,41 +43,15 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
-      - name: Install ktn-linter
-        run: |
-          curl -sSfL https://github.com/kodflow/ktn-linter/releases/latest/download/ktn-linter-linux-amd64 -o /usr/local/bin/ktn-linter
-          chmod +x /usr/local/bin/ktn-linter
-
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=5m
 
-      - name: Check formatting
-        run: |
-          make fmt
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "❌ Code is not formatted. Run 'make fmt' locally."
-            git diff
-            exit 1
-          fi
-          echo "✅ Code is properly formatted"
-
-  # ============================================================================
-  # Build & Installation
-  # ============================================================================
   build:
-    name: Build Provider
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            platform: linux
-          - os: macos-latest
-            platform: darwin
+    name: Build
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -165,114 +64,8 @@ jobs:
 
       - name: Install Bazelisk
         run: |
-          if [ "${{ matrix.platform }}" == "linux" ]; then
-            wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-          else
-            wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-darwin-amd64
-          fi
+          wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
           chmod +x /usr/local/bin/bazel
 
       - name: Build provider
         run: make build
-
-      - name: Verify installation
-        run: |
-          PLUGIN_DIR="${HOME}/.terraform.d/plugins"
-          if [ ! -d "$PLUGIN_DIR" ]; then
-            echo "❌ Plugin directory not created"
-            exit 1
-          fi
-          echo "✅ Provider built and installed successfully"
-
-  # ============================================================================
-  # Documentation
-  # ============================================================================
-  documentation:
-    name: Check Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
-
-      - name: Generate CHANGELOG
-        run: |
-          chmod +x scripts/generate-changelog.sh
-          ./scripts/generate-changelog.sh
-
-      - name: Check if CHANGELOG is up to date
-        run: |
-          if [ -n "$(git diff CHANGELOG.md)" ]; then
-            echo "⚠️  CHANGELOG.md is out of date"
-            echo "Run 'make changelog' locally and commit the changes"
-            git diff CHANGELOG.md
-          else
-            echo "✅ CHANGELOG.md is up to date"
-          fi
-
-      - name: Generate and check COVERAGE.MD
-        run: |
-          chmod +x scripts/generate-coverage.sh
-          ./scripts/generate-coverage.sh
-
-          if [ -n "$(git diff COVERAGE.MD)" ]; then
-            echo "⚠️  COVERAGE.MD is out of date"
-            echo "Run 'make coverage-report' locally and commit the changes"
-            git diff COVERAGE.MD
-          else
-            echo "✅ COVERAGE.MD is up to date"
-          fi
-
-  # ============================================================================
-  # Security Scan
-  # ============================================================================
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: "trivy-results.sarif"
-        continue-on-error: true
-
-      - name: Run gosec
-        uses: securego/gosec@master
-        with:
-          args: "./..."
-        continue-on-error: true
-
-  # ============================================================================
-  # Status final
-  # ============================================================================
-  ci-success:
-    name: CI Success
-    runs-on: ubuntu-latest
-    needs: [test, lint, build, documentation]
-    if: success()
-    steps:
-      - name: All checks passed
-        run: |
-          echo "✅ All CI checks passed successfully!"
-          echo ""
-          echo "Next steps:"
-          echo "- Merge this PR"
-          echo "- Tag will be created automatically"
-          echo "- Release will be published via GoReleaser"

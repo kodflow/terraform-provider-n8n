@@ -20,11 +20,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockProvider for testing
+// MockProvider for testing.
 type MockProvider struct {
 	mock.Mock
 	provider.Provider
 }
+
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
 
 func TestInit(t *testing.T) {
 	t.Run("init configures root command", func(t *testing.T) {
@@ -205,9 +208,7 @@ func TestRun(t *testing.T) {
 		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
 			// Simulate panic in provider creation
 			defer func() {
-				if r := recover(); r != nil {
-					// Recovered from panic
-				}
+				_ = recover() // Explicitly ignore panic recovery
 			}()
 			_ = providerFunc()
 			return nil
@@ -520,7 +521,7 @@ func TestSetVersion(t *testing.T) {
 		SetVersion("concurrent-test")
 
 		var wg sync.WaitGroup
-		errors := make([]error, 100)
+		errs := make([]error, 100)
 
 		for i := 0; i < 100; i++ {
 			wg.Add(1)
@@ -528,14 +529,14 @@ func TestSetVersion(t *testing.T) {
 				defer wg.Done()
 				v := Version
 				if v != "concurrent-test" {
-					errors[idx] = fmt.Errorf("unexpected version: %s", v)
+					errs[idx] = fmt.Errorf("unexpected version: %s", v)
 				}
 			}(i)
 		}
 
 		wg.Wait()
 
-		for _, err := range errors {
+		for _, err := range errs {
 			assert.NoError(t, err)
 		}
 	})
@@ -643,7 +644,7 @@ func TestProviderServeVariable(t *testing.T) {
 			return nil
 		}
 
-		testCtx := context.WithValue(context.Background(), "test", "value")
+		testCtx := context.WithValue(context.Background(), contextKey("test"), "value")
 		testFunc := func() provider.Provider { return nil }
 		testOpts := providerserver.ServeOpts{
 			Address: "test-address",
@@ -803,7 +804,7 @@ func TestRunEdgeCases(t *testing.T) {
 			Use:   "test",
 			Short: "test command",
 		}
-		cmd.SetContext(context.WithValue(context.Background(), "key", "value"))
+		cmd.SetContext(context.WithValue(context.Background(), contextKey("key"), "value"))
 
 		err := run(cmd, []string{})
 		assert.NoError(t, err)
@@ -1102,7 +1103,7 @@ func BenchmarkExecute(b *testing.B) {
 	}
 }
 
-// Example function to demonstrate usage
+// Example function to demonstrate usage.
 func ExampleSetVersion() {
 	originalVersion := Version
 	defer func() { Version = originalVersion }()

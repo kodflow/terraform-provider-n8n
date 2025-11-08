@@ -141,18 +141,18 @@ func TestDataSources(t *testing.T) {
 			},
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.WorkflowID.ValueString(), copy.WorkflowID.ValueString())
-		assert.Equal(t, original.ProjectID.ValueString(), copy.ProjectID.ValueString())
+		assert.Equal(t, original.WorkflowID.ValueString(), copied.WorkflowID.ValueString())
+		assert.Equal(t, original.ProjectID.ValueString(), copied.ProjectID.ValueString())
 
-		// Modify copy
-		copy.WorkflowID = types.StringValue("modified-wf")
+		// Modify copied
+		copied.WorkflowID = types.StringValue("modified-wf")
 		assert.Equal(t, "original-wf", original.WorkflowID.ValueString())
-		assert.Equal(t, "modified-wf", copy.WorkflowID.ValueString())
+		assert.Equal(t, "modified-wf", copied.WorkflowID.ValueString())
 
-		// Note: slice is shared between original and copy
-		copy.Executions[0].ID = types.StringValue("exec-modified")
+		// Note: slice is shared between original and copied
+		copied.Executions[0].ID = types.StringValue("exec-modified")
 		assert.Equal(t, "exec-modified", original.Executions[0].ID.ValueString())
 	})
 

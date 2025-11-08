@@ -16,8 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// createTestSchema creates a test schema for project resource
+// createTestSchema creates a test schema for project resource.
 func createTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &ProjectResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -25,8 +26,9 @@ func createTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTestClient creates a test N8nClient with httptest server
+// setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
@@ -48,7 +50,7 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestProjectResource_Create tests project creation
+// TestProjectResource_Create tests project creation.
 func TestProjectResource_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +149,7 @@ func TestProjectResource_Create(t *testing.T) {
 	})
 }
 
-// TestProjectResource_Read tests project reading
+// TestProjectResource_Read tests project reading.
 func TestProjectResource_Read(t *testing.T) {
 	t.Run("successful read", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -237,7 +239,7 @@ func TestProjectResource_Read(t *testing.T) {
 	})
 }
 
-// TestProjectResource_Update tests project update
+// TestProjectResource_Update tests project update.
 func TestProjectResource_Update(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -301,7 +303,7 @@ func TestProjectResource_Update(t *testing.T) {
 	})
 }
 
-// TestProjectResource_Delete tests project deletion
+// TestProjectResource_Delete tests project deletion.
 func TestProjectResource_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -373,7 +375,7 @@ func TestProjectResource_Delete(t *testing.T) {
 	})
 }
 
-// TestProjectResource_ImportState tests state import
+// TestProjectResource_ImportState tests state import.
 func TestProjectResource_ImportState(t *testing.T) {
 	r := &ProjectResource{}
 

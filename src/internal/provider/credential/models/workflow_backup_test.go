@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Helper functions for creating pointers
+// Helper functions for creating pointers.
 func strPtr(s string) *string {
 	return &s
 }
@@ -236,20 +236,20 @@ func TestWorkflowBackup(t *testing.T) {
 			Original: &n8nsdk.Workflow{Id: strPtr("original-workflow")},
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID, copy.ID)
-		assert.Equal(t, original.Original, copy.Original) // Pointer equality
+		assert.Equal(t, original.ID, copied.ID)
+		assert.Equal(t, original.Original, copied.Original) // Pointer equality
 
-		// Modify copy ID
-		copy.ID = "copy-backup"
+		// Modify copied ID
+		copied.ID = "copy-backup"
 		assert.Equal(t, "original-backup", original.ID)
-		assert.Equal(t, "copy-backup", copy.ID)
+		assert.Equal(t, "copy-backup", copied.ID)
 
 		// Note: Original field is a pointer, so both structs point to same workflow
-		*copy.Original.Id = "modified-workflow"
+		*copied.Original.Id = "modified-workflow"
 		assert.Equal(t, "modified-workflow", *original.Original.Id)
-		assert.Equal(t, "modified-workflow", *copy.Original.Id)
+		assert.Equal(t, "modified-workflow", *copied.Original.Id)
 	})
 
 	t.Run("deep copy workflow", func(t *testing.T) {
@@ -801,7 +801,7 @@ func BenchmarkWorkflowBackup(b *testing.B) {
 		workflow := &n8nsdk.Workflow{Id: strPtr("slice-wf")}
 
 		b.ResetTimer()
-		backups := make([]WorkflowBackup, 0, b.N)
+		var backups []WorkflowBackup
 		for i := 0; i < b.N; i++ {
 			backup := WorkflowBackup{
 				ID:       fmt.Sprintf("backup-%d", i),
@@ -809,5 +809,6 @@ func BenchmarkWorkflowBackup(b *testing.B) {
 			}
 			backups = append(backups, backup)
 		}
+		_ = backups // Explicitly use the slice to prevent optimization
 	})
 }

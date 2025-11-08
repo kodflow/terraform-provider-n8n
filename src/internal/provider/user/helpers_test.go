@@ -460,20 +460,3 @@ func BenchmarkMapUserToResourceModel(b *testing.B) {
 		mapUserToResourceModel(user, data)
 	}
 }
-
-// Helper functions for tests
-func stringPtr(s string) *string {
-	return &s
-}
-
-func boolPtr(b bool) *bool {
-	return &b
-}
-
-func stringValue(s string) types.String {
-	return types.StringValue(s)
-}
-
-func boolValue(b bool) types.Bool {
-	return types.BoolValue(b)
-}

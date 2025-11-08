@@ -191,8 +191,9 @@ func TestWorkflowTransferResource_Configure(t *testing.T) {
 	})
 }
 
-// createTransferTestSchema creates a test schema for workflow transfer resource
+// createTransferTestSchema creates a test schema for workflow transfer resource.
 func createTransferTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
 	r := &WorkflowTransferResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
@@ -200,8 +201,9 @@ func createTransferTestSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// setupTransferTestClient creates a test N8nClient with httptest server
+// setupTransferTestClient creates a test N8nClient with httptest server.
 func setupTransferTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()

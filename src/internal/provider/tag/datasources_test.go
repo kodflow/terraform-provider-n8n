@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockTagsDataSourceInterface is a mock implementation of TagsDataSourceInterface
+// MockTagsDataSourceInterface is a mock implementation of TagsDataSourceInterface.
 type MockTagsDataSourceInterface struct {
 	mock.Mock
 }
@@ -59,8 +59,8 @@ func TestNewTagsDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewTagsDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 

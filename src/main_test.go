@@ -440,12 +440,10 @@ func TestMainExecutionFlow(t *testing.T) {
 
 		// Step 2: SetVersion is called
 		cmd.SetVersion(version)
-		executionOrder = append(executionOrder, "SetVersion-called")
 
 		// Step 3: Execute would be called (not in test)
-		if cmd.Execute != nil {
-			executionOrder = append(executionOrder, "Execute-available")
-		}
+		// Note: Execute is always available on cmd (function methods are never nil)
+		executionOrder = append(executionOrder, "SetVersion-called", "Execute-available")
 
 		// Verify flow
 		assert.Equal(t, []string{"version-set", "SetVersion-called", "Execute-available"}, executionOrder)
@@ -580,7 +578,7 @@ func BenchmarkMainSimulation(b *testing.B) {
 	}
 }
 
-// Example test to demonstrate usage
+// Example test to demonstrate usage.
 func ExampleSetVersion() {
 	// Save original
 	originalVersion := cmd.Version

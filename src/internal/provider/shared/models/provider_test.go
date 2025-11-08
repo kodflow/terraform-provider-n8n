@@ -244,17 +244,17 @@ func TestN8nProviderModel(t *testing.T) {
 			BaseURL: types.StringValue("https://original.com"),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.APIKey.ValueString(), copy.APIKey.ValueString())
-		assert.Equal(t, original.BaseURL.ValueString(), copy.BaseURL.ValueString())
+		assert.Equal(t, original.APIKey.ValueString(), copied.APIKey.ValueString())
+		assert.Equal(t, original.BaseURL.ValueString(), copied.BaseURL.ValueString())
 
-		// Modify copy
-		copy.APIKey = types.StringValue("modified-key")
+		// Modify copied
+		copied.APIKey = types.StringValue("modified-key")
 
 		// Original should not be affected (value semantics)
 		assert.Equal(t, "original-key", original.APIKey.ValueString())
-		assert.Equal(t, "modified-key", copy.APIKey.ValueString())
+		assert.Equal(t, "modified-key", copied.APIKey.ValueString())
 	})
 }
 

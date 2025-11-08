@@ -553,12 +553,3 @@ func BenchmarkFindTagByNameNotFound(b *testing.B) {
 		_, _ = findTagByName(tags, "NonExistentTag")
 	}
 }
-
-// Helper functions for tests
-func stringPtr(s string) *string {
-	return &s
-}
-
-func timePtr(t time.Time) *time.Time {
-	return &t
-}

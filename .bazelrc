@@ -11,6 +11,11 @@ build --incompatible_strict_action_env
 # Go
 build --action_env=GOPROXY=https://proxy.golang.org,direct
 
+# Go compiler optimizations for inlining
+# Default Go compiler behavior enables inlining automatically
+# We use compilation_mode=opt to ensure optimizations are enabled
+build --compilation_mode=opt
+
 # Performance
 build --experimental_reuse_sandbox_directories
 build --nolegacy_external_runfiles

@@ -176,21 +176,21 @@ func TestDataSource(t *testing.T) {
 			IncludeData: types.BoolValue(false),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.WorkflowID.ValueString(), copy.WorkflowID.ValueString())
-		assert.Equal(t, original.Finished.ValueBool(), copy.Finished.ValueBool())
-		assert.Equal(t, original.Status.ValueString(), copy.Status.ValueString())
-		assert.Equal(t, original.IncludeData.ValueBool(), copy.IncludeData.ValueBool())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.WorkflowID.ValueString(), copied.WorkflowID.ValueString())
+		assert.Equal(t, original.Finished.ValueBool(), copied.Finished.ValueBool())
+		assert.Equal(t, original.Status.ValueString(), copied.Status.ValueString())
+		assert.Equal(t, original.IncludeData.ValueBool(), copied.IncludeData.ValueBool())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
-		copy.IncludeData = types.BoolValue(true)
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
+		copied.IncludeData = types.BoolValue(true)
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 		assert.False(t, original.IncludeData.ValueBool())
-		assert.True(t, copy.IncludeData.ValueBool())
+		assert.True(t, copied.IncludeData.ValueBool())
 	})
 
 	t.Run("partial initialization", func(t *testing.T) {

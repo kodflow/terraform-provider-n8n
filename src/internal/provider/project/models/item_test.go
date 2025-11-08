@@ -121,21 +121,21 @@ func TestItem(t *testing.T) {
 			Description: types.StringValue("Original description"),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.Name.ValueString(), copy.Name.ValueString())
-		assert.Equal(t, original.Type.ValueString(), copy.Type.ValueString())
-		assert.Equal(t, original.Icon.ValueString(), copy.Icon.ValueString())
-		assert.Equal(t, original.Description.ValueString(), copy.Description.ValueString())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.Name.ValueString(), copied.Name.ValueString())
+		assert.Equal(t, original.Type.ValueString(), copied.Type.ValueString())
+		assert.Equal(t, original.Icon.ValueString(), copied.Icon.ValueString())
+		assert.Equal(t, original.Description.ValueString(), copied.Description.ValueString())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
-		copy.Name = types.StringValue("Modified Item")
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
+		copied.Name = types.StringValue("Modified Item")
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 		assert.Equal(t, "Original Item", original.Name.ValueString())
-		assert.Equal(t, "Modified Item", copy.Name.ValueString())
+		assert.Equal(t, "Modified Item", copied.Name.ValueString())
 	})
 
 	t.Run("partial initialization", func(t *testing.T) {

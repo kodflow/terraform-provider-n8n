@@ -49,7 +49,7 @@ Rapport de couverture généré automatiquement.
 |--------|-------|
 | **Total Coverage** | **${TOTAL_COVERAGE}** |
 | **Threshold** | **70.0%** |
-| **Status** | $(if (($(echo "$TOTAL_VALUE >= 70.0" | bc -l))); then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
+| **Status** | $(if [ $(awk "BEGIN {print ($TOTAL_VALUE >= 70.0)}") -eq 1 ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
 
 ---
 
@@ -68,9 +68,9 @@ for pkg in $PACKAGES; do
   PKG_VALUE=$(echo "$PKG_COV" | sed 's/%//')
 
   # Determine icon
-  if (($(echo "$PKG_VALUE >= 90.0" | bc -l))); then
+  if [ $(awk "BEGIN {print ($PKG_VALUE >= 90.0)}") -eq 1 ]; then
     ICON="🟢"
-  elif (($(echo "$PKG_VALUE >= 70.0" | bc -l))); then
+  elif [ $(awk "BEGIN {print ($PKG_VALUE >= 70.0)}") -eq 1 ]; then
     ICON="🟡"
   else
     ICON="🔴"
@@ -107,7 +107,7 @@ echo -e "  ${CYAN}Total Coverage:${RESET} ${TOTAL_COVERAGE}"
 echo ""
 
 # Check if coverage meets threshold
-if (($(echo "$TOTAL_VALUE < 70.0" | bc -l))); then
+if [ $(awk "BEGIN {print ($TOTAL_VALUE < 70.0)}") -eq 1 ]; then
   echo -e "${RED}⚠️  Warning: Coverage is below 70% threshold${RESET}"
   exit 1
 fi

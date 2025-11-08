@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockExecutionsDataSourceInterface is a mock implementation of ExecutionsDataSourceInterface
+// MockExecutionsDataSourceInterface is a mock implementation of ExecutionsDataSourceInterface.
 type MockExecutionsDataSourceInterface struct {
 	mock.Mock
 }
@@ -60,8 +60,8 @@ func TestNewExecutionsDataSourceWrapper(t *testing.T) {
 	t.Run("wrapper returns datasource.DataSource interface", func(t *testing.T) {
 		ds := NewExecutionsDataSourceWrapper()
 
-		_, ok := ds.(datasource.DataSource)
-		assert.True(t, ok)
+		// ds is already of type datasource.DataSource, no assertion needed
+		assert.NotNil(t, ds)
 	})
 }
 

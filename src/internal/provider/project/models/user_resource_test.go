@@ -85,20 +85,20 @@ func TestUserResource(t *testing.T) {
 			Role:      types.StringValue("admin"),
 		}
 
-		copy := original
+		copied := original
 
-		assert.Equal(t, original.ID.ValueString(), copy.ID.ValueString())
-		assert.Equal(t, original.ProjectID.ValueString(), copy.ProjectID.ValueString())
-		assert.Equal(t, original.UserID.ValueString(), copy.UserID.ValueString())
-		assert.Equal(t, original.Role.ValueString(), copy.Role.ValueString())
+		assert.Equal(t, original.ID.ValueString(), copied.ID.ValueString())
+		assert.Equal(t, original.ProjectID.ValueString(), copied.ProjectID.ValueString())
+		assert.Equal(t, original.UserID.ValueString(), copied.UserID.ValueString())
+		assert.Equal(t, original.Role.ValueString(), copied.Role.ValueString())
 
-		// Modify copy
-		copy.ID = types.StringValue("modified-id")
-		copy.Role = types.StringValue("viewer")
+		// Modify copied
+		copied.ID = types.StringValue("modified-id")
+		copied.Role = types.StringValue("viewer")
 		assert.Equal(t, "original-id", original.ID.ValueString())
-		assert.Equal(t, "modified-id", copy.ID.ValueString())
+		assert.Equal(t, "modified-id", copied.ID.ValueString())
 		assert.Equal(t, "admin", original.Role.ValueString())
-		assert.Equal(t, "viewer", copy.Role.ValueString())
+		assert.Equal(t, "viewer", copied.Role.ValueString())
 	})
 
 	t.Run("partial initialization", func(t *testing.T) {
