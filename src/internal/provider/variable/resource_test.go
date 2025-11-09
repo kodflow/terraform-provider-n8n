@@ -156,6 +156,166 @@ func TestVariableResource_Create(t *testing.T) {
 
 		assert.True(t, resp.Diagnostics.HasError(), "Create should have errors")
 	})
+
+	t.Run("variable not found after creation", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/variables":
+				if r.Method == http.MethodPost {
+					w.WriteHeader(http.StatusCreated)
+					return
+				}
+				if r.Method == http.MethodGet {
+					// Return empty list - variable not found
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(map[string]interface{}{
+						"data": []map[string]interface{}{},
+					})
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, nil),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Create should have errors when variable not found after creation")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error finding created variable")
+	})
+
+	t.Run("API error when reading after creation", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/variables":
+				if r.Method == http.MethodPost {
+					w.WriteHeader(http.StatusCreated)
+					return
+				}
+				if r.Method == http.MethodGet {
+					// Return error when trying to read
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, nil),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Create should have errors on API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error reading variable after creation")
+	})
+
+	t.Run("null data after creation", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/variables":
+				if r.Method == http.MethodPost {
+					w.WriteHeader(http.StatusCreated)
+					return
+				}
+				if r.Method == http.MethodGet {
+					// Return null data
+					w.Header().Set("Content-Type", "application/json")
+					w.Write([]byte(`{}`))
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, nil),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Create should have errors when data is null")
+	})
 }
 
 // TestVariableResource_Read tests variable reading.
@@ -251,6 +411,85 @@ func TestVariableResource_Read(t *testing.T) {
 		// Note: In Terraform, when a resource is not found during Read, it's removed from state
 		// This is tested by checking that resp.State would be empty, but we can't easily verify that in unit tests
 	})
+
+	t.Run("API error when reading", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables" && r.Method == http.MethodGet {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawState := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+		resp := resource.ReadResponse{
+			State: state,
+		}
+
+		r.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors on API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error reading variable")
+	})
+
+	t.Run("null data from API", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawState := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+		resp := resource.ReadResponse{
+			State: state,
+		}
+
+		r.Read(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors with null data (variable is removed from state)")
+	})
 }
 
 // TestVariableResource_Update tests variable update.
@@ -319,6 +558,231 @@ func TestVariableResource_Update(t *testing.T) {
 		r.Update(context.Background(), req, &resp)
 
 		assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
+	})
+
+	t.Run("update API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables/var-123" && r.Method == http.MethodPut {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		rawState := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: state,
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors on API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error updating variable")
+	})
+
+	t.Run("API error when reading after update", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case r.URL.Path == "/variables/var-123" && r.Method == http.MethodPut:
+				w.WriteHeader(http.StatusOK)
+				return
+			case r.URL.Path == "/variables" && r.Method == http.MethodGet:
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		rawState := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: state,
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors on read API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error reading variable after update")
+	})
+
+	t.Run("variable not found after update", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case r.URL.Path == "/variables/var-123" && r.Method == http.MethodPut:
+				w.WriteHeader(http.StatusOK)
+				return
+			case r.URL.Path == "/variables" && r.Method == http.MethodGet:
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": []map[string]interface{}{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		rawState := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: state,
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when variable not found")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error verifying updated variable")
+	})
+
+	t.Run("null data after update", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case r.URL.Path == "/variables/var-123" && r.Method == http.MethodPut:
+				w.WriteHeader(http.StatusOK)
+				return
+			case r.URL.Path == "/variables" && r.Method == http.MethodGet:
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &VariableResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		rawState := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, "TEST_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, "test-value"),
+			"type":       tftypes.NewValue(tftypes.String, "string"),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "key": tftypes.String, "value": tftypes.String, "type": tftypes.String, "project_id": tftypes.String}}, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: state,
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors with null data")
 	})
 }
 

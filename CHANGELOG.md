@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- improve datasource and datasources test coverage to 100% (`a06b5fb`)
 - improve coverage with enhanced tests and shared utilities (`d19fa35`)
 - achieve 94.3% coverage for credential package (`03d8697`)
 - comprehensive test coverage improvements (`3344c2f`)
@@ -79,10 +80,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 42
+- **Total commits:** 43
 - **Features:** 8
 - **Bug fixes:** 5
-- **Tests:** 3
+- **Tests:** 4
 - **Refactoring:** 13
 - **Test coverage:** N/A
 
@@ -92,4 +93,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 00:36:21*
+*Changelog generated automatically on 2025-11-09 01:47:55*
