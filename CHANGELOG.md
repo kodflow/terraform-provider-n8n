@@ -19,9 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
-- add comprehensive unit tests - 78.1% to 97.7% coverage (`367d5e1`)
-- add comprehensive unit tests - 71.3% to 98.8% coverage (`7fdbd90`)
-- improve test coverage from 60% to 90.8% (`affb29a`)
+- add comprehensive unit tests - 78.1% to 97.7% coverage (`d2d9fb1`)
+- add comprehensive unit tests - 71.3% to 98.8% coverage (`0928909`)
+- improve test coverage from 60% to 90.8% (`c57c46d`)
 - add automatic documentation generation system (`034cf4f`)
 - integrate ktn-linter with golangci-lint and VSCode (`b828914`)
 - implement complete SDK coverage with all datasources and resources (`bbec535`)
@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- allow tests to fail in coverage generation (`7a67c1f`)
 - correct coverage calculation in generate-coverage.sh (`2be6595`)
 - remove executable permission from README.md (`4607bcb`)
 - add hook permissions fix script for GUI clients (`46ccbe2`)
@@ -86,9 +87,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 49
+- **Total commits:** 50
 - **Features:** 11
-- **Bug fixes:** 6
+- **Bug fixes:** 7
 - **Tests:** 5
 - **Refactoring:** 14
 - **Test coverage:** N/A
@@ -99,4 +100,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 12:21:56*
+*Changelog generated automatically on 2025-11-09 12:27:56*

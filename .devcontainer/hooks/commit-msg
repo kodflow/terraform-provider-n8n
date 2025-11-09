@@ -18,6 +18,21 @@ fi
 
 # Validate commit message
 echo "🔍 Validating commit message..."
+
+# Check for forbidden AI mentions first
+if grep -qi "co-authored-by.*claude\|co-authored-by.*gpt\|🤖 generated with\|claude code\|generated with.*ai" "$COMMIT_MSG_FILE"; then
+    echo ""
+    echo "❌ Commit message contains forbidden AI attribution!"
+    echo ""
+    echo "Remove the following from your commit message:"
+    echo "  - Co-Authored-By: Claude"
+    echo "  - Co-Authored-By: GPT"
+    echo "  - 🤖 Generated with [Claude Code]"
+    echo "  - Any AI mentions or attributions"
+    echo ""
+    exit 1
+fi
+
 if commitlint --edit "$COMMIT_MSG_FILE"; then
     echo "✅ Commit message valid"
     exit 0
