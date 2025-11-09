@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🔨 Chore
 
+- ignore repomix configuration and output files (`99cb808`)
 - apply formatting and gazelle updates (`a140452`)
 - remove temporary build and analysis scripts (`9eab33c`)
 - upgrade Go version from 1.24 to 1.25.3 (`6cd7cec`)
@@ -88,7 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 51
+- **Total commits:** 52
 - **Features:** 11
 - **Bug fixes:** 8
 - **Tests:** 5
@@ -101,4 +102,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 12:47:07*
+*Changelog generated automatically on 2025-11-09 12:49:56*
