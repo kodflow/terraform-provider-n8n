@@ -11,17 +11,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
-- improve resource test coverage to 98.4% (`20b6eef`)
-- improve datasource and datasources test coverage to 100% (`a06b5fb`)
+- improve resource test coverage to 98.4% (`fa10123`)
+- improve datasource and datasources test coverage to 100% (`462e068`)
 - improve coverage with enhanced tests and shared utilities (`d19fa35`)
 - achieve 94.3% coverage for credential package (`03d8697`)
 - comprehensive test coverage improvements (`3344c2f`)
 
 ### 🚀 Features
 
-- add comprehensive unit tests - 78.1% to 97.7% coverage (`d2d9fb1`)
-- add comprehensive unit tests - 71.3% to 98.8% coverage (`0928909`)
-- improve test coverage from 60% to 90.8% (`c57c46d`)
+- add comprehensive unit tests - 78.1% to 97.7% coverage (`17b8e12`)
+- add comprehensive unit tests - 71.3% to 98.8% coverage (`ae4f64e`)
+- improve test coverage from 60% to 90.8% (`da7d597`)
 - add automatic documentation generation system (`034cf4f`)
 - integrate ktn-linter with golangci-lint and VSCode (`b828914`)
 - implement complete SDK coverage with all datasources and resources (`bbec535`)
@@ -40,8 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
-- allow tests to fail in coverage generation (`7a67c1f`)
-- correct coverage calculation in generate-coverage.sh (`2be6595`)
+- enhance commit-msg hook to block AI attribution (`b99ff30`)
+- allow tests to fail in coverage generation (`e6cbf19`)
+- correct coverage calculation in generate-coverage.sh (`0d74bd2`)
 - remove executable permission from README.md (`4607bcb`)
 - add hook permissions fix script for GUI clients (`46ccbe2`)
 - resolve critical linter issues across provider codebase (`ec19363`)
@@ -58,7 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
-- merge test files and clean up per linter requirements (`51cbf49`)
+- merge test files and clean up per linter requirements (`1467db5`)
 - optimize code for Go 1.25.4 and improve pre-push hook (`160308b`)
 - improve Makefile formatting and documentation targets (`353658c`)
 - reorganize models into domain subdirectories (`8ae34eb`)
@@ -87,9 +88,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 50
+- **Total commits:** 51
 - **Features:** 11
-- **Bug fixes:** 7
+- **Bug fixes:** 8
 - **Tests:** 5
 - **Refactoring:** 14
 - **Test coverage:** N/A
@@ -100,4 +101,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 12:27:56*
+*Changelog generated automatically on 2025-11-09 12:47:07*

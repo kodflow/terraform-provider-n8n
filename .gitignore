@@ -225,11 +225,16 @@ docker-compose.override.yml
 .codacy/
 
 # Repomix AI context outputs
+repomix.config.json
 repomix-output.md
 repomix-output.txt
 repomix-output.xml
 repomix-output.json
 .repomix-cache/
+repomix-*.md
+repomix-*.txt
+repomix-*.xml
+repomix-*.json
 
 # Bazel
 bazel-*
