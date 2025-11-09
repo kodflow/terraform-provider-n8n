@@ -2,12 +2,16 @@ package workflow
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -484,4 +488,270 @@ func BenchmarkConvertTagIDsToTagIdsInner(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = convertTagIDsToTagIdsInner(tagIDs)
 	}
+}
+
+func TestHandleWorkflowActivation(t *testing.T) {
+	t.Run("activate workflow when active changes to true", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows/wf-123/activate" && r.Method == http.MethodPost {
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"success": true,
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupHelperTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		plan := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(true),
+		}
+		state := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(false),
+		}
+		diags := &diag.Diagnostics{}
+
+		r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+		assert.False(t, diags.HasError(), "Activation should not have errors")
+	})
+
+	t.Run("deactivate workflow when active changes to false", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows/wf-123/deactivate" && r.Method == http.MethodPost {
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"success": true,
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupHelperTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		plan := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(false),
+		}
+		state := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(true),
+		}
+		diags := &diag.Diagnostics{}
+
+		r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+		assert.False(t, diags.HasError(), "Deactivation should not have errors")
+	})
+
+	t.Run("no change when active status is same", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		plan := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(true),
+		}
+		state := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(true),
+		}
+		diags := &diag.Diagnostics{}
+
+		r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+		assert.False(t, diags.HasError(), "No change should not have errors")
+	})
+
+	t.Run("error when activation fails", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Activation failed"}`))
+		})
+
+		n8nClient, server := setupHelperTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		plan := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(true),
+		}
+		state := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(false),
+		}
+		diags := &diag.Diagnostics{}
+
+		r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+		assert.True(t, diags.HasError(), "Activation should have errors")
+		assert.Contains(t, diags.Errors()[0].Summary(), "Error changing workflow activation status")
+	})
+
+	t.Run("no change when active is null", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		plan := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolNull(),
+		}
+		state := &models.Resource{
+			ID:     types.StringValue("wf-123"),
+			Active: types.BoolValue(false),
+		}
+		diags := &diag.Diagnostics{}
+
+		r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+		assert.False(t, diags.HasError(), "Null active should not cause errors")
+	})
+}
+
+func TestUpdateWorkflowTags(t *testing.T) {
+	t.Run("update tags successfully", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows/wf-123/tags" && r.Method == http.MethodPut {
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode([]interface{}{
+					map[string]interface{}{"id": "tag1"},
+					map[string]interface{}{"id": "tag2"},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupHelperTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		tags, _ := types.ListValueFrom(context.Background(), types.StringType, []string{"tag1", "tag2"})
+		plan := &models.Resource{
+			Tags: tags,
+		}
+		workflow := &n8nsdk.Workflow{}
+		diags := &diag.Diagnostics{}
+
+		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+
+		assert.False(t, diags.HasError(), "Update tags should not have errors")
+	})
+
+	t.Run("skip when tags is null", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		plan := &models.Resource{
+			Tags: types.ListNull(types.StringType),
+		}
+		workflow := &n8nsdk.Workflow{}
+		diags := &diag.Diagnostics{}
+
+		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+
+		assert.False(t, diags.HasError(), "Null tags should not cause errors")
+	})
+
+	t.Run("skip when tags is unknown", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		plan := &models.Resource{
+			Tags: types.ListUnknown(types.StringType),
+		}
+		workflow := &n8nsdk.Workflow{}
+		diags := &diag.Diagnostics{}
+
+		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+
+		assert.False(t, diags.HasError(), "Unknown tags should not cause errors")
+	})
+
+	t.Run("error when tag update fails", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"message": "Invalid tags"}`))
+		})
+
+		n8nClient, server := setupHelperTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		tags, _ := types.ListValueFrom(context.Background(), types.StringType, []string{"tag1"})
+		plan := &models.Resource{
+			Tags: tags,
+		}
+		workflow := &n8nsdk.Workflow{}
+		diags := &diag.Diagnostics{}
+
+		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+
+		assert.True(t, diags.HasError(), "Failed tag update should have errors")
+	})
+
+	t.Run("update with empty tag list", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows/wf-123/tags" && r.Method == http.MethodPut {
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode([]interface{}{})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupHelperTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		tags, _ := types.ListValueFrom(context.Background(), types.StringType, []string{})
+		plan := &models.Resource{
+			Tags: tags,
+		}
+		workflow := &n8nsdk.Workflow{}
+		diags := &diag.Diagnostics{}
+
+		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+
+		assert.False(t, diags.HasError(), "Empty tags should not cause errors")
+	})
+}
+
+// setupHelperTestClient creates a test N8nClient with httptest server for helper tests.
+func setupHelperTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

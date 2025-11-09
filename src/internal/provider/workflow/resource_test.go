@@ -560,6 +560,127 @@ func TestWorkflowResource_Read(t *testing.T) {
 
 // TestWorkflowResource_Update tests workflow update.
 func TestWorkflowResource_Update(t *testing.T) {
+	t.Run("update with state get failure", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		// Create state with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawState := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+			Schema: wrongSchema,
+		}
+
+		plan := tfsdk.Plan{
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: tfsdk.State{Schema: createTestSchema(t)},
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should fail when State.Get fails")
+	})
+
+	t.Run("update fails with API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Internal server error"}`))
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		objectType := tftypes.Object{
+			AttributeTypes: map[string]tftypes.Type{
+				"id":               tftypes.String,
+				"name":             tftypes.String,
+				"active":           tftypes.Bool,
+				"tags":             tftypes.List{ElementType: tftypes.String},
+				"nodes_json":       tftypes.String,
+				"connections_json": tftypes.String,
+				"settings_json":    tftypes.String,
+				"created_at":       tftypes.String,
+				"updated_at":       tftypes.String,
+				"version_id":       tftypes.String,
+				"is_archived":      tftypes.Bool,
+				"trigger_count":    tftypes.Number,
+				"meta":             tftypes.Map{ElementType: tftypes.String},
+				"pin_data":         tftypes.Map{ElementType: tftypes.String},
+			},
+		}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":               tftypes.NewValue(tftypes.String, "wf-123"),
+			"name":             tftypes.NewValue(tftypes.String, "Updated Workflow"),
+			"active":           tftypes.NewValue(tftypes.Bool, false),
+			"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+			"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
+			"connections_json": tftypes.NewValue(tftypes.String, "{}"),
+			"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
+			"created_at":       tftypes.NewValue(tftypes.String, nil),
+			"updated_at":       tftypes.NewValue(tftypes.String, nil),
+			"version_id":       tftypes.NewValue(tftypes.String, nil),
+			"is_archived":      tftypes.NewValue(tftypes.Bool, nil),
+			"trigger_count":    tftypes.NewValue(tftypes.Number, nil),
+			"meta":             tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+			"pin_data":         tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(objectType, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		rawState := map[string]tftypes.Value{
+			"id":               tftypes.NewValue(tftypes.String, "wf-123"),
+			"name":             tftypes.NewValue(tftypes.String, "Test Workflow"),
+			"active":           tftypes.NewValue(tftypes.Bool, false),
+			"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+			"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
+			"connections_json": tftypes.NewValue(tftypes.String, "{}"),
+			"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
+			"created_at":       tftypes.NewValue(tftypes.String, nil),
+			"updated_at":       tftypes.NewValue(tftypes.String, nil),
+			"version_id":       tftypes.NewValue(tftypes.String, nil),
+			"is_archived":      tftypes.NewValue(tftypes.Bool, nil),
+			"trigger_count":    tftypes.NewValue(tftypes.Number, nil),
+			"meta":             tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+			"pin_data":         tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(objectType, rawState),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: state,
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when API fails")
+	})
+
 	t.Run("successful update", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch {
@@ -902,6 +1023,98 @@ func BenchmarkWorkflowResource_SchemaAttributes(b *testing.B) {
 // CRUD Tests - Focus on helper function testing.
 
 func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
+	t.Run("create with tags", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/workflows":
+				if r.Method == http.MethodPost {
+					response := map[string]interface{}{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"active":      false,
+						"nodes":       []interface{}{},
+						"connections": map[string]interface{}{},
+						"settings":    map[string]interface{}{},
+						"tags":        []interface{}{map[string]interface{}{"id": "tag1"}},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+			case "/workflows/wf-123/tags":
+				if r.Method == http.MethodPut {
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode([]interface{}{map[string]interface{}{"id": "tag1"}})
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := &WorkflowResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"id":               tftypes.NewValue(tftypes.String, nil),
+			"name":             tftypes.NewValue(tftypes.String, "Test Workflow"),
+			"active":           tftypes.NewValue(tftypes.Bool, nil),
+			"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
+			"nodes_json":       tftypes.NewValue(tftypes.String, nil),
+			"connections_json": tftypes.NewValue(tftypes.String, nil),
+			"settings_json":    tftypes.NewValue(tftypes.String, nil),
+			"created_at":       tftypes.NewValue(tftypes.String, nil),
+			"updated_at":       tftypes.NewValue(tftypes.String, nil),
+			"version_id":       tftypes.NewValue(tftypes.String, nil),
+			"is_archived":      tftypes.NewValue(tftypes.Bool, nil),
+			"trigger_count":    tftypes.NewValue(tftypes.Number, nil),
+			"meta":             tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+			"pin_data":         tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+		}
+		objectType := tftypes.Object{
+			AttributeTypes: map[string]tftypes.Type{
+				"id":               tftypes.String,
+				"name":             tftypes.String,
+				"active":           tftypes.Bool,
+				"tags":             tftypes.List{ElementType: tftypes.String},
+				"nodes_json":       tftypes.String,
+				"connections_json": tftypes.String,
+				"settings_json":    tftypes.String,
+				"created_at":       tftypes.String,
+				"updated_at":       tftypes.String,
+				"version_id":       tftypes.String,
+				"is_archived":      tftypes.Bool,
+				"trigger_count":    tftypes.Number,
+				"meta":             tftypes.Map{ElementType: tftypes.String},
+				"pin_data":         tftypes.Map{ElementType: tftypes.String},
+			},
+		}
+
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(objectType, rawPlan),
+			Schema: createTestSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(objectType, nil),
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Create with tags should not have errors")
+	})
+
 	t.Run("invalid nodes json", func(t *testing.T) {
 		plan := &models.Resource{
 			Name:            types.StringValue("Test Workflow"),

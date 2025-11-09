@@ -512,6 +512,59 @@ func TestUserDataSource_Read(t *testing.T) {
 
 		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when user not found")
 	})
+
+	t.Run("missing id and email", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &UserDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"email":      tftypes.NewValue(tftypes.String, nil),
+			"first_name": tftypes.NewValue(tftypes.String, nil),
+			"last_name":  tftypes.NewValue(tftypes.String, nil),
+			"is_pending": tftypes.NewValue(tftypes.Bool, nil),
+			"created_at": tftypes.NewValue(tftypes.String, nil),
+			"updated_at": tftypes.NewValue(tftypes.String, nil),
+			"role":       tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":         tftypes.String,
+			"email":      tftypes.String,
+			"first_name": tftypes.String,
+			"last_name":  tftypes.String,
+			"is_pending": tftypes.Bool,
+			"created_at": tftypes.String,
+			"updated_at": tftypes.String,
+			"role":       tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when both id and email are missing")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+	})
 }
 
 // createTestDataSourceSchema creates a test schema for user datasource.

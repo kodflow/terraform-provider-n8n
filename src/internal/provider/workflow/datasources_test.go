@@ -2,9 +2,16 @@ package workflow
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -322,4 +329,236 @@ func BenchmarkWorkflowsDataSource_Configure(b *testing.B) {
 		}
 		ds.Configure(context.Background(), req, resp)
 	}
+}
+
+func TestWorkflowsDataSource_Read(t *testing.T) {
+	t.Run("successful read all workflows", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows" && r.Method == http.MethodGet {
+				response := map[string]interface{}{
+					"data": []interface{}{
+						map[string]interface{}{
+							"id":     "wf-1",
+							"name":   "Workflow 1",
+							"active": true,
+						},
+						map[string]interface{}{
+							"id":     "wf-2",
+							"name":   "Workflow 2",
+							"active": false,
+						},
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(response)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupDataSourceTestClient(t, handler)
+		defer server.Close()
+
+		ds := &WorkflowsDataSource{client: n8nClient}
+
+		dsSchema := createDataSourceTestSchema(t)
+
+		rawConfig := map[string]tftypes.Value{
+			"active":    tftypes.NewValue(tftypes.Bool, nil),
+			"workflows": tftypes.NewValue(tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, rawConfig),
+			Schema: dsSchema,
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, nil),
+			Schema: dsSchema,
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+
+	t.Run("successful read with active filter", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows" && r.Method == http.MethodGet {
+				// Verify active filter is present
+				activeParam := r.URL.Query().Get("active")
+				assert.Equal(t, "true", activeParam)
+
+				response := map[string]interface{}{
+					"data": []interface{}{
+						map[string]interface{}{
+							"id":     "wf-1",
+							"name":   "Active Workflow",
+							"active": true,
+						},
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(response)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupDataSourceTestClient(t, handler)
+		defer server.Close()
+
+		ds := &WorkflowsDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"active":    tftypes.NewValue(tftypes.Bool, true),
+			"workflows": tftypes.NewValue(tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, rawConfig),
+			Schema: createDataSourceTestSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, nil),
+			Schema: createDataSourceTestSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+
+	t.Run("read fails with API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Internal server error"}`))
+		})
+
+		n8nClient, server := setupDataSourceTestClient(t, handler)
+		defer server.Close()
+
+		ds := &WorkflowsDataSource{client: n8nClient}
+
+		dsSchema := createDataSourceTestSchema(t)
+
+		rawConfig := map[string]tftypes.Value{
+			"active":    tftypes.NewValue(tftypes.Bool, nil),
+			"workflows": tftypes.NewValue(tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, rawConfig),
+			Schema: dsSchema,
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, nil),
+			Schema: dsSchema,
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error reading workflows")
+	})
+
+	t.Run("read with empty workflow list", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/workflows" && r.Method == http.MethodGet {
+				response := map[string]interface{}{
+					"data": []interface{}{},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(response)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupDataSourceTestClient(t, handler)
+		defer server.Close()
+
+		ds := &WorkflowsDataSource{client: n8nClient}
+
+		dsSchema := createDataSourceTestSchema(t)
+
+		rawConfig := map[string]tftypes.Value{
+			"active":    tftypes.NewValue(tftypes.Bool, nil),
+			"workflows": tftypes.NewValue(tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, rawConfig),
+			Schema: dsSchema,
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"active": tftypes.Bool, "workflows": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "active": tftypes.Bool}}}}}, nil),
+			Schema: dsSchema,
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+}
+
+// createDataSourceTestSchema creates a test schema for workflows data source.
+func createDataSourceTestSchema(t *testing.T) dsschema.Schema {
+	t.Helper()
+	ds := NewWorkflowsDataSource()
+	req := datasource.SchemaRequest{}
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), req, resp)
+	return resp.Schema
+}
+
+// setupDataSourceTestClient creates a test N8nClient with httptest server for data source tests.
+func setupDataSourceTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

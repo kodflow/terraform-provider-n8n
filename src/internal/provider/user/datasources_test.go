@@ -2,9 +2,16 @@ package user
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	datasource_schema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -309,4 +316,169 @@ func BenchmarkUsersDataSource_Configure(b *testing.B) {
 		}
 		ds.Configure(context.Background(), req, resp)
 	}
+}
+
+// TestUsersDataSource_Read tests the read functionality.
+func TestUsersDataSource_Read(t *testing.T) {
+	t.Run("successful read with users", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/users" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": []map[string]interface{}{
+						{
+							"id":        "user-1",
+							"email":     "user1@example.com",
+							"firstName": "User",
+							"lastName":  "One",
+							"isPending": false,
+							"createdAt": "2024-01-01T00:00:00Z",
+							"updatedAt": "2024-01-02T00:00:00Z",
+							"role":      "global:member",
+						},
+						{
+							"id":        "user-2",
+							"email":     "user2@example.com",
+							"firstName": "User",
+							"lastName":  "Two",
+							"isPending": true,
+							"createdAt": "2024-01-01T00:00:00Z",
+							"updatedAt": "2024-01-02T00:00:00Z",
+							"role":      "global:admin",
+						},
+					},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestUsersDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &UsersDataSource{client: n8nClient}
+
+		resp := datasource.ReadResponse{
+			State: tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"users": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String, "role": tftypes.String}}}}}, nil),
+				Schema: createTestUsersDataSourceSchema(t),
+			},
+		}
+
+		ds.Read(context.Background(), datasource.ReadRequest{}, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+
+	t.Run("successful read with empty users", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/users" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": []map[string]interface{}{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestUsersDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &UsersDataSource{client: n8nClient}
+
+		resp := datasource.ReadResponse{
+			State: tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"users": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String, "role": tftypes.String}}}}}, nil),
+				Schema: createTestUsersDataSourceSchema(t),
+			},
+		}
+
+		ds.Read(context.Background(), datasource.ReadRequest{}, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+
+	t.Run("successful read with nil data", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/users" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestUsersDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &UsersDataSource{client: n8nClient}
+
+		resp := datasource.ReadResponse{
+			State: tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"users": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String, "role": tftypes.String}}}}}, nil),
+				Schema: createTestUsersDataSourceSchema(t),
+			},
+		}
+
+		ds.Read(context.Background(), datasource.ReadRequest{}, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+
+	t.Run("read fails with error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Internal server error"}`))
+		})
+
+		n8nClient, server := setupTestUsersDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &UsersDataSource{client: n8nClient}
+
+		resp := datasource.ReadResponse{
+			State: tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"users": tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String, "role": tftypes.String}}}}}, nil),
+				Schema: createTestUsersDataSourceSchema(t),
+			},
+		}
+
+		ds.Read(context.Background(), datasource.ReadRequest{}, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when API fails")
+	})
+}
+
+// createTestUsersDataSourceSchema creates a test schema for users datasource.
+func createTestUsersDataSourceSchema(t *testing.T) datasource_schema.Schema {
+	t.Helper()
+	ds := &UsersDataSource{}
+	req := datasource.SchemaRequest{}
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), req, resp)
+	return resp.Schema
+}
+
+// setupTestUsersDataSourceClient creates a test N8nClient with httptest server.
+func setupTestUsersDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

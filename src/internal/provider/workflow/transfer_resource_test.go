@@ -374,6 +374,44 @@ func TestWorkflowTransferResource_Delete(t *testing.T) {
 
 		assert.False(t, resp.Diagnostics.HasError())
 	})
+
+	t.Run("delete with state", func(t *testing.T) {
+		r := &WorkflowTransferResource{}
+
+		rawState := map[string]tftypes.Value{
+			"id":                     tftypes.NewValue(tftypes.String, "wf-123-to-proj-456"),
+			"workflow_id":            tftypes.NewValue(tftypes.String, "wf-123"),
+			"destination_project_id": tftypes.NewValue(tftypes.String, "proj-456"),
+			"transferred_at":         tftypes.NewValue(tftypes.String, "2024-01-01"),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "workflow_id": tftypes.String, "destination_project_id": tftypes.String, "transferred_at": tftypes.String}}, rawState),
+			Schema: createTransferTestSchema(t),
+		}
+
+		req := resource.DeleteRequest{
+			State: state,
+		}
+		resp := &resource.DeleteResponse{}
+
+		r.Delete(context.Background(), req, resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Delete with state should not have errors")
+	})
+
+	t.Run("delete multiple times", func(t *testing.T) {
+		r := &WorkflowTransferResource{}
+
+		// First delete
+		resp1 := &resource.DeleteResponse{}
+		r.Delete(context.Background(), resource.DeleteRequest{}, resp1)
+		assert.False(t, resp1.Diagnostics.HasError())
+
+		// Second delete
+		resp2 := &resource.DeleteResponse{}
+		r.Delete(context.Background(), resource.DeleteRequest{}, resp2)
+		assert.False(t, resp2.Diagnostics.HasError())
+	})
 }
 
 func TestWorkflowTransferResource_ImportState(t *testing.T) {
