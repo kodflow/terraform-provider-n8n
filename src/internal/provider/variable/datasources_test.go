@@ -928,7 +928,7 @@ func createTestVariablesDataSourceConfigHelper(t *testing.T) tfsdk.Config {
 	configValue := tftypes.NewValue(tfType, map[string]tftypes.Value{
 		"project_id": tftypes.NewValue(tftypes.String, nil),
 		"state":      tftypes.NewValue(tftypes.String, nil),
-		"variables":  tftypes.NewValue(tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{
+		"variables": tftypes.NewValue(tftypes.List{ElementType: tftypes.Object{AttributeTypes: map[string]tftypes.Type{
 			"id":         tftypes.String,
 			"key":        tftypes.String,
 			"value":      tftypes.String,

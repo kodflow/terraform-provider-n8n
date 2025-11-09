@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- merge test files and clean up per linter requirements (`51cbf49`)
 - optimize code for Go 1.25.4 and improve pre-push hook (`160308b`)
 - improve Makefile formatting and documentation targets (`353658c`)
 - reorganize models into domain subdirectories (`8ae34eb`)
@@ -81,11 +82,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 44
+- **Total commits:** 45
 - **Features:** 8
 - **Bug fixes:** 5
 - **Tests:** 5
-- **Refactoring:** 13
+- **Refactoring:** 14
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -94,4 +95,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 03:05:48*
+*Changelog generated automatically on 2025-11-09 11:09:56*

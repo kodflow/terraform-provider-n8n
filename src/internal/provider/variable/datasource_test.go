@@ -665,7 +665,7 @@ func TestVariableDataSource_Read(t *testing.T) {
 		resp := datasource.ReadResponse{
 			State: tfsdk.State{
 				Schema: createTestDataSourceSchema(t),
-				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{
+				Raw: tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{
 					"id":         tftypes.String,
 					"key":        tftypes.String,
 					"value":      tftypes.String,

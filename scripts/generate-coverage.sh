@@ -15,10 +15,12 @@ echo ""
 
 # Run tests with coverage
 echo -e "${CYAN}→${RESET} Running tests with coverage..."
-go test -coverprofile=coverage.out -covermode=atomic ./src/internal/provider/... >/dev/null 2>&1
 
-# Generate coverage report
-echo -e "${CYAN}→${RESET} Generating coverage data..."
+# Get coverage per package using go test directly
+COVERAGE_BY_PKG=$(go test -cover ./src/internal/provider/... 2>&1 | grep "coverage:" | grep -v "\[no statements\]")
+
+# Also get total coverage
+go test -coverprofile=coverage.out -covermode=atomic ./src/internal/provider/... >/dev/null 2>&1
 COVERAGE_DATA=$(go tool cover -func=coverage.out)
 
 # Extract total coverage
@@ -60,12 +62,19 @@ Rapport de couverture généré automatiquement.
 EOF
 
 # Parse coverage by package
-PACKAGES=$(echo "$COVERAGE_DATA" | grep -v "^total:" | awk '{print $1}' | sed 's/\/[^\/]*$//' | sort -u)
+# Use the actual coverage output from go test, which gives accurate per-package percentages
+echo "$COVERAGE_BY_PKG" | while IFS= read -r line; do
+  # Extract package name and coverage percentage
+  # Format: "ok  	github.com/kodflow/n8n/src/internal/provider/variable	0.123s	coverage: 98.4% of statements"
+  pkg=$(echo "$line" | awk '{print $2}')
+  coverage=$(echo "$line" | grep -oP 'coverage: \K[0-9.]+%')
 
-for pkg in $PACKAGES; do
-  # Get coverage for this package
-  PKG_COV=$(echo "$COVERAGE_DATA" | grep "^$pkg" | awk '{sum += $3; count++} END {if (count > 0) printf "%.1f%%", sum/count; else print "0.0%"}')
-  PKG_VALUE=$(echo "$PKG_COV" | sed 's/%//')
+  # Skip if we couldn't extract coverage
+  if [ -z "$coverage" ]; then
+    continue
+  fi
+
+  PKG_VALUE=$(echo "$coverage" | sed 's/%//')
 
   # Determine icon
   if [ $(awk "BEGIN {print ($PKG_VALUE >= 90.0)}") -eq 1 ]; then
@@ -77,7 +86,7 @@ for pkg in $PACKAGES; do
   fi
 
   # Add to table
-  echo "| $ICON | \`$pkg\` | $PKG_COV |" >>COVERAGE.MD
+  echo "| $ICON | \`$pkg\` | $coverage |" >>COVERAGE.MD
 done
 
 # Add footer
