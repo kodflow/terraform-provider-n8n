@@ -1035,7 +1035,7 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 						"nodes":       []interface{}{},
 						"connections": map[string]interface{}{},
 						"settings":    map[string]interface{}{},
-						"tags":        []interface{}{map[string]interface{}{"id": "tag1"}},
+						"tags":        []interface{}{map[string]interface{}{"id": "tag1", "name": "Tag 1"}},
 					}
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
@@ -1044,9 +1044,9 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 				}
 			case "/workflows/wf-123/tags":
 				if r.Method == http.MethodPut {
-					w.WriteHeader(http.StatusOK)
 					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode([]interface{}{map[string]interface{}{"id": "tag1"}})
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode([]interface{}{map[string]interface{}{"id": "tag1", "name": "Tag 1"}})
 					return
 				}
 			}
@@ -1112,6 +1112,11 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 
 		r.Create(context.Background(), req, &resp)
 
+		if resp.Diagnostics.HasError() {
+			for _, diag := range resp.Diagnostics.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", diag.Summary(), diag.Detail())
+			}
+		}
 		assert.False(t, resp.Diagnostics.HasError(), "Create with tags should not have errors")
 	})
 

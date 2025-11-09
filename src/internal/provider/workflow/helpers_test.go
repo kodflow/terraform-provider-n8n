@@ -30,6 +30,11 @@ func TestParseWorkflowJSON(t *testing.T) {
 
 		nodes, connections, settings := parseWorkflowJSON(plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.Len(t, nodes, 1)
 		assert.NotNil(t, nodes[0].Name)
@@ -46,6 +51,11 @@ func TestParseWorkflowJSON(t *testing.T) {
 
 		nodes, connections, settings := parseWorkflowJSON(plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.NotNil(t, nodes)
 		assert.NotNil(t, connections)
@@ -61,6 +71,11 @@ func TestParseWorkflowJSON(t *testing.T) {
 
 		nodes, connections, settings := parseWorkflowJSON(plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.NotNil(t, nodes)
 		assert.NotNil(t, connections)
@@ -116,6 +131,11 @@ func TestParseWorkflowJSON(t *testing.T) {
 
 		nodes, connections, settings := parseWorkflowJSON(plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.Empty(t, nodes)
 		assert.Empty(t, connections)
@@ -132,6 +152,11 @@ func TestParseWorkflowJSON(t *testing.T) {
 
 		nodes, connections, settings := parseWorkflowJSON(plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.Empty(t, nodes)
 		assert.Empty(t, connections)
@@ -152,6 +177,11 @@ func TestMapTagsFromWorkflow(t *testing.T) {
 
 		tagList := mapTagsFromWorkflow(context.Background(), workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.False(t, tagList.IsNull())
 
@@ -171,6 +201,11 @@ func TestMapTagsFromWorkflow(t *testing.T) {
 
 		tagList := mapTagsFromWorkflow(context.Background(), workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.False(t, tagList.IsNull())
 	})
@@ -186,6 +221,11 @@ func TestMapTagsFromWorkflow(t *testing.T) {
 
 		tagList := mapTagsFromWorkflow(context.Background(), workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.False(t, tagList.IsNull())
 
@@ -296,6 +336,11 @@ func TestMapWorkflowToModel(t *testing.T) {
 
 		mapWorkflowToModel(context.Background(), workflow, plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.Equal(t, "Test Workflow", plan.Name.ValueString())
 		assert.True(t, plan.Active.ValueBool())
@@ -317,6 +362,11 @@ func TestMapWorkflowToModel(t *testing.T) {
 
 		mapWorkflowToModel(context.Background(), workflow, plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.False(t, plan.Meta.IsNull())
 	})
@@ -333,6 +383,11 @@ func TestMapWorkflowToModel(t *testing.T) {
 
 		mapWorkflowToModel(context.Background(), workflow, plan, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError())
 		assert.False(t, plan.PinData.IsNull())
 	})
@@ -494,10 +549,15 @@ func TestHandleWorkflowActivation(t *testing.T) {
 	t.Run("activate workflow when active changes to true", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/workflows/wf-123/activate" && r.Method == http.MethodPost {
-				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"success": true,
+					"id":          "wf-123",
+					"name":        "Test Workflow",
+					"active":      true,
+					"nodes":       []interface{}{},
+					"connections": map[string]interface{}{},
+					"settings":    map[string]interface{}{},
 				})
 				return
 			}
@@ -521,16 +581,26 @@ func TestHandleWorkflowActivation(t *testing.T) {
 
 		r.handleWorkflowActivation(context.Background(), plan, state, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Activation should not have errors")
 	})
 
 	t.Run("deactivate workflow when active changes to false", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/workflows/wf-123/deactivate" && r.Method == http.MethodPost {
-				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"success": true,
+					"id":          "wf-123",
+					"name":        "Test Workflow",
+					"active":      false,
+					"nodes":       []interface{}{},
+					"connections": map[string]interface{}{},
+					"settings":    map[string]interface{}{},
 				})
 				return
 			}
@@ -554,6 +624,11 @@ func TestHandleWorkflowActivation(t *testing.T) {
 
 		r.handleWorkflowActivation(context.Background(), plan, state, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Deactivation should not have errors")
 	})
 
@@ -572,6 +647,11 @@ func TestHandleWorkflowActivation(t *testing.T) {
 
 		r.handleWorkflowActivation(context.Background(), plan, state, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "No change should not have errors")
 	})
 
@@ -617,6 +697,11 @@ func TestHandleWorkflowActivation(t *testing.T) {
 
 		r.handleWorkflowActivation(context.Background(), plan, state, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Null active should not cause errors")
 	})
 }
@@ -625,11 +710,11 @@ func TestUpdateWorkflowTags(t *testing.T) {
 	t.Run("update tags successfully", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/workflows/wf-123/tags" && r.Method == http.MethodPut {
-				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
 				json.NewEncoder(w).Encode([]interface{}{
-					map[string]interface{}{"id": "tag1"},
-					map[string]interface{}{"id": "tag2"},
+					map[string]interface{}{"id": "tag1", "name": "Tag 1"},
+					map[string]interface{}{"id": "tag2", "name": "Tag 2"},
 				})
 				return
 			}
@@ -650,6 +735,11 @@ func TestUpdateWorkflowTags(t *testing.T) {
 
 		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Update tags should not have errors")
 	})
 
@@ -664,6 +754,11 @@ func TestUpdateWorkflowTags(t *testing.T) {
 
 		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Null tags should not cause errors")
 	})
 
@@ -678,6 +773,11 @@ func TestUpdateWorkflowTags(t *testing.T) {
 
 		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Unknown tags should not cause errors")
 	})
 
@@ -707,8 +807,8 @@ func TestUpdateWorkflowTags(t *testing.T) {
 	t.Run("update with empty tag list", func(t *testing.T) {
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/workflows/wf-123/tags" && r.Method == http.MethodPut {
-				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
 				json.NewEncoder(w).Encode([]interface{}{})
 				return
 			}
@@ -729,6 +829,11 @@ func TestUpdateWorkflowTags(t *testing.T) {
 
 		r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
 
+		if diags.HasError() {
+			for _, err := range diags.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", err.Summary(), err.Detail())
+			}
+		}
 		assert.False(t, diags.HasError(), "Empty tags should not cause errors")
 	})
 }

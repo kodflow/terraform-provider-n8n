@@ -338,14 +338,20 @@ func TestWorkflowsDataSource_Read(t *testing.T) {
 				response := map[string]interface{}{
 					"data": []interface{}{
 						map[string]interface{}{
-							"id":     "wf-1",
-							"name":   "Workflow 1",
-							"active": true,
+							"id":          "wf-1",
+							"name":        "Workflow 1",
+							"active":      true,
+							"nodes":       []interface{}{},
+							"connections": map[string]interface{}{},
+							"settings":    map[string]interface{}{},
 						},
 						map[string]interface{}{
-							"id":     "wf-2",
-							"name":   "Workflow 2",
-							"active": false,
+							"id":          "wf-2",
+							"name":        "Workflow 2",
+							"active":      false,
+							"nodes":       []interface{}{},
+							"connections": map[string]interface{}{},
+							"settings":    map[string]interface{}{},
 						},
 					},
 				}
@@ -386,6 +392,11 @@ func TestWorkflowsDataSource_Read(t *testing.T) {
 
 		ds.Read(context.Background(), req, &resp)
 
+		if resp.Diagnostics.HasError() {
+			for _, diag := range resp.Diagnostics.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", diag.Summary(), diag.Detail())
+			}
+		}
 		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
 	})
 
@@ -399,9 +410,12 @@ func TestWorkflowsDataSource_Read(t *testing.T) {
 				response := map[string]interface{}{
 					"data": []interface{}{
 						map[string]interface{}{
-							"id":     "wf-1",
-							"name":   "Active Workflow",
-							"active": true,
+							"id":          "wf-1",
+							"name":        "Active Workflow",
+							"active":      true,
+							"nodes":       []interface{}{},
+							"connections": map[string]interface{}{},
+							"settings":    map[string]interface{}{},
 						},
 					},
 				}
@@ -440,6 +454,11 @@ func TestWorkflowsDataSource_Read(t *testing.T) {
 
 		ds.Read(context.Background(), req, &resp)
 
+		if resp.Diagnostics.HasError() {
+			for _, diag := range resp.Diagnostics.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", diag.Summary(), diag.Detail())
+			}
+		}
 		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
 	})
 
@@ -526,6 +545,11 @@ func TestWorkflowsDataSource_Read(t *testing.T) {
 
 		ds.Read(context.Background(), req, &resp)
 
+		if resp.Diagnostics.HasError() {
+			for _, diag := range resp.Diagnostics.Errors() {
+				t.Logf("Diagnostic Error: %s - %s", diag.Summary(), diag.Detail())
+			}
+		}
 		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
 	})
 }
