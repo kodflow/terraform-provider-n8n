@@ -224,6 +224,13 @@ docker-compose.override.yml
 .windsurf/
 .codacy/
 
+# Repomix AI context outputs
+repomix-output.md
+repomix-output.txt
+repomix-output.xml
+repomix-output.json
+.repomix-cache/
+
 # Bazel
 bazel-*
 .bazel-cache

@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
-- improve coverage with enhanced tests and shared utilities (`5a778ac`)
+- improve coverage with enhanced tests and shared utilities (`d19fa35`)
 - achieve 94.3% coverage for credential package (`03d8697`)
 - comprehensive test coverage improvements (`3344c2f`)
 
@@ -92,4 +92,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-08 22:06:25*
+*Changelog generated automatically on 2025-11-09 00:36:21*

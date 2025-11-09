@@ -1,0 +1,49 @@
+{
+  "output": {
+    "filePath": "repomix-output.md",
+    "style": "markdown",
+    "removeComments": false,
+    "showLineNumbers": false,
+    "topFilesLength": 200,
+    "compress": true
+  },
+  "include": [
+    "src/**/*.go",
+    "codegen/**/*.sh",
+    "scripts/**/*.sh",
+    "go.mod",
+    "go.sum",
+    "Makefile",
+    "WORKSPACE",
+    "**/BUILD.bazel",
+    ".bazelrc",
+    "CLAUDE.md",
+    "README.md"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "vendor/**",
+      "**/*_test.go",
+      "**/mock_*.go",
+      "**/*_mock.go",
+      "sdk/n8nsdk/**",
+      "bin/**",
+      "tmp/**",
+      ".env*",
+      "bazel-*/**",
+      "*.out",
+      "*.html",
+      ".terraform/**",
+      "*.tfstate*",
+      "examples/**",
+      ".git/**",
+      "node_modules/**",
+      "repomix-output.md"
+    ]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

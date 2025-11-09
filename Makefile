@@ -202,3 +202,45 @@ docs: ## Generate all documentation (changelog + coverage)
 	@./scripts/generate-coverage.sh
 	@echo "$(BOLD)$(GREEN)✅ All documentation generated$(RESET)"
 	@echo ""
+
+# ============================================================================
+# AI Context Generation
+# ============================================================================
+
+.PHONY: repomix
+repomix: ## Generate compressed project context for AI (70% token reduction)
+	@echo ""
+	@echo "$(BOLD)$(CYAN)🤖 Generating AI context with Repomix...$(RESET)"
+	@if ! command -v repomix >/dev/null 2>&1; then \
+		printf "  $(RED)✗$(RESET) Repomix not installed. Run: npm install -g repomix\n"; \
+		exit 1; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Compressing codebase (excludes tests)\n"
+	@repomix
+	@echo "$(GREEN)✓$(RESET) Context generated: repomix-output.md"
+	@echo ""
+	@echo "$(BOLD)Token Statistics:$(RESET)"
+	@grep -A 3 "Token Statistics" repomix-output.md || true
+	@echo ""
+
+.PHONY: repomix/full
+repomix/full: ## Generate full project context including tests
+	@echo ""
+	@echo "$(BOLD)$(CYAN)🤖 Generating full AI context...$(RESET)"
+	@if ! command -v repomix >/dev/null 2>&1; then \
+		printf "  $(RED)✗$(RESET) Repomix not installed. Run: npm install -g repomix\n"; \
+		exit 1; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Compressing full codebase (with tests)\n"
+	@repomix --include "**/*.go" --include "**/*.sh" --compress
+	@echo "$(GREEN)✓$(RESET) Full context generated: repomix-output.md"
+	@echo ""
+
+.PHONY: repomix/install
+repomix/install: ## Install Repomix globally
+	@echo ""
+	@echo "$(BOLD)$(CYAN)📦 Installing Repomix...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Installing via npm\n"
+	@npm install -g repomix
+	@echo "$(GREEN)✓$(RESET) Repomix installed successfully"
+	@echo ""

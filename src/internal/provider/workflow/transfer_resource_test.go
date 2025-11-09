@@ -505,6 +505,126 @@ func BenchmarkWorkflowTransferResource_Metadata(b *testing.B) {
 	}
 }
 
+// TestWorkflowTransferResource_EdgeCases tests edge cases for 100% coverage.
+func TestWorkflowTransferResource_EdgeCases(t *testing.T) {
+	t.Run("create fails when plan get fails", func(t *testing.T) {
+		r := &WorkflowTransferResource{}
+
+		// Create plan with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawPlan := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+			Schema: wrongSchema,
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(context.Background(), resource.SchemaRequest{}, &schemaResp)
+
+		resp := resource.CreateResponse{
+			State: tfsdk.State{Schema: schemaResp.Schema},
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Create should fail when Plan.Get fails")
+	})
+
+	t.Run("read fails when state get fails", func(t *testing.T) {
+		r := &WorkflowTransferResource{}
+
+		// Create state with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawState := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+			Schema: wrongSchema,
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(context.Background(), resource.SchemaRequest{}, &schemaResp)
+
+		resp := resource.ReadResponse{
+			State: tfsdk.State{Schema: schemaResp.Schema},
+		}
+
+		r.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Get fails")
+	})
+
+	t.Run("read succeeds but state set fails", func(t *testing.T) {
+		r := &WorkflowTransferResource{}
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(context.Background(), resource.SchemaRequest{}, &schemaResp)
+
+		rawState := map[string]tftypes.Value{
+			"id":                     tftypes.NewValue(tftypes.String, "wf-123-to-proj-456"),
+			"workflow_id":            tftypes.NewValue(tftypes.String, "wf-123"),
+			"destination_project_id": tftypes.NewValue(tftypes.String, "proj-456"),
+			"transferred_at":         tftypes.NewValue(tftypes.String, "2024-01-01"),
+		}
+
+		attrTypes := make(map[string]tftypes.Type)
+		for key := range schemaResp.Schema.Attributes {
+			attrTypes[key] = tftypes.String
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawState),
+			Schema: schemaResp.Schema,
+		}
+
+		// Create response state with incompatible schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Computed: true,
+				},
+			},
+		}
+		respState := tfsdk.State{
+			Schema: wrongSchema,
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+		resp := resource.ReadResponse{
+			State: respState,
+		}
+
+		r.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Set fails")
+	})
+}
+
 func BenchmarkWorkflowTransferResource_Configure(b *testing.B) {
 	r := &WorkflowTransferResource{}
 	mockClient := &client.N8nClient{}

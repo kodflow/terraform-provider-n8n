@@ -1029,3 +1029,159 @@ func TestWorkflowResource_CRUD(t *testing.T) {
 		assert.NotNil(t, NewWorkflowResource())
 	})
 }
+
+// TestWorkflowResource_ImportState tests state import functionality.
+func TestWorkflowResource_ImportState(t *testing.T) {
+	t.Run("successful import", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		schema := createTestSchema(t)
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String}}, nil),
+			Schema: schema,
+		}
+
+		req := resource.ImportStateRequest{
+			ID: "workflow-123",
+		}
+		resp := &resource.ImportStateResponse{
+			State: state,
+		}
+
+		r.ImportState(context.Background(), req, resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
+	})
+}
+
+// TestWorkflowResource_EdgeCasesForCoverage tests edge cases for 100% coverage.
+func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
+	t.Run("create fails when plan get fails", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		// Create plan with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawPlan := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+			Schema: wrongSchema,
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := resource.CreateResponse{
+			State: tfsdk.State{Schema: createTestSchema(t)},
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Create should fail when Plan.Get fails")
+	})
+
+	t.Run("read fails when state get fails", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		// Create state with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawState := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+			Schema: wrongSchema,
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+		resp := resource.ReadResponse{
+			State: tfsdk.State{Schema: createTestSchema(t)},
+		}
+
+		r.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Get fails")
+	})
+
+	t.Run("update fails when plan get fails", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		// Create plan with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawPlan := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		plan := tfsdk.Plan{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+			Schema: wrongSchema,
+		}
+
+		state := tfsdk.State{
+			Schema: createTestSchema(t),
+		}
+
+		req := resource.UpdateRequest{
+			Plan:  plan,
+			State: state,
+		}
+		resp := resource.UpdateResponse{
+			State: state,
+		}
+
+		r.Update(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Update should fail when Plan.Get fails")
+	})
+
+	t.Run("delete fails when state get fails", func(t *testing.T) {
+		r := &WorkflowResource{}
+
+		// Create state with mismatched schema
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Required: true,
+				},
+			},
+		}
+		rawState := map[string]tftypes.Value{
+			"id": tftypes.NewValue(tftypes.Number, 123),
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+			Schema: wrongSchema,
+		}
+
+		req := resource.DeleteRequest{
+			State: state,
+		}
+		resp := resource.DeleteResponse{
+			State: tfsdk.State{Schema: createTestSchema(t)},
+		}
+
+		r.Delete(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Delete should fail when State.Get fails")
+	})
+}

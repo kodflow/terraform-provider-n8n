@@ -488,6 +488,323 @@ func TestProjectDataSource_Read(t *testing.T) {
 
 		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when project not found")
 	})
+
+	t.Run("read fails when neither ID nor name provided", func(t *testing.T) {
+		ds := &ProjectDataSource{}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":          tftypes.NewValue(tftypes.String, nil),
+			"name":        tftypes.NewValue(tftypes.String, nil),
+			"type":        tftypes.NewValue(tftypes.String, nil),
+			"created_at":  tftypes.NewValue(tftypes.String, nil),
+			"updated_at":  tftypes.NewValue(tftypes.String, nil),
+			"icon":        tftypes.NewValue(tftypes.String, nil),
+			"description": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":          tftypes.String,
+			"name":        tftypes.String,
+			"type":        tftypes.String,
+			"created_at":  tftypes.String,
+			"updated_at":  tftypes.String,
+			"icon":        tftypes.String,
+			"description": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when neither ID nor name provided")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+	})
+
+	t.Run("read fails with API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Internal server error"}`))
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &ProjectDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":          tftypes.NewValue(tftypes.String, "proj-123"),
+			"name":        tftypes.NewValue(tftypes.String, nil),
+			"type":        tftypes.NewValue(tftypes.String, nil),
+			"created_at":  tftypes.NewValue(tftypes.String, nil),
+			"updated_at":  tftypes.NewValue(tftypes.String, nil),
+			"icon":        tftypes.NewValue(tftypes.String, nil),
+			"description": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":          tftypes.String,
+			"name":        tftypes.String,
+			"type":        tftypes.String,
+			"created_at":  tftypes.String,
+			"updated_at":  tftypes.String,
+			"icon":        tftypes.String,
+			"description": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors on API failure")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error listing projects")
+	})
+
+	t.Run("read fails when config get fails", func(t *testing.T) {
+		ds := &ProjectDataSource{}
+
+		// Create config with mismatched schema - use wrong types
+		rawConfig := map[string]tftypes.Value{
+			"id":   tftypes.NewValue(tftypes.Number, 123), // Wrong type - should be String
+			"name": tftypes.NewValue(tftypes.String, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number, "name": tftypes.String}}, rawConfig),
+			Schema: createTestDataSourceSchema(t), // Schema expects String for id
+		}
+
+		state := tfsdk.State{
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when Config.Get fails")
+	})
+
+	t.Run("read succeeds but state set fails", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+				projects := []map[string]interface{}{
+					{
+						"id":   "proj-123",
+						"name": "Test Project",
+						"type": "team",
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": projects,
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &ProjectDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":          tftypes.NewValue(tftypes.String, "proj-123"),
+			"name":        tftypes.NewValue(tftypes.String, nil),
+			"type":        tftypes.NewValue(tftypes.String, nil),
+			"created_at":  tftypes.NewValue(tftypes.String, nil),
+			"updated_at":  tftypes.NewValue(tftypes.String, nil),
+			"icon":        tftypes.NewValue(tftypes.String, nil),
+			"description": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":          tftypes.String,
+			"name":        tftypes.String,
+			"type":        tftypes.String,
+			"created_at":  tftypes.String,
+			"updated_at":  tftypes.String,
+			"icon":        tftypes.String,
+			"description": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		// Create state with incompatible schema to trigger Set failure
+		wrongSchema := schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				"id": schema.NumberAttribute{
+					Computed: true,
+				},
+			},
+		}
+		state := tfsdk.State{
+			Schema: wrongSchema, // Wrong schema will cause Set to fail
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		// State.Set should fail due to schema mismatch
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Set fails")
+	})
+
+	t.Run("read fails when project list data is nil", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+				// Return response with nil data
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": nil,
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &ProjectDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":          tftypes.NewValue(tftypes.String, "proj-123"),
+			"name":        tftypes.NewValue(tftypes.String, nil),
+			"type":        tftypes.NewValue(tftypes.String, nil),
+			"created_at":  tftypes.NewValue(tftypes.String, nil),
+			"updated_at":  tftypes.NewValue(tftypes.String, nil),
+			"icon":        tftypes.NewValue(tftypes.String, nil),
+			"description": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":          tftypes.String,
+			"name":        tftypes.String,
+			"type":        tftypes.String,
+			"created_at":  tftypes.String,
+			"updated_at":  tftypes.String,
+			"icon":        tftypes.String,
+			"description": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when project not found (nil data)")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project Not Found")
+	})
+
+	t.Run("read fails when project not found by name", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+				// Return empty list
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": []map[string]interface{}{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &ProjectDataSource{client: n8nClient}
+
+		// Search by NAME only (ID is nil) - this will test the identifier == "" branch
+		rawConfig := map[string]tftypes.Value{
+			"id":          tftypes.NewValue(tftypes.String, nil),
+			"name":        tftypes.NewValue(tftypes.String, "Nonexistent Project"),
+			"type":        tftypes.NewValue(tftypes.String, nil),
+			"created_at":  tftypes.NewValue(tftypes.String, nil),
+			"updated_at":  tftypes.NewValue(tftypes.String, nil),
+			"icon":        tftypes.NewValue(tftypes.String, nil),
+			"description": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":          tftypes.String,
+			"name":        tftypes.String,
+			"type":        tftypes.String,
+			"created_at":  tftypes.String,
+			"updated_at":  tftypes.String,
+			"icon":        tftypes.String,
+			"description": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when project not found by name")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project Not Found")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "Nonexistent Project")
+	})
 }
 
 // createTestDataSourceSchema creates a test schema for project datasource.

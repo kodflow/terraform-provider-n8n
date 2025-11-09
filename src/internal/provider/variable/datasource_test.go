@@ -552,6 +552,303 @@ func TestVariableDataSource_Read(t *testing.T) {
 
 		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when variable not found")
 	})
+
+	t.Run("missing identifiers", func(t *testing.T) {
+		n8nClient, server := setupTestDataSourceClient(t, nil)
+		defer server.Close()
+
+		ds := &VariableDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"key":        tftypes.NewValue(tftypes.String, nil),
+			"value":      tftypes.NewValue(tftypes.String, nil),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":         tftypes.String,
+			"key":        tftypes.String,
+			"value":      tftypes.String,
+			"type":       tftypes.String,
+			"project_id": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when no identifiers provided")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+	})
+
+	t.Run("API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables" && r.Method == http.MethodGet {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "internal error"}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &VariableDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, nil),
+			"value":      tftypes.NewValue(tftypes.String, nil),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":         tftypes.String,
+			"key":        tftypes.String,
+			"value":      tftypes.String,
+			"type":       tftypes.String,
+			"project_id": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors on API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error listing variables")
+	})
+
+	t.Run("invalid config", func(t *testing.T) {
+		n8nClient, server := setupTestDataSourceClient(t, nil)
+		defer server.Close()
+
+		ds := &VariableDataSource{client: n8nClient}
+
+		// Create config with wrong schema
+		wrongSchema := datasource.SchemaResponse{}
+		req := datasource.ReadRequest{
+			Config: tfsdk.Config{
+				Schema: wrongSchema.Schema,
+				Raw:    tftypes.NewValue(tftypes.Object{}, nil),
+			},
+		}
+		resp := datasource.ReadResponse{
+			State: tfsdk.State{
+				Schema: createTestDataSourceSchema(t),
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{
+					"id":         tftypes.String,
+					"key":        tftypes.String,
+					"value":      tftypes.String,
+					"type":       tftypes.String,
+					"project_id": tftypes.String,
+				}}, nil),
+			},
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors with invalid config")
+	})
+
+	t.Run("variable not found by key with fallback", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": []map[string]interface{}{},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &VariableDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"key":        tftypes.NewValue(tftypes.String, "NONEXISTENT_KEY"),
+			"value":      tftypes.NewValue(tftypes.String, nil),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":         tftypes.String,
+			"key":        tftypes.String,
+			"value":      tftypes.String,
+			"type":       tftypes.String,
+			"project_id": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when variable not found by key")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "NONEXISTENT_KEY")
+	})
+
+	t.Run("null data from API", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &VariableDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-123"),
+			"key":        tftypes.NewValue(tftypes.String, nil),
+			"value":      tftypes.NewValue(tftypes.String, nil),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":         tftypes.String,
+			"key":        tftypes.String,
+			"value":      tftypes.String,
+			"type":       tftypes.String,
+			"project_id": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when data is null")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Variable Not Found")
+	})
+
+	t.Run("read with project_id filter", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/variables" && r.Method == http.MethodGet {
+				// Verify project_id query param is present
+				projectID := r.URL.Query().Get("projectId")
+				assert.Equal(t, "proj-789", projectID)
+
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"data": []map[string]interface{}{
+						{
+							"id":    "var-with-project",
+							"key":   "PROJECT_VAR",
+							"value": "project-value",
+							"type":  "string",
+						},
+					},
+				})
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &VariableDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, "var-with-project"),
+			"key":        tftypes.NewValue(tftypes.String, nil),
+			"value":      tftypes.NewValue(tftypes.String, nil),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, "proj-789"),
+		}
+		attrTypes := map[string]tftypes.Type{
+			"id":         tftypes.String,
+			"key":        tftypes.String,
+			"value":      tftypes.String,
+			"type":       tftypes.String,
+			"project_id": tftypes.String,
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: attrTypes}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors with project_id filter")
+	})
 }
 
 // createTestDataSourceSchema creates a test schema for variable datasource.
