@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
+- update coverage report with workflow package at 96.8% (`318ad40`)
 - add strict testing and quality standards (`eac2a36`)
 - improve AI assistant configuration with stricter directives (`dd4f419`)
 - add AI assistant configuration document (`9d0c27d`)
@@ -91,7 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 54
+- **Total commits:** 55
 - **Features:** 11
 - **Bug fixes:** 10
 - **Tests:** 5
@@ -104,4 +105,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 13:02:08*
+*Changelog generated automatically on 2025-11-09 13:41:13*

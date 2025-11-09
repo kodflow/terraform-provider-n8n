@@ -1,7 +1,7 @@
 load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
-    name = "n8n_lib",
+    name = "src_lib",
     srcs = ["main.go"],
     importpath = "github.com/kodflow/n8n/src",
     visibility = ["//visibility:private"],
@@ -12,18 +12,16 @@ go_library(
 
 go_binary(
     name = "terraform-provider-n8n",
-    embed = [":n8n_lib"],
+    embed = [":src_lib"],
     visibility = ["//visibility:public"],
 )
 
 go_test(
-    name = "n8n_test",
+    name = "src_test",
     srcs = ["main_test.go"],
-    embed = [":n8n_lib"],
+    embed = [":src_lib"],
     deps = [
         "//src/cmd",
-        "@com_github_hashicorp_terraform_plugin_framework//provider",
-        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
         "@com_github_stretchr_testify//assert",
     ],
 )
