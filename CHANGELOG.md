@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- correct coverage calculation in generate-coverage.sh (`2be6595`)
 - remove executable permission from README.md (`4607bcb`)
 - add hook permissions fix script for GUI clients (`46ccbe2`)
 - resolve critical linter issues across provider codebase (`ec19363`)
@@ -82,9 +83,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 45
+- **Total commits:** 46
 - **Features:** 8
-- **Bug fixes:** 5
+- **Bug fixes:** 6
 - **Tests:** 5
 - **Refactoring:** 14
 - **Test coverage:** N/A
@@ -95,4 +96,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 11:09:56*
+*Changelog generated automatically on 2025-11-09 11:42:13*

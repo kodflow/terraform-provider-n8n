@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -928,4 +929,199 @@ func BenchmarkSourceControlPullResource_BuildPullRequest(b *testing.B) {
 		resp := &resource.CreateResponse{}
 		_ = r.buildPullRequest(plan, resp)
 	}
+}
+
+// setupTestClient creates a test N8nClient with httptest server.
+func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
+}
+
+// TestSourceControlPullResource_Create tests the Create function.
+func TestSourceControlPullResource_Create(t *testing.T) {
+	t.Run("create with API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Internal Server Error"))
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := NewSourceControlPullResource()
+		r.client = n8nClient
+
+		ctx := context.Background()
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+		planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+			"id":             tftypes.NewValue(tftypes.String, nil),
+			"force":          tftypes.NewValue(tftypes.Bool, false),
+			"variables_json": tftypes.NewValue(tftypes.String, nil),
+			"result_json":    tftypes.NewValue(tftypes.String, nil),
+		})
+
+		plan := tfsdk.Plan{
+			Schema: schemaResp.Schema,
+			Raw:    planRaw,
+		}
+
+		state := tfsdk.State{
+			Schema: schemaResp.Schema,
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := &resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(ctx, req, resp)
+
+		assert.True(t, resp.Diagnostics.HasError())
+	})
+
+	t.Run("create with invalid variables JSON", func(t *testing.T) {
+		r := NewSourceControlPullResource()
+		ctx := context.Background()
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+		planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+			"id":             tftypes.NewValue(tftypes.String, nil),
+			"force":          tftypes.NewValue(tftypes.Bool, false),
+			"variables_json": tftypes.NewValue(tftypes.String, `{invalid-json`),
+			"result_json":    tftypes.NewValue(tftypes.String, nil),
+		})
+
+		plan := tfsdk.Plan{
+			Schema: schemaResp.Schema,
+			Raw:    planRaw,
+		}
+
+		state := tfsdk.State{
+			Schema: schemaResp.Schema,
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := &resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(ctx, req, resp)
+
+		assert.True(t, resp.Diagnostics.HasError())
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Invalid variables JSON")
+	})
+}
+
+// TestSourceControlPullResource_ExecutePullOperation_Complete tests executePullOperation.
+func TestSourceControlPullResource_ExecutePullOperation_Complete(t *testing.T) {
+	t.Run("API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("Forbidden"))
+		})
+
+		n8nClient, server := setupTestClient(t, handler)
+		defer server.Close()
+
+		r := NewSourceControlPullResource()
+		r.client = n8nClient
+
+		pullReq := n8nsdk.NewPull()
+		resp := &resource.CreateResponse{}
+
+		result, httpResp := r.executePullOperation(context.Background(), pullReq, resp)
+		if httpResp != nil && httpResp.Body != nil {
+			defer httpResp.Body.Close()
+		}
+
+		assert.Nil(t, result)
+		assert.NotNil(t, httpResp)
+		assert.True(t, resp.Diagnostics.HasError())
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error pulling from source control")
+	})
+}
+
+// TestSourceControlPullResource_Read_Complete tests Read error paths.
+func TestSourceControlPullResource_Read_Complete(t *testing.T) {
+	t.Run("read with invalid state", func(t *testing.T) {
+		r := NewSourceControlPullResource()
+		ctx := context.Background()
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+		// Create invalid state
+		state := tfsdk.State{
+			Schema: schemaResp.Schema,
+			Raw:    tftypes.NewValue(tftypes.String, "invalid"),
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+		resp := &resource.ReadResponse{
+			State: state,
+		}
+
+		r.Read(ctx, req, resp)
+
+		assert.True(t, resp.Diagnostics.HasError())
+	})
+}
+
+// TestSourceControlPullResource_Delete_WithState tests Delete with state.
+func TestSourceControlPullResource_Delete_WithState(t *testing.T) {
+	t.Run("delete with valid state", func(t *testing.T) {
+		r := NewSourceControlPullResource()
+		ctx := context.Background()
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+		stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+			"id":             tftypes.NewValue(tftypes.String, "pull-200"),
+			"force":          tftypes.NewValue(tftypes.Bool, true),
+			"variables_json": tftypes.NewValue(tftypes.String, nil),
+			"result_json":    tftypes.NewValue(tftypes.String, `{"workflows":[]}`),
+		})
+
+		state := tfsdk.State{
+			Schema: schemaResp.Schema,
+			Raw:    stateRaw,
+		}
+
+		req := resource.DeleteRequest{
+			State: state,
+		}
+		resp := &resource.DeleteResponse{}
+
+		r.Delete(ctx, req, resp)
+
+		assert.False(t, resp.Diagnostics.HasError())
+	})
 }
