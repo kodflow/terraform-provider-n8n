@@ -559,6 +559,111 @@ func TestTagDataSource_Read(t *testing.T) {
 
 		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when tag not found by name")
 	})
+
+	t.Run("missing identifier", func(t *testing.T) {
+		ds := &TagDataSource{}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"name":       tftypes.NewValue(tftypes.String, nil),
+			"created_at": tftypes.NewValue(tftypes.String, nil),
+			"updated_at": tftypes.NewValue(tftypes.String, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors when both ID and name are missing")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+	})
+
+	t.Run("read with invalid config", func(t *testing.T) {
+		ds := &TagDataSource{}
+
+		ctx := context.Background()
+		schema := createTestDataSourceSchema(t)
+
+		// Create invalid config
+		config := tfsdk.Config{
+			Schema: schema,
+			Raw:    tftypes.NewValue(tftypes.String, "invalid"),
+		}
+
+		state := tfsdk.State{
+			Schema: schema,
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(ctx, req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors with invalid config")
+	})
+
+	t.Run("API error when listing by name", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourceClient(t, handler)
+		defer server.Close()
+
+		ds := &TagDataSource{client: n8nClient}
+
+		rawConfig := map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"name":       tftypes.NewValue(tftypes.String, "Test Tag"),
+			"created_at": tftypes.NewValue(tftypes.String, nil),
+			"updated_at": tftypes.NewValue(tftypes.String, nil),
+		}
+		config := tfsdk.Config{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawConfig),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
+			Schema: createTestDataSourceSchema(t),
+		}
+
+		req := datasource.ReadRequest{
+			Config: config,
+		}
+		resp := datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(context.Background(), req, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors on API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error listing tags")
+	})
 }
 
 // createTestDataSourceSchema creates a test schema for tag datasource.

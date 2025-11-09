@@ -2,9 +2,15 @@ package tag
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -360,4 +366,178 @@ func BenchmarkTagsDataSource_Configure(b *testing.B) {
 		}
 		ds.Configure(context.Background(), req, resp)
 	}
+}
+
+// TestTagsDataSource_Read tests the Read method.
+func TestTagsDataSource_Read(t *testing.T) {
+	t.Run("successful read with tags", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+				tags := map[string]interface{}{
+					"data": []map[string]interface{}{
+						{
+							"id":        "tag-123",
+							"name":      "Test Tag 1",
+							"createdAt": "2024-01-01T00:00:00Z",
+							"updatedAt": "2024-01-02T00:00:00Z",
+						},
+						{
+							"id":        "tag-456",
+							"name":      "Test Tag 2",
+							"createdAt": "2024-01-03T00:00:00Z",
+							"updatedAt": "2024-01-04T00:00:00Z",
+						},
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(tags)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourcesClient(t, handler)
+		defer server.Close()
+
+		ds := &TagsDataSource{client: n8nClient}
+
+		ctx := context.Background()
+		schemaResp := datasource.SchemaResponse{}
+		ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+		state := createEmptyTagsState(t, schemaResp.Schema)
+
+		req := datasource.ReadRequest{}
+		resp := &datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(ctx, req, resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+
+	t.Run("successful read with empty list", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+				tags := map[string]interface{}{
+					"data": []map[string]interface{}{},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(tags)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourcesClient(t, handler)
+		defer server.Close()
+
+		ds := &TagsDataSource{client: n8nClient}
+
+		ctx := context.Background()
+		schemaResp := datasource.SchemaResponse{}
+		ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+		state := createEmptyTagsState(t, schemaResp.Schema)
+
+		req := datasource.ReadRequest{}
+		resp := &datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(ctx, req, resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors with empty list")
+	})
+
+	t.Run("API error", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Internal server error"}`))
+		})
+
+		n8nClient, server := setupTestDataSourcesClient(t, handler)
+		defer server.Close()
+
+		ds := &TagsDataSource{client: n8nClient}
+
+		ctx := context.Background()
+		schemaResp := datasource.SchemaResponse{}
+		ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+		state := createEmptyTagsState(t, schemaResp.Schema)
+
+		req := datasource.ReadRequest{}
+		resp := &datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(ctx, req, resp)
+
+		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors on API error")
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error listing tags")
+	})
+
+	t.Run("read with nil data", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestDataSourcesClient(t, handler)
+		defer server.Close()
+
+		ds := &TagsDataSource{client: n8nClient}
+
+		ctx := context.Background()
+		schemaResp := datasource.SchemaResponse{}
+		ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+		state := createEmptyTagsState(t, schemaResp.Schema)
+
+		req := datasource.ReadRequest{}
+		resp := &datasource.ReadResponse{
+			State: state,
+		}
+
+		ds.Read(ctx, req, resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors with nil data")
+	})
+}
+
+// createEmptyTagsState creates an empty state for tags datasource tests.
+func createEmptyTagsState(t *testing.T, schema schema.Schema) tfsdk.State {
+	t.Helper()
+	return tfsdk.State{
+		Schema: schema,
+	}
+}
+
+// setupTestDataSourcesClient creates a test N8nClient with httptest server for datasources.
+func setupTestDataSourcesClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }
