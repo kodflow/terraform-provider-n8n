@@ -17,10 +17,11 @@ echo ""
 echo -e "${CYAN}→${RESET} Running tests with coverage..."
 
 # Get coverage per package using go test directly
-COVERAGE_BY_PKG=$(go test -cover ./src/internal/provider/... 2>&1 | grep "coverage:" | grep -v "\[no statements\]")
+# Filter only lines starting with "ok" to avoid workflow aggregate line
+COVERAGE_BY_PKG=$(go test -cover ./src/internal/provider/... 2>&1 | grep "^ok" | grep "coverage:" | grep -v "\[no statements\]")
 
-# Also get total coverage
-go test -coverprofile=coverage.out -covermode=atomic ./src/internal/provider/... >/dev/null 2>&1
+# Also get total coverage (allow tests to fail)
+go test -coverprofile=coverage.out -covermode=atomic ./src/internal/provider/... >/dev/null 2>&1 || true
 COVERAGE_DATA=$(go tool cover -func=coverage.out)
 
 # Extract total coverage

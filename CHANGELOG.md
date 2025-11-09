@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- add comprehensive unit tests - 78.1% to 97.7% coverage (`367d5e1`)
 - add comprehensive unit tests - 71.3% to 98.8% coverage (`7fdbd90`)
 - improve test coverage from 60% to 90.8% (`affb29a`)
 - add automatic documentation generation system (`034cf4f`)
@@ -85,8 +86,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 48
-- **Features:** 10
+- **Total commits:** 49
+- **Features:** 11
 - **Bug fixes:** 6
 - **Tests:** 5
 - **Refactoring:** 14
@@ -98,4 +99,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 12:01:14*
+*Changelog generated automatically on 2025-11-09 12:21:56*
