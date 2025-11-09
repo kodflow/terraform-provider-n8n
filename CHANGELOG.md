@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- correct workflow test mocks to match SDK requirements (`33a6035`)
 - remove duplicate test definition in src/BUILD.bazel (`314f1b3`)
 - enhance commit-msg hook to block AI attribution (`b99ff30`)
 - allow tests to fail in coverage generation (`e6cbf19`)
@@ -90,9 +91,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 53
+- **Total commits:** 54
 - **Features:** 11
-- **Bug fixes:** 9
+- **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 14
 - **Test coverage:** N/A
@@ -103,4 +104,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 13:01:30*
+*Changelog generated automatically on 2025-11-09 13:02:08*
