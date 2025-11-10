@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- convert credential tests to table-driven format (`d58c8d0`)
 - add comprehensive unit tests - 78.1% to 97.7% coverage (`17b8e12`)
 - add comprehensive unit tests - 71.3% to 98.8% coverage (`ae4f64e`)
 - improve test coverage from 60% to 90.8% (`da7d597`)
@@ -93,8 +94,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 56
-- **Features:** 11
+- **Total commits:** 57
+- **Features:** 12
 - **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 15
@@ -106,4 +107,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 14:36:00*
+*Changelog generated automatically on 2025-11-10 14:39:41*
