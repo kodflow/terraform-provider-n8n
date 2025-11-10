@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- convert execution datasource tests to table-driven format (`a3deeaf`)
 - convert execution datasources tests to table-driven format (`81b13ce`)
 - convert variable datasources tests to table-driven format (`317e43c`)
 - convert tag datasources tests to table-driven format with error cases (`1109915`)
@@ -100,8 +101,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 63
-- **Features:** 18
+- **Total commits:** 64
+- **Features:** 19
 - **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 15
@@ -113,4 +114,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:02:30*
+*Changelog generated automatically on 2025-11-10 15:04:20*
