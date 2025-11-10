@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- convert credential resource_test validation+usecases (`405ccca`)
 - add wantErr to internal test stubs (4 files) (`3b2086c`)
 - convert constants_test to table-driven (`43cde9e`)
 - add wantErr field to shared pointers_test (`70c0426`)
@@ -115,10 +116,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 78
+- **Total commits:** 79
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 9
+- **Tests:** 10
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -128,4 +129,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:37:42*
+*Changelog generated automatically on 2025-11-10 15:41:22*

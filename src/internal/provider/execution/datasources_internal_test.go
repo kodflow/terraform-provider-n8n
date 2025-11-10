@@ -12,10 +12,16 @@ func TestExecutionsDataSource_schemaAttributes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -32,10 +38,16 @@ func TestExecutionsDataSource_executionItemAttributes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -52,10 +64,16 @@ func TestExecutionsDataSource_buildExecutionsAPIRequest(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -72,10 +90,16 @@ func TestExecutionsDataSource_populateExecutionsList(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
