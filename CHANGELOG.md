@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- convert project datasource_test to table-driven format (`64b4723`)
 - convert variable helpers_test to table-driven format (`5ccc2be`)
 - convert credential workflow_backup_test to table-driven format (`c8c2f31`)
 - convert tag helpers_test to table-driven format (`5b966d5`)
@@ -130,10 +131,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 93
+- **Total commits:** 94
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 24
+- **Tests:** 25
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -143,4 +144,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 16:46:39*
+*Changelog generated automatically on 2025-11-10 16:52:26*

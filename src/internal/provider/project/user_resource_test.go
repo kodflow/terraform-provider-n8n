@@ -17,1070 +17,1656 @@ import (
 )
 
 func TestNewProjectUserResource(t *testing.T) {
-	t.Run("create new instance", func(t *testing.T) {
-		r := NewProjectUserResource()
+	t.Parallel()
 
-		assert.NotNil(t, r)
-		assert.IsType(t, &ProjectUserResource{}, r)
-		assert.Nil(t, r.client)
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "create new instance",
+			wantErr: false,
+		},
+		{
+			name:    "multiple instances are independent",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-	t.Run("multiple instances are independent", func(t *testing.T) {
-		r1 := NewProjectUserResource()
-		r2 := NewProjectUserResource()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		assert.NotSame(t, r1, r2)
-	})
+			switch tt.name {
+			case "create new instance":
+				r := NewProjectUserResource()
+
+				assert.NotNil(t, r)
+				assert.IsType(t, &ProjectUserResource{}, r)
+				assert.Nil(t, r.client)
+
+			case "multiple instances are independent":
+				r1 := NewProjectUserResource()
+				r2 := NewProjectUserResource()
+
+				assert.NotSame(t, r1, r2)
+
+			case "error case - validation checks":
+				r := NewProjectUserResource()
+
+				assert.NotNil(t, r, "NewProjectUserResource should never return nil")
+				assert.IsType(t, &ProjectUserResource{}, r, "should return ProjectUserResource type")
+			}
+		})
+	}
 }
 
 func TestNewProjectUserResourceWrapper(t *testing.T) {
-	t.Run("create new wrapped instance", func(t *testing.T) {
-		r := NewProjectUserResourceWrapper()
+	t.Parallel()
 
-		assert.NotNil(t, r)
-		assert.IsType(t, &ProjectUserResource{}, r)
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "create new wrapped instance",
+			wantErr: false,
+		},
+		{
+			name:    "wrapper returns resource.Resource interface",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-	t.Run("wrapper returns resource.Resource interface", func(t *testing.T) {
-		r := NewProjectUserResourceWrapper()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		// Verify it implements resource.Resource.
-		assert.Implements(t, (*resource.Resource)(nil), r)
-		assert.NotNil(t, r)
-	})
+			switch tt.name {
+			case "create new wrapped instance":
+				r := NewProjectUserResourceWrapper()
+
+				assert.NotNil(t, r)
+				assert.IsType(t, &ProjectUserResource{}, r)
+
+			case "wrapper returns resource.Resource interface":
+				r := NewProjectUserResourceWrapper()
+
+				// Verify it implements resource.Resource.
+				assert.Implements(t, (*resource.Resource)(nil), r)
+				assert.NotNil(t, r)
+
+			case "error case - validation checks":
+				r := NewProjectUserResourceWrapper()
+
+				assert.NotNil(t, r, "NewProjectUserResourceWrapper should never return nil")
+				assert.Implements(t, (*resource.Resource)(nil), r, "should implement resource.Resource interface")
+			}
+		})
+	}
 }
 
 func TestProjectUserResource_Metadata(t *testing.T) {
-	t.Run("set metadata with provider type", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.MetadataResponse{}
+	t.Parallel()
 
-		r.Metadata(context.Background(), resource.MetadataRequest{
-			ProviderTypeName: "n8n",
-		}, resp)
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "set metadata with provider type",
+			wantErr: false,
+		},
+		{
+			name:    "set metadata with custom provider type",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-		assert.Equal(t, "n8n_project_user", resp.TypeName)
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("set metadata with custom provider type", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.MetadataResponse{}
+			switch tt.name {
+			case "set metadata with provider type":
+				r := NewProjectUserResource()
+				resp := &resource.MetadataResponse{}
 
-		r.Metadata(context.Background(), resource.MetadataRequest{
-			ProviderTypeName: "custom_provider",
-		}, resp)
+				r.Metadata(context.Background(), resource.MetadataRequest{
+					ProviderTypeName: "n8n",
+				}, resp)
 
-		assert.Equal(t, "custom_provider_project_user", resp.TypeName)
-	})
+				assert.Equal(t, "n8n_project_user", resp.TypeName)
+
+			case "set metadata with custom provider type":
+				r := NewProjectUserResource()
+				resp := &resource.MetadataResponse{}
+
+				r.Metadata(context.Background(), resource.MetadataRequest{
+					ProviderTypeName: "custom_provider",
+				}, resp)
+
+				assert.Equal(t, "custom_provider_project_user", resp.TypeName)
+
+			case "error case - validation checks":
+				r := NewProjectUserResource()
+				resp := &resource.MetadataResponse{}
+
+				r.Metadata(context.Background(), resource.MetadataRequest{
+					ProviderTypeName: "",
+				}, resp)
+
+				assert.Equal(t, "_project_user", resp.TypeName, "should handle empty provider type name")
+			}
+		})
+	}
 }
 
 func TestProjectUserResource_Schema(t *testing.T) {
-	t.Run("return schema", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.SchemaResponse{}
+	t.Parallel()
 
-		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "return schema",
+			wantErr: false,
+		},
+		{
+			name:    "schema attributes have descriptions",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-		assert.NotNil(t, resp.Schema)
-		assert.Contains(t, resp.Schema.MarkdownDescription, "user membership")
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		expectedAttrs := []string{
-			"id",
-			"project_id",
-			"user_id",
-			"role",
-		}
+			switch tt.name {
+			case "return schema":
+				r := NewProjectUserResource()
+				resp := &resource.SchemaResponse{}
 
-		for _, attr := range expectedAttrs {
-			_, exists := resp.Schema.Attributes[attr]
-			assert.True(t, exists, "Attribute %s should exist", attr)
-		}
-	})
+				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
-	t.Run("schema attributes have descriptions", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.SchemaResponse{}
+				assert.NotNil(t, resp.Schema)
+				assert.Contains(t, resp.Schema.MarkdownDescription, "user membership")
 
-		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+				expectedAttrs := []string{
+					"id",
+					"project_id",
+					"user_id",
+					"role",
+				}
 
-		for name, attr := range resp.Schema.Attributes {
-			assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", name)
-		}
-	})
+				for _, attr := range expectedAttrs {
+					_, exists := resp.Schema.Attributes[attr]
+					assert.True(t, exists, "Attribute %s should exist", attr)
+				}
+
+			case "schema attributes have descriptions":
+				r := NewProjectUserResource()
+				resp := &resource.SchemaResponse{}
+
+				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+				for name, attr := range resp.Schema.Attributes {
+					assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", name)
+				}
+
+			case "error case - validation checks":
+				r := NewProjectUserResource()
+				resp := &resource.SchemaResponse{}
+
+				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+				assert.NotNil(t, resp.Schema, "Schema should not be nil")
+				assert.NotEmpty(t, resp.Schema.Attributes, "Schema should have attributes")
+			}
+		})
+	}
 }
 
 func TestProjectUserResource_Configure(t *testing.T) {
-	t.Run("configure with valid client", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.ConfigureResponse{}
+	t.Parallel()
 
-		mockClient := &client.N8nClient{}
-		req := resource.ConfigureRequest{
-			ProviderData: mockClient,
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "configure with valid client",
+			wantErr: false,
+		},
+		{
+			name:    "configure with nil provider data",
+			wantErr: false,
+		},
+		{
+			name:    "configure with invalid provider data",
+			wantErr: true,
+		},
+		{
+			name:    "configure with wrong type",
+			wantErr: true,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-		r.Configure(context.Background(), req, resp)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		assert.NotNil(t, r.client)
-		assert.Equal(t, mockClient, r.client)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+			switch tt.name {
+			case "configure with valid client":
+				r := NewProjectUserResource()
+				resp := &resource.ConfigureResponse{}
 
-	t.Run("configure with nil provider data", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.ConfigureResponse{}
-		req := resource.ConfigureRequest{
-			ProviderData: nil,
-		}
+				mockClient := &client.N8nClient{}
+				req := resource.ConfigureRequest{
+					ProviderData: mockClient,
+				}
 
-		r.Configure(context.Background(), req, resp)
+				r.Configure(context.Background(), req, resp)
 
-		assert.Nil(t, r.client)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+				assert.NotNil(t, r.client)
+				assert.Equal(t, mockClient, r.client)
+				assert.False(t, resp.Diagnostics.HasError())
 
-	t.Run("configure with invalid provider data", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.ConfigureResponse{}
-		req := resource.ConfigureRequest{
-			ProviderData: "invalid-data",
-		}
+			case "configure with nil provider data":
+				r := NewProjectUserResource()
+				resp := &resource.ConfigureResponse{}
+				req := resource.ConfigureRequest{
+					ProviderData: nil,
+				}
 
-		r.Configure(context.Background(), req, resp)
+				r.Configure(context.Background(), req, resp)
 
-		assert.Nil(t, r.client)
-		assert.True(t, resp.Diagnostics.HasError())
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
-	})
+				assert.Nil(t, r.client)
+				assert.False(t, resp.Diagnostics.HasError())
 
-	t.Run("configure with wrong type", func(t *testing.T) {
-		r := NewProjectUserResource()
-		resp := &resource.ConfigureResponse{}
-		req := resource.ConfigureRequest{
-			ProviderData: struct{}{},
-		}
+			case "configure with invalid provider data":
+				r := NewProjectUserResource()
+				resp := &resource.ConfigureResponse{}
+				req := resource.ConfigureRequest{
+					ProviderData: "invalid-data",
+				}
 
-		r.Configure(context.Background(), req, resp)
+				r.Configure(context.Background(), req, resp)
 
-		assert.Nil(t, r.client)
-		assert.True(t, resp.Diagnostics.HasError())
-	})
+				assert.Nil(t, r.client)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
+
+			case "configure with wrong type":
+				r := NewProjectUserResource()
+				resp := &resource.ConfigureResponse{}
+				req := resource.ConfigureRequest{
+					ProviderData: struct{}{},
+				}
+
+				r.Configure(context.Background(), req, resp)
+
+				assert.Nil(t, r.client)
+				assert.True(t, resp.Diagnostics.HasError())
+
+			case "error case - validation checks":
+				r := NewProjectUserResource()
+				resp := &resource.ConfigureResponse{}
+				req := resource.ConfigureRequest{
+					ProviderData: 123,
+				}
+
+				r.Configure(context.Background(), req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Configure should fail with integer provider data")
+				assert.Nil(t, r.client, "client should remain nil on error")
+			}
+		})
+	}
 }
 
 func TestProjectUserResource_Create(t *testing.T) {
-	t.Run("successful creation", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/projects/proj-123/users" && r.Method == http.MethodPost {
-				w.WriteHeader(http.StatusCreated)
-				return
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "successful creation",
+			wantErr: false,
+		},
+		{
+			name:    "creation fails with API error",
+			wantErr: true,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "successful creation":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/projects/proj-123/users" && r.Method == http.MethodPost {
+						w.WriteHeader(http.StatusCreated)
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+
+			case "creation fails with API error":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error adding user to project")
+
+			case "error case - validation checks":
+				r := &ProjectUserResource{}
+
+				// Create plan with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
+						},
+					},
+				}
+				rawPlan := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+					Schema: wrongSchema,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should fail when Plan.Get fails")
 			}
-			w.WriteHeader(http.StatusNotFound)
 		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		resp := resource.CreateResponse{
-			State: state,
-		}
-
-		r.Create(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
-	})
-
-	t.Run("creation fails with API error", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		resp := resource.CreateResponse{
-			State: state,
-		}
-
-		r.Create(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Create should have errors")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error adding user to project")
-	})
+	}
 }
 
 func TestProjectUserResource_Read(t *testing.T) {
-	t.Run("successful read", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/users" && r.Method == http.MethodGet {
-				w.Header().Set("Content-Type", "application/json")
-				userID := "user-456"
-				role := "project:editor"
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"data": []map[string]interface{}{
-						{
-							"id":    userID,
-							"email": "test@example.com",
-							"role":  role,
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "successful read",
+			wantErr: false,
+		},
+		{
+			name:    "user not found removes from state",
+			wantErr: false,
+		},
+		{
+			name:    "read fails with API error",
+			wantErr: true,
+		},
+		{
+			name:    "read with nil data",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "successful read":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodGet {
+						w.Header().Set("Content-Type", "application/json")
+						userID := "user-456"
+						role := "project:editor"
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"data": []map[string]interface{}{
+								{
+									"id":    userID,
+									"email": "test@example.com",
+									"role":  role,
+								},
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+
+			case "user not found removes from state":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodGet &&
+						r.URL.Query().Get("projectId") == "proj-123" {
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"data": []map[string]interface{}{},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+
+			case "read fails with API error":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Read should have errors")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error reading project users")
+
+			case "read with nil data":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodGet &&
+						r.URL.Query().Get("projectId") == "proj-123" {
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(map[string]interface{}{})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Read should handle nil data gracefully")
+
+			case "error case - validation checks":
+				r := &ProjectUserResource{}
+
+				// Create state with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
 						},
 					},
-				})
-				return
+				}
+				rawState := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+					Schema: wrongSchema,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Get fails")
 			}
-			w.WriteHeader(http.StatusNotFound)
 		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: state,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
-	})
-
-	t.Run("user not found removes from state", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/users" && r.Method == http.MethodGet &&
-				r.URL.Query().Get("projectId") == "proj-123" {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"data": []map[string]interface{}{},
-				})
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: state,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
-	})
-
-	t.Run("read fails with API error", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: state,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Read should have errors")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error reading project users")
-	})
-
-	t.Run("read with nil data", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/users" && r.Method == http.MethodGet &&
-				r.URL.Query().Get("projectId") == "proj-123" {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]interface{}{})
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: state,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Read should handle nil data gracefully")
-	})
+	}
 }
 
 func TestProjectUserResource_Update(t *testing.T) {
-	t.Run("successful update", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodPatch {
-				w.WriteHeader(http.StatusOK)
-				return
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "successful update",
+			wantErr: false,
+		},
+		{
+			name:    "update fails when changing project_id",
+			wantErr: true,
+		},
+		{
+			name:    "update fails when changing user_id",
+			wantErr: true,
+		},
+		{
+			name:    "update fails with API error",
+			wantErr: true,
+		},
+		{
+			name:    "update succeeds when role unchanged",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "successful update":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodPatch {
+						w.WriteHeader(http.StatusOK)
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
+
+			case "update fails when changing project_id":
+				r := &ProjectUserResource{}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-789/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-789"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when changing project_id")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project/User Change Not Supported")
+
+			case "update fails when changing user_id":
+				r := &ProjectUserResource{}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-789"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-789"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when changing user_id")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project/User Change Not Supported")
+
+			case "update fails with API error":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Update should have errors")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error updating user role in project")
+
+			case "update succeeds when role unchanged":
+				r := &ProjectUserResource{}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors when role is unchanged")
+
+			case "error case - validation checks":
+				r := &ProjectUserResource{}
+
+				// Create plan with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
+						},
+					},
+				}
+				rawPlan := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+					Schema: wrongSchema,
+				}
+
+				state := tfsdk.State{
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Update should fail when Plan.Get fails")
 			}
-			w.WriteHeader(http.StatusNotFound)
 		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
-	})
-
-	t.Run("update fails when changing project_id", func(t *testing.T) {
-		r := &ProjectUserResource{}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-789/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-789"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when changing project_id")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project/User Change Not Supported")
-	})
-
-	t.Run("update fails when changing user_id", func(t *testing.T) {
-		r := &ProjectUserResource{}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-789"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-789"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when changing user_id")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project/User Change Not Supported")
-	})
-
-	t.Run("update fails with API error", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error updating user role in project")
-	})
-
-	t.Run("update succeeds when role unchanged", func(t *testing.T) {
-		r := &ProjectUserResource{}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors when role is unchanged")
-	})
+	}
 }
 
 func TestProjectUserResource_Delete(t *testing.T) {
-	t.Run("successful delete", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodDelete {
-				w.WriteHeader(http.StatusNoContent)
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
+	t.Parallel()
 
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "successful delete",
+			wantErr: false,
+		},
+		{
+			name:    "delete fails with API error",
+			wantErr: true,
+		},
+		{
+			name:    "delete fails when state get fails",
+			wantErr: true,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-		r := &ProjectUserResource{client: n8nClient}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
+			switch tt.name {
+			case "successful delete":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodDelete {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
 
-		req := resource.DeleteRequest{
-			State: state,
-		}
-		resp := resource.DeleteResponse{
-			State: state,
-		}
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
 
-		r.Delete(context.Background(), req, &resp)
+				r := &ProjectUserResource{client: n8nClient}
 
-		assert.False(t, resp.Diagnostics.HasError(), "Delete should not have errors")
-	})
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
 
-	t.Run("delete fails with API error", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
-		})
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := resource.DeleteResponse{
+					State: state,
+				}
 
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
+				r.Delete(context.Background(), req, &resp)
 
-		r := &ProjectUserResource{client: n8nClient}
+				assert.False(t, resp.Diagnostics.HasError(), "Delete should not have errors")
 
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
+			case "delete fails with API error":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
 
-		req := resource.DeleteRequest{
-			State: state,
-		}
-		resp := resource.DeleteResponse{
-			State: state,
-		}
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
 
-		r.Delete(context.Background(), req, &resp)
+				r := &ProjectUserResource{client: n8nClient}
 
-		assert.True(t, resp.Diagnostics.HasError(), "Delete should have errors")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error removing user from project")
-	})
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
 
-	t.Run("delete fails when state get fails", func(t *testing.T) {
-		r := &ProjectUserResource{}
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := resource.DeleteResponse{
+					State: state,
+				}
 
-		// Create state with mismatched schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Required: true,
-				},
-			},
-		}
-		rawState := map[string]tftypes.Value{
-			"id": tftypes.NewValue(tftypes.Number, 123),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
-			Schema: wrongSchema,
-		}
+				r.Delete(context.Background(), req, &resp)
 
-		req := resource.DeleteRequest{
-			State: state,
-		}
-		resp := resource.DeleteResponse{
-			State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
-		}
+				assert.True(t, resp.Diagnostics.HasError(), "Delete should have errors")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error removing user from project")
 
-		r.Delete(context.Background(), req, &resp)
+			case "delete fails when state get fails":
+				r := &ProjectUserResource{}
 
-		assert.True(t, resp.Diagnostics.HasError(), "Delete should fail when State.Get fails")
-	})
-}
-
-// TestProjectUserResource_EdgeCasesForCoverage tests edge cases for 100% coverage.
-func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
-	t.Run("create fails when plan get fails", func(t *testing.T) {
-		r := &ProjectUserResource{}
-
-		// Create plan with mismatched schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Required: true,
-				},
-			},
-		}
-		rawPlan := map[string]tftypes.Value{
-			"id": tftypes.NewValue(tftypes.Number, 123),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
-			Schema: wrongSchema,
-		}
-
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		resp := resource.CreateResponse{
-			State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
-		}
-
-		r.Create(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Create should fail when Plan.Get fails")
-	})
-
-	t.Run("create succeeds but state set fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodPut {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]interface{}{})
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		// Create state with incompatible schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Computed: true,
-				},
-			},
-		}
-		state := tfsdk.State{
-			Schema: wrongSchema,
-		}
-
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		resp := resource.CreateResponse{
-			State: state,
-		}
-
-		r.Create(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Create should fail when State.Set fails")
-	})
-
-	t.Run("read fails when state get fails", func(t *testing.T) {
-		r := &ProjectUserResource{}
-
-		// Create state with mismatched schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Required: true,
-				},
-			},
-		}
-		rawState := map[string]tftypes.Value{
-			"id": tftypes.NewValue(tftypes.Number, 123),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
-			Schema: wrongSchema,
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Get fails")
-	})
-
-	t.Run("read succeeds but state set fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/users" && r.Method == http.MethodGet && r.URL.Query().Get("projectId") == "proj-123" {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"data": []map[string]interface{}{
-						{
-							"id":    "user-456",
-							"email": "test@example.com",
-							"role":  "project:editor",
+				// Create state with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
 						},
 					},
+				}
+				rawState := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+					Schema: wrongSchema,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := resource.DeleteResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Delete(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Delete should fail when State.Get fails")
+
+			case "error case - validation checks":
+				r := &ProjectUserResource{}
+
+				// Test with empty state
+				emptySchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				}
+				rawState := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.String, nil),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String}}, rawState),
+					Schema: emptySchema,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := resource.DeleteResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Delete(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Delete should fail with invalid state schema")
+			}
+		})
+	}
+}
+
+func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "create fails when plan get fails",
+			wantErr: true,
+		},
+		{
+			name:    "create succeeds but state set fails",
+			wantErr: true,
+		},
+		{
+			name:    "read fails when state get fails",
+			wantErr: true,
+		},
+		{
+			name:    "read succeeds but state set fails",
+			wantErr: true,
+		},
+		{
+			name:    "update fails when plan get fails",
+			wantErr: true,
+		},
+		{
+			name:    "update succeeds but state set fails",
+			wantErr: true,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "create fails when plan get fails":
+				r := &ProjectUserResource{}
+
+				// Create plan with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
+						},
+					},
+				}
+				rawPlan := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+					Schema: wrongSchema,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should fail when Plan.Get fails")
+
+			case "create succeeds but state set fails":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodPut {
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(map[string]interface{}{})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
 				})
-				return
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				// Create state with incompatible schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Computed: true,
+						},
+					},
+				}
+				state := tfsdk.State{
+					Schema: wrongSchema,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should fail when State.Set fails")
+
+			case "read fails when state get fails":
+				r := &ProjectUserResource{}
+
+				// Create state with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
+						},
+					},
+				}
+				rawState := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawState),
+					Schema: wrongSchema,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Get fails")
+
+			case "read succeeds but state set fails":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodGet && r.URL.Query().Get("projectId") == "proj-123" {
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"data": []map[string]interface{}{
+								{
+									"id":    "user-456",
+									"email": "test@example.com",
+									"role":  "project:editor",
+								},
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				// Create response state with incompatible schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Computed: true,
+						},
+					},
+				}
+				respState := tfsdk.State{
+					Schema: wrongSchema,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: respState,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Set fails")
+
+			case "update fails when plan get fails":
+				r := &ProjectUserResource{}
+
+				// Create plan with mismatched schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Required: true,
+						},
+					},
+				}
+				rawPlan := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Number, 123),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
+					Schema: wrongSchema,
+				}
+
+				state := tfsdk.State{
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Update should fail when Plan.Get fails")
+
+			case "update succeeds but state set fails":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodPut {
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(map[string]interface{}{})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestUserResourceClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectUserResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+					Schema: createTestUserResourceSchema(t),
+				}
+
+				// Create response state with incompatible schema
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.NumberAttribute{
+							Computed: true,
+						},
+					},
+				}
+				respState := tfsdk.State{
+					Schema: wrongSchema,
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := resource.UpdateResponse{
+					State: respState,
+				}
+
+				r.Update(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Update should fail when State.Set fails")
+
+			case "error case - validation checks":
+				// Test that state set failures are properly handled
+				r := &ProjectUserResource{}
+
+				// Create plan with mismatched schema (different from first test case)
+				wrongSchema := schema.Schema{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.BoolAttribute{
+							Required: true,
+						},
+					},
+				}
+				rawPlan := map[string]tftypes.Value{
+					"id": tftypes.NewValue(tftypes.Bool, true),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Bool}}, rawPlan),
+					Schema: wrongSchema,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should fail with invalid plan schema")
 			}
-			w.WriteHeader(http.StatusNotFound)
 		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		// Create response state with incompatible schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Computed: true,
-				},
-			},
-		}
-		respState := tfsdk.State{
-			Schema: wrongSchema,
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: respState,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Set fails")
-	})
-
-	t.Run("update fails when plan get fails", func(t *testing.T) {
-		r := &ProjectUserResource{}
-
-		// Create plan with mismatched schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Required: true,
-				},
-			},
-		}
-		rawPlan := map[string]tftypes.Value{
-			"id": tftypes.NewValue(tftypes.Number, 123),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.Number}}, rawPlan),
-			Schema: wrongSchema,
-		}
-
-		state := tfsdk.State{
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should fail when Plan.Get fails")
-	})
-
-	t.Run("update succeeds but state set fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodPut {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]interface{}{})
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestUserResourceClient(t, handler)
-		defer server.Close()
-
-		r := &ProjectUserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
-			"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-			"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-			"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-			Schema: createTestUserResourceSchema(t),
-		}
-
-		// Create response state with incompatible schema
-		wrongSchema := schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.NumberAttribute{
-					Computed: true,
-				},
-			},
-		}
-		respState := tfsdk.State{
-			Schema: wrongSchema,
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: respState,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should fail when State.Set fails")
-	})
+	}
 }
 
 func TestProjectUserResource_ImportState(t *testing.T) {
-	t.Run("successful import", func(t *testing.T) {
-		r := &ProjectUserResource{}
+	t.Parallel()
 
-		schema := createTestUserResourceSchema(t)
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
-			Schema: schema,
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "successful import",
+			wantErr: false,
+		},
+		{
+			name:    "import fails with invalid ID format",
+			wantErr: true,
+		},
+		{
+			name:    "import fails with too many parts",
+			wantErr: true,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
 
-		req := resource.ImportStateRequest{
-			ID: "proj-123/user-456",
-		}
-		resp := &resource.ImportStateResponse{
-			State: state,
-		}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		r.ImportState(context.Background(), req, resp)
+			switch tt.name {
+			case "successful import":
+				r := &ProjectUserResource{}
 
-		assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
-	})
+				schema := createTestUserResourceSchema(t)
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+					Schema: schema,
+				}
 
-	t.Run("import fails with invalid ID format", func(t *testing.T) {
-		r := &ProjectUserResource{}
+				req := resource.ImportStateRequest{
+					ID: "proj-123/user-456",
+				}
+				resp := &resource.ImportStateResponse{
+					State: state,
+				}
 
-		schema := createTestUserResourceSchema(t)
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
-			Schema: schema,
-		}
+				r.ImportState(context.Background(), req, resp)
 
-		req := resource.ImportStateRequest{
-			ID: "invalid-id",
-		}
-		resp := &resource.ImportStateResponse{
-			State: state,
-		}
+				assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
 
-		r.ImportState(context.Background(), req, resp)
+			case "import fails with invalid ID format":
+				r := &ProjectUserResource{}
 
-		assert.True(t, resp.Diagnostics.HasError(), "ImportState should have errors with invalid ID")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Invalid Import ID")
-	})
+				schema := createTestUserResourceSchema(t)
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+					Schema: schema,
+				}
 
-	t.Run("import fails with too many parts", func(t *testing.T) {
-		r := &ProjectUserResource{}
+				req := resource.ImportStateRequest{
+					ID: "invalid-id",
+				}
+				resp := &resource.ImportStateResponse{
+					State: state,
+				}
 
-		schema := createTestUserResourceSchema(t)
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
-			Schema: schema,
-		}
+				r.ImportState(context.Background(), req, resp)
 
-		req := resource.ImportStateRequest{
-			ID: "proj-123/user-456/extra",
-		}
-		resp := &resource.ImportStateResponse{
-			State: state,
-		}
+				assert.True(t, resp.Diagnostics.HasError(), "ImportState should have errors with invalid ID")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Invalid Import ID")
 
-		r.ImportState(context.Background(), req, resp)
+			case "import fails with too many parts":
+				r := &ProjectUserResource{}
 
-		assert.True(t, resp.Diagnostics.HasError(), "ImportState should have errors with too many parts")
-	})
+				schema := createTestUserResourceSchema(t)
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+					Schema: schema,
+				}
+
+				req := resource.ImportStateRequest{
+					ID: "proj-123/user-456/extra",
+				}
+				resp := &resource.ImportStateResponse{
+					State: state,
+				}
+
+				r.ImportState(context.Background(), req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "ImportState should have errors with too many parts")
+
+			case "error case - validation checks":
+				r := &ProjectUserResource{}
+
+				schema := createTestUserResourceSchema(t)
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+					Schema: schema,
+				}
+
+				req := resource.ImportStateRequest{
+					ID: "",
+				}
+				resp := &resource.ImportStateResponse{
+					State: state,
+				}
+
+				r.ImportState(context.Background(), req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "ImportState should fail with empty ID")
+			}
+		})
+	}
 }
 
 func TestProjectUserResource_Interfaces(t *testing.T) {
-	t.Run("implements required interfaces", func(t *testing.T) {
-		r := NewProjectUserResource()
+	t.Parallel()
 
-		var _ resource.Resource = r
-		var _ resource.ResourceWithConfigure = r
-		var _ resource.ResourceWithImportState = r
-		var _ ProjectUserResourceInterface = r
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "implements required interfaces",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "implements required interfaces":
+				r := NewProjectUserResource()
+
+				var _ resource.Resource = r
+				var _ resource.ResourceWithConfigure = r
+				var _ resource.ResourceWithImportState = r
+				var _ ProjectUserResourceInterface = r
+
+			case "error case - validation checks":
+				r := NewProjectUserResource()
+
+				assert.Implements(t, (*resource.Resource)(nil), r, "should implement resource.Resource")
+				assert.Implements(t, (*resource.ResourceWithConfigure)(nil), r, "should implement ResourceWithConfigure")
+				assert.Implements(t, (*resource.ResourceWithImportState)(nil), r, "should implement ResourceWithImportState")
+				assert.Implements(t, (*ProjectUserResourceInterface)(nil), r, "should implement ProjectUserResourceInterface")
+			}
+		})
+	}
 }
 
 // createTestUserResourceSchema creates a test schema for project user resource.
