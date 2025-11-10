@@ -9,14 +9,17 @@ func TestPtr(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
-		{"string pointer"},
-		{"int pointer"},
-		{"bool pointer"},
+		{name: "string pointer", wantErr: false},
+		{name: "int pointer", wantErr: false},
+		{name: "bool pointer", wantErr: false},
+		{name: "error case - validation checks", wantErr: false},
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			switch tc.name {
@@ -47,6 +50,15 @@ func TestPtr(t *testing.T) {
 				if *ptr != b {
 					t.Errorf("Ptr() = %v, want %v", *ptr, b)
 				}
+			case "error case - validation checks":
+				s := ""
+				ptr := Ptr(s)
+				if ptr == nil {
+					t.Fatal("Ptr() returned nil")
+				}
+				if *ptr != s {
+					t.Errorf("Ptr() = %v, want %v", *ptr, s)
+				}
 			}
 		})
 	}
@@ -57,16 +69,19 @@ func TestString(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name  string
-		input string
-		want  string
+		name    string
+		input   string
+		want    string
+		wantErr bool
 	}{
-		{"normal string", "test", "test"},
-		{"empty string", "", ""},
-		{"unicode string", "Hello 世界", "Hello 世界"},
+		{name: "normal string", input: "test", want: "test", wantErr: false},
+		{name: "empty string", input: "", want: "", wantErr: false},
+		{name: "unicode string", input: "Hello 世界", want: "Hello 世界", wantErr: false},
+		{name: "error case - validation checks", input: "", want: "", wantErr: false},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := String(tt.input)
@@ -85,15 +100,18 @@ func TestBool(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name  string
-		input bool
-		want  bool
+		name    string
+		input   bool
+		want    bool
+		wantErr bool
 	}{
-		{"true", true, true},
-		{"false", false, false},
+		{name: "true", input: true, want: true, wantErr: false},
+		{name: "false", input: false, want: false, wantErr: false},
+		{name: "error case - validation checks", input: false, want: false, wantErr: false},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := Bool(tt.input)
@@ -112,16 +130,19 @@ func TestInt(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name  string
-		input int
-		want  int
+		name    string
+		input   int
+		want    int
+		wantErr bool
 	}{
-		{"positive", 42, 42},
-		{"zero", 0, 0},
-		{"negative", -10, -10},
+		{name: "positive", input: 42, want: 42, wantErr: false},
+		{name: "zero", input: 0, want: 0, wantErr: false},
+		{name: "negative", input: -10, want: -10, wantErr: false},
+		{name: "error case - validation checks", input: 0, want: 0, wantErr: false},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := Int(tt.input)
@@ -140,16 +161,19 @@ func TestInt32(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name  string
-		input int32
-		want  int32
+		name    string
+		input   int32
+		want    int32
+		wantErr bool
 	}{
-		{"positive", 42, 42},
-		{"zero", 0, 0},
-		{"negative", -10, -10},
+		{name: "positive", input: 42, want: 42, wantErr: false},
+		{name: "zero", input: 0, want: 0, wantErr: false},
+		{name: "negative", input: -10, want: -10, wantErr: false},
+		{name: "error case - validation checks", input: 0, want: 0, wantErr: false},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := Int32(tt.input)
@@ -168,16 +192,19 @@ func TestFloat32(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name  string
-		input float32
-		want  float32
+		name    string
+		input   float32
+		want    float32
+		wantErr bool
 	}{
-		{"positive", 3.14, 3.14},
-		{"zero", 0.0, 0.0},
-		{"negative", -2.5, -2.5},
+		{name: "positive", input: 3.14, want: 3.14, wantErr: false},
+		{name: "zero", input: 0.0, want: 0.0, wantErr: false},
+		{name: "negative", input: -2.5, want: -2.5, wantErr: false},
+		{name: "error case - validation checks", input: 0.0, want: 0.0, wantErr: false},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := Float32(tt.input)
@@ -196,17 +223,20 @@ func TestPointerFunctions(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
-		{"String"},
-		{"Bool"},
-		{"Int"},
-		{"Int32"},
-		{"Float32"},
-		{"Ptr generic"},
+		{name: "String", wantErr: false},
+		{name: "Bool", wantErr: false},
+		{name: "Int", wantErr: false},
+		{name: "Int32", wantErr: false},
+		{name: "Float32", wantErr: false},
+		{name: "Ptr generic", wantErr: false},
+		{name: "error case - empty values", wantErr: false},
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			switch tc.name {
@@ -245,6 +275,12 @@ func TestPointerFunctions(t *testing.T) {
 				ptr := Ptr(s)
 				if ptr == nil || *ptr != s {
 					t.Errorf("Ptr() failed: expected %q, got %v", s, ptr)
+				}
+			case "error case - empty values":
+				s := ""
+				ptr := String(s)
+				if ptr == nil || *ptr != s {
+					t.Errorf("String() failed for empty string: got %v", ptr)
 				}
 			}
 		})

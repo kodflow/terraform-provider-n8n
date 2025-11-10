@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- convert execution helpers_test to table-driven (`23730a2`)
 - improve resource test coverage to 98.4% (`fa10123`)
 - improve datasource and datasources test coverage to 100% (`462e068`)
 - improve coverage with enhanced tests and shared utilities (`d19fa35`)
@@ -111,10 +112,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 74
+- **Total commits:** 75
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 5
+- **Tests:** 6
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -124,4 +125,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:26:43*
+*Changelog generated automatically on 2025-11-10 15:28:38*
