@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- add wantErr to internal test stubs (4 files) (`3b2086c`)
 - convert constants_test to table-driven (`43cde9e`)
 - add wantErr field to shared pointers_test (`70c0426`)
 - convert execution helpers_test to table-driven (`23730a2`)
@@ -114,10 +115,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 77
+- **Total commits:** 78
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 8
+- **Tests:** 9
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -127,4 +128,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:33:59*
+*Changelog generated automatically on 2025-11-10 15:37:42*

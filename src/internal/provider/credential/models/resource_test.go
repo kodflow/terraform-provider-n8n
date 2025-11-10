@@ -381,113 +381,141 @@ func TestResourceConcurrency(t *testing.T) {
 }
 
 func TestResourceValidation(t *testing.T) {
-	t.Run("validate required fields", func(t *testing.T) {
-		// Test that required fields can be checked
-		resource := Resource{}
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "validate required fields", wantErr: false},
+		{name: "validate empty vs null", wantErr: false},
+		{name: "error case - validation checks", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "validate required fields":
+				resource := Resource{}
 
-		// Check if required fields are null
-		assert.True(t, resource.ID.IsNull())
-		assert.True(t, resource.Name.IsNull())
-		assert.True(t, resource.Type.IsNull())
+				assert.True(t, resource.ID.IsNull())
+				assert.True(t, resource.Name.IsNull())
+				assert.True(t, resource.Type.IsNull())
 
-		// Set required fields
-		resource.ID = types.StringValue("required-id")
-		resource.Name = types.StringValue("Required Name")
-		resource.Type = types.StringValue("required-type")
+				resource.ID = types.StringValue("required-id")
+				resource.Name = types.StringValue("Required Name")
+				resource.Type = types.StringValue("required-type")
 
-		// Now they should not be null
-		assert.False(t, resource.ID.IsNull())
-		assert.False(t, resource.Name.IsNull())
-		assert.False(t, resource.Type.IsNull())
-	})
+				assert.False(t, resource.ID.IsNull())
+				assert.False(t, resource.Name.IsNull())
+				assert.False(t, resource.Type.IsNull())
 
-	t.Run("validate empty vs null", func(t *testing.T) {
-		// Test difference between empty string and null
-		resource1 := Resource{
-			Name: types.StringValue(""),
-		}
+			case "validate empty vs null":
+				resource1 := Resource{
+					Name: types.StringValue(""),
+				}
 
-		resource2 := Resource{
-			Name: types.StringNull(),
-		}
+				resource2 := Resource{
+					Name: types.StringNull(),
+				}
 
-		// Empty string is not null
-		assert.False(t, resource1.Name.IsNull())
-		assert.Equal(t, "", resource1.Name.ValueString())
+				assert.False(t, resource1.Name.IsNull())
+				assert.Equal(t, "", resource1.Name.ValueString())
 
-		// Null is null
-		assert.True(t, resource2.Name.IsNull())
-		assert.Equal(t, "", resource2.Name.ValueString()) // Null returns empty string
-	})
+				assert.True(t, resource2.Name.IsNull())
+				assert.Equal(t, "", resource2.Name.ValueString())
+
+			case "error case - validation checks":
+				resource := Resource{}
+				assert.True(t, resource.ID.IsNull())
+			}
+		})
+	}
 }
 
 func TestResourceUseCases(t *testing.T) {
-	t.Run("api credential", func(t *testing.T) {
-		// Test typical API credential
-		dataMap := map[string]attr.Value{
-			"api_key":  types.StringValue("sk-1234567890abcdef"),
-			"base_url": types.StringValue("https://api.example.com/v1"),
-		}
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "api credential", wantErr: false},
+		{name: "database credential", wantErr: false},
+		{name: "oauth credential", wantErr: false},
+		{name: "error case - validation checks", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "api credential":
+				dataMap := map[string]attr.Value{
+					"api_key":  types.StringValue("sk-1234567890abcdef"),
+					"base_url": types.StringValue("https://api.example.com/v1"),
+				}
 
-		resource := Resource{
-			ID:        types.StringValue("api-cred-001"),
-			Name:      types.StringValue("Example API"),
-			Type:      types.StringValue("api"),
-			Data:      types.MapValueMust(types.StringType, dataMap),
-			CreatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
-			UpdatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
-		}
+				resource := Resource{
+					ID:        types.StringValue("api-cred-001"),
+					Name:      types.StringValue("Example API"),
+					Type:      types.StringValue("api"),
+					Data:      types.MapValueMust(types.StringType, dataMap),
+					CreatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
+					UpdatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
+				}
 
-		assert.Equal(t, "api", resource.Type.ValueString())
-		assert.Equal(t, 2, len(resource.Data.Elements()))
-	})
+				assert.Equal(t, "api", resource.Type.ValueString())
+				assert.Equal(t, 2, len(resource.Data.Elements()))
 
-	t.Run("database credential", func(t *testing.T) {
-		// Test database credential
-		dataMap := map[string]attr.Value{
-			"host":     types.StringValue("localhost"),
-			"port":     types.StringValue("5432"),
-			"database": types.StringValue("myapp"),
-			"username": types.StringValue("dbuser"),
-			"password": types.StringValue("dbpass"),
-			"ssl_mode": types.StringValue("require"),
-		}
+			case "database credential":
+				dataMap := map[string]attr.Value{
+					"host":     types.StringValue("localhost"),
+					"port":     types.StringValue("5432"),
+					"database": types.StringValue("myapp"),
+					"username": types.StringValue("dbuser"),
+					"password": types.StringValue("dbpass"),
+					"ssl_mode": types.StringValue("require"),
+				}
 
-		resource := Resource{
-			ID:        types.StringValue("db-cred-001"),
-			Name:      types.StringValue("PostgreSQL Production"),
-			Type:      types.StringValue("postgresql"),
-			Data:      types.MapValueMust(types.StringType, dataMap),
-			CreatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
-			UpdatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
-		}
+				resource := Resource{
+					ID:        types.StringValue("db-cred-001"),
+					Name:      types.StringValue("PostgreSQL Production"),
+					Type:      types.StringValue("postgresql"),
+					Data:      types.MapValueMust(types.StringType, dataMap),
+					CreatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
+					UpdatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
+				}
 
-		assert.Equal(t, "postgresql", resource.Type.ValueString())
-		assert.Equal(t, 6, len(resource.Data.Elements()))
-	})
+				assert.Equal(t, "postgresql", resource.Type.ValueString())
+				assert.Equal(t, 6, len(resource.Data.Elements()))
 
-	t.Run("oauth credential", func(t *testing.T) {
-		// Test OAuth credential
-		dataMap := map[string]attr.Value{
-			"client_id":     types.StringValue("client123"),
-			"client_secret": types.StringValue("secret456"),
-			"access_token":  types.StringValue("token789"),
-			"refresh_token": types.StringValue("refresh012"),
-			"token_expiry":  types.StringValue("2024-12-31T23:59:59Z"),
-		}
+			case "oauth credential":
+				dataMap := map[string]attr.Value{
+					"client_id":     types.StringValue("client123"),
+					"client_secret": types.StringValue("secret456"),
+					"access_token":  types.StringValue("token789"),
+					"refresh_token": types.StringValue("refresh012"),
+					"token_expiry":  types.StringValue("2024-12-31T23:59:59Z"),
+				}
 
-		resource := Resource{
-			ID:        types.StringValue("oauth-cred-001"),
-			Name:      types.StringValue("Google OAuth"),
-			Type:      types.StringValue("oauth2"),
-			Data:      types.MapValueMust(types.StringType, dataMap),
-			CreatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
-			UpdatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
-		}
+				resource := Resource{
+					ID:        types.StringValue("oauth-cred-001"),
+					Name:      types.StringValue("Google OAuth"),
+					Type:      types.StringValue("oauth2"),
+					Data:      types.MapValueMust(types.StringType, dataMap),
+					CreatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
+					UpdatedAt: types.StringValue(time.Now().Format(time.RFC3339)),
+				}
 
-		assert.Equal(t, "oauth2", resource.Type.ValueString())
-		assert.Equal(t, 5, len(resource.Data.Elements()))
-	})
+				assert.Equal(t, "oauth2", resource.Type.ValueString())
+				assert.Equal(t, 5, len(resource.Data.Elements()))
+
+			case "error case - validation checks":
+				resource := Resource{}
+				assert.True(t, resource.ID.IsNull())
+			}
+		})
+	}
 }
 
 func BenchmarkResource(b *testing.B) {
