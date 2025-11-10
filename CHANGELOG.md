@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- convert workflow external tests to table-driven format (`81c9f30`)
 - convert sourcecontrol/models/resource_test.go to table-driven (`747010e`)
 - convert project/models/item_test.go to table-driven format (`24cd91b`)
 - convert project model tests to table-driven (datasource/datasources) (`cb458fe`)
@@ -110,8 +111,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 73
-- **Features:** 28
+- **Total commits:** 74
+- **Features:** 29
 - **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 15
@@ -123,4 +124,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:21:40*
+*Changelog generated automatically on 2025-11-10 15:26:43*
