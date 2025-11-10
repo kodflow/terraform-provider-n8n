@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- convert tag resource tests to table-driven format with error cases (`42530a7`)
 - convert execution models datasource tests to table-driven (`9294118`)
 - convert credential tests to table-driven format (`d58c8d0`)
 - add comprehensive unit tests - 78.1% to 97.7% coverage (`17b8e12`)
@@ -95,8 +96,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 58
-- **Features:** 13
+- **Total commits:** 59
+- **Features:** 14
 - **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 15
@@ -108,4 +109,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 14:46:32*
+*Changelog generated automatically on 2025-11-10 14:48:41*
