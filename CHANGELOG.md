@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- convert project resource model tests to table-driven format (`4881441`)
 - convert project user resource model tests to table-driven (`b2d30a2`)
 - convert execution item model tests to table-driven format (`af3febf`)
 - convert execution datasources model tests to table-driven (`d5c16d1`)
@@ -105,8 +106,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 68
-- **Features:** 23
+- **Total commits:** 69
+- **Features:** 24
 - **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 15
@@ -118,4 +119,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:10:20*
+*Changelog generated automatically on 2025-11-10 15:13:43*
