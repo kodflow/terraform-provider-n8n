@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- convert execution retry resource model tests to table-driven (`ac4ef21`)
 - convert execution datasource tests to table-driven format (`a3deeaf`)
 - convert execution datasources tests to table-driven format (`81b13ce`)
 - convert variable datasources tests to table-driven format (`317e43c`)
@@ -101,8 +102,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 64
-- **Features:** 19
+- **Total commits:** 65
+- **Features:** 20
 - **Bug fixes:** 10
 - **Tests:** 5
 - **Refactoring:** 15
@@ -114,4 +115,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:04:20*
+*Changelog generated automatically on 2025-11-10 15:06:01*
