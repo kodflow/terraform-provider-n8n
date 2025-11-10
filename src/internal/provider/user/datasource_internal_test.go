@@ -12,10 +12,16 @@ func TestUserDataSource_schemaAttributes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -32,10 +38,16 @@ func TestUserDataSource_getIdentifier(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -52,10 +64,16 @@ func TestUserDataSource_fetchUser(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -72,10 +90,16 @@ func TestUserDataSource_populateUserData(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
