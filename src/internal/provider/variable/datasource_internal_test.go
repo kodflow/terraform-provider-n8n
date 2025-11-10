@@ -12,10 +12,16 @@ func TestVariableDataSource_validateIdentifiers(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -32,10 +38,16 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 

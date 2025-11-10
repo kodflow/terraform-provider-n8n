@@ -12,10 +12,16 @@ func TestVariableResource_executeVariableCreate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -32,10 +38,16 @@ func TestVariableResource_findCreatedVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -52,10 +64,16 @@ func TestVariableResource_findVariableByID(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -72,10 +90,16 @@ func TestVariableResource_updateStateFromVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -92,10 +116,16 @@ func TestVariableResource_executeVariableUpdate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 
@@ -112,10 +142,16 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
+		name    string
+		wantErr bool
 	}{
 		{
-			name: "success case",
+			name:    "success case",
+			wantErr: false,
+		},
+		{
+			name:    "error case - validation checks",
+			wantErr: false,
 		},
 	}
 

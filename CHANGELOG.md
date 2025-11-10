@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- convert constants_test to table-driven (`43cde9e`)
 - add wantErr field to shared pointers_test (`70c0426`)
 - convert execution helpers_test to table-driven (`23730a2`)
 - improve resource test coverage to 98.4% (`fa10123`)
@@ -113,10 +114,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 76
+- **Total commits:** 77
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 7
+- **Tests:** 8
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -126,4 +127,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:30:13*
+*Changelog generated automatically on 2025-11-10 15:33:59*
