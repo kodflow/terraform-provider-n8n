@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- convert workflow resource_internal_test to table-driven format (`b026f0b`)
 - add wantErr fields to user internal test stubs (`82b60c6`)
 - add wantErr fields to execution internal test stubs (`2c4ab0b`)
 - convert credential resource_test validation+usecases (`405ccca`)
@@ -118,10 +119,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 81
+- **Total commits:** 82
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 12
+- **Tests:** 13
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -131,4 +132,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 15:45:40*
+*Changelog generated automatically on 2025-11-10 15:47:36*
