@@ -32,6 +32,23 @@ func TestNewCredentialTransferResource(t *testing.T) {
 	})
 }
 
+func TestNewCredentialTransferResourceWrapper(t *testing.T) {
+	t.Run("returns valid resource", func(t *testing.T) {
+		resource := NewCredentialTransferResourceWrapper()
+		assert.NotNil(t, resource, "should not return nil")
+
+		transferResource, ok := resource.(*CredentialTransferResource)
+		assert.True(t, ok, "should be *CredentialTransferResource")
+		assert.NotNil(t, transferResource, "resource should not be nil")
+	})
+
+	t.Run("resource has nil client initially", func(t *testing.T) {
+		resource := NewCredentialTransferResourceWrapper()
+		transferResource := resource.(*CredentialTransferResource)
+		assert.Nil(t, transferResource.client, "client should be nil")
+	})
+}
+
 func TestCredentialTransferResource_Metadata(t *testing.T) {
 	t.Run("set metadata", func(t *testing.T) {
 		r := &CredentialTransferResource{}

@@ -14,7 +14,7 @@ import (
 )
 
 // WORKFLOW_ATTRIBUTES_SIZE defines the initial capacity for workflow attributes map.
-const WORKFLOW_ATTRIBUTES_SIZE int = 11
+const WORKFLOW_ATTRIBUTES_SIZE int = 14
 
 // Ensure WorkflowResource implements required interfaces.
 var (

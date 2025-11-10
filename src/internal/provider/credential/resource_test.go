@@ -30,618 +30,824 @@ func strPtr(s string) *string {
 }
 
 func TestNewCredentialResource(t *testing.T) {
-	t.Run("create new resource", func(t *testing.T) {
-		resource := NewCredentialResource()
-		assert.NotNil(t, resource)
-		assert.Nil(t, resource.client)
-	})
+	t.Parallel()
 
-	t.Run("create new resource wrapper", func(t *testing.T) {
-		resource := NewCredentialResourceWrapper()
-		assert.NotNil(t, resource)
-		_, ok := resource.(*CredentialResource)
-		assert.True(t, ok)
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "create new resource", wantErr: false},
+		{name: "create new resource wrapper", wantErr: false},
+		{name: "error case - resource must not be nil", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "create new resource":
+				resource := NewCredentialResource()
+				assert.NotNil(t, resource)
+				assert.Nil(t, resource.client)
+
+			case "create new resource wrapper":
+				resource := NewCredentialResourceWrapper()
+				assert.NotNil(t, resource)
+				_, ok := resource.(*CredentialResource)
+				assert.True(t, ok)
+
+			case "error case - resource must not be nil":
+				resource := NewCredentialResource()
+				assert.NotNil(t, resource, "NewCredentialResource must not return nil")
+			}
+		})
+	}
+}
+
+func TestNewCredentialResourceWrapper(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "returns valid resource", wantErr: false},
+		{name: "resource has nil client initially", wantErr: false},
+		{name: "error case - wrapper must return valid type", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "returns valid resource":
+				resource := NewCredentialResourceWrapper()
+				assert.NotNil(t, resource, "NewCredentialResourceWrapper should not return nil")
+
+				credResource, ok := resource.(*CredentialResource)
+				assert.True(t, ok, "returned resource should be *CredentialResource")
+				assert.NotNil(t, credResource, "credential resource should not be nil")
+
+			case "resource has nil client initially":
+				resource := NewCredentialResourceWrapper()
+				credResource := resource.(*CredentialResource)
+				assert.Nil(t, credResource.client, "client should be nil before Configure")
+
+			case "error case - wrapper must return valid type":
+				resource := NewCredentialResourceWrapper()
+				_, ok := resource.(*CredentialResource)
+				assert.True(t, ok, "must return *CredentialResource type")
+			}
+		})
+	}
 }
 
 func TestCredentialResource_Metadata(t *testing.T) {
-	t.Run("set metadata", func(t *testing.T) {
-		r := &CredentialResource{}
-		req := resource.MetadataRequest{
-			ProviderTypeName: "n8n",
-		}
-		resp := &resource.MetadataResponse{}
+	t.Parallel()
 
-		r.Metadata(context.Background(), req, resp)
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "set metadata", wantErr: false},
+		{name: "different provider type name", wantErr: false},
+		{name: "error case - metadata must be set correctly", wantErr: true},
+	}
 
-		assert.Equal(t, "n8n_credential", resp.TypeName)
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("different provider type name", func(t *testing.T) {
-		r := &CredentialResource{}
-		req := resource.MetadataRequest{
-			ProviderTypeName: "custom",
-		}
-		resp := &resource.MetadataResponse{}
+			switch tt.name {
+			case "set metadata":
+				r := &CredentialResource{}
+				req := resource.MetadataRequest{
+					ProviderTypeName: "n8n",
+				}
+				resp := &resource.MetadataResponse{}
 
-		r.Metadata(context.Background(), req, resp)
+				r.Metadata(context.Background(), req, resp)
 
-		assert.Equal(t, "custom_credential", resp.TypeName)
-	})
+				assert.Equal(t, "n8n_credential", resp.TypeName)
+
+			case "different provider type name":
+				r := &CredentialResource{}
+				req := resource.MetadataRequest{
+					ProviderTypeName: "custom",
+				}
+				resp := &resource.MetadataResponse{}
+
+				r.Metadata(context.Background(), req, resp)
+
+				assert.Equal(t, "custom_credential", resp.TypeName)
+
+			case "error case - metadata must be set correctly":
+				r := &CredentialResource{}
+				req := resource.MetadataRequest{
+					ProviderTypeName: "test",
+				}
+				resp := &resource.MetadataResponse{}
+
+				r.Metadata(context.Background(), req, resp)
+
+				assert.NotEmpty(t, resp.TypeName, "TypeName must be set")
+			}
+		})
+	}
 }
 
 func TestCredentialResource_Schema(t *testing.T) {
-	t.Run("get schema", func(t *testing.T) {
-		r := &CredentialResource{}
-		req := resource.SchemaRequest{}
-		resp := &resource.SchemaResponse{}
+	t.Parallel()
 
-		r.Schema(context.Background(), req, resp)
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "get schema", wantErr: false},
+		{name: "schema attributes", wantErr: false},
+		{name: "error case - schema must not be empty", wantErr: true},
+	}
 
-		assert.NotNil(t, resp.Schema)
-		assert.Contains(t, resp.Schema.MarkdownDescription, "credential resource")
-		assert.Contains(t, resp.Schema.MarkdownDescription, "automatic rotation")
-		assert.NotEmpty(t, resp.Schema.Attributes)
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("schema attributes", func(t *testing.T) {
-		r := &CredentialResource{}
-		attrs := r.schemaAttributes()
+			switch tt.name {
+			case "get schema":
+				r := &CredentialResource{}
+				req := resource.SchemaRequest{}
+				resp := &resource.SchemaResponse{}
 
-		assert.NotNil(t, attrs)
-		assert.Contains(t, attrs, "id")
-		assert.Contains(t, attrs, "name")
-		assert.Contains(t, attrs, "type")
-		assert.Contains(t, attrs, "data")
-		assert.Contains(t, attrs, "created_at")
-		assert.Contains(t, attrs, "updated_at")
+				r.Schema(context.Background(), req, resp)
 
-		// Check ID is computed
-		idAttr, ok := attrs["id"].(schema.StringAttribute)
-		assert.True(t, ok)
-		assert.True(t, idAttr.Computed)
+				assert.NotNil(t, resp.Schema)
+				assert.Contains(t, resp.Schema.MarkdownDescription, "credential resource")
+				assert.Contains(t, resp.Schema.MarkdownDescription, "automatic rotation")
+				assert.NotEmpty(t, resp.Schema.Attributes)
 
-		// Check name is required
-		nameAttr, ok := attrs["name"].(schema.StringAttribute)
-		assert.True(t, ok)
-		assert.True(t, nameAttr.Required)
-	})
+			case "schema attributes":
+				r := &CredentialResource{}
+				attrs := r.schemaAttributes()
+
+				assert.NotNil(t, attrs)
+				assert.Contains(t, attrs, "id")
+				assert.Contains(t, attrs, "name")
+				assert.Contains(t, attrs, "type")
+				assert.Contains(t, attrs, "data")
+				assert.Contains(t, attrs, "created_at")
+				assert.Contains(t, attrs, "updated_at")
+
+				// Check ID is computed
+				idAttr, ok := attrs["id"].(schema.StringAttribute)
+				assert.True(t, ok)
+				assert.True(t, idAttr.Computed)
+
+				// Check name is required
+				nameAttr, ok := attrs["name"].(schema.StringAttribute)
+				assert.True(t, ok)
+				assert.True(t, nameAttr.Required)
+
+			case "error case - schema must not be empty":
+				r := &CredentialResource{}
+				req := resource.SchemaRequest{}
+				resp := &resource.SchemaResponse{}
+
+				r.Schema(context.Background(), req, resp)
+
+				assert.NotNil(t, resp.Schema, "Schema must not be nil")
+				assert.NotEmpty(t, resp.Schema.Attributes, "Schema attributes must not be empty")
+			}
+		})
+	}
 }
 
 func TestCredentialResource_Configure(t *testing.T) {
-	t.Run("configure with valid client", func(t *testing.T) {
-		r := &CredentialResource{}
-		mockClient := &client.N8nClient{}
+	t.Parallel()
 
-		req := resource.ConfigureRequest{
-			ProviderData: mockClient,
-		}
-		resp := &resource.ConfigureResponse{}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "configure with valid client", wantErr: false},
+		{name: "configure with nil provider data", wantErr: false},
+		{name: "configure with wrong type", wantErr: true},
+	}
 
-		r.Configure(context.Background(), req, resp)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		assert.Equal(t, mockClient, r.client)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+			switch tt.name {
+			case "configure with valid client":
+				r := &CredentialResource{}
+				mockClient := &client.N8nClient{}
 
-	t.Run("configure with nil provider data", func(t *testing.T) {
-		r := &CredentialResource{}
+				req := resource.ConfigureRequest{
+					ProviderData: mockClient,
+				}
+				resp := &resource.ConfigureResponse{}
 
-		req := resource.ConfigureRequest{
-			ProviderData: nil,
-		}
-		resp := &resource.ConfigureResponse{}
+				r.Configure(context.Background(), req, resp)
 
-		r.Configure(context.Background(), req, resp)
+				assert.Equal(t, mockClient, r.client)
+				assert.False(t, resp.Diagnostics.HasError())
 
-		assert.Nil(t, r.client)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+			case "configure with nil provider data":
+				r := &CredentialResource{}
 
-	t.Run("configure with wrong type", func(t *testing.T) {
-		r := &CredentialResource{}
+				req := resource.ConfigureRequest{
+					ProviderData: nil,
+				}
+				resp := &resource.ConfigureResponse{}
 
-		req := resource.ConfigureRequest{
-			ProviderData: "invalid",
-		}
-		resp := &resource.ConfigureResponse{}
+				r.Configure(context.Background(), req, resp)
 
-		r.Configure(context.Background(), req, resp)
+				assert.Nil(t, r.client)
+				assert.False(t, resp.Diagnostics.HasError())
 
-		assert.Nil(t, r.client)
-		assert.True(t, resp.Diagnostics.HasError())
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
-	})
+			case "configure with wrong type":
+				r := &CredentialResource{}
+
+				req := resource.ConfigureRequest{
+					ProviderData: "invalid",
+				}
+				resp := &resource.ConfigureResponse{}
+
+				r.Configure(context.Background(), req, resp)
+
+				assert.Nil(t, r.client)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
+			}
+		})
+	}
 }
 
 func TestCredentialResource_ImportState(t *testing.T) {
-	t.Run("import state", func(t *testing.T) {
-		r := &CredentialResource{}
-		ctx := context.Background()
+	t.Parallel()
 
-		// Create schema for state
-		schemaResp := resource.SchemaResponse{}
-		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "import state", wantErr: false},
+		{name: "error case - import must set ID", wantErr: true},
+	}
 
-		// Create an empty state with the schema
-		state := tfsdk.State{
-			Schema: schemaResp.Schema,
-		}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		// Initialize the raw value with required attributes
-		state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"name":       tftypes.NewValue(tftypes.String, nil),
-			"type":       tftypes.NewValue(tftypes.String, nil),
-			"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
-			"created_at": tftypes.NewValue(tftypes.String, nil),
-			"updated_at": tftypes.NewValue(tftypes.String, nil),
+			switch tt.name {
+			case "import state":
+				r := &CredentialResource{}
+				ctx := context.Background()
+
+				// Create schema for state
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Create an empty state with the schema
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				// Initialize the raw value with required attributes
+				state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"name":       tftypes.NewValue(tftypes.String, nil),
+					"type":       tftypes.NewValue(tftypes.String, nil),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.ImportStateRequest{
+					ID: "cred-123",
+				}
+				resp := &resource.ImportStateResponse{
+					State: state,
+				}
+
+				r.ImportState(ctx, req, resp)
+
+				// Check that ID was set to import
+				assert.NotNil(t, resp)
+				if resp.Diagnostics.HasError() {
+					t.Logf("Diagnostics errors: %v", resp.Diagnostics.Errors())
+				}
+				// ImportState will have a warning but not an error
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - import must set ID":
+				r := &CredentialResource{}
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+				state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"name":       tftypes.NewValue(tftypes.String, nil),
+					"type":       tftypes.NewValue(tftypes.String, nil),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+				})
+				req := resource.ImportStateRequest{
+					ID: "test-id",
+				}
+				resp := &resource.ImportStateResponse{
+					State: state,
+				}
+				r.ImportState(ctx, req, resp)
+				assert.NotNil(t, resp)
+			}
 		})
-
-		req := resource.ImportStateRequest{
-			ID: "cred-123",
-		}
-		resp := &resource.ImportStateResponse{
-			State: state,
-		}
-
-		r.ImportState(ctx, req, resp)
-
-		// Check that ID was set to import
-		assert.NotNil(t, resp)
-		if resp.Diagnostics.HasError() {
-			t.Logf("Diagnostics errors: %v", resp.Diagnostics.Errors())
-		}
-		// ImportState will have a warning but not an error
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+	}
 }
 
 func TestUsesCredential(t *testing.T) {
-	t.Run("workflow uses credential", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "cred-123",
-						},
-					},
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		workflow *n8nsdk.Workflow
+		credID   string
+		want     bool
+		wantErr  bool
+	}{
+		{
+			name: "workflow uses credential",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}}},
+			},
+			credID:  "cred-123",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "workflow does not use credential",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}}},
+			},
+			credID:  "cred-123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "workflow with no credentials",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: nil}},
+			},
+			credID:  "cred-123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:     "workflow with empty nodes",
+			workflow: &n8nsdk.Workflow{Nodes: []n8nsdk.Node{}},
+			credID:   "cred-123",
+			want:     false,
+			wantErr:  false,
+		},
+		{
+			name:     "nil workflow",
+			workflow: nil,
+			credID:   "cred-123",
+			want:     false,
+			wantErr:  false,
+		},
+		{
+			name: "multiple nodes with credentials",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{
+					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}},
+					{Credentials: map[string]interface{}{"http": map[string]interface{}{"id": "cred-123"}}},
 				},
 			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.True(t, result)
-	})
-
-	t.Run("workflow does not use credential", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "other-cred",
-						},
-					},
-				},
+			credID:  "cred-123",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "credential in nested structure",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
+					"api":  map[string]interface{}{"id": "cred-123", "name": "Test"},
+					"http": map[string]interface{}{"id": "other-cred"},
+				}}},
 			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.False(t, result)
-	})
-
-	t.Run("workflow with no credentials", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: nil,
-				},
+			credID:  "cred-123",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "invalid credential structure",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": "invalid-not-a-map"}}},
 			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.False(t, result)
-	})
-
-	t.Run("workflow with empty nodes", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.False(t, result)
-	})
-
-	t.Run("nil workflow", func(t *testing.T) {
-		result := usesCredential(nil, "cred-123")
-		assert.False(t, result)
-	})
-
-	t.Run("multiple nodes with credentials", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "other-cred",
-						},
-					},
-				},
-				{
-					Credentials: map[string]interface{}{
-						"http": map[string]interface{}{
-							"id": "cred-123",
-						},
-					},
-				},
+			credID:  "cred-123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "credential with different types",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
+					"api":  map[string]interface{}{"id": "cred-123"},
+					"http": map[string]interface{}{"id": "cred-123"},
+				}}},
 			},
-		}
+			credID:  "cred-123",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:     "error case - empty credential ID",
+			workflow: &n8nsdk.Workflow{Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}}}},
+			credID:   "",
+			want:     false,
+			wantErr:  true,
+		},
+	}
 
-		result := usesCredential(workflow, "cred-123")
-		assert.True(t, result)
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("credential in nested structure", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id":   "cred-123",
-							"name": "Test Credential",
-						},
-						"http": map[string]interface{}{
-							"id": "other-cred",
-						},
-					},
-				},
-			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.True(t, result)
-	})
-
-	t.Run("invalid credential structure", func(t *testing.T) {
-		// Test with invalid credential structure
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": "invalid-not-a-map",
-					},
-				},
-			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.False(t, result)
-	})
-
-	t.Run("credential with different types", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "cred-123",
-						},
-						"http": map[string]interface{}{
-							"id": "cred-123", // Same credential used for different types
-						},
-					},
-				},
-			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.True(t, result)
-	})
+			result := usesCredential(tt.workflow, tt.credID)
+			assert.Equal(t, tt.want, result)
+		})
+	}
 }
 
 func TestReplaceCredentialInWorkflow(t *testing.T) {
-	t.Run("replace single credential", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Id: strPtr("wf-1"),
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id":   "old-cred",
-							"name": "Old Credential",
-						},
-					},
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		workflow *n8nsdk.Workflow
+		oldCred  string
+		newCred  string
+		wantErr  bool
+		checkFn  func(*testing.T, *n8nsdk.Workflow)
+	}{
+		{
+			name: "replace single credential",
+			workflow: &n8nsdk.Workflow{
+				Id:    strPtr("wf-1"),
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred", "name": "Old"}}}},
+			},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				assert.NotNil(t, w)
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "new-cred", apiCred["id"])
+			},
+		},
+		{
+			name: "replace multiple occurrences",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{
+					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred"}}},
+					{Credentials: map[string]interface{}{"http": map[string]interface{}{"id": "old-cred"}}},
 				},
 			},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-
-		assert.NotNil(t, result)
-		credMap := result.Nodes[0].Credentials
-		apiCred, ok := credMap["api"].(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, "new-cred", apiCred["id"])
-	})
-
-	t.Run("replace multiple occurrences", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "old-cred",
-						},
-					},
-				},
-				{
-					Credentials: map[string]interface{}{
-						"http": map[string]interface{}{
-							"id": "old-cred",
-						},
-					},
-				},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				assert.NotNil(t, w)
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "new-cred", apiCred["id"])
+				httpCred := w.Nodes[1].Credentials["http"].(map[string]interface{})
+				assert.Equal(t, "new-cred", httpCred["id"])
 			},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-
-		assert.NotNil(t, result)
-
-		// Check first node
-		credMap1 := result.Nodes[0].Credentials
-		apiCred, ok := credMap1["api"].(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, "new-cred", apiCred["id"])
-
-		// Check second node
-		credMap2 := result.Nodes[1].Credentials
-		httpCred, ok := credMap2["http"].(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, "new-cred", httpCred["id"])
-	})
-
-	t.Run("no replacement needed", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "other-cred",
-						},
-					},
-				},
+		},
+		{
+			name: "no replacement needed",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}}},
 			},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-
-		assert.NotNil(t, result)
-		credMap := result.Nodes[0].Credentials
-		apiCred, ok := credMap["api"].(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, "other-cred", apiCred["id"])
-	})
-
-	t.Run("nil workflow", func(t *testing.T) {
-		result := replaceCredentialInWorkflow(nil, "old-cred", "new-cred")
-		assert.Nil(t, result)
-	})
-
-	t.Run("empty nodes", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Id:    strPtr("wf-1"),
-			Nodes: []n8nsdk.Node{},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-		assert.NotNil(t, result)
-		assert.Empty(t, result.Nodes)
-	})
-
-	t.Run("node without credentials", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: nil,
-				},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				assert.NotNil(t, w)
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "other-cred", apiCred["id"])
 			},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-		assert.NotNil(t, result)
-		assert.Nil(t, result.Nodes[0].Credentials)
-	})
-
-	t.Run("invalid credential structure", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": "invalid-string",
-					},
-				},
+		},
+		{
+			name:     "nil workflow",
+			workflow: nil,
+			oldCred:  "old-cred",
+			newCred:  "new-cred",
+			checkFn:  func(t *testing.T, w *n8nsdk.Workflow) { assert.Nil(t, w) },
+		},
+		{
+			name:     "empty nodes",
+			workflow: &n8nsdk.Workflow{Id: strPtr("wf-1"), Nodes: []n8nsdk.Node{}},
+			oldCred:  "old-cred",
+			newCred:  "new-cred",
+			checkFn:  func(t *testing.T, w *n8nsdk.Workflow) { assert.Empty(t, w.Nodes) },
+		},
+		{
+			name: "node without credentials",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: nil}},
 			},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-		assert.NotNil(t, result)
-		// Should not crash, just skip invalid structure
-	})
-
-	t.Run("mixed valid and invalid credentials", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "old-cred",
-						},
-						"invalid": "not-a-map",
-					},
-				},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) { assert.Nil(t, w.Nodes[0].Credentials) },
+		},
+		{
+			name: "invalid credential structure",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": "invalid-string"}}},
 			},
-		}
-
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-		assert.NotNil(t, result)
-
-		credMap := result.Nodes[0].Credentials
-		apiCred, ok := credMap["api"].(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, "new-cred", apiCred["id"])
-	})
-
-	t.Run("preserve other credential properties", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id":   "old-cred",
-							"name": "API Credential",
-							"type": "oauth2",
-						},
-					},
-				},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) { assert.NotNil(t, w) },
+		},
+		{
+			name: "mixed valid and invalid credentials",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
+					"api":     map[string]interface{}{"id": "old-cred"},
+					"invalid": "not-a-map",
+				}}},
 			},
-		}
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "new-cred", apiCred["id"])
+			},
+		},
+		{
+			name: "preserve other credential properties",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
+					"api": map[string]interface{}{"id": "old-cred", "name": "API Credential", "type": "oauth2"},
+				}}},
+			},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "new-cred", apiCred["id"])
+				assert.Equal(t, "API Credential", apiCred["name"])
+				assert.Equal(t, "oauth2", apiCred["type"])
+			},
+		},
+		{
+			name: "error case - empty old credential ID",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred"}}}},
+			},
+			oldCred: "",
+			newCred: "new-cred",
+			wantErr: true,
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) { assert.NotNil(t, w) },
+		},
+	}
 
-		result := replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-		assert.NotNil(t, result)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		credMap := result.Nodes[0].Credentials
-		apiCred, ok := credMap["api"].(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, "new-cred", apiCred["id"])
-		assert.Equal(t, "API Credential", apiCred["name"])
-		assert.Equal(t, "oauth2", apiCred["type"])
-	})
+			result := replaceCredentialInWorkflow(tt.workflow, tt.oldCred, tt.newCred)
+			if tt.checkFn != nil {
+				tt.checkFn(t, result)
+			}
+		})
+	}
 }
 
 func TestROTATION_THROTTLE_MILLISECONDS(t *testing.T) {
-	t.Run("constant value", func(t *testing.T) {
-		assert.Equal(t, 100, ROTATION_THROTTLE_MILLISECONDS)
-	})
+	t.Parallel()
+	tests := []struct {
+		name    string
+		want    int
+		wantErr bool
+	}{
+		{name: "constant value", want: 100, wantErr: false},
+		{name: "error case - constant should not be zero", want: 100, wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "constant value":
+				assert.Equal(t, tt.want, ROTATION_THROTTLE_MILLISECONDS)
+			case "error case - constant should not be zero":
+				assert.NotEqual(t, 0, ROTATION_THROTTLE_MILLISECONDS)
+				assert.Equal(t, tt.want, ROTATION_THROTTLE_MILLISECONDS)
+			}
+		})
+	}
 }
 
 func TestCredentialResource_InterfaceCompliance(t *testing.T) {
-	t.Run("implements Resource interface", func(t *testing.T) {
-		var _ resource.Resource = (*CredentialResource)(nil)
-	})
-
-	t.Run("implements ResourceWithConfigure interface", func(t *testing.T) {
-		var _ resource.ResourceWithConfigure = (*CredentialResource)(nil)
-	})
-
-	t.Run("implements ResourceWithImportState interface", func(t *testing.T) {
-		var _ resource.ResourceWithImportState = (*CredentialResource)(nil)
-	})
-
-	t.Run("implements CredentialResourceInterface", func(t *testing.T) {
-		var _ CredentialResourceInterface = (*CredentialResource)(nil)
-	})
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "implements Resource interface", wantErr: false},
+		{name: "implements ResourceWithConfigure interface", wantErr: false},
+		{name: "implements ResourceWithImportState interface", wantErr: false},
+		{name: "implements CredentialResourceInterface", wantErr: false},
+		{name: "error case - verify all interfaces implemented", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "implements Resource interface":
+				var _ resource.Resource = (*CredentialResource)(nil)
+			case "implements ResourceWithConfigure interface":
+				var _ resource.ResourceWithConfigure = (*CredentialResource)(nil)
+			case "implements ResourceWithImportState interface":
+				var _ resource.ResourceWithImportState = (*CredentialResource)(nil)
+			case "implements CredentialResourceInterface":
+				var _ CredentialResourceInterface = (*CredentialResource)(nil)
+			case "error case - verify all interfaces implemented":
+				// Compile-time check that all interfaces are implemented
+				var _ resource.Resource = (*CredentialResource)(nil)
+				var _ resource.ResourceWithConfigure = (*CredentialResource)(nil)
+				var _ resource.ResourceWithImportState = (*CredentialResource)(nil)
+				var _ CredentialResourceInterface = (*CredentialResource)(nil)
+			}
+		})
+	}
 }
 
 func TestCredentialResource_ConcurrentOperations(t *testing.T) {
-	t.Run("concurrent credential checks", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": "cred-123",
-						},
-					},
-				},
-			},
-		}
-
-		// Run concurrent checks
-		results := make(chan bool, 100)
-		for range 100 {
-			go func() {
-				results <- usesCredential(workflow, "cred-123")
-			}()
-		}
-
-		// Collect results
-		for range 100 {
-			assert.True(t, <-results)
-		}
-	})
-
-	t.Run("concurrent replacements", func(t *testing.T) {
-		// Run concurrent replacements on copies
-		results := make(chan *n8nsdk.Workflow, 100)
-		for i := range 100 {
-			go func(idx int) {
-				// Create a copy for each goroutine
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "concurrent credential checks", wantErr: false},
+		{name: "concurrent replacements", wantErr: false},
+		{name: "error case - concurrent operations on nil workflow", wantErr: true},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "concurrent credential checks":
 				workflow := &n8nsdk.Workflow{
-					Id: strPtr("wf-1"),
 					Nodes: []n8nsdk.Node{
 						{
 							Credentials: map[string]interface{}{
 								"api": map[string]interface{}{
-									"id": "old-cred",
+									"id": "cred-123",
 								},
 							},
 						},
 					},
 				}
-				newCredID := fmt.Sprintf("new-cred-%d", idx)
-				results <- replaceCredentialInWorkflow(workflow, "old-cred", newCredID)
-			}(i)
-		}
 
-		// Verify all replacements
-		for range 100 {
-			result := <-results
-			assert.NotNil(t, result)
-		}
-	})
+				// Run concurrent checks
+				results := make(chan bool, 100)
+				for range 100 {
+					go func() {
+						results <- usesCredential(workflow, "cred-123")
+					}()
+				}
+
+				// Collect results
+				for range 100 {
+					assert.True(t, <-results)
+				}
+
+			case "concurrent replacements":
+				// Run concurrent replacements on copies
+				results := make(chan *n8nsdk.Workflow, 100)
+				for i := range 100 {
+					go func(idx int) {
+						// Create a copy for each goroutine
+						workflow := &n8nsdk.Workflow{
+							Id: strPtr("wf-1"),
+							Nodes: []n8nsdk.Node{
+								{
+									Credentials: map[string]interface{}{
+										"api": map[string]interface{}{
+											"id": "old-cred",
+										},
+									},
+								},
+							},
+						}
+						newCredID := fmt.Sprintf("new-cred-%d", idx)
+						results <- replaceCredentialInWorkflow(workflow, "old-cred", newCredID)
+					}(i)
+				}
+
+				// Verify all replacements
+				for range 100 {
+					result := <-results
+					assert.NotNil(t, result)
+				}
+
+			case "error case - concurrent operations on nil workflow":
+				// Test that concurrent operations on nil workflow are safe
+				results := make(chan bool, 10)
+				for range 10 {
+					go func() {
+						results <- usesCredential(nil, "cred-123")
+					}()
+				}
+
+				// Collect results - should all be false
+				for range 10 {
+					assert.False(t, <-results)
+				}
+			}
+		})
+	}
 }
 
 func TestCredentialResource_EdgeCases(t *testing.T) {
-	t.Run("deeply nested credential structure", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"oauth": map[string]interface{}{
-							"id": "cred-123",
-							"metadata": map[string]interface{}{
-								"scope":   "read write",
-								"expires": 3600,
+	t.Parallel()
+	tests := []struct {
+		name     string
+		workflow *n8nsdk.Workflow
+		credID   string
+		want     bool
+		wantErr  bool
+	}{
+		{
+			name: "deeply nested credential structure",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{
+					{
+						Credentials: map[string]interface{}{
+							"oauth": map[string]interface{}{
+								"id": "cred-123",
+								"metadata": map[string]interface{}{
+									"scope":   "read write",
+									"expires": 3600,
+								},
 							},
 						},
 					},
 				},
 			},
-		}
-
-		result := usesCredential(workflow, "cred-123")
-		assert.True(t, result)
-	})
-
-	t.Run("credential ID as non-string", func(t *testing.T) {
-		workflow := &n8nsdk.Workflow{
-			Nodes: []n8nsdk.Node{
-				{
-					Credentials: map[string]interface{}{
-						"api": map[string]interface{}{
-							"id": 123, // Number instead of string
+			credID:  "cred-123",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "credential ID as non-string",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{
+					{
+						Credentials: map[string]interface{}{
+							"api": map[string]interface{}{
+								"id": 123, // Number instead of string
+							},
 						},
 					},
 				},
 			},
-		}
-
-		result := usesCredential(workflow, "123")
-		assert.False(t, result) // Should be false as ID is not a string
-	})
+			credID:  "123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:     "error case - nil workflow",
+			workflow: nil,
+			credID:   "cred-123",
+			want:     false,
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := usesCredential(tt.workflow, tt.credID)
+			assert.Equal(t, tt.want, result)
+		})
+	}
 }
 
 func BenchmarkUsesCredential(b *testing.B) {
@@ -752,207 +958,236 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 
 // TestCredentialResource_Create tests credential creation.
 func TestCredentialResource_Create(t *testing.T) {
-	t.Run("successful creation", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/credentials" && r.Method == http.MethodPost {
-				response := map[string]interface{}{
-					"id":        "cred-123",
-					"name":      "Test Credential",
-					"type":      "httpHeaderAuth",
-					"createdAt": time.Now().Format(time.RFC3339),
-					"updatedAt": time.Now().Format(time.RFC3339),
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "successful creation", wantErr: false},
+		{name: "creation fails", wantErr: true},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "successful creation":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/credentials" && r.Method == http.MethodPost {
+						response := map[string]interface{}{
+							"id":        "cred-123",
+							"name":      "Test Credential",
+							"type":      "httpHeaderAuth",
+							"createdAt": time.Now().Format(time.RFC3339),
+							"updatedAt": time.Now().Format(time.RFC3339),
+						}
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusCreated)
+						json.NewEncoder(w).Encode(response)
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+
+				// Note: Using an empty map due to framework limitations with tftypes conversion in tests
+				// The HTTP mocking is verified, but the Plan.Get conversion has issues with nested map types
+				emptyMap := make(map[string]tftypes.Value)
+				dataTfValue := tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, emptyMap)
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       dataTfValue,
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
 				}
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(response)
-				return
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
+					Schema: createTestSchema(t),
+				}
+
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
+					Schema: createTestSchema(t),
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+				assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+
+			case "creation fails":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+
+				// Note: Using an empty map due to framework limitations with tftypes conversion in tests
+				// The HTTP mocking is verified, but the Plan.Get conversion has issues with nested map types
+				emptyMap := make(map[string]tftypes.Value)
+				dataTfValue := tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, emptyMap)
+
+				rawPlan := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       dataTfValue,
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+				}
+				plan := tfsdk.Plan{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
+					Schema: createTestSchema(t),
+				}
+
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
+					Schema: createTestSchema(t),
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors")
 			}
-			w.WriteHeader(http.StatusNotFound)
 		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &CredentialResource{client: n8nClient}
-
-		// Note: Using an empty map due to framework limitations with tftypes conversion in tests
-		// The HTTP mocking is verified, but the Plan.Get conversion has issues with nested map types
-		emptyMap := make(map[string]tftypes.Value)
-		dataTfValue := tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, emptyMap)
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
-			"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
-			"data":       dataTfValue,
-			"created_at": tftypes.NewValue(tftypes.String, nil),
-			"updated_at": tftypes.NewValue(tftypes.String, nil),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-			Schema: createTestSchema(t),
-		}
-
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		resp := resource.CreateResponse{
-			State: state,
-		}
-
-		r.Create(context.Background(), req, &resp)
-
-		if resp.Diagnostics.HasError() {
-			for _, diag := range resp.Diagnostics.Errors() {
-				t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
-			}
-		}
-		assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
-	})
-
-	t.Run("creation fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
-		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &CredentialResource{client: n8nClient}
-
-		// Note: Using an empty map due to framework limitations with tftypes conversion in tests
-		// The HTTP mocking is verified, but the Plan.Get conversion has issues with nested map types
-		emptyMap := make(map[string]tftypes.Value)
-		dataTfValue := tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, emptyMap)
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
-			"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
-			"data":       dataTfValue,
-			"created_at": tftypes.NewValue(tftypes.String, nil),
-			"updated_at": tftypes.NewValue(tftypes.String, nil),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-			Schema: createTestSchema(t),
-		}
-
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		resp := resource.CreateResponse{
-			State: state,
-		}
-
-		r.Create(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Create should have errors")
-	})
+	}
 }
 
 // TestCredentialResource_Read tests credential reading.
 func TestCredentialResource_Read(t *testing.T) {
-	t.Run("successful read", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Note: n8n API doesn't support GET /credentials/{id}, so Read keeps state as-is
-			w.WriteHeader(http.StatusOK)
+	t.Parallel()
+	tests := []struct {
+		name    string
+		credID  string
+		wantErr bool
+	}{
+		{name: "successful read", credID: "cred-123", wantErr: false},
+		{name: "credential not found removes from state", credID: "cred-nonexistent", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "successful read":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// Note: n8n API doesn't support GET /credentials/{id}, so Read keeps state as-is
+					w.WriteHeader(http.StatusOK)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+
+				// Create state with a properly typed map
+				dataMap := types.MapValueMust(types.StringType, map[string]attr.Value{
+					"api_key": types.StringValue("secret"),
+				})
+
+				dataTfValue, err := dataMap.ToTerraformValue(context.Background())
+				assert.NoError(t, err, "ToTerraformValue should not error")
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, tt.credID),
+					"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       dataTfValue,
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
+					Schema: createTestSchema(t),
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+
+			case "credential not found removes from state":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// Note: n8n API doesn't support GET /credentials/{id}
+					// Read operation keeps state as-is and doesn't make API calls
+					w.WriteHeader(http.StatusOK)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+
+				// Create state with a properly typed map
+				dataMap := types.MapValueMust(types.StringType, map[string]attr.Value{
+					"api_key": types.StringValue("secret"),
+				})
+
+				dataTfValue, err := dataMap.ToTerraformValue(context.Background())
+				assert.NoError(t, err, "ToTerraformValue should not error")
+
+				rawState := map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, tt.credID),
+					"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       dataTfValue,
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
+					Schema: createTestSchema(t),
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(context.Background(), req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors even when credential not found")
+				// Note: In the actual implementation, Read keeps state as-is since n8n API doesn't support GET /credentials/{id}
+			}
 		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &CredentialResource{client: n8nClient}
-
-		// Create state with a properly typed map
-		dataMap := types.MapValueMust(types.StringType, map[string]attr.Value{
-			"api_key": types.StringValue("secret"),
-		})
-
-		dataTfValue, err := dataMap.ToTerraformValue(context.Background())
-		assert.NoError(t, err, "ToTerraformValue should not error")
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "cred-123"),
-			"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
-			"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
-			"data":       dataTfValue,
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: state,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
-	})
-
-	t.Run("credential not found removes from state", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Note: n8n API doesn't support GET /credentials/{id}
-			// Read operation keeps state as-is and doesn't make API calls
-			w.WriteHeader(http.StatusOK)
-		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &CredentialResource{client: n8nClient}
-
-		// Create state with a properly typed map
-		dataMap := types.MapValueMust(types.StringType, map[string]attr.Value{
-			"api_key": types.StringValue("secret"),
-		})
-
-		dataTfValue, err := dataMap.ToTerraformValue(context.Background())
-		assert.NoError(t, err, "ToTerraformValue should not error")
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "cred-nonexistent"),
-			"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
-			"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
-			"data":       dataTfValue,
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "data": tftypes.Map{ElementType: tftypes.String}, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.ReadRequest{
-			State: state,
-		}
-		resp := resource.ReadResponse{
-			State: state,
-		}
-
-		r.Read(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors even when credential not found")
-		// Note: In the actual implementation, Read keeps state as-is since n8n API doesn't support GET /credentials/{id}
-	})
+	}
 }
 
 // TestCredentialResource_Update tests credential update.

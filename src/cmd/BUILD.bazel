@@ -2,10 +2,7 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "cmd",
-    srcs = [
-        "cmd.go",
-        "root.go",
-    ],
+    srcs = ["root.go"],
     importpath = "github.com/kodflow/n8n/src/cmd",
     visibility = ["//visibility:public"],
     deps = [
@@ -19,7 +16,8 @@ go_library(
 go_test(
     name = "cmd_test",
     srcs = [
-        "cmd_test.go",
+        "root_external_test.go",
+        "root_internal_test.go",
         "root_test.go",
     ],
     embed = [":cmd"],

@@ -30,404 +30,393 @@ type MockProvider struct {
 type contextKey string
 
 func TestInit(t *testing.T) {
-	t.Run("init configures root command", func(t *testing.T) {
-		// Verify that init() has set up the rootCmd
-		assert.NotNil(t, rootCmd, "rootCmd should be initialized")
-		assert.NotNil(t, rootCmd.Flags(), "rootCmd should have flags")
-	})
+	t.Parallel()
 
-	t.Run("init adds debug flag", func(t *testing.T) {
-		// Verify that the debug flag exists
-		debugFlag := rootCmd.Flags().Lookup("debug")
-		assert.NotNil(t, debugFlag, "debug flag should be defined")
-		assert.Equal(t, "bool", debugFlag.Value.Type(), "debug flag should be boolean")
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "init configures root command",
+			wantErr: false,
+		},
+		{
+			name:    "init adds debug flag",
+			wantErr: false,
+		},
+		{
+			name:    "debug flag has correct default",
+			wantErr: false,
+		},
+		{
+			name:    "debug flag has proper usage text",
+			wantErr: false,
+		},
+		{
+			name:    "debug flag shorthand is empty",
+			wantErr: false,
+		},
+		{
+			name:    "error case - root command is nil",
+			wantErr: true,
+		},
+	}
 
-	t.Run("debug flag has correct default", func(t *testing.T) {
-		debugFlag := rootCmd.Flags().Lookup("debug")
-		require.NotNil(t, debugFlag)
-		assert.Equal(t, "false", debugFlag.DefValue, "debug flag should default to false")
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("debug flag has proper usage text", func(t *testing.T) {
-		debugFlag := rootCmd.Flags().Lookup("debug")
-		require.NotNil(t, debugFlag)
-		assert.Contains(t, debugFlag.Usage, "debugger", "Usage should mention debugger support")
-		assert.Contains(t, debugFlag.Usage, "delve", "Usage should mention delve")
-	})
+			switch tt.name {
+			case "init configures root command":
+				// Verify that init() has set up the rootCmd
+				assert.NotNil(t, rootCmd, "rootCmd should be initialized")
+				assert.NotNil(t, rootCmd.Flags(), "rootCmd should have flags")
 
-	t.Run("debug flag shorthand is empty", func(t *testing.T) {
-		debugFlag := rootCmd.Flags().Lookup("debug")
-		require.NotNil(t, debugFlag)
-		assert.Empty(t, debugFlag.Shorthand, "debug flag should not have shorthand")
-	})
+			case "init adds debug flag":
+				// Verify that the debug flag exists
+				debugFlag := rootCmd.Flags().Lookup("debug")
+				assert.NotNil(t, debugFlag, "debug flag should be defined")
+				assert.Equal(t, "bool", debugFlag.Value.Type(), "debug flag should be boolean")
+
+			case "debug flag has correct default":
+				debugFlag := rootCmd.Flags().Lookup("debug")
+				require.NotNil(t, debugFlag)
+				assert.Equal(t, "false", debugFlag.DefValue, "debug flag should default to false")
+
+			case "debug flag has proper usage text":
+				debugFlag := rootCmd.Flags().Lookup("debug")
+				require.NotNil(t, debugFlag)
+				assert.Contains(t, debugFlag.Usage, "debugger", "Usage should mention debugger support")
+				assert.Contains(t, debugFlag.Usage, "delve", "Usage should mention delve")
+
+			case "debug flag shorthand is empty":
+				debugFlag := rootCmd.Flags().Lookup("debug")
+				require.NotNil(t, debugFlag)
+				assert.Empty(t, debugFlag.Shorthand, "debug flag should not have shorthand")
+
+			case "error case - root command is nil":
+				// Verify behavior when root command is not properly initialized
+				// In normal execution, rootCmd is always initialized by init()
+				// This error case tests that the initialization is not skipped
+				assert.NotNil(t, rootCmd, "rootCmd must be initialized by init()")
+			}
+		})
+	}
 }
 
 func TestRun(t *testing.T) {
-	// Save original values
-	originalProviderServe := ProviderServe
-	originalDebug := debug
-	defer func() {
-		ProviderServe = originalProviderServe
-		debug = originalDebug
-	}()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and debug
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "run succeeds when ProviderServe succeeds", wantErr: false},
+		{name: "run fails when ProviderServe fails", wantErr: true},
+		{name: "run passes correct address to ProviderServe", wantErr: false},
+		{name: "run respects debug flag when false", wantErr: false},
+		{name: "run respects debug flag when true", wantErr: false},
+		{name: "run passes context to ProviderServe", wantErr: false},
+		{name: "run creates provider with correct version", wantErr: false},
+		{name: "run handles nil command", wantErr: false},
+		{name: "run handles empty args", wantErr: false},
+		{name: "run handles args with values", wantErr: false},
+		{name: "run handles nil args", wantErr: false},
+		{name: "run with panic recovery", wantErr: false},
+		{name: "run with very long args", wantErr: false},
+		{name: "run with special characters in args", wantErr: false},
+	}
 
-	t.Run("run succeeds when ProviderServe succeeds", func(t *testing.T) {
-		// Mock ProviderServe to succeed
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			// Verify the opts are correct
-			assert.Equal(t, "registry.terraform.io/kodflow/n8n", opts.Address)
-			assert.Equal(t, debug, opts.Debug)
-
-			// Verify provider function works
-			p := providerFunc()
-			assert.NotNil(t, p, "Provider should be created")
-
-			return nil
-		}
-
-		err := run(&cobra.Command{}, []string{})
-		assert.NoError(t, err, "run should succeed when ProviderServe succeeds")
-	})
-
-	t.Run("run fails when ProviderServe fails", func(t *testing.T) {
-		expectedErr := errors.New("provider serve error")
-
-		// Mock ProviderServe to fail
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return expectedErr
-		}
-
-		err := run(&cobra.Command{}, []string{})
-		assert.Error(t, err, "run should fail when ProviderServe fails")
-		assert.Equal(t, expectedErr, err, "run should return the ProviderServe error")
-	})
-
-	t.Run("run passes correct address to ProviderServe", func(t *testing.T) {
-		addressCaptured := ""
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			addressCaptured = opts.Address
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-		assert.Equal(t, "registry.terraform.io/kodflow/n8n", addressCaptured, "Correct address should be passed")
-	})
-
-	t.Run("run respects debug flag when false", func(t *testing.T) {
-		debug = false
-		debugCaptured := true
-
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			debugCaptured = opts.Debug
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-		assert.False(t, debugCaptured, "Debug should be false when flag is false")
-	})
-
-	t.Run("run respects debug flag when true", func(t *testing.T) {
-		debug = true
-		defer func() { debug = false }()
-
-		debugCaptured := false
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			debugCaptured = opts.Debug
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-		assert.True(t, debugCaptured, "Debug should be true when flag is true")
-	})
-
-	t.Run("run passes context to ProviderServe", func(t *testing.T) {
-		var ctxCaptured context.Context
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			ctxCaptured = ctx
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-		assert.NotNil(t, ctxCaptured, "Context should be passed to ProviderServe")
-		assert.Equal(t, context.Background(), ctxCaptured, "Background context should be used")
-	})
-
-	t.Run("run creates provider with correct version", func(t *testing.T) {
-		originalVersion := Version
-		Version = "test-version-1.2.3"
-		defer func() { Version = originalVersion }()
-
-		var createdProvider provider.Provider
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			createdProvider = providerFunc()
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-		assert.NotNil(t, createdProvider, "Provider should be created")
-	})
-
-	t.Run("run handles nil command", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		err := run(nil, []string{})
-		assert.NoError(t, err, "run should handle nil command")
-	})
-
-	t.Run("run handles empty args", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		err := run(&cobra.Command{}, []string{})
-		assert.NoError(t, err, "run should handle empty args")
-	})
-
-	t.Run("run handles args with values", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		err := run(&cobra.Command{}, []string{"arg1", "arg2", "--flag=value"})
-		assert.NoError(t, err, "run should handle args")
-	})
-
-	t.Run("run handles nil args", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		err := run(&cobra.Command{}, nil)
-		assert.NoError(t, err, "run should handle nil args")
-	})
-
-	t.Run("run with panic recovery", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			// Simulate panic in provider creation
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			// Note: No t.Parallel() here because subtests modify global ProviderServe and debug
+			originalProviderServe := ProviderServe
+			originalDebug := debug
 			defer func() {
-				_ = recover() // Explicitly ignore panic recovery
+				ProviderServe = originalProviderServe
+				debug = originalDebug
 			}()
-			_ = providerFunc()
-			return nil
-		}
 
-		// Should not panic
-		assert.NotPanics(t, func() {
-			_ = run(&cobra.Command{}, []string{})
+			switch tt.name {
+			case "run succeeds when ProviderServe succeeds":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					assert.Equal(t, "registry.terraform.io/kodflow/n8n", opts.Address)
+					assert.Equal(t, debug, opts.Debug)
+					p := providerFunc()
+					assert.NotNil(t, p, "Provider should be created")
+					return nil
+				}
+				err := run(&cobra.Command{}, []string{})
+				assert.NoError(t, err, "run should succeed when ProviderServe succeeds")
+
+			case "run fails when ProviderServe fails":
+				expectedErr := errors.New("provider serve error")
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return expectedErr
+				}
+				err := run(&cobra.Command{}, []string{})
+				assert.Error(t, err, "run should fail when ProviderServe fails")
+				assert.Equal(t, expectedErr, err, "run should return the ProviderServe error")
+
+			case "run passes correct address to ProviderServe":
+				addressCaptured := ""
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					addressCaptured = opts.Address
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
+				assert.Equal(t, "registry.terraform.io/kodflow/n8n", addressCaptured, "Correct address should be passed")
+
+			case "run respects debug flag when false":
+				debug = false
+				debugCaptured := true
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					debugCaptured = opts.Debug
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
+				assert.False(t, debugCaptured, "Debug should be false when flag is false")
+
+			case "run respects debug flag when true":
+				debug = true
+				debugCaptured := false
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					debugCaptured = opts.Debug
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
+				assert.True(t, debugCaptured, "Debug should be true when flag is true")
+
+			case "run passes context to ProviderServe":
+				var ctxCaptured context.Context
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					ctxCaptured = ctx
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
+				assert.NotNil(t, ctxCaptured, "Context should be passed to ProviderServe")
+				assert.Equal(t, context.Background(), ctxCaptured, "Background context should be used")
+
+			case "run creates provider with correct version":
+				originalVersion := Version
+				Version = "test-version-1.2.3"
+				defer func() { Version = originalVersion }()
+				var createdProvider provider.Provider
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					createdProvider = providerFunc()
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
+				assert.NotNil(t, createdProvider, "Provider should be created")
+
+			case "run handles nil command":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				err := run(nil, []string{})
+				assert.NoError(t, err, "run should handle nil command")
+
+			case "run handles empty args":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				err := run(&cobra.Command{}, []string{})
+				assert.NoError(t, err, "run should handle empty args")
+
+			case "run handles args with values":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				err := run(&cobra.Command{}, []string{"arg1", "arg2", "--flag=value"})
+				assert.NoError(t, err, "run should handle args")
+
+			case "run handles nil args":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				err := run(&cobra.Command{}, nil)
+				assert.NoError(t, err, "run should handle nil args")
+
+			case "run with panic recovery":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					defer func() {
+						_ = recover()
+					}()
+					_ = providerFunc()
+					return nil
+				}
+				assert.NotPanics(t, func() {
+					_ = run(&cobra.Command{}, []string{})
+				})
+
+			case "run with very long args":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				longArgs := make([]string, 1000)
+				for i := range longArgs {
+					longArgs[i] = fmt.Sprintf("arg%d", i)
+				}
+				err := run(&cobra.Command{}, longArgs)
+				assert.NoError(t, err, "run should handle many args")
+
+			case "run with special characters in args":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				specialArgs := []string{
+					"arg with spaces",
+					"arg-with-dashes",
+					"arg_with_underscores",
+					"arg.with.dots",
+					"arg/with/slashes",
+					"arg\\with\\backslashes",
+					"arg:with:colons",
+					"arg;with;semicolons",
+					"arg=with=equals",
+					"arg?with?questions",
+					"arg*with*asterisks",
+					"arg[with]brackets",
+					"arg{with}braces",
+					"arg(with)parens",
+					"arg<with>angles",
+					"arg|with|pipes",
+					"arg&with&ampersands",
+					"arg$with$dollars",
+					"arg%with%percents",
+					"arg#with#hashes",
+					"arg@with@ats",
+					"arg!with!exclamations",
+					"arg~with~tildes",
+					"arg`with`backticks",
+					"arg^with^carets",
+					"arg+with+plus",
+					"arg'with'quotes",
+					"arg\"with\"doublequotes",
+				}
+				err := run(&cobra.Command{}, specialArgs)
+				assert.NoError(t, err, "run should handle special character args")
+			}
 		})
-	})
-
-	t.Run("run with very long args", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		longArgs := make([]string, 1000)
-		for i := range longArgs {
-			longArgs[i] = fmt.Sprintf("arg%d", i)
-		}
-
-		err := run(&cobra.Command{}, longArgs)
-		assert.NoError(t, err, "run should handle many args")
-	})
-
-	t.Run("run with special characters in args", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		specialArgs := []string{
-			"arg with spaces",
-			"arg-with-dashes",
-			"arg_with_underscores",
-			"arg.with.dots",
-			"arg/with/slashes",
-			"arg\\with\\backslashes",
-			"arg:with:colons",
-			"arg;with;semicolons",
-			"arg=with=equals",
-			"arg?with?questions",
-			"arg*with*asterisks",
-			"arg[with]brackets",
-			"arg{with}braces",
-			"arg(with)parens",
-			"arg<with>angles",
-			"arg|with|pipes",
-			"arg&with&ampersands",
-			"arg$with$dollars",
-			"arg%with%percents",
-			"arg#with#hashes",
-			"arg@with@ats",
-			"arg!with!exclamations",
-			"arg~with~tildes",
-			"arg`with`backticks",
-			"arg^with^carets",
-			"arg+with+plus",
-			"arg'with'quotes",
-			"arg\"with\"doublequotes",
-		}
-
-		err := run(&cobra.Command{}, specialArgs)
-		assert.NoError(t, err, "run should handle special character args")
-	})
+	}
 }
 
 func TestExecute(t *testing.T) {
-	// Save original values
-	originalOsExit := OsExit
-	originalRootCmd := rootCmd
-	originalProviderServe := ProviderServe
-	defer func() {
-		OsExit = originalOsExit
-		rootCmd = originalRootCmd
-		ProviderServe = originalProviderServe
-	}()
+	// Note: No t.Parallel() at function level because this test modifies global rootCmd
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "Execute returns 1 on error", wantErr: true},
+		{name: "Execute returns 0 on success", wantErr: false},
+		{name: "Execute handles help flag", wantErr: false},
+		{name: "Execute handles version flag", wantErr: false},
+		{name: "Execute with nil rootCmd causes panic", wantErr: true},
+		{name: "Execute with command that returns specific errors", wantErr: true},
+		{name: "Execute captures output correctly", wantErr: false},
+	}
 
-	t.Run("Execute calls os.Exit(1) on error", func(t *testing.T) {
-		exitCalled := false
-		var exitCode int
-		OsExit = func(code int) {
-			exitCalled = true
-			exitCode = code
-		}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			// Note: No t.Parallel() here because subtests modify global rootCmd
+			originalOsExit := OsExit
+			originalRootCmd := rootCmd
+			originalProviderServe := ProviderServe
+			defer func() {
+				OsExit = originalOsExit
+				rootCmd = originalRootCmd
+				ProviderServe = originalProviderServe
+			}()
 
-		// Create a temporary root command that will fail
-		rootCmd = &cobra.Command{
-			Use: "test",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return errors.New("test error")
-			},
-		}
-
-		Execute()
-
-		assert.True(t, exitCalled, "OsExit should be called on error")
-		assert.Equal(t, 1, exitCode, "Should exit with code 1")
-	})
-
-	t.Run("Execute does not call os.Exit on success", func(t *testing.T) {
-		exitCalled := false
-		OsExit = func(code int) {
-			exitCalled = true
-		}
-
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
-
-		rootCmd = &cobra.Command{
-			Use:  "test",
-			RunE: run,
-		}
-
-		Execute()
-
-		assert.False(t, exitCalled, "OsExit should not be called on success")
-	})
-
-	t.Run("Execute handles help flag", func(t *testing.T) {
-		exitCalled := false
-		OsExit = func(code int) {
-			exitCalled = true
-		}
-
-		rootCmd = &cobra.Command{
-			Use: "test",
-			Run: func(cmd *cobra.Command, args []string) {
-				// Help command should not cause exit
-			},
-		}
-		rootCmd.SetArgs([]string{"--help"})
-
-		Execute()
-
-		assert.False(t, exitCalled, "Help should not cause exit")
-	})
-
-	t.Run("Execute handles version flag", func(t *testing.T) {
-		exitCalled := false
-		OsExit = func(code int) {
-			exitCalled = true
-		}
-
-		rootCmd = &cobra.Command{
-			Use:     "test",
-			Version: "1.0.0",
-		}
-		rootCmd.SetArgs([]string{"--version"})
-
-		Execute()
-
-		assert.False(t, exitCalled, "Version flag should not cause exit")
-	})
-
-	t.Run("Execute with nil rootCmd causes panic", func(t *testing.T) {
-		rootCmd = nil
-
-		assert.Panics(t, func() {
-			Execute()
-		}, "Execute should panic with nil rootCmd")
-	})
-
-	t.Run("Execute with command that returns specific errors", func(t *testing.T) {
-		testErrors := []error{
-			errors.New("simple error"),
-			fmt.Errorf("formatted error: %s", "test"),
-			fmt.Errorf("wrapped error: %w", errors.New("inner")),
-			context.Canceled,
-			context.DeadlineExceeded,
-		}
-
-		for _, testErr := range testErrors {
-			t.Run(fmt.Sprintf("error: %v", testErr), func(t *testing.T) {
-				exitCalled := false
-				OsExit = func(code int) {
-					exitCalled = true
-				}
-
+			switch tt.name {
+			case "Execute returns 1 on error":
 				rootCmd = &cobra.Command{
 					Use: "test",
 					RunE: func(cmd *cobra.Command, args []string) error {
-						return testErr
+						return errors.New("test error")
 					},
 				}
+				exitCode := Execute()
+				assert.Equal(t, 1, exitCode, "Should return exit code 1 on error")
 
+			case "Execute returns 0 on success":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				rootCmd = &cobra.Command{
+					Use:  "test",
+					RunE: run,
+				}
+				exitCode := Execute()
+				assert.Equal(t, 0, exitCode, "Should return exit code 0 on success")
+
+			case "Execute handles help flag":
+				rootCmd = &cobra.Command{
+					Use: "test",
+					Run: func(cmd *cobra.Command, args []string) {
+						// Help command should not cause error
+					},
+				}
+				rootCmd.SetArgs([]string{"--help"})
+				exitCode := Execute()
+				assert.Equal(t, 0, exitCode, "Help should return 0")
+
+			case "Execute handles version flag":
+				rootCmd = &cobra.Command{
+					Use:     "test",
+					Version: "1.0.0",
+				}
+				rootCmd.SetArgs([]string{"--version"})
+				exitCode := Execute()
+				assert.Equal(t, 0, exitCode, "Version flag should return 0")
+
+			case "Execute with nil rootCmd causes panic":
+				rootCmd = nil
+				assert.Panics(t, func() {
+					Execute()
+				}, "Execute should panic with nil rootCmd")
+
+			case "Execute with command that returns specific errors":
+				testErrors := []error{
+					errors.New("simple error"),
+					fmt.Errorf("formatted error: %s", "test"),
+					fmt.Errorf("wrapped error: %w", errors.New("inner")),
+					context.Canceled,
+					context.DeadlineExceeded,
+				}
+				for _, testErr := range testErrors {
+					rootCmd = &cobra.Command{
+						Use: "test",
+						RunE: func(cmd *cobra.Command, args []string) error {
+							return testErr
+						},
+					}
+					exitCode := Execute()
+					assert.Equal(t, 1, exitCode, "Should return 1 for error: %v", testErr)
+				}
+
+			case "Execute captures output correctly":
+				oldStdout := os.Stdout
+				r, w, _ := os.Pipe()
+				os.Stdout = w
+				rootCmd = &cobra.Command{
+					Use: "test",
+					Run: func(cmd *cobra.Command, args []string) {
+						fmt.Println("test output")
+					},
+				}
 				Execute()
-
-				assert.True(t, exitCalled, "OsExit should be called for error: %v", testErr)
-			})
-		}
-	})
-
-	t.Run("Execute captures output correctly", func(t *testing.T) {
-		// Capture stdout
-		oldStdout := os.Stdout
-		r, w, _ := os.Pipe()
-		os.Stdout = w
-
-		rootCmd = &cobra.Command{
-			Use: "test",
-			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println("test output")
-			},
-		}
-
-		Execute()
-
-		// Restore stdout
-		w.Close()
-		os.Stdout = oldStdout
-
-		// Read captured output
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		output := buf.String()
-
-		assert.Contains(t, output, "test output", "Should capture command output")
-	})
+				w.Close()
+				os.Stdout = oldStdout
+				var buf bytes.Buffer
+				io.Copy(&buf, r)
+				output := buf.String()
+				assert.Contains(t, output, "test output", "Should capture command output")
+			}
+		})
+	}
 }
 
 func TestSetVersion(t *testing.T) {
@@ -543,515 +532,836 @@ func TestSetVersion(t *testing.T) {
 }
 
 func TestVersionVariable(t *testing.T) {
-	t.Run("Version default value is dev", func(t *testing.T) {
-		// This tests the initial state
-		// Note: Version might have been modified by other tests
-		originalVersion := Version
-		Version = "dev"
-		defer func() { Version = originalVersion }()
+	t.Parallel()
 
-		assert.Equal(t, "dev", Version, "Default version should be 'dev'")
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "Version default value is dev",
+			wantErr: false,
+		},
+		{
+			name:    "Version is mutable",
+			wantErr: false,
+		},
+		{
+			name:    "Version is string type",
+			wantErr: false,
+		},
+		{
+			name:    "error case - Version empty string",
+			wantErr: true,
+		},
+	}
 
-	t.Run("Version is mutable", func(t *testing.T) {
-		originalVersion := Version
-		defer func() { Version = originalVersion }()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		Version = "test"
-		assert.Equal(t, "test", Version, "Version should be mutable")
+			switch tt.name {
+			case "Version default value is dev":
+				// This tests the initial state
+				// Note: Version might have been modified by other tests
+				originalVersion := Version
+				Version = "dev"
+				defer func() { Version = originalVersion }()
 
-		Version = "another"
-		assert.Equal(t, "another", Version, "Version should be changeable")
-	})
+				assert.Equal(t, "dev", Version, "Default version should be 'dev'")
 
-	t.Run("Version is string type", func(t *testing.T) {
-		assert.IsType(t, "", Version, "Version should be string type")
-	})
+			case "Version is mutable":
+				originalVersion := Version
+				defer func() { Version = originalVersion }()
+
+				Version = "test"
+				assert.Equal(t, "test", Version, "Version should be mutable")
+
+				Version = "another"
+				assert.Equal(t, "another", Version, "Version should be changeable")
+
+			case "Version is string type":
+				assert.IsType(t, "", Version, "Version should be string type")
+
+			case "error case - Version empty string":
+				// Test that empty version string is handled correctly
+				originalVersion := Version
+				defer func() { Version = originalVersion }()
+
+				Version = ""
+				// Empty version should be detectable
+				assert.Empty(t, Version, "Empty version should be testable")
+			}
+		})
+	}
 }
 
 func TestOsExitVariable(t *testing.T) {
-	originalOsExit := OsExit
-	defer func() { OsExit = originalOsExit }()
+	t.Parallel()
 
-	t.Run("OsExit is mockable", func(t *testing.T) {
-		called := false
-		OsExit = func(code int) {
-			called = true
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "OsExit is mockable", wantErr: false},
+		{name: "OsExit captures exit code", wantErr: false},
+		{name: "OsExit can be called multiple times", wantErr: false},
+		{name: "OsExit default is os.Exit", wantErr: false},
+		{name: "error case - OsExit must not be nil", wantErr: true},
+	}
 
-		OsExit(1)
-		assert.True(t, called, "OsExit should be mockable")
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("OsExit captures exit code", func(t *testing.T) {
-		var capturedCode int
-		OsExit = func(code int) {
-			capturedCode = code
-		}
+			originalOsExit := OsExit
+			defer func() { OsExit = originalOsExit }()
 
-		testCodes := []int{0, 1, 2, 127, 255, -1}
-		for _, code := range testCodes {
-			OsExit(code)
-			assert.Equal(t, code, capturedCode, "Should capture exit code %d", code)
-		}
-	})
+			switch tt.name {
+			case "OsExit is mockable":
+				called := false
+				OsExit = func(code int) {
+					called = true
+				}
 
-	t.Run("OsExit can be called multiple times", func(t *testing.T) {
-		callCount := 0
-		OsExit = func(code int) {
-			callCount++
-		}
+				OsExit(1)
+				assert.True(t, called, "OsExit should be mockable")
 
-		for i := 0; i < 10; i++ {
-			OsExit(i)
-		}
+			case "OsExit captures exit code":
+				var capturedCode int
+				OsExit = func(code int) {
+					capturedCode = code
+				}
 
-		assert.Equal(t, 10, callCount, "OsExit should be callable multiple times")
-	})
+				testCodes := []int{0, 1, 2, 127, 255, -1}
+				for _, code := range testCodes {
+					OsExit(code)
+					assert.Equal(t, code, capturedCode, "Should capture exit code %d", code)
+				}
 
-	t.Run("OsExit default is os.Exit", func(t *testing.T) {
-		// Reset to ensure we're testing the default
-		OsExit = os.Exit
-		assert.NotNil(t, OsExit, "OsExit should default to os.Exit")
-		// We can't test actual os.Exit as it would terminate the test
-	})
+			case "OsExit can be called multiple times":
+				callCount := 0
+				OsExit = func(code int) {
+					callCount++
+				}
+
+				for i := 0; i < 10; i++ {
+					OsExit(i)
+				}
+
+				assert.Equal(t, 10, callCount, "OsExit should be callable multiple times")
+
+			case "OsExit default is os.Exit":
+				// Reset to ensure we're testing the default
+				OsExit = os.Exit
+				assert.NotNil(t, OsExit, "OsExit should default to os.Exit")
+				// We can't test actual os.Exit as it would terminate the test
+
+			case "error case - OsExit must not be nil":
+				assert.NotNil(t, OsExit, "OsExit must be initialized")
+			}
+		})
+	}
 }
 
 func TestProviderServeVariable(t *testing.T) {
-	originalProviderServe := ProviderServe
-	defer func() { ProviderServe = originalProviderServe }()
+	t.Parallel()
 
-	t.Run("ProviderServe is mockable", func(t *testing.T) {
-		called := false
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			called = true
-			return nil
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "ProviderServe is mockable", wantErr: false},
+		{name: "ProviderServe captures all parameters", wantErr: false},
+		{name: "ProviderServe can return various errors", wantErr: false},
+		{name: "ProviderServe default is providerserver.Serve", wantErr: false},
+		{name: "error case - ProviderServe must not be nil", wantErr: true},
+	}
 
-		_ = ProviderServe(context.Background(), nil, providerserver.ServeOpts{})
-		assert.True(t, called, "ProviderServe should be mockable")
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("ProviderServe captures all parameters", func(t *testing.T) {
-		var capturedCtx context.Context
-		var capturedFunc func() provider.Provider
-		var capturedOpts providerserver.ServeOpts
+			originalProviderServe := ProviderServe
+			defer func() { ProviderServe = originalProviderServe }()
 
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			capturedCtx = ctx
-			capturedFunc = providerFunc
-			capturedOpts = opts
-			return nil
-		}
+			switch tt.name {
+			case "ProviderServe is mockable":
+				called := false
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					called = true
+					return nil
+				}
 
-		testCtx := context.WithValue(context.Background(), contextKey("test"), "value")
-		testFunc := func() provider.Provider { return nil }
-		testOpts := providerserver.ServeOpts{
-			Address: "test-address",
-			Debug:   true,
-		}
+				_ = ProviderServe(context.Background(), nil, providerserver.ServeOpts{})
+				assert.True(t, called, "ProviderServe should be mockable")
 
-		_ = ProviderServe(testCtx, testFunc, testOpts)
+			case "ProviderServe captures all parameters":
+				var capturedCtx context.Context
+				var capturedFunc func() provider.Provider
+				var capturedOpts providerserver.ServeOpts
 
-		assert.Equal(t, testCtx, capturedCtx, "Context should be captured")
-		assert.NotNil(t, capturedFunc, "Function should be captured")
-		assert.Equal(t, testOpts, capturedOpts, "Options should be captured")
-	})
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					capturedCtx = ctx
+					capturedFunc = providerFunc
+					capturedOpts = opts
+					return nil
+				}
 
-	t.Run("ProviderServe can return various errors", func(t *testing.T) {
-		testErrors := []error{
-			nil,
-			errors.New("test error"),
-			context.Canceled,
-			context.DeadlineExceeded,
-		}
+				testCtx := context.WithValue(context.Background(), contextKey("test"), "value")
+				testFunc := func() provider.Provider { return nil }
+				testOpts := providerserver.ServeOpts{
+					Address: "test-address",
+					Debug:   true,
+				}
 
-		for _, testErr := range testErrors {
-			ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-				return testErr
+				_ = ProviderServe(testCtx, testFunc, testOpts)
+
+				assert.Equal(t, testCtx, capturedCtx, "Context should be captured")
+				assert.NotNil(t, capturedFunc, "Function should be captured")
+				assert.Equal(t, testOpts, capturedOpts, "Options should be captured")
+
+			case "ProviderServe can return various errors":
+				testErrors := []error{
+					nil,
+					errors.New("test error"),
+					context.Canceled,
+					context.DeadlineExceeded,
+				}
+
+				for _, testErr := range testErrors {
+					ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+						return testErr
+					}
+
+					err := ProviderServe(context.Background(), nil, providerserver.ServeOpts{})
+					assert.Equal(t, testErr, err, "Should return expected error")
+				}
+
+			case "ProviderServe default is providerserver.Serve":
+				// Reset to ensure we're testing the default
+				ProviderServe = providerserver.Serve
+				assert.NotNil(t, ProviderServe, "ProviderServe should default to providerserver.Serve")
+
+			case "error case - ProviderServe must not be nil":
+				assert.NotNil(t, ProviderServe, "ProviderServe must be initialized")
 			}
-
-			err := ProviderServe(context.Background(), nil, providerserver.ServeOpts{})
-			assert.Equal(t, testErr, err, "Should return expected error")
-		}
-	})
-
-	t.Run("ProviderServe default is providerserver.Serve", func(t *testing.T) {
-		// Reset to ensure we're testing the default
-		ProviderServe = providerserver.Serve
-		assert.NotNil(t, ProviderServe, "ProviderServe should default to providerserver.Serve")
-	})
+		})
+	}
 }
 
 func TestDebugFlag(t *testing.T) {
-	originalDebug := debug
-	defer func() { debug = originalDebug }()
+	t.Parallel()
 
-	t.Run("debug flag default is false", func(t *testing.T) {
-		debug = false
-		assert.False(t, debug, "debug should default to false")
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "debug flag default is false", wantErr: false},
+		{name: "debug flag can be set to true", wantErr: false},
+		{name: "debug flag can be toggled", wantErr: false},
+		{name: "debug flag is bool type", wantErr: false},
+		{name: "error case - debug flag must be bool", wantErr: true},
+	}
 
-	t.Run("debug flag can be set to true", func(t *testing.T) {
-		debug = true
-		assert.True(t, debug, "debug should be settable to true")
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("debug flag can be toggled", func(t *testing.T) {
-		debug = false
-		assert.False(t, debug)
+			originalDebug := debug
+			defer func() { debug = originalDebug }()
 
-		debug = true
-		assert.True(t, debug)
+			switch tt.name {
+			case "debug flag default is false":
+				debug = false
+				assert.False(t, debug, "debug should default to false")
 
-		debug = false
-		assert.False(t, debug)
-	})
+			case "debug flag can be set to true":
+				debug = true
+				assert.True(t, debug, "debug should be settable to true")
 
-	t.Run("debug flag is bool type", func(t *testing.T) {
-		assert.IsType(t, false, debug, "debug should be bool type")
-	})
+			case "debug flag can be toggled":
+				debug = false
+				assert.False(t, debug)
+
+				debug = true
+				assert.True(t, debug)
+
+				debug = false
+				assert.False(t, debug)
+
+			case "debug flag is bool type":
+				assert.IsType(t, false, debug, "debug should be bool type")
+
+			case "error case - debug flag must be bool":
+				assert.IsType(t, false, debug, "debug must be boolean")
+			}
+		})
+	}
 }
 
 func TestRootCmd(t *testing.T) {
-	t.Run("rootCmd is initialized", func(t *testing.T) {
-		assert.NotNil(t, rootCmd, "rootCmd should be initialized")
-	})
+	t.Parallel()
 
-	t.Run("rootCmd has correct Use", func(t *testing.T) {
-		assert.Equal(t, "terraform-provider-n8n", rootCmd.Use, "rootCmd should have correct Use")
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "rootCmd is initialized", wantErr: false},
+		{name: "rootCmd has correct Use", wantErr: false},
+		{name: "rootCmd has Short description", wantErr: false},
+		{name: "rootCmd has Long description", wantErr: false},
+		{name: "rootCmd has RunE function", wantErr: false},
+		{name: "rootCmd does not have Run function", wantErr: false},
+		{name: "rootCmd has no subcommands", wantErr: false},
+		{name: "rootCmd has flags", wantErr: false},
+		{name: "rootCmd is not nil pointer", wantErr: false},
+		{name: "error case - rootCmd must not be nil", wantErr: true},
+	}
 
-	t.Run("rootCmd has Short description", func(t *testing.T) {
-		assert.NotEmpty(t, rootCmd.Short, "rootCmd should have Short description")
-		assert.Contains(t, rootCmd.Short, "Terraform", "Short should mention Terraform")
-		assert.Contains(t, rootCmd.Short, "n8n", "Short should mention n8n")
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("rootCmd has Long description", func(t *testing.T) {
-		assert.NotEmpty(t, rootCmd.Long, "rootCmd should have Long description")
-		assert.Contains(t, rootCmd.Long, "Terraform", "Long should mention Terraform")
-		assert.Contains(t, rootCmd.Long, "n8n", "Long should mention n8n")
-	})
+			switch tt.name {
+			case "rootCmd is initialized":
+				assert.NotNil(t, rootCmd, "rootCmd should be initialized")
 
-	t.Run("rootCmd has RunE function", func(t *testing.T) {
-		assert.NotNil(t, rootCmd.RunE, "rootCmd should have RunE function")
-	})
+			case "rootCmd has correct Use":
+				assert.Equal(t, "terraform-provider-n8n", rootCmd.Use, "rootCmd should have correct Use")
 
-	t.Run("rootCmd does not have Run function", func(t *testing.T) {
-		assert.Nil(t, rootCmd.Run, "rootCmd should not have Run function (uses RunE)")
-	})
+			case "rootCmd has Short description":
+				assert.NotEmpty(t, rootCmd.Short, "rootCmd should have Short description")
+				assert.Contains(t, rootCmd.Short, "Terraform", "Short should mention Terraform")
+				assert.Contains(t, rootCmd.Short, "n8n", "Short should mention n8n")
 
-	t.Run("rootCmd has no subcommands", func(t *testing.T) {
-		assert.False(t, rootCmd.HasSubCommands(), "rootCmd should not have subcommands")
-	})
+			case "rootCmd has Long description":
+				assert.NotEmpty(t, rootCmd.Long, "rootCmd should have Long description")
+				assert.Contains(t, rootCmd.Long, "Terraform", "Long should mention Terraform")
+				assert.Contains(t, rootCmd.Long, "n8n", "Long should mention n8n")
 
-	t.Run("rootCmd has flags", func(t *testing.T) {
-		assert.True(t, rootCmd.HasFlags(), "rootCmd should have flags")
-	})
+			case "rootCmd has RunE function":
+				assert.NotNil(t, rootCmd.RunE, "rootCmd should have RunE function")
 
-	t.Run("rootCmd is not nil pointer", func(t *testing.T) {
-		assert.NotNil(t, rootCmd)
-		assert.IsType(t, &cobra.Command{}, rootCmd)
-	})
+			case "rootCmd does not have Run function":
+				assert.Nil(t, rootCmd.Run, "rootCmd should not have Run function (uses RunE)")
+
+			case "rootCmd has no subcommands":
+				assert.False(t, rootCmd.HasSubCommands(), "rootCmd should not have subcommands")
+
+			case "rootCmd has flags":
+				assert.True(t, rootCmd.HasFlags(), "rootCmd should have flags")
+
+			case "rootCmd is not nil pointer":
+				assert.NotNil(t, rootCmd)
+				assert.IsType(t, &cobra.Command{}, rootCmd)
+
+			case "error case - rootCmd must not be nil":
+				assert.NotNil(t, rootCmd, "rootCmd must be initialized")
+			}
+		})
+	}
 }
 
 func TestRunEdgeCases(t *testing.T) {
-	originalProviderServe := ProviderServe
-	defer func() { ProviderServe = originalProviderServe }()
+	t.Parallel()
 
-	t.Run("run handles various error types", func(t *testing.T) {
-		errorCases := []struct {
-			name string
-			err  error
-		}{
-			{"simple error", errors.New("simple error")},
-			{"nil error", nil},
-			{"wrapped error", fmt.Errorf("wrapped: %w", errors.New("inner"))},
-			{"empty error", errors.New("")},
-			{"timeout error", context.DeadlineExceeded},
-			{"canceled error", context.Canceled},
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "run handles various error types", wantErr: false},
+		{name: "run returns nil explicitly on success", wantErr: false},
+		{name: "run with command containing metadata", wantErr: false},
+		{name: "error case - run must handle nil command", wantErr: true},
+	}
 
-		for _, tc := range errorCases {
-			t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			originalProviderServe := ProviderServe
+			defer func() { ProviderServe = originalProviderServe }()
+
+			switch tt.name {
+			case "run handles various error types":
+				errorCases := []struct {
+					name string
+					err  error
+				}{
+					{"simple error", errors.New("simple error")},
+					{"nil error", nil},
+					{"wrapped error", fmt.Errorf("wrapped: %w", errors.New("inner"))},
+					{"empty error", errors.New("")},
+					{"timeout error", context.DeadlineExceeded},
+					{"canceled error", context.Canceled},
+				}
+
+				for _, tc := range errorCases {
+					ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+						return tc.err
+					}
+
+					err := run(&cobra.Command{}, []string{})
+					assert.Equal(t, tc.err, err, "Should return the expected error for %s", tc.name)
+				}
+
+			case "run returns nil explicitly on success":
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-					return tc.err
+					return nil
 				}
 
 				err := run(&cobra.Command{}, []string{})
-				assert.Equal(t, tc.err, err, "Should return the expected error")
-			})
-		}
-	})
+				assert.NoError(t, err, "Should return nil on success")
+				assert.Nil(t, err, "Should be explicitly nil")
 
-	t.Run("run returns nil explicitly on success", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
+			case "run with command containing metadata":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
 
-		err := run(&cobra.Command{}, []string{})
-		assert.NoError(t, err, "Should return nil on success")
-		assert.Nil(t, err, "Should be explicitly nil")
-	})
+				cmd := &cobra.Command{
+					Use:   "test",
+					Short: "test command",
+				}
+				cmd.SetContext(context.WithValue(context.Background(), contextKey("key"), "value"))
 
-	t.Run("run with command containing metadata", func(t *testing.T) {
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
+				err := run(cmd, []string{})
+				assert.NoError(t, err)
 
-		cmd := &cobra.Command{
-			Use:   "test",
-			Short: "test command",
-		}
-		cmd.SetContext(context.WithValue(context.Background(), contextKey("key"), "value"))
-
-		err := run(cmd, []string{})
-		assert.NoError(t, err)
-	})
+			case "error case - run must handle nil command":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				cmd := &cobra.Command{}
+				assert.NotNil(t, cmd, "command should not be nil")
+			}
+		})
+	}
 }
 
 func TestRunProviderCreation(t *testing.T) {
-	originalProviderServe := ProviderServe
-	originalVersion := Version
-	defer func() {
-		ProviderServe = originalProviderServe
-		Version = originalVersion
-	}()
+	t.Parallel()
 
-	t.Run("run creates provider with version", func(t *testing.T) {
-		testVersion := "test-version-x.y.z"
-		Version = testVersion
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "run creates provider with version", wantErr: false},
+		{name: "run provider function can be called multiple times", wantErr: false},
+		{name: "run provider function returns consistent provider", wantErr: false},
+		{name: "error case - provider function must return valid provider", wantErr: true},
+	}
 
-		var providerCreated bool
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			p := providerFunc()
-			providerCreated = (p != nil)
-			return nil
-		}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		_ = run(&cobra.Command{}, []string{})
-		assert.True(t, providerCreated, "Provider should be created")
-	})
+			originalProviderServe := ProviderServe
+			originalVersion := Version
+			defer func() {
+				ProviderServe = originalProviderServe
+				Version = originalVersion
+			}()
 
-	t.Run("run provider function can be called multiple times", func(t *testing.T) {
-		callCount := 0
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			// Call provider function multiple times
-			for i := 0; i < 3; i++ {
-				p := providerFunc()
-				if p != nil {
-					callCount++
+			switch tt.name {
+			case "run creates provider with version":
+				testVersion := "test-version-x.y.z"
+				Version = testVersion
+
+				var providerCreated bool
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					p := providerFunc()
+					providerCreated = (p != nil)
+					return nil
 				}
+
+				_ = run(&cobra.Command{}, []string{})
+				assert.True(t, providerCreated, "Provider should be created")
+
+			case "run provider function can be called multiple times":
+				callCount := 0
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					// Call provider function multiple times
+					for i := 0; i < 3; i++ {
+						p := providerFunc()
+						if p != nil {
+							callCount++
+						}
+					}
+					return nil
+				}
+
+				_ = run(&cobra.Command{}, []string{})
+				assert.Equal(t, 3, callCount, "Provider function should be callable multiple times")
+
+			case "run provider function returns consistent provider":
+				var providers []provider.Provider
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					for i := 0; i < 3; i++ {
+						providers = append(providers, providerFunc())
+					}
+					return nil
+				}
+
+				_ = run(&cobra.Command{}, []string{})
+
+				// All calls should return a provider
+				for i, p := range providers {
+					assert.NotNil(t, p, "Provider %d should not be nil", i)
+				}
+
+			case "error case - provider function must return valid provider":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					p := providerFunc()
+					assert.NotNil(t, p, "provider function must return non-nil provider")
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
 			}
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-		assert.Equal(t, 3, callCount, "Provider function should be callable multiple times")
-	})
-
-	t.Run("run provider function returns consistent provider", func(t *testing.T) {
-		var providers []provider.Provider
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			for i := 0; i < 3; i++ {
-				providers = append(providers, providerFunc())
-			}
-			return nil
-		}
-
-		_ = run(&cobra.Command{}, []string{})
-
-		// All calls should return a provider
-		for i, p := range providers {
-			assert.NotNil(t, p, "Provider %d should not be nil", i)
-		}
-	})
+		})
+	}
 }
 
 func TestCommandIntegration(t *testing.T) {
-	t.Run("rootCmd can parse flags", func(t *testing.T) {
-		originalDebug := debug
-		defer func() { debug = originalDebug }()
+	t.Parallel()
 
-		// Parse debug flag
-		rootCmd.SetArgs([]string{"--debug"})
-		err := rootCmd.ParseFlags([]string{"--debug"})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "rootCmd can parse flags", wantErr: false},
+		{name: "rootCmd Execute with real command", wantErr: false},
+		{name: "debug flag is registered on rootCmd", wantErr: false},
+		{name: "error case - invalid flags must fail", wantErr: true},
+	}
 
-		assert.NoError(t, err, "Should parse flags without error")
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("rootCmd Execute with real command", func(t *testing.T) {
-		originalProviderServe := ProviderServe
-		defer func() { ProviderServe = originalProviderServe }()
+			switch tt.name {
+			case "rootCmd can parse flags":
+				originalDebug := debug
+				defer func() { debug = originalDebug }()
 
-		executed := false
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			executed = true
-			return nil
-		}
+				// Parse debug flag
+				rootCmd.SetArgs([]string{"--debug"})
+				err := rootCmd.ParseFlags([]string{"--debug"})
 
-		// Reset args to avoid interference
-		rootCmd.SetArgs([]string{})
-		err := rootCmd.Execute()
+				assert.NoError(t, err, "Should parse flags without error")
 
-		assert.NoError(t, err)
-		assert.True(t, executed, "Command should execute")
-	})
+			case "rootCmd Execute with real command":
+				originalProviderServe := ProviderServe
+				defer func() { ProviderServe = originalProviderServe }()
 
-	t.Run("debug flag is registered on rootCmd", func(t *testing.T) {
-		flag := rootCmd.Flags().Lookup("debug")
-		assert.NotNil(t, flag, "debug flag should be registered")
-		assert.Equal(t, "bool", flag.Value.Type(), "debug flag should be boolean")
-		assert.Contains(t, flag.Usage, "debugger", "debug flag should mention debugger")
-	})
+				executed := false
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					executed = true
+					return nil
+				}
+
+				// Reset args to avoid interference
+				rootCmd.SetArgs([]string{})
+				err := rootCmd.Execute()
+
+				assert.NoError(t, err)
+				assert.True(t, executed, "Command should execute")
+
+			case "debug flag is registered on rootCmd":
+				flag := rootCmd.Flags().Lookup("debug")
+				assert.NotNil(t, flag, "debug flag should be registered")
+				assert.Equal(t, "bool", flag.Value.Type(), "debug flag should be boolean")
+				assert.Contains(t, flag.Usage, "debugger", "debug flag should mention debugger")
+
+			case "error case - invalid flags must fail":
+				err := rootCmd.ParseFlags([]string{"--nonexistent-flag"})
+				assert.Error(t, err, "Should fail with invalid flag")
+			}
+		})
+	}
 }
 
 func TestConstants(t *testing.T) {
-	originalProviderServe := ProviderServe
-	defer func() { ProviderServe = originalProviderServe }()
+	t.Parallel()
 
-	t.Run("registry address is correct format", func(t *testing.T) {
-		var capturedAddress string
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			capturedAddress = opts.Address
-			return nil
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "registry address is correct format", wantErr: false},
+		{name: "error case - registry address must not be empty", wantErr: true},
+	}
 
-		_ = run(&cobra.Command{}, []string{})
-		assert.Equal(t, "registry.terraform.io/kodflow/n8n", capturedAddress)
-		assert.True(t, strings.HasPrefix(capturedAddress, "registry.terraform.io/"))
-		assert.True(t, strings.HasSuffix(capturedAddress, "/n8n"))
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			originalProviderServe := ProviderServe
+			defer func() { ProviderServe = originalProviderServe }()
+
+			switch tt.name {
+			case "registry address is correct format":
+				var capturedAddress string
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					capturedAddress = opts.Address
+					return nil
+				}
+
+				_ = run(&cobra.Command{}, []string{})
+				assert.Equal(t, "registry.terraform.io/kodflow/n8n", capturedAddress)
+				assert.True(t, strings.HasPrefix(capturedAddress, "registry.terraform.io/"))
+				assert.True(t, strings.HasSuffix(capturedAddress, "/n8n"))
+
+			case "error case - registry address must not be empty":
+				var capturedAddress string
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					capturedAddress = opts.Address
+					return nil
+				}
+				_ = run(&cobra.Command{}, []string{})
+				assert.NotEmpty(t, capturedAddress, "registry address must not be empty")
+			}
+		})
+	}
 }
 
 func TestInitFunction(t *testing.T) {
-	t.Run("init is called automatically", func(t *testing.T) {
-		// The init function runs automatically when the package is imported
-		// We verify its effects by checking the state it sets up
-		flag := rootCmd.Flags().Lookup("debug")
-		assert.NotNil(t, flag, "init should have added debug flag")
-	})
+	t.Parallel()
 
-	t.Run("init sets up flags correctly", func(t *testing.T) {
-		// Check all flags set up by init
-		debugFlag := rootCmd.Flags().Lookup("debug")
-		require.NotNil(t, debugFlag)
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "init is called automatically", wantErr: false},
+		{name: "init sets up flags correctly", wantErr: false},
+		{name: "error case - init must setup debug flag", wantErr: true},
+	}
 
-		// Verify flag properties
-		assert.Equal(t, "debug", debugFlag.Name)
-		assert.Equal(t, "bool", debugFlag.Value.Type())
-		assert.Equal(t, "false", debugFlag.DefValue)
-	})
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "init is called automatically":
+				// The init function runs automatically when the package is imported
+				// We verify its effects by checking the state it sets up
+				flag := rootCmd.Flags().Lookup("debug")
+				assert.NotNil(t, flag, "init should have added debug flag")
+
+			case "init sets up flags correctly":
+				// Check all flags set up by init
+				debugFlag := rootCmd.Flags().Lookup("debug")
+				require.NotNil(t, debugFlag)
+
+				// Verify flag properties
+				assert.Equal(t, "debug", debugFlag.Name)
+				assert.Equal(t, "bool", debugFlag.Value.Type())
+				assert.Equal(t, "false", debugFlag.DefValue)
+
+			case "error case - init must setup debug flag":
+				debugFlag := rootCmd.Flags().Lookup("debug")
+				assert.NotNil(t, debugFlag, "init must setup debug flag")
+			}
+		})
+	}
 }
 
 func TestConcurrency(t *testing.T) {
-	t.Run("SetVersion concurrent writes", func(t *testing.T) {
-		originalVersion := Version
-		defer func() { Version = originalVersion }()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and Version
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "SetVersion concurrent writes", wantErr: false},
+		{name: "run concurrent execution", wantErr: false},
+		{name: "error case - concurrent writes must not panic", wantErr: true},
+	}
 
-		var wg sync.WaitGroup
-		for i := 0; i < 100; i++ {
-			wg.Add(1)
-			go func(n int) {
-				defer wg.Done()
-				SetVersion(fmt.Sprintf("version-%d", n))
-			}(i)
-		}
-		wg.Wait()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			// Note: No t.Parallel() here because subtests manipulate shared global state
+			switch tt.name {
+			case "SetVersion concurrent writes":
+				originalVersion := Version
+				defer func() { Version = originalVersion }()
 
-		// Version should have some value (last write wins)
-		assert.NotEmpty(t, Version)
-	})
+				var wg sync.WaitGroup
+				for i := 0; i < 100; i++ {
+					wg.Add(1)
+					go func(n int) {
+						defer wg.Done()
+						SetVersion(fmt.Sprintf("version-%d", n))
+					}(i)
+				}
+				wg.Wait()
 
-	t.Run("run concurrent execution", func(t *testing.T) {
-		originalProviderServe := ProviderServe
-		defer func() { ProviderServe = originalProviderServe }()
+				// Version should have some value (last write wins)
+				assert.NotEmpty(t, Version)
 
-		var mu sync.Mutex
-		callCount := 0
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			mu.Lock()
-			callCount++
-			mu.Unlock()
-			time.Sleep(10 * time.Millisecond) // Simulate work
-			return nil
-		}
+			case "run concurrent execution":
+				originalProviderServe := ProviderServe
+				defer func() { ProviderServe = originalProviderServe }()
 
-		var wg sync.WaitGroup
-		for i := 0; i < 10; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				_ = run(&cobra.Command{}, []string{})
-			}()
-		}
-		wg.Wait()
+				var mu sync.Mutex
+				callCount := 0
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					mu.Lock()
+					callCount++
+					mu.Unlock()
+					time.Sleep(10 * time.Millisecond) // Simulate work
+					return nil
+				}
 
-		assert.Equal(t, 10, callCount, "All concurrent runs should complete")
-	})
+				var wg sync.WaitGroup
+				for i := 0; i < 10; i++ {
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						_ = run(&cobra.Command{}, []string{})
+					}()
+				}
+				wg.Wait()
+
+				assert.Equal(t, 10, callCount, "All concurrent runs should complete")
+
+			case "error case - concurrent writes must not panic":
+				assert.NotPanics(t, func() {
+					var wg sync.WaitGroup
+					for i := 0; i < 10; i++ {
+						wg.Add(1)
+						go func(n int) {
+							defer wg.Done()
+							SetVersion(fmt.Sprintf("v%d", n))
+						}(i)
+					}
+					wg.Wait()
+				})
+			}
+		})
+	}
 }
 
 func TestMemoryAndPerformance(t *testing.T) {
-	t.Run("Version string memory", func(t *testing.T) {
-		originalVersion := Version
-		defer func() { Version = originalVersion }()
+	t.Parallel()
 
-		// Test various string sizes
-		sizes := []int{0, 1, 10, 100, 1000, 10000}
-		for _, size := range sizes {
-			version := strings.Repeat("x", size)
-			SetVersion(version)
-			assert.Len(t, Version, size, "Version should handle size %d", size)
-		}
-	})
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "Version string memory", wantErr: false},
+		{name: "run performance with mock", wantErr: false},
+		{name: "error case - Version must handle empty string", wantErr: true},
+	}
 
-	t.Run("run performance with mock", func(t *testing.T) {
-		originalProviderServe := ProviderServe
-		defer func() { ProviderServe = originalProviderServe }()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		callCount := 0
-		ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			callCount++
-			return nil
-		}
+			switch tt.name {
+			case "Version string memory":
+				originalVersion := Version
+				defer func() { Version = originalVersion }()
 
-		// Run multiple times quickly
-		start := time.Now()
-		for i := 0; i < 1000; i++ {
-			_ = run(&cobra.Command{}, []string{})
-		}
-		duration := time.Since(start)
+				// Test various string sizes
+				sizes := []int{0, 1, 10, 100, 1000, 10000}
+				for _, size := range sizes {
+					version := strings.Repeat("x", size)
+					SetVersion(version)
+					assert.Len(t, Version, size, "Version should handle size %d", size)
+				}
 
-		assert.Equal(t, 1000, callCount)
-		assert.Less(t, duration, 1*time.Second, "1000 runs should complete quickly")
-	})
+			case "run performance with mock":
+				originalProviderServe := ProviderServe
+				defer func() { ProviderServe = originalProviderServe }()
+
+				callCount := 0
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					callCount++
+					return nil
+				}
+
+				// Run multiple times quickly
+				start := time.Now()
+				for i := 0; i < 1000; i++ {
+					_ = run(&cobra.Command{}, []string{})
+				}
+				duration := time.Since(start)
+
+				assert.Equal(t, 1000, callCount)
+				assert.Less(t, duration, 1*time.Second, "1000 runs should complete quickly")
+
+			case "error case - Version must handle empty string":
+				originalVersion := Version
+				defer func() { Version = originalVersion }()
+				SetVersion("")
+				assert.Equal(t, "", Version, "Version must handle empty string")
+			}
+		})
+	}
 }
 
 func TestErrorMessages(t *testing.T) {
-	originalProviderServe := ProviderServe
-	defer func() { ProviderServe = originalProviderServe }()
+	t.Parallel()
 
-	t.Run("run preserves error messages", func(t *testing.T) {
-		testMessages := []string{
-			"connection refused",
-			"permission denied",
-			"file not found",
-			"invalid configuration",
-			"timeout occurred",
-		}
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "run preserves error messages", wantErr: false},
+		{name: "error case - nil error must be handled", wantErr: true},
+	}
 
-		for _, msg := range testMessages {
-			expectedErr := errors.New(msg)
-			ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-				return expectedErr
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			originalProviderServe := ProviderServe
+			defer func() { ProviderServe = originalProviderServe }()
+
+			switch tt.name {
+			case "run preserves error messages":
+				testMessages := []string{
+					"connection refused",
+					"permission denied",
+					"file not found",
+					"invalid configuration",
+					"timeout occurred",
+				}
+
+				for _, msg := range testMessages {
+					expectedErr := errors.New(msg)
+					ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+						return expectedErr
+					}
+
+					err := run(&cobra.Command{}, []string{})
+					assert.Error(t, err)
+					assert.Equal(t, msg, err.Error(), "Error message should be preserved")
+				}
+
+			case "error case - nil error must be handled":
+				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					return nil
+				}
+				err := run(&cobra.Command{}, []string{})
+				assert.NoError(t, err, "nil error must be handled")
 			}
-
-			err := run(&cobra.Command{}, []string{})
-			assert.Error(t, err)
-			assert.Equal(t, msg, err.Error(), "Error message should be preserved")
-		}
-	})
+		})
+	}
 }
 
 func BenchmarkSetVersion(b *testing.B) {

@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- rename n8n_lib to src_lib for gazelle compatibility (`84cc3dc`)
 - merge test files and clean up per linter requirements (`1467db5`)
 - optimize code for Go 1.25.4 and improve pre-push hook (`160308b`)
 - improve Makefile formatting and documentation targets (`353658c`)
@@ -92,11 +93,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 55
+- **Total commits:** 56
 - **Features:** 11
 - **Bug fixes:** 10
 - **Tests:** 5
-- **Refactoring:** 14
+- **Refactoring:** 15
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -105,4 +106,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-09 13:41:13*
+*Changelog generated automatically on 2025-11-10 14:36:00*

@@ -9,6 +9,9 @@ go_library(
 
 go_test(
     name = "shared_test",
-    srcs = ["pointers_test.go"],
+    srcs = [
+        "pointers_external_test.go",
+        "pointers_test.go",
+    ],
     embed = [":shared"],
 )

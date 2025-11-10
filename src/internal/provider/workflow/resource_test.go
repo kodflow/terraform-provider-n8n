@@ -34,6 +34,14 @@ func TestNewWorkflowResource(t *testing.T) {
 	})
 }
 
+func TestNewWorkflowResourceWrapper(t *testing.T) {
+	t.Run("wrapper returns WorkflowResource", func(t *testing.T) {
+		r := NewWorkflowResourceWrapper()
+		assert.NotNil(t, r)
+		assert.Implements(t, (*resource.Resource)(nil), r)
+	})
+}
+
 func TestWorkflowResource_Metadata(t *testing.T) {
 	t.Run("set metadata", func(t *testing.T) {
 		r := &WorkflowResource{}
@@ -964,7 +972,7 @@ func TestWorkflowResource_Concurrency(t *testing.T) {
 
 func TestWORKFLOW_ATTRIBUTES_SIZE(t *testing.T) {
 	t.Run("constant is defined", func(t *testing.T) {
-		assert.Equal(t, 11, WORKFLOW_ATTRIBUTES_SIZE)
+		assert.Equal(t, 14, WORKFLOW_ATTRIBUTES_SIZE)
 	})
 
 	t.Run("actual schema has 14 attributes", func(t *testing.T) {
@@ -1192,36 +1200,40 @@ func TestWorkflowResource_Read_ClientRequired(t *testing.T) {
 }
 
 func TestWorkflowResource_Update_ActivationDetection(t *testing.T) {
-	t.Run("detect activation change", func(t *testing.T) {
-		plan := &models.Resource{
-			Active: types.BoolValue(true),
-		}
+	tests := []struct {
+		name          string
+		planActive    types.Bool
+		stateActive   types.Bool
+		expectChanged bool
+	}{
+		{"true to false - should detect change", types.BoolValue(true), types.BoolValue(false), true},
+		{"false to true - should detect change", types.BoolValue(false), types.BoolValue(true), true},
+		{"true to true - no change", types.BoolValue(true), types.BoolValue(true), false},
+		{"false to false - no change", types.BoolValue(false), types.BoolValue(false), false},
+		{"null plan - no change detected", types.BoolNull(), types.BoolValue(true), false},
+		{"null state - no change detected", types.BoolValue(true), types.BoolNull(), false},
+		{"both null - no change", types.BoolNull(), types.BoolNull(), false},
+		{"unknown plan - no change", types.BoolUnknown(), types.BoolValue(true), false},
+		{"unknown state - no change", types.BoolValue(true), types.BoolUnknown(), false},
+		{"both unknown - no change", types.BoolUnknown(), types.BoolUnknown(), false},
+	}
 
-		state := &models.Resource{
-			Active: types.BoolValue(false),
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan := &models.Resource{
+				Active: tt.planActive,
+			}
+			state := &models.Resource{
+				Active: tt.stateActive,
+			}
 
-		// Activation should be detected as changed
-		activeChanged := !plan.Active.IsNull() && !state.Active.IsNull() &&
-			plan.Active.ValueBool() != state.Active.ValueBool()
+			activeChanged := !plan.Active.IsNull() && !plan.Active.IsUnknown() &&
+				!state.Active.IsNull() && !state.Active.IsUnknown() &&
+				plan.Active.ValueBool() != state.Active.ValueBool()
 
-		assert.True(t, activeChanged)
-	})
-
-	t.Run("no change when both active", func(t *testing.T) {
-		plan := &models.Resource{
-			Active: types.BoolValue(true),
-		}
-
-		state := &models.Resource{
-			Active: types.BoolValue(true),
-		}
-
-		activeChanged := !plan.Active.IsNull() && !state.Active.IsNull() &&
-			plan.Active.ValueBool() != state.Active.ValueBool()
-
-		assert.False(t, activeChanged)
-	})
+			assert.Equal(t, tt.expectChanged, activeChanged)
+		})
+	}
 }
 
 func TestWorkflowResource_Delete_Basic(t *testing.T) {

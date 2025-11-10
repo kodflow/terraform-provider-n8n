@@ -59,12 +59,14 @@ func mapProjectToDataSourceModel(project *n8nsdk.Project, data *models.DataSourc
 	if project.Icon != nil {
 		data.Icon = types.StringPointerValue(project.Icon)
 	} else {
+		// Icon is nil, explicitly set to null for Terraform state.
 		data.Icon = types.StringNull()
 	}
 	// Check for non-nil value.
 	if project.Description != nil {
 		data.Description = types.StringPointerValue(project.Description)
 	} else {
+		// Description is nil, explicitly set to null for Terraform state.
 		data.Description = types.StringNull()
 	}
 }

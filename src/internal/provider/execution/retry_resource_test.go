@@ -857,3 +857,151 @@ func TestRetryExecutionResource_Delete(t *testing.T) {
 		// it just removes from state, so it always succeeds
 	})
 }
+
+func TestExecutionRetryResource_Create(t *testing.T) {
+	t.Run("successful retry operation", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/executions/123/retry" && r.Method == http.MethodPost {
+				execution := map[string]interface{}{
+					"id":         float32(456),
+					"workflowId": float32(789),
+					"finished":   true,
+					"mode":       "manual",
+					"startedAt":  "2024-01-01T00:00:00Z",
+					"stoppedAt":  "2024-01-01T00:01:00Z",
+					"status":     "success",
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(execution)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+		n8nClient, server := setupTestRetryClient(t, handler)
+		defer server.Close()
+
+		r := &ExecutionRetryResource{client: n8nClient}
+
+		rawPlan := map[string]tftypes.Value{
+			"execution_id":     tftypes.NewValue(tftypes.String, "123"),
+			"new_execution_id": tftypes.NewValue(tftypes.String, nil),
+			"workflow_id":      tftypes.NewValue(tftypes.String, nil),
+			"finished":         tftypes.NewValue(tftypes.Bool, nil),
+			"mode":             tftypes.NewValue(tftypes.String, nil),
+			"started_at":       tftypes.NewValue(tftypes.String, nil),
+			"stopped_at":       tftypes.NewValue(tftypes.String, nil),
+			"status":           tftypes.NewValue(tftypes.String, nil),
+		}
+		plan := tfsdk.Plan{
+			Raw: tftypes.NewValue(tftypes.Object{
+				AttributeTypes: map[string]tftypes.Type{
+					"execution_id":     tftypes.String,
+					"new_execution_id": tftypes.String,
+					"workflow_id":      tftypes.String,
+					"finished":         tftypes.Bool,
+					"mode":             tftypes.String,
+					"started_at":       tftypes.String,
+					"stopped_at":       tftypes.String,
+					"status":           tftypes.String,
+				},
+			}, rawPlan),
+			Schema: createTestRetrySchema(t),
+		}
+
+		state := tfsdk.State{
+			Raw: tftypes.NewValue(tftypes.Object{
+				AttributeTypes: map[string]tftypes.Type{
+					"execution_id":     tftypes.String,
+					"new_execution_id": tftypes.String,
+					"workflow_id":      tftypes.String,
+					"finished":         tftypes.Bool,
+					"mode":             tftypes.String,
+					"started_at":       tftypes.String,
+					"stopped_at":       tftypes.String,
+					"status":           tftypes.String,
+				},
+			}, nil),
+			Schema: createTestRetrySchema(t),
+		}
+
+		req := resource.CreateRequest{
+			Plan: plan,
+		}
+		resp := resource.CreateResponse{
+			State: state,
+		}
+
+		r.Create(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+	})
+}
+
+func TestExecutionRetryResource_Read(t *testing.T) {
+	t.Run("read maintains state", func(t *testing.T) {
+		r := &ExecutionRetryResource{}
+
+		rawState := map[string]tftypes.Value{
+			"execution_id":     tftypes.NewValue(tftypes.String, "123"),
+			"new_execution_id": tftypes.NewValue(tftypes.String, "456"),
+			"workflow_id":      tftypes.NewValue(tftypes.String, "workflow-789"),
+			"finished":         tftypes.NewValue(tftypes.Bool, true),
+			"mode":             tftypes.NewValue(tftypes.String, "manual"),
+			"started_at":       tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+			"stopped_at":       tftypes.NewValue(tftypes.String, "2024-01-01T00:01:00Z"),
+			"status":           tftypes.NewValue(tftypes.String, "success"),
+		}
+		state := tfsdk.State{
+			Raw: tftypes.NewValue(tftypes.Object{
+				AttributeTypes: map[string]tftypes.Type{
+					"execution_id":     tftypes.String,
+					"new_execution_id": tftypes.String,
+					"workflow_id":      tftypes.String,
+					"finished":         tftypes.Bool,
+					"mode":             tftypes.String,
+					"started_at":       tftypes.String,
+					"stopped_at":       tftypes.String,
+					"status":           tftypes.String,
+				},
+			}, rawState),
+			Schema: createTestRetrySchema(t),
+		}
+
+		req := resource.ReadRequest{
+			State: state,
+		}
+		resp := resource.ReadResponse{
+			State: state,
+		}
+
+		r.Read(context.Background(), req, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+	})
+}
+
+func TestExecutionRetryResource_Update(t *testing.T) {
+	t.Run("update returns error", func(t *testing.T) {
+		r := &ExecutionRetryResource{}
+		resp := &resource.UpdateResponse{}
+
+		r.Update(context.Background(), resource.UpdateRequest{}, resp)
+
+		assert.True(t, resp.Diagnostics.HasError())
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Update Not Supported")
+	})
+}
+
+func TestExecutionRetryResource_Delete(t *testing.T) {
+	t.Run("delete removes from state", func(t *testing.T) {
+		r := &ExecutionRetryResource{}
+		resp := &resource.DeleteResponse{}
+
+		// Delete should not cause any errors
+		r.Delete(context.Background(), resource.DeleteRequest{}, resp)
+
+		assert.False(t, resp.Diagnostics.HasError())
+	})
+}

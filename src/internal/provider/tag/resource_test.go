@@ -827,3 +827,57 @@ func TestTagResource_Interfaces(t *testing.T) {
 		var _ TagResourceInterface = r
 	})
 }
+
+// TestTagResource_Schema tests schema definition.
+func TestTagResource_Schema(t *testing.T) {
+	t.Run("schema has correct structure", func(t *testing.T) {
+		r := NewTagResource()
+		resp := &resource.SchemaResponse{}
+
+		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+		assert.NotNil(t, resp.Schema)
+		assert.Contains(t, resp.Schema.MarkdownDescription, "tag")
+
+		// Verify id attribute (computed)
+		idAttr, exists := resp.Schema.Attributes["id"]
+		assert.True(t, exists)
+		assert.True(t, idAttr.IsComputed())
+
+		// Verify name attribute (required)
+		nameAttr, exists := resp.Schema.Attributes["name"]
+		assert.True(t, exists)
+		assert.True(t, nameAttr.IsRequired())
+
+		// Verify created_at attribute (computed)
+		createdAtAttr, exists := resp.Schema.Attributes["created_at"]
+		assert.True(t, exists)
+		assert.True(t, createdAtAttr.IsComputed())
+
+		// Verify updated_at attribute (computed)
+		updatedAtAttr, exists := resp.Schema.Attributes["updated_at"]
+		assert.True(t, exists)
+		assert.True(t, updatedAtAttr.IsComputed())
+	})
+
+	t.Run("schema attributes have descriptions", func(t *testing.T) {
+		r := NewTagResource()
+		resp := &resource.SchemaResponse{}
+
+		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+		for name, attr := range resp.Schema.Attributes {
+			assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", name)
+		}
+	})
+
+	t.Run("schema has correct attribute count", func(t *testing.T) {
+		r := NewTagResource()
+		resp := &resource.SchemaResponse{}
+
+		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+		// Should have id, name, created_at, updated_at
+		assert.Len(t, resp.Schema.Attributes, 4)
+	})
+}

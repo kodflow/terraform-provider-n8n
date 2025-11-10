@@ -244,8 +244,7 @@ func convertTagIDsToTagIdsInner(tagIDs []string) []n8nsdk.TagIdsInner {
 // Returns:
 //   - None: Updates workflow via API
 func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, state *models.Resource, diags *diag.Diagnostics) {
-	activeChanged := !plan.Active.IsNull() && !state.Active.IsNull() &&
-		plan.Active.ValueBool() != state.Active.ValueBool()
+	activeChanged := isActivationChanged(plan, state)
 
 	// Check condition.
 	if !activeChanged {
@@ -272,16 +271,44 @@ func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, s
 
 	// Check for error.
 	if err != nil {
-		action := "activate"
-		// Check condition.
-		if !plan.Active.ValueBool() {
-			action = "deactivate"
-		}
+		action := getActivationAction(plan)
 		diags.AddError(
 			fmt.Sprintf("Error changing workflow activation status to %s", action),
 			fmt.Sprintf("Could not %s workflow ID %s: %s\nHTTP Response: %v", action, plan.ID.ValueString(), err.Error(), httpResp),
 		)
 	}
+}
+
+// isActivationChanged checks if the workflow activation status has changed.
+//
+// Params:
+//   - plan: The desired workflow state
+//   - state: The current workflow state
+//
+// Returns:
+//   - bool: True if activation status has changed
+func isActivationChanged(plan, state *models.Resource) bool {
+	// Return boolean result.
+	return !plan.Active.IsNull() && !plan.Active.IsUnknown() &&
+		!state.Active.IsNull() && !state.Active.IsUnknown() &&
+		plan.Active.ValueBool() != state.Active.ValueBool()
+}
+
+// getActivationAction returns the activation action string.
+//
+// Params:
+//   - plan: The desired workflow state
+//
+// Returns:
+//   - string: "activate" or "deactivate"
+func getActivationAction(plan *models.Resource) string {
+	// Check condition.
+	if plan.Active.ValueBool() {
+		// Return activate action.
+		return "activate"
+	}
+	// Return deactivate action.
+	return "deactivate"
 }
 
 // updateWorkflowTags updates the tags for a workflow.

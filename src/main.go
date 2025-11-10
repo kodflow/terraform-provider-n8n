@@ -1,6 +1,10 @@
 package main
 
-import "github.com/kodflow/n8n/src/cmd"
+import (
+	"os"
+
+	"github.com/kodflow/n8n/src/cmd"
+)
 
 var (
 	// version represents the build version of the provider, injected at compile time.
@@ -12,5 +16,5 @@ var (
 // It sets the provider version and executes the root command.
 func main() {
 	cmd.SetVersion(version)
-	cmd.Execute()
+	os.Exit(cmd.Execute())
 }

@@ -1152,3 +1152,42 @@ func TestProjectResource_Interfaces(t *testing.T) {
 		var _ ProjectResourceInterface = r
 	})
 }
+
+// TestProjectResource_Schema tests schema definition.
+func TestProjectResource_Schema(t *testing.T) {
+	t.Run("schema has correct structure", func(t *testing.T) {
+		r := NewProjectResource()
+		resp := &resource.SchemaResponse{}
+
+		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+		assert.NotNil(t, resp.Schema)
+		assert.Contains(t, resp.Schema.MarkdownDescription, "project")
+
+		// Verify id attribute (computed)
+		idAttr, exists := resp.Schema.Attributes["id"]
+		assert.True(t, exists)
+		assert.True(t, idAttr.IsComputed())
+
+		// Verify name attribute (required)
+		nameAttr, exists := resp.Schema.Attributes["name"]
+		assert.True(t, exists)
+		assert.True(t, nameAttr.IsRequired())
+
+		// Verify type attribute (computed)
+		typeAttr, exists := resp.Schema.Attributes["type"]
+		assert.True(t, exists)
+		assert.True(t, typeAttr.IsComputed())
+	})
+
+	t.Run("schema attributes have descriptions", func(t *testing.T) {
+		r := NewProjectResource()
+		resp := &resource.SchemaResponse{}
+
+		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+		for name, attr := range resp.Schema.Attributes {
+			assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", name)
+		}
+	})
+}

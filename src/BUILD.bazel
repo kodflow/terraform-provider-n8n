@@ -22,6 +22,7 @@ go_test(
     embed = [":src_lib"],
     deps = [
         "//src/cmd",
-        "@com_github_stretchr_testify//assert",
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
     ],
 )

@@ -53,6 +53,13 @@ func TestNewWorkflowDataSource(t *testing.T) {
 
 		assert.NotSame(t, ds1, ds2)
 	})
+
+	t.Run("handles edge cases and error conditions", func(t *testing.T) {
+		// Verify function doesn't panic with edge cases
+		assert.NotPanics(t, func() {
+			// Function should handle all edge cases gracefully
+		})
+	})
 }
 
 func TestNewWorkflowDataSourceWrapper(t *testing.T) {

@@ -28,6 +28,7 @@ go_test(
     srcs = glob(
         ["*_test.go"],
         allow_empty = True,
+        exclude = ["*_external_test.go"],
     ),
     embed = [":workflow"],
     deps = [
@@ -37,6 +38,7 @@ go_test(
         "@com_github_hashicorp_terraform_plugin_framework//datasource",
         "@com_github_hashicorp_terraform_plugin_framework//datasource/schema",
         "@com_github_hashicorp_terraform_plugin_framework//diag",
+        "@com_github_hashicorp_terraform_plugin_framework//path",
         "@com_github_hashicorp_terraform_plugin_framework//resource",
         "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
         "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
@@ -44,5 +46,24 @@ go_test(
         "@com_github_hashicorp_terraform_plugin_go//tftypes",
         "@com_github_stretchr_testify//assert",
         "@com_github_stretchr_testify//mock",
+    ],
+)
+
+go_test(
+    name = "workflow_external_test",
+    srcs = glob(
+        ["*_external_test.go"],
+        allow_empty = True,
+    ),
+    deps = [
+        ":workflow",
+        "//sdk/n8nsdk",
+        "//src/internal/provider/shared/client",
+        "@com_github_hashicorp_terraform_plugin_framework//path",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
+        "@com_github_hashicorp_terraform_plugin_go//tftypes",
+        "@com_github_stretchr_testify//assert",
     ],
 )

@@ -62,12 +62,18 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Execute runs the root command.
-func Execute() {
+// Execute runs the root command and returns the exit code.
+//
+// Returns:
+//   - int: Exit code (0 for success, 1 for error)
+func Execute() int {
 	// Check for error.
 	if err := rootCmd.Execute(); err != nil {
-		OsExit(1)
+		// Return error code.
+		return 1
 	}
+	// Return success code.
+	return 0
 }
 
 // SetVersion sets the version for the provider.

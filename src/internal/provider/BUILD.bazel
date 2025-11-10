@@ -25,7 +25,10 @@ go_library(
 
 go_test(
     name = "provider_test",
-    srcs = ["provider_test.go"],
+    srcs = [
+        "provider_external_test.go",
+        "provider_test.go",
+    ],
     embed = [":provider"],
     deps = [
         "//src/internal/provider/shared/models",
