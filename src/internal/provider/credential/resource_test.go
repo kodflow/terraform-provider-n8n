@@ -512,6 +512,7 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
 				assert.NotNil(t, w)
 				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
 				assert.Equal(t, "new-cred", apiCred["id"])
@@ -528,6 +529,7 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
 				assert.NotNil(t, w)
 				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
 				assert.Equal(t, "new-cred", apiCred["id"])
@@ -543,6 +545,7 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
 				assert.NotNil(t, w)
 				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
 				assert.Equal(t, "other-cred", apiCred["id"])
@@ -553,14 +556,20 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			workflow: nil,
 			oldCred:  "old-cred",
 			newCred:  "new-cred",
-			checkFn:  func(t *testing.T, w *n8nsdk.Workflow) { assert.Nil(t, w) },
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.Nil(t, w)
+			},
 		},
 		{
 			name:     "empty nodes",
 			workflow: &n8nsdk.Workflow{Id: strPtr("wf-1"), Nodes: []n8nsdk.Node{}},
 			oldCred:  "old-cred",
 			newCred:  "new-cred",
-			checkFn:  func(t *testing.T, w *n8nsdk.Workflow) { assert.Empty(t, w.Nodes) },
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.Empty(t, w.Nodes)
+			},
 		},
 		{
 			name: "node without credentials",
@@ -569,7 +578,10 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) { assert.Nil(t, w.Nodes[0].Credentials) },
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.Nil(t, w.Nodes[0].Credentials)
+			},
 		},
 		{
 			name: "invalid credential structure",
@@ -578,7 +590,10 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) { assert.NotNil(t, w) },
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.NotNil(t, w)
+			},
 		},
 		{
 			name: "mixed valid and invalid credentials",
@@ -591,6 +606,7 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
 				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
 				assert.Equal(t, "new-cred", apiCred["id"])
 			},
@@ -605,6 +621,7 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
 				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
 				assert.Equal(t, "new-cred", apiCred["id"])
 				assert.Equal(t, "API Credential", apiCred["name"])
@@ -619,7 +636,10 @@ func TestReplaceCredentialInWorkflow(t *testing.T) {
 			oldCred: "",
 			newCred: "new-cred",
 			wantErr: true,
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) { assert.NotNil(t, w) },
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.NotNil(t, w)
+			},
 		},
 	}
 

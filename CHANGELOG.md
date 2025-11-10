@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- convert user helpers_test to table-driven format (`17667d0`)
 - convert credential models transfer_resource_test to table-driven (`fdab61f`)
 - convert credential models resource_test to table-driven format (`adaa98b`)
 - convert shared provider_test to table-driven format (`268ab0e`)
@@ -126,10 +127,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 89
+- **Total commits:** 90
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 20
+- **Tests:** 21
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -139,4 +140,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 16:21:50*
+*Changelog generated automatically on 2025-11-10 16:28:41*

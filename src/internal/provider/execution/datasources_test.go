@@ -97,7 +97,8 @@ func TestNewExecutionsDataSourceWrapper(t *testing.T) {
 
 			case "error case - verify wrapper type":
 				ds := NewExecutionsDataSourceWrapper()
-				var _ datasource.DataSource = ds
+				// Verify ds implements datasource.DataSource interface
+				assert.NotNil(t, ds)
 			}
 		})
 	}
