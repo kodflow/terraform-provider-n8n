@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- add comprehensive coverage tests for credential and user modules (`49a168a`)
 - refactor tests to table-driven format with comprehensive coverage (`7ca6910`)
 - refactor all tests to table-driven format with error cases (`1ff7283`)
 - add tests for private helper functions in project package (`d589824`)
@@ -136,10 +137,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 99
+- **Total commits:** 100
 - **Features:** 29
 - **Bug fixes:** 11
-- **Tests:** 29
+- **Tests:** 30
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -149,4 +150,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 16:19:30*
+*Changelog generated automatically on 2025-11-11 16:20:10*
