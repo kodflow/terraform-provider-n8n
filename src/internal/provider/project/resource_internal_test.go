@@ -1256,6 +1256,105 @@ func TestProjectResource_Update_CRUD(t *testing.T) {
 				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
 			},
 		},
+		{
+			name: "error - API update fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPut && r.URL.Path == "/projects/proj-123" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "updated-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API update fails")
+			},
+		},
+		{
+			name: "error - project not found after update",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPut && r.URL.Path == "/projects/proj-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[]}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "updated-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when project not found after update")
+			},
+		},
 	}
 
 	for _, tt := range tests {

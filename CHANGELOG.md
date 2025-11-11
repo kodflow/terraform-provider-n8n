@@ -85,6 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🔨 Chore
 
+- remove TODO comment from credential test (`b595868`)
 - ignore repomix configuration and output files (`99cb808`)
 - apply formatting and gazelle updates (`a140452`)
 - remove temporary build and analysis scripts (`9eab33c`)
@@ -147,7 +148,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 110
+- **Total commits:** 111
 - **Features:** 30
 - **Bug fixes:** 11
 - **Tests:** 38
@@ -160,4 +161,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 21:56:20*
+*Changelog generated automatically on 2025-11-11 22:03:58*
