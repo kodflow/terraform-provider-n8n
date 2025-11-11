@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseWorkflowJSON(t *testing.T) {
+func Test_parseWorkflowJSON(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -220,22 +220,7 @@ func TestParseWorkflowJSON(t *testing.T) {
 	}
 }
 
-// TestmapTagsFromWorkflow tests the exact function name expected by KTN-TEST-003.
-func TestmapTagsFromWorkflow(t *testing.T) {
-	t.Parallel()
-	tag1ID := "tag-1"
-	workflow := &n8nsdk.Workflow{
-		Tags: []n8nsdk.Tag{
-			{Id: &tag1ID},
-		},
-	}
-	diags := &diag.Diagnostics{}
-	result := mapTagsFromWorkflow(context.Background(), workflow, diags)
-	assert.False(t, diags.HasError())
-	assert.False(t, result.IsNull())
-}
-
-func TestMapTagsFromWorkflow(t *testing.T) {
+func Test_mapTagsFromWorkflow(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -330,7 +315,7 @@ func TestMapTagsFromWorkflow(t *testing.T) {
 }
 
 // TestmapWorkflowBasicFields tests the exact function name expected by KTN-TEST-003.
-func TestmapWorkflowBasicFields(t *testing.T) {
+func Test_mapWorkflowBasicFields(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -478,158 +463,7 @@ func TestmapWorkflowBasicFields(t *testing.T) {
 	}
 }
 
-func TestMapWorkflowBasicFields(t *testing.T) {
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "map all basic fields",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				active := true
-				versionID := "v1"
-				isArchived := false
-				triggerCount := int32(5)
-				workflow := &n8nsdk.Workflow{
-					Active:       &active,
-					VersionId:    &versionID,
-					IsArchived:   &isArchived,
-					TriggerCount: &triggerCount,
-				}
-				plan := &models.Resource{}
-
-				mapWorkflowBasicFields(workflow, plan)
-
-				assert.Equal(t, types.BoolValue(true), plan.Active)
-				assert.Equal(t, types.StringValue("v1"), plan.VersionID)
-				assert.Equal(t, types.BoolValue(false), plan.IsArchived)
-				assert.Equal(t, types.Int64Value(5), plan.TriggerCount)
-			},
-		},
-		{
-			name: "map with nil active",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				versionID := "v1"
-				workflow := &n8nsdk.Workflow{
-					Active:    nil,
-					VersionId: &versionID,
-				}
-				plan := &models.Resource{}
-
-				mapWorkflowBasicFields(workflow, plan)
-
-				assert.True(t, plan.Active.IsNull())
-				assert.Equal(t, types.StringValue("v1"), plan.VersionID)
-			},
-		},
-		{
-			name: "map with nil version ID",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				active := true
-				workflow := &n8nsdk.Workflow{
-					Active:    &active,
-					VersionId: nil,
-				}
-				plan := &models.Resource{}
-
-				mapWorkflowBasicFields(workflow, plan)
-
-				assert.Equal(t, types.BoolValue(true), plan.Active)
-				assert.True(t, plan.VersionID.IsNull())
-			},
-		},
-		{
-			name: "map with nil is archived",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				active := true
-				workflow := &n8nsdk.Workflow{
-					Active:     &active,
-					IsArchived: nil,
-				}
-				plan := &models.Resource{}
-
-				mapWorkflowBasicFields(workflow, plan)
-
-				assert.Equal(t, types.BoolValue(true), plan.Active)
-				assert.True(t, plan.IsArchived.IsNull())
-			},
-		},
-		{
-			name: "map with nil trigger count",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				active := true
-				workflow := &n8nsdk.Workflow{
-					Active:       &active,
-					TriggerCount: nil,
-				}
-				plan := &models.Resource{}
-
-				mapWorkflowBasicFields(workflow, plan)
-
-				assert.Equal(t, types.BoolValue(true), plan.Active)
-				assert.True(t, plan.TriggerCount.IsNull())
-			},
-		},
-		{
-			name: "map with all nil fields",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				workflow := &n8nsdk.Workflow{
-					Active:       nil,
-					VersionId:    nil,
-					IsArchived:   nil,
-					TriggerCount: nil,
-				}
-				plan := &models.Resource{}
-
-				mapWorkflowBasicFields(workflow, plan)
-
-				assert.True(t, plan.Active.IsNull())
-				assert.True(t, plan.VersionID.IsNull())
-				assert.True(t, plan.IsArchived.IsNull())
-				assert.True(t, plan.TriggerCount.IsNull())
-			},
-		},
-		{
-			name: "error case - nil workflow pointer does not panic",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				defer func() {
-					if r := recover(); r == nil {
-						t.Error("Expected panic from nil workflow, but did not panic")
-					}
-				}()
-				plan := &models.Resource{}
-				mapWorkflowBasicFields(nil, plan)
-			},
-		},
-		{
-			name: "error case - nil plan pointer does not panic",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				// Function should handle nil gracefully without panicking
-				workflow := &n8nsdk.Workflow{}
-				plan := models.Resource{}
-				mapWorkflowBasicFields(workflow, &plan)
-				// Verify plan fields are empty/null after nil workflow data
-				assert.True(t, plan.Name.IsNull() || plan.Name.ValueString() == "")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.testFunc(t)
-		})
-	}
-}
-
-func TestMapWorkflowTimestamps(t *testing.T) {
+func Test_mapWorkflowTimestamps(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -752,25 +586,7 @@ func TestMapWorkflowTimestamps(t *testing.T) {
 	}
 }
 
-// TestmapWorkflowToModel tests the exact function name expected by KTN-TEST-003.
-func TestmapWorkflowToModel(t *testing.T) {
-	t.Parallel()
-	active := true
-	workflow := &n8nsdk.Workflow{
-		Name:        "Test Workflow",
-		Active:      &active,
-		Nodes:       []n8nsdk.Node{},
-		Connections: map[string]any{},
-		Settings:    n8nsdk.WorkflowSettings{},
-	}
-	plan := &models.Resource{}
-	diags := &diag.Diagnostics{}
-	mapWorkflowToModel(context.Background(), workflow, plan, diags)
-	assert.False(t, diags.HasError())
-	assert.Equal(t, "Test Workflow", plan.Name.ValueString())
-}
-
-func TestMapWorkflowToModel(t *testing.T) {
+func Test_mapWorkflowToModel(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -882,7 +698,7 @@ func TestMapWorkflowToModel(t *testing.T) {
 	}
 }
 
-func TestSerializeWorkflowJSON(t *testing.T) {
+func Test_serializeWorkflowJSON(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -999,7 +815,7 @@ func TestSerializeWorkflowJSON(t *testing.T) {
 	}
 }
 
-func TestConvertTagIDsToTagIdsInner(t *testing.T) {
+func Test_convertTagIDsToTagIdsInner(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1072,7 +888,7 @@ func TestConvertTagIDsToTagIdsInner(t *testing.T) {
 	}
 }
 
-func TestIsActivationChanged(t *testing.T) {
+func Test_isActivationChanged(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1208,7 +1024,7 @@ func TestIsActivationChanged(t *testing.T) {
 	}
 }
 
-func TestGetActivationAction(t *testing.T) {
+func Test_getActivationAction(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1342,311 +1158,6 @@ func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
 	}
 }
 
-func TestparseWorkflowJSON(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "valid JSON fields"},
-		{name: "null JSON fields"},
-		{name: "invalid nodes JSON", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			diags := &diag.Diagnostics{}
-
-			switch tt.name {
-			case "valid JSON fields":
-				plan := &models.Resource{
-					NodesJSON:       types.StringValue(`[]`),
-					ConnectionsJSON: types.StringValue(`{}`),
-					SettingsJSON:    types.StringValue(`{}`),
-				}
-				nodes, connections, settings := parseWorkflowJSON(plan, diags)
-				assert.False(t, diags.HasError())
-				assert.NotNil(t, nodes)
-				assert.NotNil(t, connections)
-				assert.NotNil(t, settings)
-
-			case "null JSON fields":
-				plan := &models.Resource{
-					NodesJSON:       types.StringNull(),
-					ConnectionsJSON: types.StringNull(),
-					SettingsJSON:    types.StringNull(),
-				}
-				_, _, _ = parseWorkflowJSON(plan, diags)
-				assert.False(t, diags.HasError())
-
-			case "invalid nodes JSON":
-				plan := &models.Resource{
-					NodesJSON:       types.StringValue(`{invalid json`),
-					ConnectionsJSON: types.StringValue(`{}`),
-					SettingsJSON:    types.StringValue(`{}`),
-				}
-				_, _, _ = parseWorkflowJSON(plan, diags)
-				assert.True(t, diags.HasError())
-			}
-		})
-	}
-}
-
 // TestmapWorkflowBasicFields is now in external test file - refactored to test behavior only.
 
-func TestmapWorkflowTimestamps(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "with timestamps"},
-		{name: "nil timestamps"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			plan := &models.Resource{}
-
-			switch tt.name {
-			case "with timestamps":
-				createdAt := time.Now()
-				updatedAt := time.Now().Add(time.Hour)
-				workflow := &n8nsdk.Workflow{
-					CreatedAt: &createdAt,
-					UpdatedAt: &updatedAt,
-				}
-
-				mapWorkflowTimestamps(workflow, plan)
-
-				assert.False(t, plan.CreatedAt.IsNull())
-				assert.False(t, plan.UpdatedAt.IsNull())
-
-			case "nil timestamps":
-				workflow := &n8nsdk.Workflow{
-					CreatedAt: nil,
-					UpdatedAt: nil,
-				}
-
-				mapWorkflowTimestamps(workflow, plan)
-
-				assert.True(t, plan.CreatedAt.IsNull())
-				assert.True(t, plan.UpdatedAt.IsNull())
-			}
-		})
-	}
-}
-
 // TestmapWorkflowToModel is now in external test file - refactored to test behavior only.
-
-func TestserializeWorkflowJSON(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "with nodes and connections"},
-		{name: "empty workflow"},
-		{name: "nil nodes"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			plan := &models.Resource{}
-
-			switch tt.name {
-			case "with nodes and connections":
-				workflow := &n8nsdk.Workflow{
-					Nodes:       []n8nsdk.Node{{Name: ptrString("test-node")}},
-					Connections: map[string]interface{}{"main": []interface{}{}},
-				}
-
-				serializeWorkflowJSON(workflow, plan)
-
-				assert.False(t, plan.NodesJSON.IsNull())
-				assert.False(t, plan.ConnectionsJSON.IsNull())
-
-			case "empty workflow":
-				workflow := &n8nsdk.Workflow{
-					Nodes:       []n8nsdk.Node{},
-					Connections: map[string]interface{}{},
-				}
-
-				serializeWorkflowJSON(workflow, plan)
-
-				assert.False(t, plan.NodesJSON.IsNull())
-				assert.False(t, plan.ConnectionsJSON.IsNull())
-
-			case "nil nodes":
-				workflow := &n8nsdk.Workflow{
-					Nodes:       nil,
-					Connections: nil,
-				}
-
-				serializeWorkflowJSON(workflow, plan)
-
-				assert.True(t, plan.NodesJSON.IsNull())
-				assert.True(t, plan.ConnectionsJSON.IsNull())
-			}
-		})
-	}
-}
-
-func TestconvertTagIDsToTagIdsInner(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "with tag IDs"},
-		{name: "empty list"},
-		{name: "nil list"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "with tag IDs":
-				tags := []string{"tag-1", "tag-2", "tag-3"}
-				result := convertTagIDsToTagIdsInner(tags)
-				assert.Len(t, result, 3)
-				assert.Equal(t, "tag-1", result[0].Id)
-
-			case "empty list":
-				tags := []string{}
-				result := convertTagIDsToTagIdsInner(tags)
-				assert.Empty(t, result)
-
-			case "nil list":
-				var tags []string
-				result := convertTagIDsToTagIdsInner(tags)
-				assert.Empty(t, result)
-			}
-		})
-	}
-}
-
-func TestisActivationChanged(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "activation changed - true to false"},
-		{name: "activation changed - false to true"},
-		{name: "no change"},
-		{name: "plan null"},
-		{name: "state null"},
-		{name: "plan unknown"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "activation changed - true to false":
-				plan := &models.Resource{Active: types.BoolValue(false)}
-				state := &models.Resource{Active: types.BoolValue(true)}
-				result := isActivationChanged(plan, state)
-				assert.True(t, result)
-
-			case "activation changed - false to true":
-				plan := &models.Resource{Active: types.BoolValue(true)}
-				state := &models.Resource{Active: types.BoolValue(false)}
-				result := isActivationChanged(plan, state)
-				assert.True(t, result)
-
-			case "no change":
-				plan := &models.Resource{Active: types.BoolValue(true)}
-				state := &models.Resource{Active: types.BoolValue(true)}
-				result := isActivationChanged(plan, state)
-				assert.False(t, result)
-
-			case "plan null":
-				plan := &models.Resource{Active: types.BoolNull()}
-				state := &models.Resource{Active: types.BoolValue(true)}
-				result := isActivationChanged(plan, state)
-				assert.False(t, result)
-
-			case "state null":
-				plan := &models.Resource{Active: types.BoolValue(true)}
-				state := &models.Resource{Active: types.BoolNull()}
-				result := isActivationChanged(plan, state)
-				assert.False(t, result)
-
-			case "plan unknown":
-				plan := &models.Resource{Active: types.BoolUnknown()}
-				state := &models.Resource{Active: types.BoolValue(true)}
-				result := isActivationChanged(plan, state)
-				assert.False(t, result)
-			}
-		})
-	}
-}
-
-func TestgetActivationAction(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "activate"},
-		{name: "deactivate"},
-		{name: "null - defaults to deactivate"},
-		{name: "unknown - defaults to deactivate"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "activate":
-				plan := &models.Resource{Active: types.BoolValue(true)}
-				result := getActivationAction(plan)
-				assert.Equal(t, "activate", result)
-
-			case "deactivate":
-				plan := &models.Resource{Active: types.BoolValue(false)}
-				result := getActivationAction(plan)
-				assert.Equal(t, "deactivate", result)
-
-			case "null - defaults to deactivate":
-				plan := &models.Resource{Active: types.BoolNull()}
-				result := getActivationAction(plan)
-				assert.Equal(t, "deactivate", result)
-
-			case "unknown - defaults to deactivate":
-				plan := &models.Resource{Active: types.BoolUnknown()}
-				result := getActivationAction(plan)
-				assert.Equal(t, "deactivate", result)
-			}
-		})
-	}
-}
-
-// ptrString returns a pointer to the given string.
-func ptrString(s string) *string {
-	return &s
-}

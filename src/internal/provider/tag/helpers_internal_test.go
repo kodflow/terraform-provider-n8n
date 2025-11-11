@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestmapTagToDataSourceModel(t *testing.T) {
+func Test_mapTagToDataSourceModel(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -235,7 +235,7 @@ func TestmapTagToDataSourceModel(t *testing.T) {
 	}
 }
 
-func TestfindTagByName(t *testing.T) {
+func Test_findTagByName(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -502,7 +502,7 @@ func TestfindTagByName(t *testing.T) {
 	}
 }
 
-func TestMapTagToDataSourceModelConcurrency(t *testing.T) {
+func Test_mapTagToDataSourceModelConcurrency(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -578,7 +578,7 @@ func TestMapTagToDataSourceModelConcurrency(t *testing.T) {
 	}
 }
 
-func TestFindTagByNameConcurrency(t *testing.T) {
+func Test_findTagByNameConcurrency(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

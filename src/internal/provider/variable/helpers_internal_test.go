@@ -10,7 +10,7 @@ import (
 )
 
 // TestfindVariableByIDOrKey tests the findVariableByIDOrKey private function.
-func TestfindVariableByIDOrKey(t *testing.T) {
+func Test_findVariableByIDOrKey(t *testing.T) {
 	t.Helper()
 
 	tests := []struct {
@@ -117,7 +117,7 @@ func TestfindVariableByIDOrKey(t *testing.T) {
 }
 
 // TestfindVariableByID tests the findVariableByID private function.
-func TestfindVariableByID(t *testing.T) {
+func Test_findVariableByID(t *testing.T) {
 	t.Helper()
 
 	tests := []struct {
@@ -212,7 +212,7 @@ func TestfindVariableByID(t *testing.T) {
 }
 
 // TestfindVariableByKey tests the findVariableByKey private function.
-func TestfindVariableByKey(t *testing.T) {
+func Test_findVariableByKey(t *testing.T) {
 	t.Helper()
 
 	tests := []struct {
@@ -308,7 +308,7 @@ func TestfindVariableByKey(t *testing.T) {
 }
 
 // TestmapVariableToDataSourceModel tests the mapVariableToDataSourceModel private function.
-func TestmapVariableToDataSourceModel(t *testing.T) {
+func Test_mapVariableToDataSourceModel(t *testing.T) {
 	t.Helper()
 
 	tests := []struct {
@@ -445,7 +445,7 @@ func TestmapVariableToDataSourceModel(t *testing.T) {
 }
 
 // TestmapVariableToResourceModel tests the mapVariableToResourceModel private function.
-func TestmapVariableToResourceModel(t *testing.T) {
+func Test_mapVariableToResourceModel(t *testing.T) {
 	t.Helper()
 
 	tests := []struct {
@@ -582,7 +582,7 @@ func TestmapVariableToResourceModel(t *testing.T) {
 }
 
 // TestbuildVariableRequest tests the buildVariableRequest private function.
-func TestbuildVariableRequest(t *testing.T) {
+func Test_buildVariableRequest(t *testing.T) {
 	t.Helper()
 
 	tests := []struct {

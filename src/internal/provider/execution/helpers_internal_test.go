@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestmapExecutionToItem(t *testing.T) {
+func Test_mapExecutionToItem(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
@@ -264,7 +264,7 @@ func TestmapExecutionToItem(t *testing.T) {
 	}
 }
 
-func TestMapExecutionToItemConcurrency(t *testing.T) {
+func Test_mapExecutionToItemConcurrency(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string

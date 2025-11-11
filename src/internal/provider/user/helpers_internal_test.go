@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestmapUserToItem(t *testing.T) {
+func Test_mapUserToItem(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -204,7 +204,7 @@ func TestmapUserToItem(t *testing.T) {
 	}
 }
 
-func TestmapUserToResourceModel(t *testing.T) {
+func Test_mapUserToResourceModel(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -398,7 +398,7 @@ func TestmapUserToResourceModel(t *testing.T) {
 	}
 }
 
-func TestmapUserToItemConcurrency(t *testing.T) {
+func Test_mapUserToItemConcurrency(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -475,7 +475,7 @@ func TestmapUserToItemConcurrency(t *testing.T) {
 	}
 }
 
-func TestmapUserToResourceModelConcurrency(t *testing.T) {
+func Test_mapUserToResourceModelConcurrency(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -545,7 +545,7 @@ func TestmapUserToResourceModelConcurrency(t *testing.T) {
 	}
 }
 
-func BenchmarkmapUserToItem(b *testing.B) {
+func Benchmark_mapUserToItem(b *testing.B) {
 	id := "benchmark123"
 	email := "benchmark@example.com"
 	firstName := "Benchmark"
@@ -572,7 +572,7 @@ func BenchmarkmapUserToItem(b *testing.B) {
 	}
 }
 
-func BenchmarkmapUserToResourceModel(b *testing.B) {
+func Benchmark_mapUserToResourceModel(b *testing.B) {
 	id := "benchmarkresource"
 	email := "benchmarkresource@example.com"
 	firstName := "Benchmark"
