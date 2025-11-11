@@ -35,7 +35,9 @@ go_test(
         "//src/internal/provider/tag/models",
         "@com_github_hashicorp_terraform_plugin_framework//datasource",
         "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
         "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_hashicorp_terraform_plugin_go//tftypes",
         "@com_github_stretchr_testify//assert",
     ],
 )

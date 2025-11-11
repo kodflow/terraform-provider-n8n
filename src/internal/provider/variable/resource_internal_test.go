@@ -8,7 +8,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/variable/models"
@@ -535,8 +537,409 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 	}
 }
 
-// TestVariableResource_Delete is tested via external tests and helper method tests.
-// This ensures coverage of the Delete method through the private methods it calls.
+// TestVariableResource_Create_CRUD tests the full Create method execution.
+func TestVariableResource_Create_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "create with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusCreated)
+						w.Write([]byte(`{"id":"var-123","key":"test-key","value":"test-value","type":"string"}`))
+						return
+					}
+					if r.Method == http.MethodGet {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`[{"id":"var-123","key":"test-key","value":"test-value","type":"string"}]`))
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
 
-// TestVariableResource_ImportState is tested via external tests.
-// This ensures coverage of the ImportState method.
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"key":        tftypes.NewValue(tftypes.String, "test-key"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				plan := tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := &resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - create with invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewVariableResource()
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				plan := tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := &resource.CreateResponse{}
+
+				r.Create(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestVariableResource_Read_CRUD tests the full Read method execution.
+func TestVariableResource_Read_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "read with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`[{"id":"var-123","key":"test-key","value":"test-value","type":"string"}]`))
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "test-key"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{
+					State: state,
+				}
+
+				r.Read(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - read with invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewVariableResource()
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{}
+
+				r.Read(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestVariableResource_Update_CRUD tests the full Update method execution.
+func TestVariableResource_Update_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "update with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPatch {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"id":"var-123","key":"test-key","value":"updated-value","type":"string"}`))
+						return
+					}
+					if r.Method == http.MethodGet {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`[{"id":"var-123","key":"test-key","value":"updated-value","type":"string"}]`))
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "test-key"),
+					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				plan := tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				}
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "test-key"),
+					"value":      tftypes.NewValue(tftypes.String, "old-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.UpdateRequest{
+					Plan:  plan,
+					State: state,
+				}
+				resp := &resource.UpdateResponse{
+					State: state,
+				}
+
+				r.Update(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - update with invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewVariableResource()
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				plan := tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				}
+
+				req := resource.UpdateRequest{
+					Plan: plan,
+				}
+				resp := &resource.UpdateResponse{}
+
+				r.Update(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestVariableResource_Delete_CRUD tests the full Delete method execution.
+func TestVariableResource_Delete_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "delete with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNoContent)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "test-key"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := &resource.DeleteResponse{}
+
+				r.Delete(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - delete with invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewVariableResource()
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := &resource.DeleteResponse{}
+
+				r.Delete(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestVariableResource_ImportState_CRUD tests the full ImportState method execution.
+func TestVariableResource_ImportState_CRUD(t *testing.T) {
+	t.Run("import state passthrough", func(t *testing.T) {
+		t.Helper()
+		r := NewVariableResource()
+		ctx := context.Background()
+
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+		emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+			"id":         tftypes.NewValue(tftypes.String, nil),
+			"key":        tftypes.NewValue(tftypes.String, nil),
+			"value":      tftypes.NewValue(tftypes.String, nil),
+			"type":       tftypes.NewValue(tftypes.String, nil),
+			"project_id": tftypes.NewValue(tftypes.String, nil),
+		})
+
+		req := resource.ImportStateRequest{
+			ID: "var-123",
+		}
+		resp := &resource.ImportStateResponse{
+			State: tfsdk.State{
+				Schema: schemaResp.Schema,
+				Raw:    emptyValue,
+			},
+		}
+
+		r.ImportState(ctx, req, resp)
+		assert.False(t, resp.Diagnostics.HasError())
+	})
+}
