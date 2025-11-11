@@ -625,6 +625,67 @@ func TestVariableResource_Update_CRUD(t *testing.T) {
 		testFunc func(*testing.T)
 	}{
 		{
+			name: "success - update variable",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+
+					// Step 1: PUT /variables/{id} - update variable (returns 204)
+					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+
+					// Step 2: GET /variables - list to verify update
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[{"id":"var-123","key":"MY_VAR","value":"updated-value","type":"string"}]}`))
+						return
+					}
+
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
 			name: "error - invalid plan",
 			testFunc: func(t *testing.T) {
 				t.Helper()

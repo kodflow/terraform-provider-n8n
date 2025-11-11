@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **77.5%** |
+| **Total Coverage** | **77.7%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -32,7 +32,7 @@ Rapport de couverture généré automatiquement.
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/tag` | 79.9% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 73.5% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 77.6% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 78.5% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 87.4% |
 
 ---
@@ -106,7 +106,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Read` | 🟢 100.0% | 🟡 88.9% | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Update` | 🟠 36.7% | 🟡 81.8% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟡 81.8% | 🟢 100.0% |
+| `Update` | 🟠 36.7% | 🟡 81.8% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 
 ### 📄 retry_resource.go
 

@@ -2199,6 +2199,9 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				assert.True(t, resp.Diagnostics.HasError(), "Expected error when workflow scan fails")
 			},
 		},
+		// TODO: Add success test for Update - currently blocked by Terraform framework issue.
+		// After calling plan.Data.ElementsAs(), the plan object cannot be serialized.
+		// Error: "don't know how to reflect tftypes.String into interface {}".
 	}
 
 	for _, tt := range tests {

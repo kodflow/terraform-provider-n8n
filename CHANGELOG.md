@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
-- add Update method coverage tests (`5da12ab`)
+- add Update method coverage tests (`d9c6c52`)
 - improve CRUD method coverage (`429898d`)
 - achieve 100% coverage for Delete method (`249516e`)
 - achieve 100% coverage for pull_resource CRUD methods (`d23a600`)
@@ -159,4 +159,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 21:34:34*
+*Changelog generated automatically on 2025-11-11 21:55:28*
