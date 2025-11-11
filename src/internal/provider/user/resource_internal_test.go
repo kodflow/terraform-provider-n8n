@@ -553,31 +553,227 @@ func TestUserResource_schemaAttributes(t *testing.T) {
 
 // TestUserResource_createUser tests the private createUser method.
 func TestUserResource_createUser(t *testing.T) {
-	t.Helper()
+	t.Parallel()
 
 	tests := []struct {
-		name        string
-		data        *models.Resource
-		expectError bool
+		name string
 	}{
-		{
-			name:        "nil client returns empty string",
-			data:        &models.Resource{},
-			expectError: true,
-		},
+		{name: "success - create user with role"},
+		{name: "success - create user without role"},
+		{name: "success - create user with null role"},
+		{name: "success - create user with unknown role"},
+		{name: "error - API error"},
+		{name: "error - nil user in response"},
+		{name: "error - nil user ID in response"},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Helper()
+			t.Parallel()
 
-			// Note: Cannot test createUser() with nil client as it would panic
-			// due to nil pointer dereference. In production, the client is always
-			// properly initialized via Configure().
-			// This test just verifies that the method exists and can be called
-			// with a properly configured resource.
-			r := &UserResource{}
-			assert.NotNil(t, r, "UserResource should not be nil")
+			switch tt.name {
+			case "success - create user with role":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodPost {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"user": map[string]interface{}{
+								"id":    "user-123",
+								"email": "test@example.com",
+								"role":  "admin",
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+					Role:  types.StringValue("admin"),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "user-123", userID)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "success - create user without role":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodPost {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"user": map[string]interface{}{
+								"id":    "user-123",
+								"email": "test@example.com",
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "user-123", userID)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "success - create user with null role":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodPost {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"user": map[string]interface{}{
+								"id":    "user-123",
+								"email": "test@example.com",
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+					Role:  types.StringNull(),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "user-123", userID)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "success - create user with unknown role":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodPost {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"user": map[string]interface{}{
+								"id":    "user-123",
+								"email": "test@example.com",
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+					Role:  types.StringUnknown(),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "user-123", userID)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error - API error":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "", userID)
+				assert.True(t, resp.Diagnostics.HasError())
+
+			case "error - nil user in response":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodPost {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"user": nil,
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "", userID)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "API did not return user ID")
+
+			case "error - nil user ID in response":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/users" && r.Method == http.MethodPost {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						json.NewEncoder(w).Encode(map[string]interface{}{
+							"user": map[string]interface{}{
+								"email": "test@example.com",
+							},
+						})
+						return
+					}
+					w.WriteHeader(http.StatusNotFound)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+				plan := &models.Resource{
+					Email: types.StringValue("test@example.com"),
+				}
+				resp := &resource.CreateResponse{}
+
+				userID := r.createUser(context.Background(), plan, resp)
+
+				assert.Equal(t, "", userID)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "API did not return user ID")
+			}
 		})
 	}
 }

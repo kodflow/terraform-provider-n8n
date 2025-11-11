@@ -158,6 +158,7 @@ func TestProjectUserResource_Configure(t *testing.T) {
 	}{
 		{name: "configures with valid client", wantErr: false},
 		{name: "error case - nil provider data", wantErr: false},
+		{name: "error case - wrong provider data type", wantErr: true},
 	}
 
 	for _, tt := range tests {
@@ -183,6 +184,16 @@ func TestProjectUserResource_Configure(t *testing.T) {
 				resp := &resource.ConfigureResponse{}
 				r.Configure(context.Background(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - wrong provider data type":
+				r := project.NewProjectUserResource()
+				req := resource.ConfigureRequest{
+					ProviderData: "wrong type",
+				}
+				resp := &resource.ConfigureResponse{}
+				r.Configure(context.Background(), req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
 			}
 		})
 	}

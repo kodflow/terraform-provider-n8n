@@ -392,6 +392,8 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 		{name: "success - with project filter"},
 		{name: "error - API error", wantErr: true},
 		{name: "error - variable not found", wantErr: true},
+		{name: "error - variable not found with key identifier", wantErr: true},
+		{name: "error - nil variable data", wantErr: true},
 	}
 
 	for _, tt := range tests {
@@ -525,6 +527,55 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				ds := &VariableDataSource{client: n8nClient}
 				data := &models.DataSource{
 					ID: types.StringValue("nonexistent"),
+				}
+				resp := &datasource.ReadResponse{}
+
+				variable := ds.fetchVariable(context.Background(), data, resp)
+
+				assert.Nil(t, variable)
+				assert.True(t, resp.Diagnostics.HasError())
+
+			case "error - variable not found with key identifier":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(n8nsdk.VariableList{
+						Data: []n8nsdk.Variable{},
+					})
+				})
+
+				n8nClient, server := setupTestDataSourceClient(t, handler)
+				defer server.Close()
+
+				ds := &VariableDataSource{client: n8nClient}
+				data := &models.DataSource{
+					ID:  types.StringNull(),
+					Key: types.StringValue("nonexistent-key"),
+				}
+				resp := &datasource.ReadResponse{}
+
+				variable := ds.fetchVariable(context.Background(), data, resp)
+
+				assert.Nil(t, variable)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Variable Not Found")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "nonexistent-key")
+
+			case "error - nil variable data":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(n8nsdk.VariableList{
+						Data: nil,
+					})
+				})
+
+				n8nClient, server := setupTestDataSourceClient(t, handler)
+				defer server.Close()
+
+				ds := &VariableDataSource{client: n8nClient}
+				data := &models.DataSource{
+					ID: types.StringValue("var-123"),
 				}
 				resp := &datasource.ReadResponse{}
 

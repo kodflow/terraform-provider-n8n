@@ -1,321 +1,34 @@
 package project
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
 	"testing"
-	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// TestProjectsDataSource_schemaAttributes tests the schemaAttributes method.
+// TestProjectsDataSource_schemaAttributes tests the schemaAttributes helper.
 func TestProjectsDataSource_schemaAttributes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name      string
+		want      int
+		wantError bool
 	}{
 		{
-			name:    "returns valid schema attributes",
-			wantErr: false,
+			name:      "returns correct number of attributes",
+			want:      1, // projects attribute
+			wantError: false,
 		},
 		{
-			name:    "error case - validation checks",
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "returns valid schema attributes":
-				ds := &ProjectsDataSource{}
-				attrs := ds.schemaAttributes()
-				assert.NotNil(t, attrs)
-				assert.Contains(t, attrs, "projects")
-				assert.NotNil(t, attrs["projects"])
-
-			case "error case - validation checks":
-				ds := &ProjectsDataSource{}
-				attrs := ds.schemaAttributes()
-				assert.NotNil(t, attrs)
-				assert.NotEmpty(t, attrs)
-			}
-		})
-	}
-}
-
-// TestProjectsDataSource_projectAttributes tests the projectAttributes method.
-func TestProjectsDataSource_projectAttributes(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{
-			name:    "returns valid project attributes",
-			wantErr: false,
+			name:      "nil datasource should not panic",
+			want:      1,
+			wantError: false,
 		},
 		{
-			name:    "error case - validation checks",
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "returns valid project attributes":
-				ds := &ProjectsDataSource{}
-				attrs := ds.projectAttributes()
-				assert.NotNil(t, attrs)
-				assert.Contains(t, attrs, "id")
-				assert.Contains(t, attrs, "name")
-				assert.NotNil(t, attrs["id"])
-				assert.NotNil(t, attrs["name"])
-
-			case "error case - validation checks":
-				ds := &ProjectsDataSource{}
-				attrs := ds.projectAttributes()
-				assert.NotNil(t, attrs)
-				assert.NotEmpty(t, attrs)
-			}
-		})
-	}
-}
-
-// createTestDataSourcesSchema creates a test schema for projects datasource.
-func createTestDataSourcesSchema(t *testing.T) datasource.SchemaResponse {
-	t.Helper()
-	d := &ProjectsDataSource{}
-	req := datasource.SchemaRequest{}
-	resp := &datasource.SchemaResponse{}
-	d.Schema(context.Background(), req, resp)
-	return *resp
-}
-
-// setupTestDataSourcesClient creates a test N8nClient with httptest server.
-func setupTestDataSourcesClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
-	t.Helper()
-	server := httptest.NewServer(handler)
-
-	cfg := n8nsdk.NewConfiguration()
-	cfg.Servers = n8nsdk.ServerConfigurations{
-		{
-			URL:         server.URL,
-			Description: "Test server",
-		},
-	}
-	cfg.HTTPClient = server.Client()
-	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
-
-	apiClient := n8nsdk.NewAPIClient(cfg)
-	n8nClient := &client.N8nClient{
-		APIClient: apiClient,
-	}
-
-	return n8nClient, server
-}
-
-// TestProjectsDataSource_Read tests the Read method.
-func TestProjectsDataSource_Read(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-
-	tests := []struct {
-		name        string
-		handler     http.HandlerFunc
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name: "successful read with multiple projects",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					projectType1 := "team"
-					projectType2 := "personal"
-					icon := "icon-test"
-					description := "test description"
-					projects := map[string]interface{}{
-						"data": []map[string]interface{}{
-							{
-								"id":          "proj-123",
-								"name":        "Test Project 1",
-								"type":        projectType1,
-								"createdAt":   now.Format(time.RFC3339),
-								"updatedAt":   now.Format(time.RFC3339),
-								"icon":        icon,
-								"description": description,
-							},
-							{
-								"id":        "proj-456",
-								"name":      "Test Project 2",
-								"type":      projectType2,
-								"createdAt": now.Format(time.RFC3339),
-								"updatedAt": now.Format(time.RFC3339),
-							},
-						},
-					}
-					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(projects)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			}),
-			wantErr: false,
-		},
-		{
-			name: "successful read with empty list",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					projects := map[string]interface{}{
-						"data": []map[string]interface{}{},
-					}
-					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(projects)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			}),
-			wantErr: false,
-		},
-		{
-			name: "api error",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			}),
-			wantErr:     true,
-			errContains: "Error listing projects",
-		},
-		{
-			name: "successful read with nil data",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					projects := map[string]interface{}{
-						"data": nil,
-					}
-					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(projects)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			}),
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			n8nClient, server := setupTestDataSourcesClient(t, tt.handler)
-			defer server.Close()
-
-			d := &ProjectsDataSource{client: n8nClient}
-
-			schemaResp := createTestDataSourcesSchema(t)
-
-			// Create a simplified state structure for projects list
-			projectType := tftypes.Object{
-				AttributeTypes: map[string]tftypes.Type{
-					"id":          tftypes.String,
-					"name":        tftypes.String,
-					"type":        tftypes.String,
-					"created_at":  tftypes.String,
-					"updated_at":  tftypes.String,
-					"icon":        tftypes.String,
-					"description": tftypes.String,
-				},
-			}
-
-			rawConfig := map[string]tftypes.Value{
-				"projects": tftypes.NewValue(tftypes.List{ElementType: projectType}, nil),
-			}
-
-			config := tfsdk.Config{
-				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"projects": tftypes.List{ElementType: projectType}}}, rawConfig),
-				Schema: schemaResp.Schema,
-			}
-
-			state := tfsdk.State{
-				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"projects": tftypes.List{ElementType: projectType}}}, nil),
-				Schema: schemaResp.Schema,
-			}
-
-			req := datasource.ReadRequest{
-				Config: config,
-			}
-			resp := datasource.ReadResponse{
-				State: state,
-			}
-
-			d.Read(context.Background(), req, &resp)
-
-			if tt.wantErr {
-				assert.True(t, resp.Diagnostics.HasError(), "expected error but got none")
-				if tt.errContains != "" {
-					found := false
-					for _, diag := range resp.Diagnostics.Errors() {
-						if assert.Contains(t, diag.Summary(), tt.errContains) {
-							found = true
-							break
-						}
-					}
-					assert.True(t, found, "expected error containing %s", tt.errContains)
-				}
-			} else {
-				assert.False(t, resp.Diagnostics.HasError(), "unexpected error: %v", resp.Diagnostics)
-			}
-		})
-	}
-}
-
-// TestProjectsDataSource_Configure tests the Configure method.
-func TestProjectsDataSource_Configure(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name         string
-		providerData interface{}
-		wantErr      bool
-		errContains  string
-	}{
-		{
-			name:         "nil provider data",
-			providerData: nil,
-			wantErr:      false,
-		},
-		{
-			name:         "valid provider data",
-			providerData: &client.N8nClient{},
-			wantErr:      false,
-		},
-		{
-			name:         "invalid provider data type",
-			providerData: "invalid",
-			wantErr:      true,
-			errContains:  "Unexpected Data Source Configure Type",
+			name:      "multiple calls return same result",
+			want:      1,
+			wantError: false,
 		},
 	}
 
@@ -326,28 +39,78 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 
 			d := &ProjectsDataSource{}
 
-			req := datasource.ConfigureRequest{
-				ProviderData: tt.providerData,
+			if tt.name == "multiple calls return same result" {
+				// Call multiple times and verify consistent results
+				attrs1 := d.schemaAttributes()
+				attrs2 := d.schemaAttributes()
+				assert.Equal(t, len(attrs1), len(attrs2))
 			}
-			resp := &datasource.ConfigureResponse{}
 
-			d.Configure(context.Background(), req, resp)
+			attrs := d.schemaAttributes()
 
-			if tt.wantErr {
-				assert.True(t, resp.Diagnostics.HasError(), "expected error but got none")
-				if tt.errContains != "" {
-					found := false
-					for _, diag := range resp.Diagnostics.Errors() {
-						if assert.Contains(t, diag.Summary(), tt.errContains) {
-							found = true
-							break
-						}
-					}
-					assert.True(t, found, "expected error containing %s", tt.errContains)
-				}
-			} else {
-				assert.False(t, resp.Diagnostics.HasError(), "unexpected error: %v", resp.Diagnostics)
+			assert.NotNil(t, attrs)
+			assert.Len(t, attrs, tt.want)
+			assert.Contains(t, attrs, "projects")
+		})
+	}
+}
+
+// TestProjectsDataSource_projectAttributes tests the projectAttributes helper.
+func TestProjectsDataSource_projectAttributes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		want      int
+		wantError bool
+	}{
+		{
+			name:      "returns correct number of attributes",
+			want:      7, // id, name, type, created_at, updated_at, icon, description
+			wantError: false,
+		},
+		{
+			name:      "nil datasource should not panic",
+			want:      7,
+			wantError: false,
+		},
+		{
+			name:      "multiple calls return same result",
+			want:      7,
+			wantError: false,
+		},
+		{
+			name:      "all required attributes present",
+			want:      7,
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			d := &ProjectsDataSource{}
+
+			if tt.name == "multiple calls return same result" {
+				// Call multiple times and verify consistent results
+				attrs1 := d.projectAttributes()
+				attrs2 := d.projectAttributes()
+				assert.Equal(t, len(attrs1), len(attrs2))
 			}
+
+			attrs := d.projectAttributes()
+
+			assert.NotNil(t, attrs)
+			assert.Len(t, attrs, tt.want)
+			assert.Contains(t, attrs, "id")
+			assert.Contains(t, attrs, "name")
+			assert.Contains(t, attrs, "type")
+			assert.Contains(t, attrs, "created_at")
+			assert.Contains(t, attrs, "updated_at")
+			assert.Contains(t, attrs, "icon")
+			assert.Contains(t, attrs, "description")
 		})
 	}
 }

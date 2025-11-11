@@ -188,6 +188,10 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 			name:    "error case - nil provider data",
 			wantErr: false,
 		},
+		{
+			name:    "error case - wrong provider data type",
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -213,6 +217,16 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 				resp := &datasource.ConfigureResponse{}
 				ds.Configure(context.Background(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - wrong provider data type":
+				ds := project.NewProjectsDataSource()
+				req := datasource.ConfigureRequest{
+					ProviderData: "wrong type",
+				}
+				resp := &datasource.ConfigureResponse{}
+				ds.Configure(context.Background(), req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Data Source Configure Type")
 			}
 		})
 	}

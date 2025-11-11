@@ -1,8 +1,11 @@
 package workflow_test
 
 import (
+	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/workflow"
 	"github.com/stretchr/testify/assert"
 )
@@ -227,34 +230,51 @@ func TestWorkflowsDataSource_Schema(t *testing.T) {
 
 // TestWorkflowsDataSource_Configure tests the Configure method.
 func TestWorkflowsDataSource_Configure(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name    string
+		wantErr bool
 	}{
-		{
-			name: "creates non-nil datasource",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				ds := workflow.NewWorkflowsDataSource()
-				assert.NotNil(t, ds)
-			},
-		},
-		{
-			name: "error case - datasource can be created multiple times",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				for i := 0; i < 10; i++ {
-					ds := workflow.NewWorkflowsDataSource()
-					assert.NotNil(t, ds)
-				}
-			},
-		},
+		{name: "configures with valid client", wantErr: false},
+		{name: "error case - nil provider data", wantErr: false},
+		{name: "error case - wrong provider data type", wantErr: true},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tt.testFunc(t)
+
+			switch tt.name {
+			case "configures with valid client":
+				d := workflow.NewWorkflowsDataSource()
+				req := datasource.ConfigureRequest{
+					ProviderData: &client.N8nClient{},
+				}
+				resp := &datasource.ConfigureResponse{}
+				d.Configure(context.Background(), req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - nil provider data":
+				d := workflow.NewWorkflowsDataSource()
+				req := datasource.ConfigureRequest{
+					ProviderData: nil,
+				}
+				resp := &datasource.ConfigureResponse{}
+				d.Configure(context.Background(), req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - wrong provider data type":
+				d := workflow.NewWorkflowsDataSource()
+				req := datasource.ConfigureRequest{
+					ProviderData: "wrong type",
+				}
+				resp := &datasource.ConfigureResponse{}
+				d.Configure(context.Background(), req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Data Source Configure Type")
+			}
 		})
 	}
 }

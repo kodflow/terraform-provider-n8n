@@ -345,12 +345,87 @@ func TestUserDataSource_populateUserData(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name: "valid user",
+			name: "valid user with all fields",
 			user: &n8nsdk.User{
 				Id:        stringPtr("user-123"),
 				Email:     "test@example.com",
 				FirstName: stringPtr("Test"),
 				LastName:  stringPtr("User"),
+				IsPending: boolPtr(false),
+				Role:      stringPtr("admin"),
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil id",
+			user: &n8nsdk.User{
+				Id:        nil,
+				Email:     "test@example.com",
+				FirstName: stringPtr("Test"),
+				LastName:  stringPtr("User"),
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil firstName",
+			user: &n8nsdk.User{
+				Id:        stringPtr("user-123"),
+				Email:     "test@example.com",
+				FirstName: nil,
+				LastName:  stringPtr("User"),
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil lastName",
+			user: &n8nsdk.User{
+				Id:        stringPtr("user-123"),
+				Email:     "test@example.com",
+				FirstName: stringPtr("Test"),
+				LastName:  nil,
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil isPending",
+			user: &n8nsdk.User{
+				Id:        stringPtr("user-123"),
+				Email:     "test@example.com",
+				IsPending: nil,
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil createdAt",
+			user: &n8nsdk.User{
+				Id:        stringPtr("user-123"),
+				Email:     "test@example.com",
+				CreatedAt: nil,
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil updatedAt",
+			user: &n8nsdk.User{
+				Id:        stringPtr("user-123"),
+				Email:     "test@example.com",
+				UpdatedAt: nil,
+			},
+			expectError: false,
+		},
+		{
+			name: "user with nil role",
+			user: &n8nsdk.User{
+				Id:    stringPtr("user-123"),
+				Email: "test@example.com",
+				Role:  nil,
+			},
+			expectError: false,
+		},
+		{
+			name: "user with minimal fields",
+			user: &n8nsdk.User{
+				Email: "test@example.com",
 			},
 			expectError: false,
 		},
@@ -368,6 +443,7 @@ func TestUserDataSource_populateUserData(t *testing.T) {
 
 			if !tt.expectError && tt.user != nil {
 				assert.NotNil(t, data, "data should not be nil")
+				assert.Equal(t, tt.user.Email, data.Email.ValueString(), "email should match")
 			}
 		})
 	}
@@ -376,4 +452,9 @@ func TestUserDataSource_populateUserData(t *testing.T) {
 // stringPtr is a helper function to create string pointers.
 func stringPtr(s string) *string {
 	return &s
+}
+
+// boolPtr is a helper function to create bool pointers.
+func boolPtr(b bool) *bool {
+	return &b
 }

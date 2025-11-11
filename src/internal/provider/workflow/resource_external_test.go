@@ -1,8 +1,11 @@
 package workflow_test
 
 import (
+	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/workflow"
 	"github.com/stretchr/testify/assert"
 )
@@ -227,34 +230,51 @@ func TestWorkflowResource_Schema(t *testing.T) {
 
 // TestWorkflowResource_Configure tests the Configure method.
 func TestWorkflowResource_Configure(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name    string
+		wantErr bool
 	}{
-		{
-			name: "creates non-nil resource",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := workflow.NewWorkflowResource()
-				assert.NotNil(t, r)
-			},
-		},
-		{
-			name: "error case - resource can be created multiple times",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				for i := 0; i < 10; i++ {
-					r := workflow.NewWorkflowResource()
-					assert.NotNil(t, r)
-				}
-			},
-		},
+		{name: "configures with valid client", wantErr: false},
+		{name: "error case - nil provider data", wantErr: false},
+		{name: "error case - wrong provider data type", wantErr: true},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tt.testFunc(t)
+
+			switch tt.name {
+			case "configures with valid client":
+				r := workflow.NewWorkflowResource()
+				req := resource.ConfigureRequest{
+					ProviderData: &client.N8nClient{},
+				}
+				resp := &resource.ConfigureResponse{}
+				r.Configure(context.Background(), req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - nil provider data":
+				r := workflow.NewWorkflowResource()
+				req := resource.ConfigureRequest{
+					ProviderData: nil,
+				}
+				resp := &resource.ConfigureResponse{}
+				r.Configure(context.Background(), req, resp)
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error case - wrong provider data type":
+				r := workflow.NewWorkflowResource()
+				req := resource.ConfigureRequest{
+					ProviderData: "wrong type",
+				}
+				resp := &resource.ConfigureResponse{}
+				r.Configure(context.Background(), req, resp)
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
+			}
 		})
 	}
 }

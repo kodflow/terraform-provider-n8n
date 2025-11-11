@@ -31,6 +31,77 @@ func strPtr(s string) *string {
 // TestNewCredentialResource is now in resource_external_test.go
 // TestNewCredentialResourceWrapper is now in resource_external_test.go
 // TestCredentialResource_Configure is now in resource_external_test.go.
+
+// TestCredentialResource_Configure_Internal tests the internal Configure behavior with actual client.
+func TestCredentialResource_Configure_Internal(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		providerData any
+		wantErr      bool
+		expectClient bool
+	}{
+		{
+			name:         "successful configuration with valid client",
+			providerData: &client.N8nClient{},
+			wantErr:      false,
+			expectClient: true,
+		},
+		{
+			name:         "nil provider data",
+			providerData: nil,
+			wantErr:      false,
+			expectClient: false,
+		},
+		{
+			name:         "invalid provider data type",
+			providerData: "invalid-string",
+			wantErr:      true,
+			expectClient: false,
+		},
+		{
+			name:         "invalid provider data type - integer",
+			providerData: 123,
+			wantErr:      true,
+			expectClient: false,
+		},
+		{
+			name:         "invalid provider data type - map",
+			providerData: map[string]string{"key": "value"},
+			wantErr:      true,
+			expectClient: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &CredentialResource{}
+			req := resource.ConfigureRequest{
+				ProviderData: tt.providerData,
+			}
+			resp := &resource.ConfigureResponse{}
+
+			r.Configure(context.Background(), req, resp)
+
+			if tt.wantErr {
+				assert.True(t, resp.Diagnostics.HasError(), "expected error")
+			} else {
+				assert.False(t, resp.Diagnostics.HasError(), "expected no error")
+			}
+
+			if tt.expectClient {
+				assert.NotNil(t, r.client, "expected client to be set")
+			} else {
+				assert.Nil(t, r.client, "expected client to remain nil")
+			}
+		})
+	}
+}
+
 func Test_usesCredential(t *testing.T) {
 	t.Parallel()
 
@@ -133,6 +204,53 @@ func Test_usesCredential(t *testing.T) {
 			credID:   "",
 			want:     false,
 			wantErr:  true,
+		},
+		{
+			name:     "workflow with nil Nodes",
+			workflow: &n8nsdk.Workflow{Nodes: nil},
+			credID:   "cred-123",
+			want:     false,
+			wantErr:  false,
+		},
+		{
+			name: "node with empty credentials map",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{}}},
+			},
+			credID:  "cred-123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "credential ID is nil in map",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": nil}}}},
+			},
+			credID:  "cred-123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "credential map without id field",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"name": "test"}}}},
+			},
+			credID:  "cred-123",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "multiple nodes with nil and valid credentials",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{
+					{Credentials: nil},
+					{Credentials: map[string]interface{}{}},
+					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}},
+				},
+			},
+			credID:  "cred-123",
+			want:    true,
+			wantErr: false,
 		},
 	}
 
@@ -294,6 +412,79 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
 				assert.NotNil(t, w)
+			},
+		},
+		{
+			name:     "workflow with nil Nodes",
+			workflow: &n8nsdk.Workflow{Nodes: nil},
+			oldCred:  "old-cred",
+			newCred:  "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.NotNil(t, w)
+				assert.Nil(t, w.Nodes)
+			},
+		},
+		{
+			name: "node with empty credentials map",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{}}},
+			},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.NotNil(t, w)
+				assert.Empty(t, w.Nodes[0].Credentials)
+			},
+		},
+		{
+			name: "credential map without id field",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"name": "test"}}}},
+			},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "test", apiCred["name"])
+				assert.Nil(t, apiCred["id"])
+			},
+		},
+		{
+			name: "credential ID is nil",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": nil}}}},
+			},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				assert.Nil(t, apiCred["id"])
+			},
+		},
+		{
+			name: "multiple nodes with various credential states",
+			workflow: &n8nsdk.Workflow{
+				Nodes: []n8nsdk.Node{
+					{Credentials: nil},
+					{Credentials: map[string]interface{}{}},
+					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred"}}},
+					{Credentials: map[string]interface{}{"http": map[string]interface{}{"name": "test"}}},
+				},
+			},
+			oldCred: "old-cred",
+			newCred: "new-cred",
+			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
+				t.Helper()
+				assert.Nil(t, w.Nodes[0].Credentials)
+				assert.Empty(t, w.Nodes[1].Credentials)
+				apiCred := w.Nodes[2].Credentials["api"].(map[string]interface{})
+				assert.Equal(t, "new-cred", apiCred["id"])
+				httpCred := w.Nodes[3].Credentials["http"].(map[string]interface{})
+				assert.Equal(t, "test", httpCred["name"])
 			},
 		},
 	}
@@ -942,6 +1133,104 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 				w.WriteHeader(http.StatusInternalServerError)
 			},
 			expectedRestored: 0,
+		},
+		{
+			name: "restore multiple workflows with one missing backup",
+			backups: []models.WorkflowBackup{
+				{
+					ID: "wf-123",
+					Original: &n8nsdk.Workflow{
+						Id:          strPtr("wf-123"),
+						Name:        "First",
+						Nodes:       []n8nsdk.Node{},
+						Connections: map[string]interface{}{},
+						Settings:    n8nsdk.WorkflowSettings{},
+					},
+				},
+			},
+			updatedWorkflows: []string{"wf-123", "wf-missing", "wf-456"},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "First",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectedRestored: 1,
+		},
+		{
+			name: "restore with all backups missing",
+			backups: []models.WorkflowBackup{
+				{
+					ID: "wf-other",
+					Original: &n8nsdk.Workflow{
+						Id:          strPtr("wf-other"),
+						Name:        "Other",
+						Nodes:       []n8nsdk.Node{},
+						Connections: map[string]interface{}{},
+						Settings:    n8nsdk.WorkflowSettings{},
+					},
+				},
+			},
+			updatedWorkflows: []string{"wf-123", "wf-456"},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectedRestored: 0,
+		},
+		{
+			name: "restore with mixed success and failure",
+			backups: []models.WorkflowBackup{
+				{
+					ID: "wf-success",
+					Original: &n8nsdk.Workflow{
+						Id:          strPtr("wf-success"),
+						Name:        "Success",
+						Nodes:       []n8nsdk.Node{},
+						Connections: map[string]interface{}{},
+						Settings:    n8nsdk.WorkflowSettings{},
+					},
+				},
+				{
+					ID: "wf-fail",
+					Original: &n8nsdk.Workflow{
+						Id:          strPtr("wf-fail"),
+						Name:        "Fail",
+						Nodes:       []n8nsdk.Node{},
+						Connections: map[string]interface{}{},
+						Settings:    n8nsdk.WorkflowSettings{},
+					},
+				},
+			},
+			updatedWorkflows: []string{"wf-success", "wf-fail"},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-success" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-success",
+						"name":        "Success",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-fail" {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectedRestored: 1,
 		},
 	}
 

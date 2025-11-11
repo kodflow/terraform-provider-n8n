@@ -1074,16 +1074,26 @@ func Test_getActivationAction(t *testing.T) {
 
 // TestHandleWorkflowActivation tests the handleWorkflowActivation receiver method.
 // Note: Full integration testing is done in resource_test.go.
-// This test ensures the function exists and covers the early return path.
+// This test ensures the function exists and covers all branches.
 func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name string
 	}{
-		{
-			name: "no activation change returns early",
-			testFunc: func(t *testing.T) {
-				t.Helper()
+		{name: "no activation change returns early"},
+		{name: "activation from false to true - null state"},
+		{name: "deactivation from true to false"},
+		{name: "activation from unknown state"},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			switch tt.name {
+			case "no activation change returns early":
 				r := &WorkflowResource{}
 				plan := &models.Resource{
 					ID:     types.StringValue("wf-123"),
@@ -1098,13 +1108,58 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 				r.handleWorkflowActivation(context.Background(), plan, state, diags)
 
 				assert.False(t, diags.HasError())
-			},
-		},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.testFunc(t)
+			case "activation from false to true - null state":
+				r := &WorkflowResource{}
+				plan := &models.Resource{
+					ID:     types.StringValue("wf-123"),
+					Active: types.BoolValue(true),
+				}
+				state := &models.Resource{
+					ID:     types.StringValue("wf-123"),
+					Active: types.BoolNull(),
+				}
+				diags := &diag.Diagnostics{}
+
+				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+				// No change detected because state.Active is null, returns early
+				assert.False(t, diags.HasError())
+
+			case "deactivation from true to false":
+				r := &WorkflowResource{}
+				plan := &models.Resource{
+					ID:     types.StringValue("wf-123"),
+					Active: types.BoolValue(false),
+				}
+				state := &models.Resource{
+					ID:     types.StringValue("wf-123"),
+					Active: types.BoolNull(),
+				}
+				diags := &diag.Diagnostics{}
+
+				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+				// No change detected because state.Active is null, returns early
+				assert.False(t, diags.HasError())
+
+			case "activation from unknown state":
+				r := &WorkflowResource{}
+				plan := &models.Resource{
+					ID:     types.StringValue("wf-123"),
+					Active: types.BoolValue(true),
+				}
+				state := &models.Resource{
+					ID:     types.StringValue("wf-123"),
+					Active: types.BoolUnknown(),
+				}
+				diags := &diag.Diagnostics{}
+
+				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+				// No change detected because state.Active is unknown, returns early
+				assert.False(t, diags.HasError())
+			}
 		})
 	}
 }

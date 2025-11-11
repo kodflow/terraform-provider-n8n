@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- refactor tests to table-driven format with comprehensive coverage (`7ca6910`)
 - refactor all tests to table-driven format with error cases (`1ff7283`)
 - add tests for private helper functions in project package (`d589824`)
 - convert project user_resource_test to table-driven format (`4ae9963`)
@@ -135,10 +136,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 98
+- **Total commits:** 99
 - **Features:** 29
 - **Bug fixes:** 11
-- **Tests:** 28
+- **Tests:** 29
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -148,4 +149,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 14:06:27*
+*Changelog generated automatically on 2025-11-11 16:19:30*

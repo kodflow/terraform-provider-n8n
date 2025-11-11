@@ -13,32 +13,508 @@ import (
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/tag/models"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-// MockTagDataSourceInterface is a mock implementation of TagDataSourceInterface.
-type MockTagDataSourceInterface struct {
-	mock.Mock
+func TestTagDataSource_validateIdentifier(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		data        *models.DataSource
+		expectValid bool
+	}{
+		{
+			name: "valid with ID",
+			data: &models.DataSource{
+				ID: types.StringValue("tag-123"),
+			},
+			expectValid: true,
+		},
+		{
+			name: "valid with name",
+			data: &models.DataSource{
+				Name: types.StringValue("Test Tag"),
+			},
+			expectValid: true,
+		},
+		{
+			name: "valid with both ID and name",
+			data: &models.DataSource{
+				ID:   types.StringValue("tag-123"),
+				Name: types.StringValue("Test Tag"),
+			},
+			expectValid: true,
+		},
+		{
+			name: "invalid with both null",
+			data: &models.DataSource{
+				ID:   types.StringNull(),
+				Name: types.StringNull(),
+			},
+			expectValid: false,
+		},
+		{
+			name:        "invalid with uninitialized values",
+			data:        &models.DataSource{},
+			expectValid: false,
+		},
+		{
+			name: "valid with empty string ID",
+			data: &models.DataSource{
+				ID: types.StringValue(""),
+			},
+			expectValid: true,
+		},
+		{
+			name: "valid with empty string name",
+			data: &models.DataSource{
+				Name: types.StringValue(""),
+			},
+			expectValid: true,
+		},
+		{
+			name: "valid with unknown ID",
+			data: &models.DataSource{
+				ID: types.StringUnknown(),
+			},
+			expectValid: true,
+		},
+		{
+			name: "valid with unknown name",
+			data: &models.DataSource{
+				Name: types.StringUnknown(),
+			},
+			expectValid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			d := &TagDataSource{}
+			resp := &datasource.ReadResponse{}
+
+			valid := d.validateIdentifier(tt.data, resp)
+
+			if tt.expectValid {
+				assert.True(t, valid)
+				assert.False(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, valid)
+				assert.True(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
 }
 
-func (m *MockTagDataSourceInterface) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	m.Called(ctx, req, resp)
+func TestTagDataSource_fetchTagByID(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		tagID       string
+		expectNil   bool
+		expectError bool
+	}{
+		{
+			name:  "tag found by ID",
+			tagID: "tag-123",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
+					id := "tag-123"
+					response := map[string]interface{}{
+						"id":   id,
+						"name": "Test Tag",
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:  "tag not found",
+			tagID: "tag-999",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/tag-999" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"message": "Tag not found"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:  "API returns error",
+			tagID: "tag-123",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:  "bad request error",
+			tagID: "invalid-id",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/invalid-id" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write([]byte(`{"message": "Bad request"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:  "unauthorized error",
+			tagID: "tag-123",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte(`{"message": "Unauthorized"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:  "forbidden error",
+			tagID: "tag-123",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusForbidden)
+					w.Write([]byte(`{"message": "Forbidden"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:  "empty tag ID",
+			tagID: "",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags/" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupTagTestClient(t, tt.handler)
+			defer server.Close()
+
+			d := &TagDataSource{client: n8nClient}
+			data := &models.DataSource{}
+			data.ID = types.StringValue(tt.tagID)
+			resp := &datasource.ReadResponse{}
+
+			tag := d.fetchTagByID(context.Background(), data, resp)
+
+			if tt.expectNil {
+				assert.Nil(t, tag)
+			} else {
+				assert.NotNil(t, tag)
+			}
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
 }
 
-func (m *MockTagDataSourceInterface) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	m.Called(ctx, req, resp)
+func TestTagDataSource_fetchTagByName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		tagName     string
+		expectNil   bool
+		expectError bool
+	}{
+		{
+			name:    "tag found by name",
+			tagName: "Test Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					id := "tag-123"
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   id,
+								"name": "Test Tag",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:    "tag not found in list",
+			tagName: "Missing Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   "tag-456",
+								"name": "Other Tag",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:    "API returns error",
+			tagName: "Test Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:    "empty tag list",
+			tagName: "Test Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:    "nil data in response",
+			tagName: "Test Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:    "case sensitive name matching",
+			tagName: "Test Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   "tag-123",
+								"name": "test tag",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:    "multiple tags in list",
+			tagName: "Second Tag",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   "tag-123",
+								"name": "First Tag",
+							},
+							map[string]interface{}{
+								"id":   "tag-456",
+								"name": "Second Tag",
+							},
+							map[string]interface{}{
+								"id":   "tag-789",
+								"name": "Third Tag",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:    "empty string name",
+			tagName: "",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   "tag-123",
+								"name": "",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:    "special characters in name",
+			tagName: "Tag-!@#$%",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   "tag-123",
+								"name": "Tag-!@#$%",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:    "unicode characters in name",
+			tagName: "标签测试",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":   "tag-123",
+								"name": "标签测试",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectNil:   false,
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupTagTestClient(t, tt.handler)
+			defer server.Close()
+
+			d := &TagDataSource{client: n8nClient}
+			data := &models.DataSource{}
+			data.Name = types.StringValue(tt.tagName)
+			resp := &datasource.ReadResponse{}
+
+			tag := d.fetchTagByName(context.Background(), data, resp)
+
+			if tt.expectNil {
+				assert.Nil(t, tag)
+			} else {
+				assert.NotNil(t, tag)
+			}
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
 }
 
-func (m *MockTagDataSourceInterface) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	m.Called(ctx, req, resp)
-}
-
-func (m *MockTagDataSourceInterface) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	m.Called(ctx, req, resp)
-}
-
-// setupTestDataSourceClient creates a test N8nClient with httptest server.
-func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+func setupTagTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
 	t.Helper()
 	server := httptest.NewServer(handler)
 
@@ -58,471 +534,4 @@ func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.
 	}
 
 	return n8nClient, server
-}
-
-// TestNewTagDataSource is now in external test file - refactored to test behavior only.
-
-// TestNewTagDataSourceWrapper is now in external test file - refactored to test behavior only.
-
-// TestTagDataSource_Metadata is now in external test file - refactored to test behavior only.
-
-// TestTagDataSource_Schema is now in external test file - refactored to test behavior only.
-
-// TestTagDataSource_Configure is now in external test file - refactored to test behavior only.
-
-func TestTagDataSource_Interfaces(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "implements required interfaces", wantErr: false},
-		{name: "error case - interface validation", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "implements required interfaces":
-				ds := NewTagDataSource()
-
-				// Test that TagDataSource implements datasource.DataSource
-				var _ datasource.DataSource = ds
-
-				// Test that TagDataSource implements datasource.DataSourceWithConfigure
-				var _ datasource.DataSourceWithConfigure = ds
-
-				// Test that TagDataSource implements TagDataSourceInterface
-				var _ TagDataSourceInterface = ds
-
-			case "error case - interface validation":
-				// Placeholder for validation
-				assert.False(t, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestTagDataSourceConcurrency(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "concurrent metadata calls", wantErr: false},
-		{name: "concurrent schema calls", wantErr: false},
-		{name: "concurrent configure calls", wantErr: false},
-		{name: "error case - concurrent access validation", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			// NO t.Parallel() here - concurrent goroutines don't play well with t.Parallel()
-			switch tt.name {
-			case "concurrent metadata calls":
-				ds := NewTagDataSource()
-
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
-						resp := &datasource.MetadataResponse{}
-						ds.Metadata(context.Background(), datasource.MetadataRequest{
-							ProviderTypeName: "n8n",
-						}, resp)
-						assert.Equal(t, "n8n_tag", resp.TypeName)
-						done <- true
-					}()
-				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
-
-			case "concurrent schema calls":
-				ds := NewTagDataSource()
-
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
-						resp := &datasource.SchemaResponse{}
-						ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-						assert.NotNil(t, resp.Schema)
-						done <- true
-					}()
-				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
-
-			case "concurrent configure calls":
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
-						ds := NewTagDataSource()
-						resp := &datasource.ConfigureResponse{}
-						mockClient := &client.N8nClient{}
-						req := datasource.ConfigureRequest{
-							ProviderData: mockClient,
-						}
-						ds.Configure(context.Background(), req, resp)
-						assert.NotNil(t, ds.client)
-						done <- true
-					}()
-				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
-
-			case "error case - concurrent access validation":
-				// Placeholder for validation
-				assert.False(t, tt.wantErr)
-			}
-		})
-	}
-}
-
-func BenchmarkTagDataSource_Schema(b *testing.B) {
-	ds := NewTagDataSource()
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		resp := &datasource.SchemaResponse{}
-		ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-	}
-}
-
-func BenchmarkTagDataSource_Metadata(b *testing.B) {
-	ds := NewTagDataSource()
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		resp := &datasource.MetadataResponse{}
-		ds.Metadata(context.Background(), datasource.MetadataRequest{
-			ProviderTypeName: "n8n",
-		}, resp)
-	}
-}
-
-func BenchmarkTagDataSource_Configure(b *testing.B) {
-	ds := NewTagDataSource()
-	mockClient := &client.N8nClient{}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		resp := &datasource.ConfigureResponse{}
-		req := datasource.ConfigureRequest{
-			ProviderData: mockClient,
-		}
-		ds.Configure(context.Background(), req, resp)
-	}
-}
-
-// TestTagDataSource_Read is now in external test file - refactored to test behavior only.
-
-func TestTagDataSource_validateIdentifier(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "valid - id provided"},
-		{name: "valid - name provided"},
-		{name: "valid - both provided"},
-		{name: "error - neither provided", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			ds := &TagDataSource{}
-			resp := &datasource.ReadResponse{}
-
-			switch tt.name {
-			case "valid - id provided":
-				data := &models.DataSource{
-					ID:   types.StringValue("tag-123"),
-					Name: types.StringNull(),
-				}
-
-				result := ds.validateIdentifier(data, resp)
-
-				assert.True(t, result)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "valid - name provided":
-				data := &models.DataSource{
-					ID:   types.StringNull(),
-					Name: types.StringValue("test-tag"),
-				}
-
-				result := ds.validateIdentifier(data, resp)
-
-				assert.True(t, result)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "valid - both provided":
-				data := &models.DataSource{
-					ID:   types.StringValue("tag-123"),
-					Name: types.StringValue("test-tag"),
-				}
-
-				result := ds.validateIdentifier(data, resp)
-
-				assert.True(t, result)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - neither provided":
-				data := &models.DataSource{
-					ID:   types.StringNull(),
-					Name: types.StringNull(),
-				}
-
-				result := ds.validateIdentifier(data, resp)
-
-				assert.False(t, result)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
-			}
-		})
-	}
-}
-
-func TestTagDataSource_fetchTagByID(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "success - fetch tag by ID"},
-		{name: "error - API error", wantErr: true},
-		{name: "error - tag not found", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "success - fetch tag by ID":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.Tag{
-							Id:   ptrString("tag-123"),
-							Name: "Test Tag",
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					ID: types.StringValue("tag-123"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByID(context.Background(), data, resp)
-
-				assert.NotNil(t, tag)
-				assert.Equal(t, "tag-123", *tag.Id)
-				assert.Equal(t, "Test Tag", tag.Name)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Internal server error"}`))
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					ID: types.StringValue("tag-123"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByID(context.Background(), data, resp)
-
-				assert.Nil(t, tag)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error retrieving tag")
-
-			case "error - tag not found":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusNotFound)
-					w.Write([]byte(`{"message": "Tag not found"}`))
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					ID: types.StringValue("nonexistent"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByID(context.Background(), data, resp)
-
-				assert.Nil(t, tag)
-				assert.True(t, resp.Diagnostics.HasError())
-			}
-		})
-	}
-}
-
-func TestTagDataSource_fetchTagByName(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "success - fetch tag by name"},
-		{name: "error - API error", wantErr: true},
-		{name: "error - tag not found", wantErr: true},
-		{name: "error - empty tag list", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "success - fetch tag by name":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.TagList{
-							Data: []n8nsdk.Tag{
-								{Id: ptrString("tag-1"), Name: "Production"},
-								{Id: ptrString("tag-2"), Name: "Development"},
-								{Id: ptrString("tag-3"), Name: "Testing"},
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					Name: types.StringValue("Development"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByName(context.Background(), data, resp)
-
-				assert.NotNil(t, tag)
-				assert.Equal(t, "tag-2", *tag.Id)
-				assert.Equal(t, "Development", tag.Name)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Internal server error"}`))
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					Name: types.StringValue("Test Tag"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByName(context.Background(), data, resp)
-
-				assert.Nil(t, tag)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Error listing tags")
-
-			case "error - tag not found":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.TagList{
-							Data: []n8nsdk.Tag{
-								{Id: ptrString("tag-1"), Name: "Production"},
-								{Id: ptrString("tag-2"), Name: "Development"},
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					Name: types.StringValue("NonExistent"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByName(context.Background(), data, resp)
-
-				assert.Nil(t, tag)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Tag Not Found")
-
-			case "error - empty tag list":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.TagList{
-							Data: []n8nsdk.Tag{},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestDataSourceClient(t, handler)
-				defer server.Close()
-
-				ds := &TagDataSource{client: n8nClient}
-				data := &models.DataSource{
-					Name: types.StringValue("AnyTag"),
-				}
-				resp := &datasource.ReadResponse{}
-
-				tag := ds.fetchTagByName(context.Background(), data, resp)
-
-				assert.Nil(t, tag)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Tag Not Found")
-			}
-		})
-	}
-}
-
-// ptrString returns a pointer to the given string.
-func ptrString(s string) *string {
-	return &s
 }

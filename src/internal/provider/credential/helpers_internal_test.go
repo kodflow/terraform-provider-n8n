@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestCredentialResource_createNewCredential_Success tests successful credential creation.
-func TestCredentialResource_createNewCredential_Success(t *testing.T) {
+// TestCredentialResource_createNewCredential tests the createNewCredential helper.
+func TestCredentialResource_createNewCredential(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -90,8 +90,8 @@ func TestCredentialResource_createNewCredential_Success(t *testing.T) {
 	}
 }
 
-// TestCredentialResource_scanAffectedWorkflows_Complete tests the scanAffectedWorkflows helper.
-func TestCredentialResource_scanAffectedWorkflows_Complete(t *testing.T) {
+// TestCredentialResource_scanAffectedWorkflows tests the scanAffectedWorkflows helper.
+func TestCredentialResource_scanAffectedWorkflows(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -200,8 +200,8 @@ func TestCredentialResource_scanAffectedWorkflows_Complete(t *testing.T) {
 	}
 }
 
-// TestCredentialResource_updateAffectedWorkflows_Complete tests the updateAffectedWorkflows helper.
-func TestCredentialResource_updateAffectedWorkflows_Complete(t *testing.T) {
+// TestCredentialResource_updateAffectedWorkflows tests the updateAffectedWorkflows helper.
+func TestCredentialResource_updateAffectedWorkflows(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -344,8 +344,8 @@ func TestCredentialResource_updateAffectedWorkflows_Complete(t *testing.T) {
 	}
 }
 
-// TestCredentialResource_deleteCredentialBestEffort_Complete tests the deleteCredentialBestEffort helper.
-func TestCredentialResource_deleteCredentialBestEffort_Complete(t *testing.T) {
+// TestCredentialResource_deleteCredentialBestEffort tests the deleteCredentialBestEffort helper.
+func TestCredentialResource_deleteCredentialBestEffort(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -521,6 +521,79 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 			expectSuccess: false,
 			expectedCount: 0,
 			expectError:   true,
+		},
+		{
+			name: "update multiple workflows successfully with throttling",
+			backups: []models.WorkflowBackup{
+				{
+					ID: "wf-1",
+					Original: &n8nsdk.Workflow{
+						Id:          strPtr("wf-1"),
+						Name:        "Workflow 1",
+						Nodes:       []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-multi"}}}},
+						Connections: map[string]interface{}{},
+						Settings:    n8nsdk.WorkflowSettings{},
+					},
+				},
+				{
+					ID: "wf-2",
+					Original: &n8nsdk.Workflow{
+						Id:          strPtr("wf-2"),
+						Name:        "Workflow 2",
+						Nodes:       []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-multi"}}}},
+						Connections: map[string]interface{}{},
+						Settings:    n8nsdk.WorkflowSettings{},
+					},
+				},
+			},
+			oldCredID: "old-multi",
+			newCredID: "new-multi",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					if r.URL.Path == "/workflows/wf-1" {
+						json.NewEncoder(w).Encode(map[string]any{
+							"id":   "wf-1",
+							"name": "Workflow 1",
+							"nodes": []any{
+								map[string]any{"credentials": map[string]any{"api": map[string]any{"id": "old-multi"}}},
+							},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
+						})
+						return
+					}
+					if r.URL.Path == "/workflows/wf-2" {
+						json.NewEncoder(w).Encode(map[string]any{
+							"id":   "wf-2",
+							"name": "Workflow 2",
+							"nodes": []any{
+								map[string]any{"credentials": map[string]any{"api": map[string]any{"id": "old-multi"}}},
+							},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
+						})
+						return
+					}
+				}
+				if r.Method == http.MethodPut {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          r.URL.Path[len("/workflows/"):],
+						"name":        "Updated",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectSuccess: true,
+			expectedCount: 2,
+			expectError:   false,
 		},
 	}
 

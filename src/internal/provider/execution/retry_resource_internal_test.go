@@ -518,6 +518,75 @@ func TestRetryExecutionResource_Create(t *testing.T) {
 				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors")
 			},
 		},
+		{
+			name: "invalid execution ID format",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				})
+
+				n8nClient, server := setupTestRetryClient(t, handler)
+				defer server.Close()
+
+				r := &ExecutionRetryResource{client: n8nClient}
+
+				rawPlan := map[string]tftypes.Value{
+					"execution_id":     tftypes.NewValue(tftypes.String, "invalid-not-a-number"),
+					"new_execution_id": tftypes.NewValue(tftypes.String, nil),
+					"workflow_id":      tftypes.NewValue(tftypes.String, nil),
+					"finished":         tftypes.NewValue(tftypes.Bool, nil),
+					"mode":             tftypes.NewValue(tftypes.String, nil),
+					"started_at":       tftypes.NewValue(tftypes.String, nil),
+					"stopped_at":       tftypes.NewValue(tftypes.String, nil),
+					"status":           tftypes.NewValue(tftypes.String, nil),
+				}
+				plan := tfsdk.Plan{
+					Raw: tftypes.NewValue(tftypes.Object{
+						AttributeTypes: map[string]tftypes.Type{
+							"execution_id":     tftypes.String,
+							"new_execution_id": tftypes.String,
+							"workflow_id":      tftypes.String,
+							"finished":         tftypes.Bool,
+							"mode":             tftypes.String,
+							"started_at":       tftypes.String,
+							"stopped_at":       tftypes.String,
+							"status":           tftypes.String,
+						},
+					}, rawPlan),
+					Schema: createTestRetrySchema(t),
+				}
+
+				state := tfsdk.State{
+					Raw: tftypes.NewValue(tftypes.Object{
+						AttributeTypes: map[string]tftypes.Type{
+							"execution_id":     tftypes.String,
+							"new_execution_id": tftypes.String,
+							"workflow_id":      tftypes.String,
+							"finished":         tftypes.Bool,
+							"mode":             tftypes.String,
+							"started_at":       tftypes.String,
+							"stopped_at":       tftypes.String,
+							"status":           tftypes.String,
+						},
+					}, nil),
+					Schema: createTestRetrySchema(t),
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors for invalid execution ID")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Invalid Execution ID")
+			},
+		},
 	}
 
 	for _, tt := range tests {
