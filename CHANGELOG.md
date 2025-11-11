@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- rename coverage test files to match linter requirements (`c2e5d3c`)
 - add comprehensive coverage tests for credential and user modules (`49a168a`)
 - refactor tests to table-driven format with comprehensive coverage (`7ca6910`)
 - refactor all tests to table-driven format with error cases (`1ff7283`)
@@ -137,10 +138,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 100
+- **Total commits:** 101
 - **Features:** 29
 - **Bug fixes:** 11
-- **Tests:** 30
+- **Tests:** 31
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -150,4 +151,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 16:20:10*
+*Changelog generated automatically on 2025-11-11 17:28:57*

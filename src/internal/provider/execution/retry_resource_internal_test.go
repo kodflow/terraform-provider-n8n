@@ -587,6 +587,60 @@ func TestRetryExecutionResource_Create(t *testing.T) {
 				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Invalid Execution ID")
 			},
 		},
+		{
+			name: "plan get error",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				})
+
+				n8nClient, server := setupTestRetryClient(t, handler)
+				defer server.Close()
+
+				r := &ExecutionRetryResource{client: n8nClient}
+
+				// Create invalid schema that will cause Get to fail
+				invalidPlan := tfsdk.Plan{
+					Raw: tftypes.NewValue(tftypes.Object{
+						AttributeTypes: map[string]tftypes.Type{
+							"execution_id": tftypes.String,
+						},
+					}, map[string]tftypes.Value{
+						"execution_id": tftypes.NewValue(tftypes.String, "123"),
+					}),
+					Schema: createTestRetrySchema(t),
+				}
+
+				state := tfsdk.State{
+					Raw: tftypes.NewValue(tftypes.Object{
+						AttributeTypes: map[string]tftypes.Type{
+							"execution_id":     tftypes.String,
+							"new_execution_id": tftypes.String,
+							"workflow_id":      tftypes.String,
+							"finished":         tftypes.Bool,
+							"mode":             tftypes.String,
+							"started_at":       tftypes.String,
+							"stopped_at":       tftypes.String,
+							"status":           tftypes.String,
+						},
+					}, nil),
+					Schema: createTestRetrySchema(t),
+				}
+
+				req := resource.CreateRequest{
+					Plan: invalidPlan,
+				}
+				resp := resource.CreateResponse{
+					State: state,
+				}
+
+				r.Create(context.Background(), req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors for plan get failure")
+			},
+		},
 	}
 
 	for _, tt := range tests {

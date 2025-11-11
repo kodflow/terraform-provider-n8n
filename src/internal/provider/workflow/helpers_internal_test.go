@@ -2,9 +2,13 @@ package workflow
 
 import (
 	"context"
+	"encoding/json"
+	"math/big"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
@@ -1216,3 +1220,194 @@ func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
 // TestmapWorkflowBasicFields is now in external test file - refactored to test behavior only.
 
 // TestmapWorkflowToModel is now in external test file - refactored to test behavior only.
+func TestHandleWorkflowActivation_FullCoverage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		planActive   types.Bool
+		stateActive  types.Bool
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:        "activate workflow successfully",
+			planActive:  types.BoolValue(true),
+			stateActive: types.BoolValue(false),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Accept any POST request - SDK will format the URL
+				if r.Method == http.MethodPost {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					// Return a full Workflow object as SDK expects
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"active":      true,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:        "deactivate workflow successfully",
+			planActive:  types.BoolValue(false),
+			stateActive: types.BoolValue(true),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Accept any POST request - SDK will format the URL
+				if r.Method == http.MethodPost {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					// Return a full Workflow object as SDK expects
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"active":      false,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:        "activate workflow with API error",
+			planActive:  types.BoolValue(true),
+			stateActive: types.BoolValue(false),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:        "deactivate workflow with API error",
+			planActive:  types.BoolValue(false),
+			stateActive: types.BoolValue(true),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			plan := &models.Resource{
+				ID:     types.StringValue("wf-123"),
+				Active: tt.planActive,
+			}
+			state := &models.Resource{
+				ID:     types.StringValue("wf-123"),
+				Active: tt.stateActive,
+			}
+			diags := &diag.Diagnostics{}
+
+			r.handleWorkflowActivation(context.Background(), plan, state, diags)
+
+			if tt.expectError {
+				assert.True(t, diags.HasError())
+			} else {
+				assert.False(t, diags.HasError())
+			}
+		})
+	}
+}
+
+// TestUpdateWorkflowTags_FullCoverage tests all branches of updateWorkflowTags.
+func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		tags         types.List
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name: "update tags successfully",
+			tags: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("tag-1"),
+				types.StringValue("tag-2"),
+			}),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123/tags" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode([]map[string]any{
+						{"id": "tag-1", "name": "Tag 1"},
+						{"id": "tag-2", "name": "Tag 2"},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name: "update tags with API error",
+			tags: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("tag-1"),
+			}),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name: "update tags with ElementsAs error",
+			// Use a list with wrong element type to trigger ElementsAs error
+			tags: types.ListValueMust(types.NumberType, []attr.Value{
+				types.NumberValue(big.NewFloat(123)),
+			}),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			plan := &models.Resource{
+				Tags: tt.tags,
+			}
+			workflow := &n8nsdk.Workflow{}
+			diags := &diag.Diagnostics{}
+
+			r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+
+			if tt.expectError {
+				assert.True(t, diags.HasError())
+			} else {
+				assert.False(t, diags.HasError())
+			}
+		})
+	}
+}
