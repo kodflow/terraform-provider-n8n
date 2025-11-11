@@ -3,6 +3,7 @@ package variable
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/shared"
 	"github.com/kodflow/n8n/src/internal/provider/variable/models"
 )
 
@@ -149,13 +150,11 @@ func buildVariableRequest(plan *models.Resource) n8nsdk.VariableCreate {
 	// Add optional fields
 	// Check condition.
 	if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
-		typeVal := plan.Type.ValueString()
-		variableRequest.Type = &typeVal
+		variableRequest.Type = shared.String(plan.Type.ValueString())
 	}
 	// Check condition.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
-		projectID := plan.ProjectID.ValueString()
-		variableRequest.ProjectId = *n8nsdk.NewNullableString(&projectID)
+		variableRequest.ProjectId = *n8nsdk.NewNullableString(shared.String(plan.ProjectID.ValueString()))
 	}
 
 	// Return result.

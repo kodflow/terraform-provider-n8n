@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **68.4%** |
+| **Total Coverage** | **68.7%** |
 | **Threshold** | **70.0%** |
 | **Status** | ❌ FAILED |
 
@@ -33,728 +33,119 @@ Rapport de couverture généré automatiquement.
 | 🔴 | `github.com/kodflow/n8n/src/internal/provider/tag` | 42.1% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 73.5% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 70.6% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 83.9% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 85.3% |
 
 ---
 
 ## Coverage Détaillée par Fichier
 
 Cette section liste uniquement les **fonctions publiques** (exportées) pour identifier rapidement les fonctions non testées.
-
-### 📦 Package: `github.com/kodflow/n8n/src/internal/provider`
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🟢 `ImportState` | 100.0% |
-
-</details>
-
-<details>
-<summary><b>📄 transfer_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🔴 `Metadata` | 0.0% |
-| 🔴 `Schema` | 0.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 retry_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🟡 `Read` | 80.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 user_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 provider.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Resources` | 100.0% |
-| 🟢 `DataSources` | 100.0% |
-| 🟢 `ValidateProvider` | 100.0% |
-
-</details>
-
-<details>
-<summary><b>📄 pointers.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Ptr` | 100.0% |
-| 🟢 `String` | 100.0% |
-| 🟢 `Bool` | 100.0% |
-| 🟢 `Int` | 100.0% |
-| 🟢 `Int32` | 100.0% |
-| 🟢 `Float32` | 100.0% |
-
-</details>
-
-<details>
-<summary><b>📄 pull_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟡 `Create` | 78.6% |
-| 🟢 `Read` | 100.0% |
-| 🟢 `Update` | 100.0% |
-| 🔴 `Delete` | 0.0% |
-| 🟢 `ImportState` | 100.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🔴 `Read` | 0.0% |
-| 🟢 `Update` | 100.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🔴 `Metadata` | 0.0% |
-| 🔴 `Schema` | 0.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🔴 `Metadata` | 0.0% |
-| 🔴 `Schema` | 0.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🟢 `Read` | 100.0% |
-| 🟢 `Update` | 100.0% |
-| 🟠 `Delete` | 40.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 transfer_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🟢 `Read` | 100.0% |
-| 🟢 `Update` | 100.0% |
-| 🔴 `Delete` | 0.0% |
-| 🟢 `ImportState` | 100.0% |
-
-</details>
-
-
-### 📦 Package: `credential`
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🟢 `ImportState` | 100.0% |
-
-</details>
-
-<details>
-<summary><b>📄 transfer_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🔴 `Metadata` | 0.0% |
-| 🔴 `Schema` | 0.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-
-### 📦 Package: `execution`
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 retry_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🟡 `Read` | 80.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-
-### 📦 Package: `project`
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 user_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-
-### 📦 Package: `shared`
-
-<details>
-<summary><b>📄 pointers.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Ptr` | 100.0% |
-| 🟢 `String` | 100.0% |
-| 🟢 `Bool` | 100.0% |
-| 🟢 `Int` | 100.0% |
-| 🟢 `Int32` | 100.0% |
-| 🟢 `Float32` | 100.0% |
-
-</details>
-
-
-### 📦 Package: `shared/client`
-
-
-### 📦 Package: `sourcecontrol`
-
-<details>
-<summary><b>📄 pull_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟡 `Create` | 78.6% |
-| 🟢 `Read` | 100.0% |
-| 🟢 `Update` | 100.0% |
-| 🔴 `Delete` | 0.0% |
-| 🟢 `ImportState` | 100.0% |
-
-</details>
-
-
-### 📦 Package: `tag`
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-
-### 📦 Package: `user`
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🔴 `Read` | 0.0% |
-| 🟢 `Update` | 100.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-
-### 📦 Package: `variable`
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Create` | 0.0% |
-| 🔴 `Read` | 0.0% |
-| 🔴 `Update` | 0.0% |
-| 🔴 `Delete` | 0.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-
-### 📦 Package: `workflow`
-
-<details>
-<summary><b>📄 datasource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🔴 `Metadata` | 0.0% |
-| 🔴 `Schema` | 0.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 datasources.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🔴 `Metadata` | 0.0% |
-| 🔴 `Schema` | 0.0% |
-| 🟢 `Configure` | 100.0% |
-| 🔴 `Read` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🟢 `Read` | 100.0% |
-| 🟢 `Update` | 100.0% |
-| 🟠 `Delete` | 40.0% |
-| 🔴 `ImportState` | 0.0% |
-
-</details>
-
-<details>
-<summary><b>📄 transfer_resource.go</b></summary>
-
-| Function | Coverage |
-|----------|----------|
-| 🟢 `Metadata` | 100.0% |
-| 🟢 `Schema` | 100.0% |
-| 🟢 `Configure` | 100.0% |
-| 🟢 `Create` | 100.0% |
-| 🟢 `Read` | 100.0% |
-| 🟢 `Update` | 100.0% |
-| 🔴 `Delete` | 0.0% |
-| 🟢 `ImportState` | 100.0% |
-
-</details>
-
+Les tableaux sont organisés par type de fichier pour faciliter la comparaison entre packages.
+
+### 📄 datasource.go
+
+| Function | execution | project | provider | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+
+### 📄 datasources.go
+
+| Function | execution | project | provider | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+
+### 📄 pointers.go
+
+| Function | provider | shared |
+|----------|:--------:|:--------:|
+| `Bool` | 🟢 100.0% | 🟢 100.0% |
+| `Float32` | 🟢 100.0% | 🟢 100.0% |
+| `Int` | 🟢 100.0% | 🟢 100.0% |
+| `Int32` | 🟢 100.0% | 🟢 100.0% |
+| `Ptr` | 🟢 100.0% | 🟢 100.0% |
+| `String` | 🟢 100.0% | 🟢 100.0% |
+
+### 📄 provider.go
+
+| Function | provider |
+|----------|:--------:|
+| `Configure` | 🟢 100.0% |
+| `DataSources` | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% |
+| `Resources` | 🟢 100.0% |
+| `Schema` | 🟢 100.0% |
+| `ValidateProvider` | 🟢 100.0% |
+
+### 📄 pull_resource.go
+
+| Function | provider | sourcecontrol |
+|----------|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% |
+| `Create` | 🟡 78.6% | 🟡 78.6% |
+| `Delete` | 🔴 0.0% | 🔴 0.0% |
+| `ImportState` | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🟢 100.0% | 🟢 100.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% |
+| `Update` | 🟢 100.0% | 🟢 100.0% |
+
+### 📄 resource.go
+
+| Function | credential | project | provider | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Create` | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% |
+| `Delete` | 🔴 0.0% | 🔴 0.0% | 🟠 40.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🟠 40.0% |
+| `ImportState` | 🟢 100.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Update` | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% |
+
+### 📄 retry_resource.go
+
+| Function | execution | provider |
+|----------|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% |
+| `Create` | 🟢 100.0% | 🟢 100.0% |
+| `Delete` | 🔴 0.0% | 🔴 0.0% |
+| `ImportState` | 🔴 0.0% | 🔴 0.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🟡 80.0% | 🟡 80.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% |
+| `Update` | 🔴 0.0% | 🔴 0.0% |
+
+### 📄 transfer_resource.go
+
+| Function | credential | provider | workflow |
+|----------|:--------:|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Create` | 🔴 0.0% | 🟢 100.0% | 🟢 100.0% |
+| `Delete` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `ImportState` | 🔴 0.0% | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🔴 0.0% | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🟢 100.0% | 🟢 100.0% |
+| `Schema` | 🔴 0.0% | 🟢 100.0% | 🟢 100.0% |
+| `Update` | 🔴 0.0% | 🟢 100.0% | 🟢 100.0% |
+
+### 📄 user_resource.go
+
+| Function | project | provider |
+|----------|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% |
+| `Create` | 🔴 0.0% | 🔴 0.0% |
+| `Delete` | 🔴 0.0% | 🔴 0.0% |
+| `ImportState` | 🔴 0.0% | 🔴 0.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🔴 0.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% |
+| `Update` | 🔴 0.0% | 🔴 0.0% |
 
 
 ---

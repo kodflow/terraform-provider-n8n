@@ -162,68 +162,94 @@ func TestNewWorkflowsDataSourceWrapper(t *testing.T) {
 
 // TestWorkflowsDataSource_Metadata tests the Metadata method.
 func TestWorkflowsDataSource_Metadata(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name             string
+		providerTypeName string
+		expectedTypeName string
 	}{
 		{
-			name: "creates non-nil datasource",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				ds := workflow.NewWorkflowsDataSource()
-				assert.NotNil(t, ds)
-			},
+			name:             "sets correct type name",
+			providerTypeName: "n8n",
+			expectedTypeName: "n8n_workflows",
 		},
 		{
-			name: "error case - datasource can be created multiple times",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				for i := 0; i < 10; i++ {
-					ds := workflow.NewWorkflowsDataSource()
-					assert.NotNil(t, ds)
-				}
-			},
+			name:             "error case - handles empty provider type name",
+			providerTypeName: "",
+			expectedTypeName: "_workflows",
+		},
+		{
+			name:             "error case - handles custom provider type name",
+			providerTypeName: "custom",
+			expectedTypeName: "custom_workflows",
+		},
+		{
+			name:             "error case - handles provider type name with special characters",
+			providerTypeName: "test-provider_123",
+			expectedTypeName: "test-provider_123_workflows",
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tt.testFunc(t)
+
+			ds := workflow.NewWorkflowsDataSource()
+			req := datasource.MetadataRequest{
+				ProviderTypeName: tt.providerTypeName,
+			}
+			resp := &datasource.MetadataResponse{}
+
+			ds.Metadata(context.Background(), req, resp)
+
+			assert.Equal(t, tt.expectedTypeName, resp.TypeName)
 		})
 	}
 }
 
 // TestWorkflowsDataSource_Schema tests the Schema method.
 func TestWorkflowsDataSource_Schema(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name string
 	}{
-		{
-			name: "creates non-nil datasource",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				ds := workflow.NewWorkflowsDataSource()
-				assert.NotNil(t, ds)
-			},
-		},
-		{
-			name: "error case - datasource can be created multiple times",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				for i := 0; i < 10; i++ {
-					ds := workflow.NewWorkflowsDataSource()
-					assert.NotNil(t, ds)
-				}
-			},
-		},
+		{name: "defines valid schema"},
+		{name: "schema has markdown description"},
+		{name: "error case - schema attributes are not empty"},
+		{name: "error case - schema has expected structure"},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tt.testFunc(t)
+
+			ds := workflow.NewWorkflowsDataSource()
+			req := datasource.SchemaRequest{}
+			resp := &datasource.SchemaResponse{}
+
+			ds.Schema(context.Background(), req, resp)
+
+			switch tt.name {
+			case "defines valid schema":
+				assert.NotNil(t, resp.Schema)
+				assert.NotEmpty(t, resp.Schema.Attributes)
+
+			case "schema has markdown description":
+				assert.NotEmpty(t, resp.Schema.MarkdownDescription)
+				assert.Contains(t, resp.Schema.MarkdownDescription, "workflow")
+
+			case "error case - schema attributes are not empty":
+				assert.NotEmpty(t, resp.Schema.Attributes)
+				assert.Greater(t, len(resp.Schema.Attributes), 0)
+
+			case "error case - schema has expected structure":
+				assert.NotNil(t, resp.Schema)
+				assert.NotNil(t, resp.Schema.Attributes)
+			}
 		})
 	}
 }

@@ -98,6 +98,7 @@ cat >>COVERAGE.MD <<EOF
 ## Coverage Détaillée par Fichier
 
 Cette section liste uniquement les **fonctions publiques** (exportées) pour identifier rapidement les fonctions non testées.
+Les tableaux sont organisés par type de fichier pour faciliter la comparaison entre packages.
 
 EOF
 
@@ -105,34 +106,30 @@ EOF
 # Format: file.go:line:	FunctionName	coverage%
 # We only want public functions (starting with uppercase after package.)
 
+# Create a temporary directory for processing
+TMP_DIR=$(mktemp -d)
+trap "rm -rf $TMP_DIR" EXIT
+
 # Get unique packages
 PACKAGES=$(echo "$COVERAGE_DATA" | grep -E "^github.com/kodflow/n8n/src/internal/provider/" | grep -v "total:" | awk -F: '{print $1}' | sed 's|/[^/]*\.go$||' | sort -u)
 
+# First pass: collect all data organized by filename
 for pkg in $PACKAGES; do
-  # Get package name for display
-  PKG_SHORT=$(echo "$pkg" | sed 's|github.com/kodflow/n8n/src/internal/provider/||')
+  PKG_SHORT=$(echo "$pkg" | sed 's|github.com/kodflow/n8n/src/internal/provider||' | sed 's|^/||')
+  if [ -z "$PKG_SHORT" ]; then
+    PKG_SHORT="provider"
+  fi
 
   # Get files in this package
   FILES=$(echo "$COVERAGE_DATA" | grep "^$pkg/" | awk -F: '{print $1}' | sort -u)
 
-  # Skip if no files
-  if [ -z "$FILES" ]; then
-    continue
-  fi
-
-  echo "### 📦 Package: \`$PKG_SHORT\`" >>COVERAGE.MD
-  echo "" >>COVERAGE.MD
-
   for file in $FILES; do
     FILE_SHORT=$(basename "$file")
 
-    # Extract public functions from this file (functions starting with uppercase)
-    # Format: filename.go:line:\tFunctionName\tcoverage%
-    # Note: function name may have leading/trailing whitespace for alignment
+    # Extract public functions from this file
     PUBLIC_FUNCS=$(echo "$COVERAGE_DATA" | grep "^$file:" | awk '{
-      # Split on tabs - field 1 is file:line:, field 2 is function, field 3 is coverage
-      gsub(/^[ \t]+|[ \t]+$/, "", $2);  # Trim whitespace from function name
-      if ($2 ~ /^[A-Z]/ && $2 !~ /^New/) {  # Public function, not a constructor
+      gsub(/^[ \t]+|[ \t]+$/, "", $2);
+      if ($2 ~ /^[A-Z]/ && $2 !~ /^New/) {
         print $2 "\t" $3
       }
     }')
@@ -142,31 +139,74 @@ for pkg in $PACKAGES; do
       continue
     fi
 
-    echo "<details>" >>COVERAGE.MD
-    echo "<summary><b>📄 $FILE_SHORT</b></summary>" >>COVERAGE.MD
-    echo "" >>COVERAGE.MD
-    echo "| Function | Coverage |" >>COVERAGE.MD
-    echo "|----------|----------|" >>COVERAGE.MD
+    # Save data to temp file organized by filename
+    # Replace / with _ in package name to avoid directory issues
+    PKG_SAFE=$(echo "$PKG_SHORT" | tr '/' '_')
+    FILE_DATA="$TMP_DIR/$FILE_SHORT"
+    mkdir -p "$FILE_DATA"
+    echo "$PUBLIC_FUNCS" >"$FILE_DATA/$PKG_SAFE"
+  done
+done
 
-    echo "$PUBLIC_FUNCS" | while IFS=$'\t' read -r func cov; do
-      # Determine icon based on coverage
-      COV_VALUE=$(echo "$cov" | sed 's/%//')
-      if [ $(awk "BEGIN {print ($COV_VALUE >= 90.0)}") -eq 1 ]; then
-        ICON="🟢"
-      elif [ $(awk "BEGIN {print ($COV_VALUE >= 70.0)}") -eq 1 ]; then
-        ICON="🟡"
-      elif [ $(awk "BEGIN {print ($COV_VALUE > 0.0)}") -eq 1 ]; then
-        ICON="🟠"
+# Second pass: generate tables organized by filename
+for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
+  FILE_DATA="$TMP_DIR/$FILE_SHORT"
+
+  echo "### 📄 $FILE_SHORT" >>COVERAGE.MD
+  echo "" >>COVERAGE.MD
+
+  # Collect all unique function names across all packages for this file
+  ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
+
+  # Skip if no functions
+  if [ -z "$ALL_FUNCS" ]; then
+    continue
+  fi
+
+  # Get list of packages that have this file (restore original names)
+  PKG_LIST=$(ls "$FILE_DATA" | tr '_' '/' | sort)
+
+  # Build table header
+  HEADER="| Function |"
+  SEPARATOR="|----------|"
+  for pkg in $PKG_LIST; do
+    HEADER="$HEADER $pkg |"
+    SEPARATOR="$SEPARATOR:--------:|"
+  done
+
+  echo "$HEADER" >>COVERAGE.MD
+  echo "$SEPARATOR" >>COVERAGE.MD
+
+  # Build table rows for each function
+  echo "$ALL_FUNCS" | while read -r func; do
+    ROW="| \`$func\` |"
+
+    for pkg in $PKG_LIST; do
+      # Convert package name back to safe version for file lookup
+      PKG_SAFE=$(echo "$pkg" | tr '/' '_')
+      # Get coverage for this function in this package
+      COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
+
+      if [ -z "$COV" ]; then
+        # Function doesn't exist in this package
+        ROW="$ROW - |"
       else
-        ICON="🔴"
+        # Function exists, add icon based on coverage
+        COV_VALUE=$(echo "$COV" | sed 's/%//')
+        if [ $(awk "BEGIN {print ($COV_VALUE >= 90.0)}") -eq 1 ]; then
+          ICON="🟢"
+        elif [ $(awk "BEGIN {print ($COV_VALUE >= 70.0)}") -eq 1 ]; then
+          ICON="🟡"
+        elif [ $(awk "BEGIN {print ($COV_VALUE > 0.0)}") -eq 1 ]; then
+          ICON="🟠"
+        else
+          ICON="🔴"
+        fi
+        ROW="$ROW $ICON $COV |"
       fi
-
-      echo "| $ICON \`$func\` | $cov |" >>COVERAGE.MD
     done
 
-    echo "" >>COVERAGE.MD
-    echo "</details>" >>COVERAGE.MD
-    echo "" >>COVERAGE.MD
+    echo "$ROW" >>COVERAGE.MD
   done
 
   echo "" >>COVERAGE.MD

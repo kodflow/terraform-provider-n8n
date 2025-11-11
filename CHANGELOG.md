@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
+### 📝 Other
+
+- save (`2cfad5c`)
+
 ### ✅ Tests
 
 - complete workflow CRUD functions to 100% coverage (`fc5aa03`)
@@ -46,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- improve coverage report with public function details (`2881515`)
 - convert workflow external tests to table-driven format (`81c9f30`)
 - convert sourcecontrol/models/resource_test.go to table-driven (`747010e`)
 - convert project/models/item_test.go to table-driven format (`24cd91b`)
@@ -139,8 +144,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 102
-- **Features:** 29
+- **Total commits:** 104
+- **Features:** 30
 - **Bug fixes:** 11
 - **Tests:** 32
 - **Refactoring:** 15
@@ -152,4 +157,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 17:30:54*
+*Changelog generated automatically on 2025-11-11 19:28:13*
