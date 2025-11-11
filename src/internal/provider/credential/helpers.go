@@ -23,7 +23,7 @@ import (
 //
 // Returns:
 //   - *n8nsdk.CreateCredentialResponse: The created credential or nil on error
-func (r *CredentialResource) createNewCredential(ctx context.Context, name, credType string, credData map[string]interface{}, diags *diag.Diagnostics) *n8nsdk.CreateCredentialResponse {
+func (r *CredentialResource) createNewCredential(ctx context.Context, name, credType string, credData map[string]any, diags *diag.Diagnostics) *n8nsdk.CreateCredentialResponse {
 	credRequest := n8nsdk.Credential{
 		Name: name,
 		Type: credType,

@@ -173,7 +173,7 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Prepare credential data
-	var credData map[string]interface{}
+	var credData map[string]any
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
@@ -270,7 +270,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
 
 	// Prepare credential data
-	var credData map[string]interface{}
+	var credData map[string]any
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
@@ -532,10 +532,10 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 	for _, node := range workflow.Nodes {
 		// Check if node has credentials defined.
 		if node.Credentials != nil {
-			// node.Credentials is already map[string]interface{}
+			// node.Credentials is already map[string]any
 			for _, credValue := range node.Credentials {
 				// Check if credential value is a map.
-				if credInfo, okMap := credValue.(map[string]interface{}); okMap {
+				if credInfo, okMap := credValue.(map[string]any); okMap {
 					// Check if credential ID matches the target credential.
 					if id, okID := credInfo["id"].(string); okID && id == credentialID {
 						// Return result.
@@ -577,10 +577,10 @@ func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID
 
 		// Check if node has credentials defined.
 		if node.Credentials != nil {
-			// node.Credentials is already map[string]interface{}
+			// node.Credentials is already map[string]any
 			for credType, credValue := range node.Credentials {
 				// Check if credential value is a map.
-				if credInfo, okMap := credValue.(map[string]interface{}); okMap {
+				if credInfo, okMap := credValue.(map[string]any); okMap {
 					// Check if credential ID matches the old credential.
 					if id, okID := credInfo["id"].(string); okID && id == oldCredID {
 						credInfo["id"] = newCredID

@@ -31,6 +31,7 @@ go_test(
     embed = [":execution"],
     deps = [
         "//sdk/n8nsdk",
+        "//src/internal/provider/execution/models",
         "//src/internal/provider/shared/client",
         "@com_github_hashicorp_terraform_plugin_framework//datasource",
         "@com_github_hashicorp_terraform_plugin_framework//datasource/schema",

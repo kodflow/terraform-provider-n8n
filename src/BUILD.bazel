@@ -5,9 +5,7 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/kodflow/n8n/src",
     visibility = ["//visibility:private"],
-    deps = [
-        "//src/cmd",
-    ],
+    deps = ["//src/cmd"],
 )
 
 go_binary(
@@ -18,7 +16,7 @@ go_binary(
 
 go_test(
     name = "src_test",
-    srcs = ["main_test.go"],
+    srcs = ["main_internal_test.go"],
     embed = [":src_lib"],
     deps = [
         "//src/cmd",

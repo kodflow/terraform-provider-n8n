@@ -1,7 +1,9 @@
-package shared
+package shared_test
 
 import (
 	"testing"
+
+	"github.com/kodflow/n8n/src/internal/provider/shared"
 )
 
 // TestPtr tests the generic Ptr function.
@@ -25,39 +27,39 @@ func TestPtr(t *testing.T) {
 			switch tc.name {
 			case "string pointer":
 				s := "test"
-				ptr := Ptr(s)
+				ptr := shared.Ptr(s)
 				if ptr == nil {
-					t.Fatal("Ptr() returned nil")
+					t.Fatal("shared.Ptr() returned nil")
 				}
 				if *ptr != s {
-					t.Errorf("Ptr() = %v, want %v", *ptr, s)
+					t.Errorf("shared.Ptr() = %v, want %v", *ptr, s)
 				}
 			case "int pointer":
 				i := 42
-				ptr := Ptr(i)
+				ptr := shared.Ptr(i)
 				if ptr == nil {
-					t.Fatal("Ptr() returned nil")
+					t.Fatal("shared.Ptr() returned nil")
 				}
 				if *ptr != i {
-					t.Errorf("Ptr() = %v, want %v", *ptr, i)
+					t.Errorf("shared.Ptr() = %v, want %v", *ptr, i)
 				}
 			case "bool pointer":
 				b := true
-				ptr := Ptr(b)
+				ptr := shared.Ptr(b)
 				if ptr == nil {
-					t.Fatal("Ptr() returned nil")
+					t.Fatal("shared.Ptr() returned nil")
 				}
 				if *ptr != b {
-					t.Errorf("Ptr() = %v, want %v", *ptr, b)
+					t.Errorf("shared.Ptr() = %v, want %v", *ptr, b)
 				}
 			case "error case - validation checks":
 				s := ""
-				ptr := Ptr(s)
+				ptr := shared.Ptr(s)
 				if ptr == nil {
-					t.Fatal("Ptr() returned nil")
+					t.Fatal("shared.Ptr() returned nil")
 				}
 				if *ptr != s {
-					t.Errorf("Ptr() = %v, want %v", *ptr, s)
+					t.Errorf("shared.Ptr() = %v, want %v", *ptr, s)
 				}
 			}
 		})
@@ -84,12 +86,12 @@ func TestString(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ptr := String(tt.input)
+			ptr := shared.String(tt.input)
 			if ptr == nil {
-				t.Fatal("String() returned nil")
+				t.Fatal("shared.String() returned nil")
 			}
 			if *ptr != tt.want {
-				t.Errorf("String() = %v, want %v", *ptr, tt.want)
+				t.Errorf("shared.String() = %v, want %v", *ptr, tt.want)
 			}
 		})
 	}
@@ -114,12 +116,12 @@ func TestBool(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ptr := Bool(tt.input)
+			ptr := shared.Bool(tt.input)
 			if ptr == nil {
-				t.Fatal("Bool() returned nil")
+				t.Fatal("shared.Bool() returned nil")
 			}
 			if *ptr != tt.want {
-				t.Errorf("Bool() = %v, want %v", *ptr, tt.want)
+				t.Errorf("shared.Bool() = %v, want %v", *ptr, tt.want)
 			}
 		})
 	}
@@ -145,12 +147,12 @@ func TestInt(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ptr := Int(tt.input)
+			ptr := shared.Int(tt.input)
 			if ptr == nil {
-				t.Fatal("Int() returned nil")
+				t.Fatal("shared.Int() returned nil")
 			}
 			if *ptr != tt.want {
-				t.Errorf("Int() = %v, want %v", *ptr, tt.want)
+				t.Errorf("shared.Int() = %v, want %v", *ptr, tt.want)
 			}
 		})
 	}
@@ -176,12 +178,12 @@ func TestInt32(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ptr := Int32(tt.input)
+			ptr := shared.Int32(tt.input)
 			if ptr == nil {
-				t.Fatal("Int32() returned nil")
+				t.Fatal("shared.Int32() returned nil")
 			}
 			if *ptr != tt.want {
-				t.Errorf("Int32() = %v, want %v", *ptr, tt.want)
+				t.Errorf("shared.Int32() = %v, want %v", *ptr, tt.want)
 			}
 		})
 	}
@@ -207,12 +209,12 @@ func TestFloat32(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ptr := Float32(tt.input)
+			ptr := shared.Float32(tt.input)
 			if ptr == nil {
-				t.Fatal("Float32() returned nil")
+				t.Fatal("shared.Float32() returned nil")
 			}
 			if *ptr != tt.want {
-				t.Errorf("Float32() = %v, want %v", *ptr, tt.want)
+				t.Errorf("shared.Float32() = %v, want %v", *ptr, tt.want)
 			}
 		})
 	}
@@ -242,45 +244,45 @@ func TestPointerFunctions(t *testing.T) {
 			switch tc.name {
 			case "String":
 				s := "test"
-				ptr := String(s)
+				ptr := shared.String(s)
 				if ptr == nil || *ptr != s {
-					t.Errorf("String() failed: expected %q, got %v", s, ptr)
+					t.Errorf("shared.String() failed: expected %q, got %v", s, ptr)
 				}
 			case "Bool":
 				b := true
-				ptr := Bool(b)
+				ptr := shared.Bool(b)
 				if ptr == nil || *ptr != b {
-					t.Errorf("Bool() failed: expected %v, got %v", b, ptr)
+					t.Errorf("shared.Bool() failed: expected %v, got %v", b, ptr)
 				}
 			case "Int":
 				i := 42
-				ptr := Int(i)
+				ptr := shared.Int(i)
 				if ptr == nil || *ptr != i {
-					t.Errorf("Int() failed: expected %d, got %v", i, ptr)
+					t.Errorf("shared.Int() failed: expected %d, got %v", i, ptr)
 				}
 			case "Int32":
 				var i int32 = 42
-				ptr := Int32(i)
+				ptr := shared.Int32(i)
 				if ptr == nil || *ptr != i {
-					t.Errorf("Int32() failed: expected %d, got %v", i, ptr)
+					t.Errorf("shared.Int32() failed: expected %d, got %v", i, ptr)
 				}
 			case "Float32":
 				var f float32 = 3.14
-				ptr := Float32(f)
+				ptr := shared.Float32(f)
 				if ptr == nil || *ptr != f {
-					t.Errorf("Float32() failed: expected %f, got %v", f, ptr)
+					t.Errorf("shared.Float32() failed: expected %f, got %v", f, ptr)
 				}
 			case "Ptr generic":
 				s := "generic"
-				ptr := Ptr(s)
+				ptr := shared.Ptr(s)
 				if ptr == nil || *ptr != s {
-					t.Errorf("Ptr() failed: expected %q, got %v", s, ptr)
+					t.Errorf("shared.Ptr() failed: expected %q, got %v", s, ptr)
 				}
 			case "error case - empty values":
 				s := ""
-				ptr := String(s)
+				ptr := shared.String(s)
 				if ptr == nil || *ptr != s {
-					t.Errorf("String() failed for empty string: got %v", ptr)
+					t.Errorf("shared.String() failed for empty string: got %v", ptr)
 				}
 			}
 		})
@@ -293,7 +295,7 @@ func BenchmarkString(b *testing.B) {
 	s := "test"
 	b.ResetTimer()
 	for b.Loop() {
-		_ = String(s)
+		_ = shared.String(s)
 	}
 }
 
@@ -302,7 +304,7 @@ func BenchmarkBool(b *testing.B) {
 	v := true
 	b.ResetTimer()
 	for b.Loop() {
-		_ = Bool(v)
+		_ = shared.Bool(v)
 	}
 }
 
@@ -311,7 +313,7 @@ func BenchmarkInt(b *testing.B) {
 	v := 42
 	b.ResetTimer()
 	for b.Loop() {
-		_ = Int(v)
+		_ = shared.Int(v)
 	}
 }
 
@@ -320,7 +322,7 @@ func BenchmarkPtr(b *testing.B) {
 	s := "test"
 	b.ResetTimer()
 	for b.Loop() {
-		_ = Ptr(s)
+		_ = shared.Ptr(s)
 	}
 }
 

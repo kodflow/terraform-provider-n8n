@@ -9,7 +9,7 @@ go_library(
 
 go_test(
     name = "constants_test",
-    srcs = ["constants_test.go"],
+    srcs = ["constants_internal_test.go"],
     embed = [":constants"],
     deps = [
         "@com_github_stretchr_testify//assert",

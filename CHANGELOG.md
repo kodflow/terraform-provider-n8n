@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- add tests for private helper functions in project package (`d589824`)
 - convert project user_resource_test to table-driven format (`4ae9963`)
 - convert project datasource_test to table-driven format (`64b4723`)
 - convert variable helpers_test to table-driven format (`5ccc2be`)
@@ -132,10 +133,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 95
+- **Total commits:** 96
 - **Features:** 29
 - **Bug fixes:** 10
-- **Tests:** 26
+- **Tests:** 27
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -145,4 +146,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-10 23:42:48*
+*Changelog generated automatically on 2025-11-11 11:21:37*

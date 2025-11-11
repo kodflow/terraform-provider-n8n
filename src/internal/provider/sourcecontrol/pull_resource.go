@@ -214,9 +214,9 @@ func (r *SourceControlPullResource) buildPullRequest(plan *models.PullResource, 
 //   - resp: response for diagnostics
 //
 // Returns:
-//   - map[string]interface{}: parsed variables, empty map on error
-func (r *SourceControlPullResource) parseVariablesJSON(variablesJSON string, resp *resource.CreateResponse) map[string]interface{} {
-	var variables map[string]interface{}
+//   - map[string]any: parsed variables, empty map on error
+func (r *SourceControlPullResource) parseVariablesJSON(variablesJSON string, resp *resource.CreateResponse) map[string]any {
+	var variables map[string]any
 	// Check for error.
 	if err := json.Unmarshal([]byte(variablesJSON), &variables); err != nil {
 		resp.Diagnostics.AddError(
@@ -224,7 +224,7 @@ func (r *SourceControlPullResource) parseVariablesJSON(variablesJSON string, res
 			fmt.Sprintf("Could not parse variables_json: %s", err.Error()),
 		)
 		// Return empty map on error instead of nil.
-		return make(map[string]interface{}, 0)
+		return make(map[string]any, 0)
 	}
 	// Return parsed variables.
 	return variables

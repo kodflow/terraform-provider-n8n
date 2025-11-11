@@ -1,11 +1,22 @@
 package cmd
 
+// NOTE: This file contains internal tests for the cmd package.
+// These tests MUST stay in the internal test file (package cmd) because they require
+// access to private package variables and functions:
+//   - TestRun: Tests the private 'run' function
+//   - TestExecute: Needs to modify and restore global 'rootCmd' variable
+//   - TestSetVersion: Needs to modify and restore global 'Version' variable
+//   - TestProviderServeVariable: Needs to modify global 'ProviderServe' function
+//   - TestOsExitVariable: Needs to modify global 'OsExit' function
+//   - TestDebugFlag: Needs to modify global 'debug' variable
+//
+// Moving these tests to an external test file (package cmd_test) would make it
+// impossible to access and mock these private variables for testing.
+
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"sync"
@@ -105,7 +116,7 @@ func TestInit(t *testing.T) {
 	}
 }
 
-func TestRun(t *testing.T) {
+func Test_run(t *testing.T) {
 	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and debug
 	tests := []struct {
 		name    string
@@ -302,234 +313,9 @@ func TestRun(t *testing.T) {
 	}
 }
 
-func TestExecute(t *testing.T) {
-	// Note: No t.Parallel() at function level because this test modifies global rootCmd
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "Execute returns 1 on error", wantErr: true},
-		{name: "Execute returns 0 on success", wantErr: false},
-		{name: "Execute handles help flag", wantErr: false},
-		{name: "Execute handles version flag", wantErr: false},
-		{name: "Execute with nil rootCmd causes panic", wantErr: true},
-		{name: "Execute with command that returns specific errors", wantErr: true},
-		{name: "Execute captures output correctly", wantErr: false},
-	}
+// TestExecute is now in root_external_test.go as it tests the public Execute function.
 
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			// Note: No t.Parallel() here because subtests modify global rootCmd
-			originalOsExit := OsExit
-			originalRootCmd := rootCmd
-			originalProviderServe := ProviderServe
-			defer func() {
-				OsExit = originalOsExit
-				rootCmd = originalRootCmd
-				ProviderServe = originalProviderServe
-			}()
-
-			switch tt.name {
-			case "Execute returns 1 on error":
-				rootCmd = &cobra.Command{
-					Use: "test",
-					RunE: func(cmd *cobra.Command, args []string) error {
-						return errors.New("test error")
-					},
-				}
-				exitCode := Execute()
-				assert.Equal(t, 1, exitCode, "Should return exit code 1 on error")
-
-			case "Execute returns 0 on success":
-				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-					return nil
-				}
-				rootCmd = &cobra.Command{
-					Use:  "test",
-					RunE: run,
-				}
-				exitCode := Execute()
-				assert.Equal(t, 0, exitCode, "Should return exit code 0 on success")
-
-			case "Execute handles help flag":
-				rootCmd = &cobra.Command{
-					Use: "test",
-					Run: func(cmd *cobra.Command, args []string) {
-						// Help command should not cause error
-					},
-				}
-				rootCmd.SetArgs([]string{"--help"})
-				exitCode := Execute()
-				assert.Equal(t, 0, exitCode, "Help should return 0")
-
-			case "Execute handles version flag":
-				rootCmd = &cobra.Command{
-					Use:     "test",
-					Version: "1.0.0",
-				}
-				rootCmd.SetArgs([]string{"--version"})
-				exitCode := Execute()
-				assert.Equal(t, 0, exitCode, "Version flag should return 0")
-
-			case "Execute with nil rootCmd causes panic":
-				rootCmd = nil
-				assert.Panics(t, func() {
-					Execute()
-				}, "Execute should panic with nil rootCmd")
-
-			case "Execute with command that returns specific errors":
-				testErrors := []error{
-					errors.New("simple error"),
-					fmt.Errorf("formatted error: %s", "test"),
-					fmt.Errorf("wrapped error: %w", errors.New("inner")),
-					context.Canceled,
-					context.DeadlineExceeded,
-				}
-				for _, testErr := range testErrors {
-					rootCmd = &cobra.Command{
-						Use: "test",
-						RunE: func(cmd *cobra.Command, args []string) error {
-							return testErr
-						},
-					}
-					exitCode := Execute()
-					assert.Equal(t, 1, exitCode, "Should return 1 for error: %v", testErr)
-				}
-
-			case "Execute captures output correctly":
-				oldStdout := os.Stdout
-				r, w, _ := os.Pipe()
-				os.Stdout = w
-				rootCmd = &cobra.Command{
-					Use: "test",
-					Run: func(cmd *cobra.Command, args []string) {
-						fmt.Println("test output")
-					},
-				}
-				Execute()
-				w.Close()
-				os.Stdout = oldStdout
-				var buf bytes.Buffer
-				io.Copy(&buf, r)
-				output := buf.String()
-				assert.Contains(t, output, "test output", "Should capture command output")
-			}
-		})
-	}
-}
-
-func TestSetVersion(t *testing.T) {
-	// Save original version
-	originalVersion := Version
-	defer func() {
-		Version = originalVersion
-	}()
-
-	t.Run("SetVersion sets the version", func(t *testing.T) {
-		testVersion := "1.2.3"
-		SetVersion(testVersion)
-		assert.Equal(t, testVersion, Version, "Version should be set correctly")
-	})
-
-	t.Run("SetVersion handles empty string", func(t *testing.T) {
-		SetVersion("")
-		assert.Equal(t, "", Version, "Version should handle empty string")
-	})
-
-	t.Run("SetVersion handles dev version", func(t *testing.T) {
-		SetVersion("dev")
-		assert.Equal(t, "dev", Version, "Version should handle 'dev'")
-	})
-
-	t.Run("SetVersion handles semantic version formats", func(t *testing.T) {
-		testCases := []string{
-			"1.0.0",
-			"2.3.4",
-			"10.20.30",
-			"1.0.0-alpha",
-			"1.0.0-beta.1",
-			"1.0.0+build.123",
-			"1.0.0-rc.1+build.456",
-			"v1.0.0",
-			"v1.0.0-alpha",
-			"1.0.0-SNAPSHOT",
-			"1.0",
-			"1",
-		}
-
-		for _, version := range testCases {
-			SetVersion(version)
-			assert.Equal(t, version, Version, "Version should handle %s", version)
-		}
-	})
-
-	t.Run("SetVersion handles very long version string", func(t *testing.T) {
-		longVersion := "1.0.0-" + strings.Repeat("a", 10000)
-		SetVersion(longVersion)
-		assert.Equal(t, longVersion, Version, "Version should handle long strings")
-	})
-
-	t.Run("SetVersion can be called multiple times", func(t *testing.T) {
-		versions := []string{"1.0.0", "2.0.0", "3.0.0", "dev", ""}
-		for _, v := range versions {
-			SetVersion(v)
-			assert.Equal(t, v, Version, "Version should update on each call")
-		}
-	})
-
-	t.Run("SetVersion handles unicode characters", func(t *testing.T) {
-		unicodeVersions := []string{
-			"1.0.0-测试",
-			"1.0.0-テスト",
-			"1.0.0-тест",
-			"1.0.0-🚀",
-		}
-
-		for _, v := range unicodeVersions {
-			SetVersion(v)
-			assert.Equal(t, v, Version, "Version should handle unicode: %s", v)
-		}
-	})
-
-	t.Run("SetVersion handles special characters", func(t *testing.T) {
-		specialVersions := []string{
-			"1.0.0!@#$%^&*()",
-			"1.0.0<>?:",
-			"1.0.0[]{}",
-			"1.0.0|\\",
-		}
-
-		for _, v := range specialVersions {
-			SetVersion(v)
-			assert.Equal(t, v, Version, "Version should handle special chars: %s", v)
-		}
-	})
-
-	t.Run("SetVersion is thread-safe for reading", func(t *testing.T) {
-		SetVersion("concurrent-test")
-
-		var wg sync.WaitGroup
-		errs := make([]error, 100)
-
-		for i := 0; i < 100; i++ {
-			wg.Add(1)
-			go func(idx int) {
-				defer wg.Done()
-				v := Version
-				if v != "concurrent-test" {
-					errs[idx] = fmt.Errorf("unexpected version: %s", v)
-				}
-			}(i)
-		}
-
-		wg.Wait()
-
-		for _, err := range errs {
-			assert.NoError(t, err)
-		}
-	})
-}
+// TestSetVersion is now in root_external_test.go as it tests the public SetVersion function.
 
 func TestVersionVariable(t *testing.T) {
 	t.Parallel()
@@ -869,7 +655,7 @@ func TestRootCmd(t *testing.T) {
 }
 
 func TestRunEdgeCases(t *testing.T) {
-	t.Parallel()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe
 
 	tests := []struct {
 		name    string
@@ -884,7 +670,7 @@ func TestRunEdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			originalProviderServe := ProviderServe
 			defer func() { ProviderServe = originalProviderServe }()
@@ -947,7 +733,7 @@ func TestRunEdgeCases(t *testing.T) {
 }
 
 func TestRunProviderCreation(t *testing.T) {
-	t.Parallel()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and Version
 
 	tests := []struct {
 		name    string
@@ -962,7 +748,7 @@ func TestRunProviderCreation(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			originalProviderServe := ProviderServe
 			originalVersion := Version
@@ -1031,7 +817,7 @@ func TestRunProviderCreation(t *testing.T) {
 }
 
 func TestCommandIntegration(t *testing.T) {
-	t.Parallel()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and rootCmd
 
 	tests := []struct {
 		name    string
@@ -1046,7 +832,7 @@ func TestCommandIntegration(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			switch tt.name {
 			case "rootCmd can parse flags":
@@ -1091,7 +877,7 @@ func TestCommandIntegration(t *testing.T) {
 }
 
 func TestConstants(t *testing.T) {
-	t.Parallel()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe
 
 	tests := []struct {
 		name    string
@@ -1104,7 +890,7 @@ func TestConstants(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			originalProviderServe := ProviderServe
 			defer func() { ProviderServe = originalProviderServe }()
@@ -1254,8 +1040,7 @@ func TestConcurrency(t *testing.T) {
 }
 
 func TestMemoryAndPerformance(t *testing.T) {
-	t.Parallel()
-
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and Version
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -1268,7 +1053,7 @@ func TestMemoryAndPerformance(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			switch tt.name {
 			case "Version string memory":
@@ -1287,9 +1072,12 @@ func TestMemoryAndPerformance(t *testing.T) {
 				originalProviderServe := ProviderServe
 				defer func() { ProviderServe = originalProviderServe }()
 
+				var mu sync.Mutex
 				callCount := 0
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+					mu.Lock()
 					callCount++
+					mu.Unlock()
 					return nil
 				}
 
@@ -1300,7 +1088,10 @@ func TestMemoryAndPerformance(t *testing.T) {
 				}
 				duration := time.Since(start)
 
-				assert.Equal(t, 1000, callCount)
+				mu.Lock()
+				finalCount := callCount
+				mu.Unlock()
+				assert.Equal(t, 1000, finalCount)
 				assert.Less(t, duration, 1*time.Second, "1000 runs should complete quickly")
 
 			case "error case - Version must handle empty string":
@@ -1314,7 +1105,7 @@ func TestMemoryAndPerformance(t *testing.T) {
 }
 
 func TestErrorMessages(t *testing.T) {
-	t.Parallel()
+	// Note: No t.Parallel() at function level because this test modifies global ProviderServe
 
 	tests := []struct {
 		name    string
@@ -1327,7 +1118,7 @@ func TestErrorMessages(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			originalProviderServe := ProviderServe
 			defer func() { ProviderServe = originalProviderServe }()
@@ -1428,3 +1219,5 @@ func ExampleExecute() {
 	// In practice, this is called from main.go
 	// Execute() // Would start the provider
 }
+
+// TestRun is now in external test file - refactored to test behavior only.

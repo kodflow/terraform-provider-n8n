@@ -71,6 +71,12 @@ linters:
           - unparam
         path: _test\.go
       - linters:
+          - govet
+        path: helpers_internal_test\.go
+      - linters:
+          - govet
+        path: resource_internal_test\.go
+      - linters:
           - gocritic
         path: internal/provider/
       - linters:

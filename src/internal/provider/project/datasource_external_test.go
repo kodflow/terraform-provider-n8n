@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestNewProjectsDataSource tests the NewProjectsDataSource constructor.
-func TestNewProjectsDataSource(t *testing.T) {
+// TestNewProjectDataSource tests the NewProjectDataSource constructor.
+func TestNewProjectDataSource(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -35,11 +35,11 @@ func TestNewProjectsDataSource(t *testing.T) {
 
 			switch tt.name {
 			case "creates valid datasource":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				assert.NotNil(t, ds)
 
 			case "error case - validation checks":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				assert.NotNil(t, ds)
 				assert.Implements(t, (*datasource.DataSource)(nil), ds)
 			}
@@ -47,8 +47,8 @@ func TestNewProjectsDataSource(t *testing.T) {
 	}
 }
 
-// TestNewProjectsDataSourceWrapper tests the NewProjectsDataSourceWrapper constructor.
-func TestNewProjectsDataSourceWrapper(t *testing.T) {
+// TestNewProjectDataSourceWrapper tests the NewProjectDataSourceWrapper constructor.
+func TestNewProjectDataSourceWrapper(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -72,19 +72,19 @@ func TestNewProjectsDataSourceWrapper(t *testing.T) {
 
 			switch tt.name {
 			case "creates valid datasource wrapper":
-				wrapper := project.NewProjectsDataSourceWrapper()
+				wrapper := project.NewProjectDataSourceWrapper()
 				assert.NotNil(t, wrapper)
 
 			case "error case - validation checks":
-				wrapper := project.NewProjectsDataSourceWrapper()
+				wrapper := project.NewProjectDataSourceWrapper()
 				assert.NotNil(t, wrapper)
 			}
 		})
 	}
 }
 
-// TestProjectsDataSource_Metadata tests the Metadata method.
-func TestProjectsDataSource_Metadata(t *testing.T) {
+// TestProjectDataSource_Metadata tests the Metadata method.
+func TestProjectDataSource_Metadata(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -108,16 +108,16 @@ func TestProjectsDataSource_Metadata(t *testing.T) {
 
 			switch tt.name {
 			case "sets correct type name":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				req := datasource.MetadataRequest{
 					ProviderTypeName: "n8n",
 				}
 				resp := &datasource.MetadataResponse{}
 				ds.Metadata(context.Background(), req, resp)
-				assert.Equal(t, "n8n_projects", resp.TypeName)
+				assert.Equal(t, "n8n_project", resp.TypeName)
 
 			case "error case - validation checks":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				req := datasource.MetadataRequest{
 					ProviderTypeName: "n8n",
 				}
@@ -129,8 +129,8 @@ func TestProjectsDataSource_Metadata(t *testing.T) {
 	}
 }
 
-// TestProjectsDataSource_Schema tests the Schema method.
-func TestProjectsDataSource_Schema(t *testing.T) {
+// TestProjectDataSource_Schema tests the Schema method.
+func TestProjectDataSource_Schema(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -154,7 +154,7 @@ func TestProjectsDataSource_Schema(t *testing.T) {
 
 			switch tt.name {
 			case "returns valid schema":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
 				ds.Schema(context.Background(), req, resp)
@@ -162,7 +162,7 @@ func TestProjectsDataSource_Schema(t *testing.T) {
 				assert.NotEmpty(t, resp.Schema.Attributes)
 
 			case "error case - validation checks":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
 				ds.Schema(context.Background(), req, resp)
@@ -172,8 +172,8 @@ func TestProjectsDataSource_Schema(t *testing.T) {
 	}
 }
 
-// TestProjectsDataSource_Configure tests the Configure method.
-func TestProjectsDataSource_Configure(t *testing.T) {
+// TestProjectDataSource_Configure tests the Configure method.
+func TestProjectDataSource_Configure(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -186,7 +186,7 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 		},
 		{
 			name:    "error case - nil provider data",
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 
@@ -197,7 +197,7 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 
 			switch tt.name {
 			case "configures with valid client":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				req := datasource.ConfigureRequest{
 					ProviderData: &client.N8nClient{},
 				}
@@ -206,20 +206,21 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - nil provider data":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				req := datasource.ConfigureRequest{
 					ProviderData: nil,
 				}
 				resp := &datasource.ConfigureResponse{}
 				ds.Configure(context.Background(), req, resp)
+				// Should not error on nil provider data
 				assert.False(t, resp.Diagnostics.HasError())
 			}
 		})
 	}
 }
 
-// TestProjectsDataSource_Read tests the Read method.
-func TestProjectsDataSource_Read(t *testing.T) {
+// TestProjectDataSource_Read tests the Read method.
+func TestProjectDataSource_Read(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -239,7 +240,7 @@ func TestProjectsDataSource_Read(t *testing.T) {
 
 			switch tt.name {
 			case "validates method exists":
-				ds := project.NewProjectsDataSource()
+				ds := project.NewProjectDataSource()
 				assert.NotNil(t, ds)
 			}
 		})

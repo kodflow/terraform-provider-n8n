@@ -34,13 +34,11 @@ go_test(
         "//src/internal/provider/project/models",
         "//src/internal/provider/shared/client",
         "@com_github_hashicorp_terraform_plugin_framework//datasource",
-        "@com_github_hashicorp_terraform_plugin_framework//datasource/schema",
         "@com_github_hashicorp_terraform_plugin_framework//resource",
         "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
         "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
         "@com_github_hashicorp_terraform_plugin_framework//types",
         "@com_github_hashicorp_terraform_plugin_go//tftypes",
         "@com_github_stretchr_testify//assert",
-        "@com_github_stretchr_testify//mock",
     ],
 )

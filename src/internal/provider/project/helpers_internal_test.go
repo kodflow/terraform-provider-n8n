@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFindProjectByIDOrName(t *testing.T) {
+func Test_findProjectByIDOrName(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -127,7 +127,7 @@ func TestFindProjectByIDOrName(t *testing.T) {
 	}
 }
 
-func TestMapProjectToDataSourceModel(t *testing.T) {
+func Test_mapProjectToDataSourceModel(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -216,7 +216,7 @@ func TestMapProjectToDataSourceModel(t *testing.T) {
 	}
 }
 
-func TestMapProjectToItem(t *testing.T) {
+func Test_mapProjectToItem(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

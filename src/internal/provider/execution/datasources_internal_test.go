@@ -5,6 +5,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/execution/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -31,323 +35,15 @@ func (m *MockExecutionsDataSourceInterface) Read(ctx context.Context, req dataso
 	m.Called(ctx, req, resp)
 }
 
-func TestNewExecutionsDataSource(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "create new instance", wantErr: false},
-		{name: "multiple instances are independent", wantErr: false},
-		{name: "error case - verify initialization", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "create new instance":
-				ds := NewExecutionsDataSource()
+// TestNewExecutionsDataSource is now in external test file - refactored to test behavior only.
 
-				assert.NotNil(t, ds)
-				assert.IsType(t, &ExecutionsDataSource{}, ds)
-				assert.Nil(t, ds.client)
+// TestNewExecutionsDataSourceWrapper is now in external test file - refactored to test behavior only.
 
-			case "multiple instances are independent":
-				ds1 := NewExecutionsDataSource()
-				ds2 := NewExecutionsDataSource()
+// TestExecutionsDataSource_Metadata is now in external test file - refactored to test behavior only.
 
-				assert.NotSame(t, ds1, ds2)
-				// Each instance is a different pointer, even if they have the same initial state
+// TestExecutionsDataSource_Schema is now in external test file - refactored to test behavior only.
 
-			case "error case - verify initialization":
-				ds := NewExecutionsDataSource()
-				assert.Nil(t, ds.client)
-			}
-		})
-	}
-}
-
-func TestNewExecutionsDataSourceWrapper(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "create new wrapped instance", wantErr: false},
-		{name: "wrapper returns datasource.DataSource interface", wantErr: false},
-		{name: "error case - verify wrapper type", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "create new wrapped instance":
-				ds := NewExecutionsDataSourceWrapper()
-
-				assert.NotNil(t, ds)
-				assert.IsType(t, &ExecutionsDataSource{}, ds)
-
-			case "wrapper returns datasource.DataSource interface":
-				ds := NewExecutionsDataSourceWrapper()
-
-				// ds is already of type datasource.DataSource, no assertion needed
-				assert.NotNil(t, ds)
-
-			case "error case - verify wrapper type":
-				ds := NewExecutionsDataSourceWrapper()
-				// Verify ds implements datasource.DataSource interface
-				assert.NotNil(t, ds)
-			}
-		})
-	}
-}
-
-func TestExecutionsDataSource_Metadata(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "set metadata without provider type", wantErr: false},
-		{name: "set metadata with provider type name", wantErr: false},
-		{name: "set metadata with different provider type", wantErr: false},
-		{name: "error case - metadata validation", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "set metadata without provider type":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.MetadataResponse{}
-
-				ds.Metadata(context.Background(), datasource.MetadataRequest{
-					ProviderTypeName: "n8n",
-				}, resp)
-
-				assert.Equal(t, "n8n_executions", resp.TypeName)
-
-			case "set metadata with provider type name":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.MetadataResponse{}
-				req := datasource.MetadataRequest{
-					ProviderTypeName: "n8n",
-				}
-
-				ds.Metadata(context.Background(), req, resp)
-
-				assert.Equal(t, "n8n_executions", resp.TypeName)
-
-			case "set metadata with different provider type":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.MetadataResponse{}
-				req := datasource.MetadataRequest{
-					ProviderTypeName: "custom_provider",
-				}
-
-				ds.Metadata(context.Background(), req, resp)
-
-				assert.Equal(t, "custom_provider_executions", resp.TypeName)
-
-			case "error case - metadata validation":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.MetadataResponse{}
-				ds.Metadata(context.Background(), datasource.MetadataRequest{
-					ProviderTypeName: "test",
-				}, resp)
-				assert.Equal(t, "test_executions", resp.TypeName)
-			}
-		})
-	}
-}
-
-func TestExecutionsDataSource_Schema(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "return schema", wantErr: false},
-		{name: "executions list has correct structure", wantErr: false},
-		{name: "schema attributes have descriptions", wantErr: false},
-		{name: "error case - schema validation", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "return schema":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.SchemaResponse{}
-
-				ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-
-				assert.NotNil(t, resp.Schema)
-				assert.Contains(t, resp.Schema.MarkdownDescription, "n8n workflow executions")
-
-				// Verify filter attributes
-				workflowAttr, exists := resp.Schema.Attributes["workflow_id"]
-				assert.True(t, exists)
-				assert.True(t, workflowAttr.IsOptional())
-
-				projectAttr, exists := resp.Schema.Attributes["project_id"]
-				assert.True(t, exists)
-				assert.True(t, projectAttr.IsOptional())
-
-				statusAttr, exists := resp.Schema.Attributes["status"]
-				assert.True(t, exists)
-				assert.True(t, statusAttr.IsOptional())
-
-				includeDataAttr, exists := resp.Schema.Attributes["include_data"]
-				assert.True(t, exists)
-				assert.True(t, includeDataAttr.IsOptional())
-
-				// Verify computed executions list
-				executionsAttr, exists := resp.Schema.Attributes["executions"]
-				assert.True(t, exists)
-				assert.True(t, executionsAttr.IsComputed())
-
-			case "executions list has correct structure":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.SchemaResponse{}
-
-				ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-
-				executionsAttr, exists := resp.Schema.Attributes["executions"]
-				assert.True(t, exists)
-				assert.True(t, executionsAttr.IsComputed())
-
-				// Verify that executions is a computed list attribute
-				// The actual nested structure verification would require access to the
-				// internal schema structure which varies by Terraform plugin framework version
-
-			case "schema attributes have descriptions":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.SchemaResponse{}
-
-				ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-
-				for name, attr := range resp.Schema.Attributes {
-					if name != "executions" { // Skip nested attribute
-						assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", name)
-					}
-				}
-
-			case "error case - schema validation":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.SchemaResponse{}
-				ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-				assert.NotNil(t, resp.Schema)
-			}
-		})
-	}
-}
-
-func TestExecutionsDataSource_Configure(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "configure with valid client", wantErr: false},
-		{name: "configure with nil provider data", wantErr: false},
-		{name: "configure with invalid provider data", wantErr: true},
-		{name: "configure with wrong type", wantErr: true},
-		{name: "configure multiple times", wantErr: false},
-		{name: "error case - configuration validation", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "configure with valid client":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.ConfigureResponse{}
-
-				mockClient := &client.N8nClient{}
-				req := datasource.ConfigureRequest{
-					ProviderData: mockClient,
-				}
-
-				ds.Configure(context.Background(), req, resp)
-
-				assert.NotNil(t, ds.client)
-				assert.Equal(t, mockClient, ds.client)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "configure with nil provider data":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.ConfigureResponse{}
-				req := datasource.ConfigureRequest{
-					ProviderData: nil,
-				}
-
-				ds.Configure(context.Background(), req, resp)
-
-				assert.Nil(t, ds.client)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "configure with invalid provider data":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.ConfigureResponse{}
-				req := datasource.ConfigureRequest{
-					ProviderData: "invalid-data",
-				}
-
-				ds.Configure(context.Background(), req, resp)
-
-				assert.Nil(t, ds.client)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Data Source Configure Type")
-
-			case "configure with wrong type":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.ConfigureResponse{}
-				req := datasource.ConfigureRequest{
-					ProviderData: struct{}{},
-				}
-
-				ds.Configure(context.Background(), req, resp)
-
-				assert.Nil(t, ds.client)
-				assert.True(t, resp.Diagnostics.HasError())
-
-			case "configure multiple times":
-				ds := NewExecutionsDataSource()
-
-				// First configuration
-				resp1 := &datasource.ConfigureResponse{}
-				client1 := &client.N8nClient{}
-				req1 := datasource.ConfigureRequest{
-					ProviderData: client1,
-				}
-				ds.Configure(context.Background(), req1, resp1)
-				assert.Equal(t, client1, ds.client)
-
-				// Second configuration
-				resp2 := &datasource.ConfigureResponse{}
-				client2 := &client.N8nClient{}
-				req2 := datasource.ConfigureRequest{
-					ProviderData: client2,
-				}
-				ds.Configure(context.Background(), req2, resp2)
-				assert.Equal(t, client2, ds.client)
-
-			case "error case - configuration validation":
-				ds := NewExecutionsDataSource()
-				resp := &datasource.ConfigureResponse{}
-				req := datasource.ConfigureRequest{ProviderData: nil}
-				ds.Configure(context.Background(), req, resp)
-				assert.False(t, resp.Diagnostics.HasError())
-			}
-		})
-	}
-}
+// TestExecutionsDataSource_Configure is now in external test file - refactored to test behavior only.
 
 func TestExecutionsDataSource_Interfaces(t *testing.T) {
 	t.Parallel()
@@ -489,34 +185,330 @@ func BenchmarkExecutionsDataSource_Configure(b *testing.B) {
 	}
 }
 
-func TestExecutionsDataSource_Read(t *testing.T) {
+// TestExecutionsDataSource_Read is now in external test file - refactored to test behavior only.
+
+func TestExecutionsDataSource_schemaAttributes(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
 		wantErr bool
 	}{
-		{name: "read method exists", wantErr: false},
-		{name: "error case - read method verification", wantErr: false},
+		{name: "schema attributes returned correctly", wantErr: false},
+		{name: "optional fields present", wantErr: false},
+		{name: "computed fields present", wantErr: false},
+		{name: "nested executions list present", wantErr: false},
+		{name: "error case - verify attribute count", wantErr: false},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			switch tt.name {
-			case "read method exists":
-				// This is a standalone test to verify the Read method signature exists
-				// The actual Read functionality is tested in other test cases with proper mocking
+			case "schema attributes returned correctly":
 				ds := &ExecutionsDataSource{}
+				attrs := ds.schemaAttributes()
 
-				// Verify the method can be referenced (using interface type to avoid staticcheck warning)
-				assert.NotNil(t, ds.Read)
+				assert.NotNil(t, attrs)
+				assert.Contains(t, attrs, "workflow_id")
+				assert.Contains(t, attrs, "project_id")
+				assert.Contains(t, attrs, "status")
+				assert.Contains(t, attrs, "include_data")
+				assert.Contains(t, attrs, "executions")
 
-				// This test satisfies the KTN-TEST-003 requirement for a standalone test function
-				// The actual behavior is tested in integration tests with mock HTTP servers
-
-			case "error case - read method verification":
+			case "optional fields present":
 				ds := &ExecutionsDataSource{}
-				assert.NotNil(t, ds.Read)
+				attrs := ds.schemaAttributes()
+
+				workflowIDAttr, ok := attrs["workflow_id"].(schema.StringAttribute)
+				assert.True(t, ok)
+				assert.True(t, workflowIDAttr.Optional)
+
+				projectIDAttr, ok := attrs["project_id"].(schema.StringAttribute)
+				assert.True(t, ok)
+				assert.True(t, projectIDAttr.Optional)
+
+			case "computed fields present":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.schemaAttributes()
+
+				executionsAttr, ok := attrs["executions"].(schema.ListNestedAttribute)
+				assert.True(t, ok)
+				assert.True(t, executionsAttr.Computed)
+
+			case "nested executions list present":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.schemaAttributes()
+
+				executionsAttr, ok := attrs["executions"].(schema.ListNestedAttribute)
+				assert.True(t, ok)
+				assert.NotNil(t, executionsAttr.NestedObject)
+
+			case "error case - verify attribute count":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.schemaAttributes()
+				assert.Len(t, attrs, 5)
+			}
+		})
+	}
+}
+
+func TestExecutionsDataSource_executionItemAttributes(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "execution item attributes returned correctly", wantErr: false},
+		{name: "all computed fields present", wantErr: false},
+		{name: "id field is computed", wantErr: false},
+		{name: "error case - verify all required fields", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "execution item attributes returned correctly":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.executionItemAttributes()
+
+				assert.NotNil(t, attrs)
+				assert.Contains(t, attrs, "id")
+				assert.Contains(t, attrs, "workflow_id")
+				assert.Contains(t, attrs, "finished")
+				assert.Contains(t, attrs, "mode")
+				assert.Contains(t, attrs, "started_at")
+				assert.Contains(t, attrs, "stopped_at")
+				assert.Contains(t, attrs, "status")
+
+			case "all computed fields present":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.executionItemAttributes()
+
+				for key, attr := range attrs {
+					switch v := attr.(type) {
+					case schema.StringAttribute:
+						assert.True(t, v.Computed, "Field %s should be computed", key)
+					case schema.BoolAttribute:
+						assert.True(t, v.Computed, "Field %s should be computed", key)
+					}
+				}
+
+			case "id field is computed":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.executionItemAttributes()
+
+				idAttr, ok := attrs["id"].(schema.StringAttribute)
+				assert.True(t, ok)
+				assert.True(t, idAttr.Computed)
+
+			case "error case - verify all required fields":
+				ds := &ExecutionsDataSource{}
+				attrs := ds.executionItemAttributes()
+				assert.Len(t, attrs, 7)
+			}
+		})
+	}
+}
+
+func TestExecutionsDataSource_buildExecutionsAPIRequest(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "build request with no filters", wantErr: false},
+		{name: "build request with workflow_id filter", wantErr: false},
+		{name: "build request with all filters", wantErr: false},
+		{name: "build request with null values", wantErr: false},
+		{name: "error case - verify request builder", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "build request with no filters":
+				ds := &ExecutionsDataSource{}
+				cfg := n8nsdk.NewConfiguration()
+				cfg.Servers = n8nsdk.ServerConfigurations{
+					{URL: "http://test.local", Description: "Test server"},
+				}
+				ds.client = &client.N8nClient{
+					APIClient: n8nsdk.NewAPIClient(cfg),
+				}
+
+				data := &models.DataSources{}
+				req := ds.buildExecutionsAPIRequest(context.Background(), data)
+
+				assert.NotNil(t, req)
+
+			case "build request with workflow_id filter":
+				ds := &ExecutionsDataSource{}
+				cfg := n8nsdk.NewConfiguration()
+				cfg.Servers = n8nsdk.ServerConfigurations{
+					{URL: "http://test.local", Description: "Test server"},
+				}
+				ds.client = &client.N8nClient{
+					APIClient: n8nsdk.NewAPIClient(cfg),
+				}
+
+				data := &models.DataSources{}
+				data.WorkflowID = types.StringValue("123")
+				req := ds.buildExecutionsAPIRequest(context.Background(), data)
+
+				assert.NotNil(t, req)
+
+			case "build request with all filters":
+				ds := &ExecutionsDataSource{}
+				cfg := n8nsdk.NewConfiguration()
+				cfg.Servers = n8nsdk.ServerConfigurations{
+					{URL: "http://test.local", Description: "Test server"},
+				}
+				ds.client = &client.N8nClient{
+					APIClient: n8nsdk.NewAPIClient(cfg),
+				}
+
+				data := &models.DataSources{}
+				data.WorkflowID = types.StringValue("123")
+				data.ProjectID = types.StringValue("456")
+				data.Status = types.StringValue("success")
+				data.IncludeData = types.BoolValue(true)
+				req := ds.buildExecutionsAPIRequest(context.Background(), data)
+
+				assert.NotNil(t, req)
+
+			case "build request with null values":
+				ds := &ExecutionsDataSource{}
+				cfg := n8nsdk.NewConfiguration()
+				cfg.Servers = n8nsdk.ServerConfigurations{
+					{URL: "http://test.local", Description: "Test server"},
+				}
+				ds.client = &client.N8nClient{
+					APIClient: n8nsdk.NewAPIClient(cfg),
+				}
+
+				data := &models.DataSources{}
+				data.WorkflowID = types.StringNull()
+				data.ProjectID = types.StringNull()
+				req := ds.buildExecutionsAPIRequest(context.Background(), data)
+
+				assert.NotNil(t, req)
+
+			case "error case - verify request builder":
+				ds := &ExecutionsDataSource{}
+				cfg := n8nsdk.NewConfiguration()
+				cfg.Servers = n8nsdk.ServerConfigurations{
+					{URL: "http://test.local", Description: "Test server"},
+				}
+				ds.client = &client.N8nClient{
+					APIClient: n8nsdk.NewAPIClient(cfg),
+				}
+
+				data := &models.DataSources{}
+				req := ds.buildExecutionsAPIRequest(context.Background(), data)
+				assert.NotNil(t, req)
+			}
+		})
+	}
+}
+
+func TestExecutionsDataSource_populateExecutionsList(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "populate with empty list", wantErr: false},
+		{name: "populate with single execution", wantErr: false},
+		{name: "populate with multiple executions", wantErr: false},
+		{name: "populate with nil data", wantErr: false},
+		{name: "error case - verify population", wantErr: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			switch tt.name {
+			case "populate with empty list":
+				ds := &ExecutionsDataSource{}
+				data := &models.DataSources{}
+				executionList := &n8nsdk.ExecutionList{
+					Data: []n8nsdk.Execution{},
+				}
+
+				ds.populateExecutionsList(data, executionList)
+
+				assert.NotNil(t, data.Executions)
+				assert.Len(t, data.Executions, 0)
+
+			case "populate with single execution":
+				ds := &ExecutionsDataSource{}
+				data := &models.DataSources{}
+
+				id := float32(123)
+				workflowID := float32(456)
+				status := "success"
+				executionList := &n8nsdk.ExecutionList{
+					Data: []n8nsdk.Execution{
+						{
+							Id:         &id,
+							WorkflowId: &workflowID,
+							Status:     &status,
+						},
+					},
+				}
+
+				ds.populateExecutionsList(data, executionList)
+
+				assert.NotNil(t, data.Executions)
+				assert.Len(t, data.Executions, 1)
+				assert.Equal(t, "123", data.Executions[0].ID.ValueString())
+				assert.Equal(t, "456", data.Executions[0].WorkflowID.ValueString())
+				assert.Equal(t, "success", data.Executions[0].Status.ValueString())
+
+			case "populate with multiple executions":
+				ds := &ExecutionsDataSource{}
+				data := &models.DataSources{}
+
+				id1 := float32(111)
+				id2 := float32(222)
+				id3 := float32(333)
+				executionList := &n8nsdk.ExecutionList{
+					Data: []n8nsdk.Execution{
+						{Id: &id1},
+						{Id: &id2},
+						{Id: &id3},
+					},
+				}
+
+				ds.populateExecutionsList(data, executionList)
+
+				assert.NotNil(t, data.Executions)
+				assert.Len(t, data.Executions, 3)
+				assert.Equal(t, "111", data.Executions[0].ID.ValueString())
+				assert.Equal(t, "222", data.Executions[1].ID.ValueString())
+				assert.Equal(t, "333", data.Executions[2].ID.ValueString())
+
+			case "populate with nil data":
+				ds := &ExecutionsDataSource{}
+				data := &models.DataSources{}
+				executionList := &n8nsdk.ExecutionList{}
+
+				ds.populateExecutionsList(data, executionList)
+
+				assert.NotNil(t, data.Executions)
+				assert.Len(t, data.Executions, 0)
+
+			case "error case - verify population":
+				ds := &ExecutionsDataSource{}
+				data := &models.DataSources{}
+				executionList := &n8nsdk.ExecutionList{
+					Data: []n8nsdk.Execution{},
+				}
+
+				ds.populateExecutionsList(data, executionList)
+				assert.NotNil(t, data.Executions)
 			}
 		})
 	}

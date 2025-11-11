@@ -20,9 +20,9 @@ import (
 //
 // Returns:
 //   - []n8nsdk.Node: Parsed workflow nodes
-//   - map[string]interface{}: Parsed workflow connections
+//   - map[string]any: Parsed workflow connections
 //   - n8nsdk.WorkflowSettings: Parsed workflow settings
-func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk.Node, map[string]interface{}, n8nsdk.WorkflowSettings) {
+func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk.Node, map[string]any, n8nsdk.WorkflowSettings) {
 	// Parse nodes
 	var nodes []n8nsdk.Node
 	// Check for non-nil value.
@@ -31,7 +31,7 @@ func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk
 		if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
 			diags.AddError("Invalid nodes JSON", fmt.Sprintf("Could not parse nodes_json: %s", err.Error()))
 			// Return failure status.
-			return []n8nsdk.Node{}, map[string]interface{}{}, n8nsdk.WorkflowSettings{}
+			return []n8nsdk.Node{}, map[string]any{}, n8nsdk.WorkflowSettings{}
 		}
 	} else {
 		// Return empty slice.
@@ -39,18 +39,18 @@ func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk
 	}
 
 	// Parse connections
-	var connections map[string]interface{}
+	var connections map[string]any
 	// Check for non-nil value.
 	if !plan.ConnectionsJSON.IsNull() && !plan.ConnectionsJSON.IsUnknown() {
 		// Check for error.
 		if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
 			diags.AddError("Invalid connections JSON", fmt.Sprintf("Could not parse connections_json: %s", err.Error()))
 			// Return failure status.
-			return []n8nsdk.Node{}, map[string]interface{}{}, n8nsdk.WorkflowSettings{}
+			return []n8nsdk.Node{}, map[string]any{}, n8nsdk.WorkflowSettings{}
 		}
 	} else {
 		// Return empty slice.
-		connections = map[string]interface{}{}
+		connections = map[string]any{}
 	}
 
 	// Parse settings
@@ -61,7 +61,7 @@ func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk
 		if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
 			diags.AddError("Invalid settings JSON", fmt.Sprintf("Could not parse settings_json: %s", err.Error()))
 			// Return failure status.
-			return []n8nsdk.Node{}, map[string]interface{}{}, n8nsdk.WorkflowSettings{}
+			return []n8nsdk.Node{}, map[string]any{}, n8nsdk.WorkflowSettings{}
 		}
 	}
 

@@ -18,7 +18,6 @@ go_test(
     srcs = [
         "root_external_test.go",
         "root_internal_test.go",
-        "root_test.go",
     ],
     embed = [":cmd"],
     deps = [

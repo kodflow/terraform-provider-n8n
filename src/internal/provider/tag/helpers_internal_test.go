@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMapTagToDataSourceModel(t *testing.T) {
+func TestmapTagToDataSourceModel(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -235,7 +235,7 @@ func TestMapTagToDataSourceModel(t *testing.T) {
 	}
 }
 
-func TestFindTagByName(t *testing.T) {
+func TestfindTagByName(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
