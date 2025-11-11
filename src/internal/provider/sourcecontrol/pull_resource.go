@@ -340,6 +340,8 @@ func (r *SourceControlPullResource) Update(ctx context.Context, req resource.Upd
 //   - resp: *resource.DeleteResponse
 func (r *SourceControlPullResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Pull operations cannot be undone, so we just remove from state
+	// No-op: intentionally empty
+	_ = ctx
 }
 
 // ImportState imports the resource into Terraform state.

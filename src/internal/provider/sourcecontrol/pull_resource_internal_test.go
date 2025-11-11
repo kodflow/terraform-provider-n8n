@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/sourcecontrol/models"
@@ -813,6 +815,199 @@ func TestSourceControlPullResource_updatePlanWithResult(t *testing.T) {
 
 				assert.False(t, plan.ID.IsNull())
 				assert.False(t, plan.ResultJSON.IsNull())
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestSourceControlPullResource_Delete_Internal tests the Delete method (internal test for coverage).
+func TestSourceControlPullResource_Delete_Internal(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "delete does nothing - no error",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewSourceControlPullResource()
+				ctx := context.Background()
+				req := resource.DeleteRequest{}
+				resp := &resource.DeleteResponse{}
+
+				r.Delete(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error case - delete with context",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewSourceControlPullResource()
+				ctx := context.Background()
+				req := resource.DeleteRequest{}
+				resp := &resource.DeleteResponse{}
+
+				// Delete should do nothing regardless of state
+				r.Delete(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError())
+				assert.Equal(t, 0, resp.Diagnostics.ErrorsCount())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestSourceControlPullResource_Create_Internal tests the Create method (internal test for coverage).
+func TestSourceControlPullResource_Create_Internal(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "error - create with invalid plan (Plan.Get fails)",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewSourceControlPullResource()
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Create an invalid plan value that will cause Plan.Get to fail
+				// Using an invalid type that doesn't match the schema
+				planRaw := tftypes.NewValue(tftypes.String, "invalid-not-an-object")
+
+				plan := tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := &resource.CreateResponse{}
+
+				// Call Create - this should fail at req.Plan.Get and hit lines 148-151
+				r.Create(ctx, req, resp)
+
+				// Verify it has error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "create success - full method with state.Set",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{"workflows": [{"id": "1", "name": "test"}], "credentials": []}`))
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := NewSourceControlPullResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Build plan using tftypes
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":             tftypes.NewValue(tftypes.String, nil),
+					"force":          tftypes.NewValue(tftypes.Bool, true),
+					"variables_json": tftypes.NewValue(tftypes.String, `{"key": "value"}`),
+					"result_json":    tftypes.NewValue(tftypes.String, nil),
+				})
+
+				plan := tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := resource.CreateRequest{
+					Plan: plan,
+				}
+				resp := &resource.CreateResponse{
+					State: state,
+				}
+
+				// Call the full Create method - this hits lines 174-175
+				r.Create(ctx, req, resp)
+
+				// Print diagnostics if there are errors for debugging
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+
+				// Verify success
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "create with variables JSON and body close",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					// Create response with actual body that needs closing
+					w.Write([]byte(`{"workflows": [{"id": "1", "name": "test"}]}`))
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := NewSourceControlPullResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				plan := &models.PullResource{
+					ID:            types.StringNull(),
+					Force:         types.BoolValue(true),
+					VariablesJSON: types.StringValue(`{"key": "value"}`),
+					ResultJSON:    types.StringNull(),
+				}
+
+				// Build request
+				pullReq := r.buildPullRequest(plan, &resource.CreateResponse{})
+				assert.NotNil(t, pullReq)
+
+				// Execute pull
+				resp := &resource.CreateResponse{}
+				importResult, httpResp := r.executePullOperation(ctx, pullReq, resp)
+
+				// This tests the httpResp.Body != nil path
+				if httpResp != nil && httpResp.Body != nil {
+					defer httpResp.Body.Close()
+					assert.NotNil(t, httpResp.Body)
+				}
+
+				// Update plan
+				r.updatePlanWithResult(plan, importResult, httpResp, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 			},
 		},

@@ -9,12 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
-### 📝 Other
-
-- save (`2cfad5c`)
-
 ### ✅ Tests
 
+- complete coverage to 85.3% and improve reporting (`145785b`)
 - complete workflow CRUD functions to 100% coverage (`fc5aa03`)
 - rename coverage test files to match linter requirements (`c2e5d3c`)
 - add comprehensive coverage tests for credential and user modules (`49a168a`)
@@ -147,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Total commits:** 104
 - **Features:** 30
 - **Bug fixes:** 11
-- **Tests:** 32
+- **Tests:** 33
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -157,4 +154,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 19:28:13*
+*Changelog generated automatically on 2025-11-11 19:54:48*

@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **68.7%** |
+| **Total Coverage** | **68.9%** |
 | **Threshold** | **70.0%** |
 | **Status** | ❌ FAILED |
 
@@ -29,10 +29,10 @@ Rapport de couverture généré automatiquement.
 | 🔴 | `github.com/kodflow/n8n/src/internal/provider/project` | 55.9% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared/client` | 100.0% |
-| 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 90.8% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |
 | 🔴 | `github.com/kodflow/n8n/src/internal/provider/tag` | 42.1% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 73.5% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 70.6% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 70.3% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 85.3% |
 
 ---
@@ -87,8 +87,8 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | Function | provider | sourcecontrol |
 |----------|:--------:|:--------:|
 | `Configure` | 🟢 100.0% | 🟢 100.0% |
-| `Create` | 🟡 78.6% | 🟡 78.6% |
-| `Delete` | 🔴 0.0% | 🔴 0.0% |
+| `Create` | 🟢 100.0% | 🟢 100.0% |
+| `Delete` | 🟢 100.0% | 🟢 100.0% |
 | `ImportState` | 🟢 100.0% | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% | 🟢 100.0% |
 | `Read` | 🟢 100.0% | 🟢 100.0% |
