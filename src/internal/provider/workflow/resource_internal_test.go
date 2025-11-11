@@ -510,6 +510,134 @@ func TestWorkflowResource_Delete_Basic(t *testing.T) {
 	})
 }
 
+// TestWorkflowResource_Delete_Internal tests the Delete method with full execution.
+func TestWorkflowResource_Delete_Internal(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "delete with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNoContent)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := NewWorkflowResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Build state using tftypes with all required attributes
+				rawState := map[string]tftypes.Value{
+					"id":               tftypes.NewValue(tftypes.String, "test-workflow-id"),
+					"name":             tftypes.NewValue(tftypes.String, "test"),
+					"active":           tftypes.NewValue(tftypes.Bool, false),
+					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
+					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
+					"settings_json":    tftypes.NewValue(tftypes.String, nil),
+					"created_at":       tftypes.NewValue(tftypes.String, nil),
+					"updated_at":       tftypes.NewValue(tftypes.String, nil),
+					"version_id":       tftypes.NewValue(tftypes.String, nil),
+					"is_archived":      tftypes.NewValue(tftypes.Bool, nil),
+					"trigger_count":    tftypes.NewValue(tftypes.Number, nil),
+					"meta":             tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+					"pin_data":         tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+				}
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), rawState)
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := &resource.DeleteResponse{}
+
+				// Call Delete - this hits lines 450-464
+				r.Delete(ctx, req, resp)
+
+				// Verify success
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - delete with API error",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := NewWorkflowResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Build state with all required attributes
+				rawState := map[string]tftypes.Value{
+					"id":               tftypes.NewValue(tftypes.String, "test-workflow-id"),
+					"name":             tftypes.NewValue(tftypes.String, "test"),
+					"active":           tftypes.NewValue(tftypes.Bool, false),
+					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
+					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
+					"settings_json":    tftypes.NewValue(tftypes.String, nil),
+					"created_at":       tftypes.NewValue(tftypes.String, nil),
+					"updated_at":       tftypes.NewValue(tftypes.String, nil),
+					"version_id":       tftypes.NewValue(tftypes.String, nil),
+					"is_archived":      tftypes.NewValue(tftypes.Bool, nil),
+					"trigger_count":    tftypes.NewValue(tftypes.Number, nil),
+					"meta":             tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+					"pin_data":         tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+				}
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), rawState)
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := &resource.DeleteResponse{}
+
+				// Call Delete - should handle error
+				r.Delete(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
 // TestWorkflowResource_CRUD is a comprehensive suite that validates CRUD operation logic.
 func TestWorkflowResource_CRUD(t *testing.T) {
 	tests := []struct {
