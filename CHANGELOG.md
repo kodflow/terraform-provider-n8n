@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- improve Update method test coverage to 100% for variable (`0c9a124`)
 - add Update method coverage tests (`d9c6c52`)
 - improve CRUD method coverage (`429898d`)
 - achieve 100% coverage for Delete method (`249516e`)
@@ -146,10 +147,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 109
+- **Total commits:** 110
 - **Features:** 30
 - **Bug fixes:** 11
-- **Tests:** 37
+- **Tests:** 38
 - **Refactoring:** 16
 - **Test coverage:** N/A
 
@@ -159,4 +160,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 21:55:28*
+*Changelog generated automatically on 2025-11-11 21:56:20*
