@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/workflow"
 	"github.com/stretchr/testify/assert"
@@ -417,34 +419,48 @@ func TestWorkflowResource_Delete(t *testing.T) {
 
 // TestWorkflowResource_ImportState tests the ImportState method.
 func TestWorkflowResource_ImportState(t *testing.T) {
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "creates non-nil resource",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := workflow.NewWorkflowResource()
-				assert.NotNil(t, r)
-			},
-		},
-		{
-			name: "error case - resource can be created multiple times",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				for i := 0; i < 10; i++ {
-					r := workflow.NewWorkflowResource()
-					assert.NotNil(t, r)
-				}
-			},
-		},
+	t.Parallel()
+
+	r := &workflow.WorkflowResource{}
+	ctx := context.Background()
+
+	// Create schema for state
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+	// Create an empty state with the schema
+	state := tfsdk.State{
+		Schema: schemaResp.Schema,
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			tt.testFunc(t)
-		})
+	// Initialize the raw value with required attributes
+	state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+		"id":               tftypes.NewValue(tftypes.String, nil),
+		"name":             tftypes.NewValue(tftypes.String, nil),
+		"active":           tftypes.NewValue(tftypes.Bool, nil),
+		"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+		"nodes_json":       tftypes.NewValue(tftypes.String, nil),
+		"connections_json": tftypes.NewValue(tftypes.String, nil),
+		"settings_json":    tftypes.NewValue(tftypes.String, nil),
+		"created_at":       tftypes.NewValue(tftypes.String, nil),
+		"updated_at":       tftypes.NewValue(tftypes.String, nil),
+		"version_id":       tftypes.NewValue(tftypes.String, nil),
+		"is_archived":      tftypes.NewValue(tftypes.Bool, nil),
+		"trigger_count":    tftypes.NewValue(tftypes.Number, nil),
+		"meta":             tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+		"pin_data":         tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+	})
+
+	req := resource.ImportStateRequest{
+		ID: "workflow-123",
 	}
+	resp := &resource.ImportStateResponse{
+		State: state,
+	}
+
+	r.ImportState(ctx, req, resp)
+
+	// Check that import succeeded
+	assert.NotNil(t, resp)
+	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
 }

@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **77.8%** |
+| **Total Coverage** | **82.1%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -24,16 +24,16 @@ Rapport de couverture généré automatiquement.
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 100.0% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 71.4% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 78.2% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/execution` | 79.2% |
-| 🔴 | `github.com/kodflow/n8n/src/internal/provider/project` | 67.8% |
+| 🔴 | `github.com/kodflow/n8n/src/internal/provider/project` | 69.5% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared/client` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/tag` | 79.9% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 73.5% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 78.5% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 87.4% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 84.2% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/variable` | 90.2% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 87.7% |
 
 ---
 
@@ -100,11 +100,11 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | Function | credential | project | provider | tag | user | variable | workflow |
 |----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
 | `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Create` | 🔴 0.0% | 🟡 81.8% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% |
-| `Delete` | 🟡 81.8% | 🟡 80.0% | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🟡 80.0% | 🟢 100.0% |
-| `ImportState` | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% | 🔴 0.0% |
+| `Create` | 🟠 50.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Delete` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `ImportState` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Read` | 🟢 100.0% | 🟡 88.9% | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% |
+| `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Update` | 🟠 36.7% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 

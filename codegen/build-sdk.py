@@ -7,6 +7,7 @@ Simple orchestration script for SDK generation
 import subprocess
 import sys
 import shutil
+import time
 from pathlib import Path
 
 def run(cmd, cwd=None):
@@ -37,6 +38,8 @@ def main():
 
     source_path = API_DIR / "openapi-source"
     if source_path.exists():
+        # Force remove with chmod to handle permission issues
+        run(f"chmod -R u+w {source_path}")
         shutil.rmtree(source_path)
     shutil.copytree(f"{TEMP_DIR}/packages/cli/src/public-api", source_path)
     shutil.rmtree(TEMP_DIR)

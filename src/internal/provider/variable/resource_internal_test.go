@@ -537,6 +537,211 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 	}
 }
 
+// TestVariableResource_Create_CRUD tests the Create method with full coverage.
+func TestVariableResource_Create_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "success - create variable",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+
+					// Step 1: POST /variables - create variable (returns 201)
+					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusCreated)
+						return
+					}
+
+					// Step 2: GET /variables - list to verify creation
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[{"id":"var-123","key":"MY_VAR","value":"test-value","type":"string"}]}`))
+						return
+					}
+
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
+		{
+			name: "error - API create fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API create fails")
+			},
+		},
+		{
+			name: "error - variable not found after create",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusCreated)
+						return
+					}
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[]}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when variable not found after create")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
 // TestVariableResource_Delete_CRUD tests the full Delete method execution.
 func TestVariableResource_Delete_CRUD(t *testing.T) {
 	tests := []struct {
@@ -609,6 +814,53 @@ func TestVariableResource_Delete_CRUD(t *testing.T) {
 
 				r.Delete(ctx, req, resp)
 				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - API delete fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/variables/var-123" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "test-key"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.DeleteRequest{
+					State: state,
+				}
+				resp := &resource.DeleteResponse{}
+
+				r.Delete(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API delete fails")
 			},
 		},
 	}
@@ -916,4 +1168,195 @@ func TestVariableResource_ImportState_CRUD(t *testing.T) {
 		r.ImportState(ctx, req, resp)
 		assert.False(t, resp.Diagnostics.HasError())
 	})
+}
+
+// TestVariableResource_Read_CRUD tests the Read method with comprehensive coverage.
+func TestVariableResource_Read_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "success - read variable",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[{"id":"var-123","key":"MY_VAR","value":"test-value","type":"string"}]}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "OLD_KEY"),
+					"value":      tftypes.NewValue(tftypes.String, "old-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors during read")
+			},
+		},
+		{
+			name: "error - invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := NewVariableResource()
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{}
+
+				r.Read(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+		{
+			name: "error - API read fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{}
+
+				r.Read(ctx, req, resp)
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API read fails")
+			},
+		},
+		{
+			name: "success - variable not found (removed from state)",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[]}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := NewVariableResource()
+				r.Configure(context.Background(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "test-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors when variable not found")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
 }

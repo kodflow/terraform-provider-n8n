@@ -3,6 +3,7 @@ package credential
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -181,15 +182,8 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	credRequest := n8nsdk.Credential{
-		Name: plan.Name.ValueString(),
-		Type: plan.Type.ValueString(),
-		Data: credData,
-	}
-
-	createResp, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
-		Credential(credRequest).
-		Execute()
+	// Create credential via API
+	createResp, httpResp, err := r.executeCreate(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData)
 	// Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
@@ -205,6 +199,45 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Map response to plan
+	r.mapCreateResponseToPlan(plan, createResp)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeCreate executes the API call to create a credential.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - name: Credential name
+//   - credType: Credential type
+//   - data: Credential data
+//
+// Returns:
+//   - *n8nsdk.CreateCredentialResponse: The created credential
+//   - *http.Response: The HTTP response
+//   - error: Error if any
+func (r *CredentialResource) executeCreate(ctx context.Context, name, credType string, data map[string]any) (*n8nsdk.CreateCredentialResponse, *http.Response, error) {
+	credRequest := n8nsdk.Credential{
+		Name: name,
+		Type: credType,
+		Data: data,
+	}
+
+	// Execute API call and return result.
+	return r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
+		Credential(credRequest).
+		Execute()
+}
+
+// mapCreateResponseToPlan maps the API response to the Terraform plan.
+// This helper function is separated for testability.
+//
+// Params:
+//   - plan: The Terraform plan to update
+//   - createResp: The API response
+func (r *CredentialResource) mapCreateResponseToPlan(plan *models.Resource, createResp *n8nsdk.CreateCredentialResponse) {
 	plan.ID = types.StringValue(createResp.Id)
 	plan.Name = types.StringValue(createResp.Name)
 	plan.Type = types.StringValue(createResp.Type)
@@ -215,8 +248,6 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	// Map timestamps
 	plan.CreatedAt = types.StringValue(createResp.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	plan.UpdatedAt = types.StringValue(createResp.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Read refreshes the Terraform state with the latest data.

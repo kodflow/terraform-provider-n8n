@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/user"
 	"github.com/stretchr/testify/assert"
@@ -158,11 +160,40 @@ func TestUserResource_Delete(t *testing.T) {
 func TestUserResource_ImportState(t *testing.T) {
 	t.Parallel()
 
-	// Note: Cannot test ImportState() with empty request as it would panic
-	// due to uninitialized Plan/State/Config. In production, terraform-plugin-framework
-	// always provides properly initialized structures.
-	// This test just verifies that NewUserResource doesn't panic.
-	assert.NotPanics(t, func() {
-		_ = user.NewUserResource()
-	}, "NewUserResource should not panic")
+	r := &user.UserResource{}
+	ctx := context.Background()
+
+	// Create schema for state
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+	// Create an empty state with the schema
+	state := tfsdk.State{
+		Schema: schemaResp.Schema,
+	}
+
+	// Initialize the raw value with required attributes
+	state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+		"id":         tftypes.NewValue(tftypes.String, nil),
+		"email":      tftypes.NewValue(tftypes.String, nil),
+		"first_name": tftypes.NewValue(tftypes.String, nil),
+		"last_name":  tftypes.NewValue(tftypes.String, nil),
+		"role":       tftypes.NewValue(tftypes.String, nil),
+		"is_pending": tftypes.NewValue(tftypes.Bool, nil),
+		"created_at": tftypes.NewValue(tftypes.String, nil),
+		"updated_at": tftypes.NewValue(tftypes.String, nil),
+	})
+
+	req := resource.ImportStateRequest{
+		ID: "user-123",
+	}
+	resp := &resource.ImportStateResponse{
+		State: state,
+	}
+
+	r.ImportState(ctx, req, resp)
+
+	// Check that import succeeded
+	assert.NotNil(t, resp)
+	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
 }

@@ -1282,3 +1282,271 @@ func TestUserResource_Update_FullCoverage(t *testing.T) {
 		})
 	}
 }
+
+// TestUserResource_Delete_CRUD tests the Delete method with comprehensive coverage.
+func TestUserResource_Delete_CRUD(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name: "success - delete user",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/users/user-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+
+				state := &models.Resource{
+					ID:    types.StringValue("user-123"),
+					Email: types.StringValue("test@example.com"),
+					Role:  types.StringValue("global:member"),
+				}
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+				resp := resource.DeleteResponse{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+
+				ctx := context.Background()
+				req.State.Set(ctx, state)
+
+				r.Delete(ctx, req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors during delete")
+			},
+		},
+		{
+			name: "error - invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Errorf("Should not make any API calls with invalid state")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{Raw: tftypes.NewValue(tftypes.String, "invalid"), Schema: createTestSchema(t)},
+				}
+				resp := resource.DeleteResponse{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+
+				ctx := context.Background()
+				r.Delete(ctx, req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+		{
+			name: "error - API delete fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/users/user-123" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+
+				state := &models.Resource{
+					ID:    types.StringValue("user-123"),
+					Email: types.StringValue("test@example.com"),
+					Role:  types.StringValue("global:member"),
+				}
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+				resp := resource.DeleteResponse{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+
+				ctx := context.Background()
+				req.State.Set(ctx, state)
+
+				r.Delete(ctx, req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API delete fails")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			tt.testFunc(t)
+		})
+	}
+}
+
+// TestUserResource_Read_CRUD tests the Read method with comprehensive coverage.
+func TestUserResource_Read_CRUD(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name: "success - read user",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
+						user := map[string]interface{}{
+							"id":        "user-123",
+							"email":     "test@example.com",
+							"role":      "global:member",
+							"isPending": false,
+							"createdAt": "2024-01-01T00:00:00Z",
+							"updatedAt": "2024-01-01T00:00:00Z",
+						}
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(user)
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+
+				state := &models.Resource{
+					ID:    types.StringValue("user-123"),
+					Email: types.StringValue("old@example.com"),
+					Role:  types.StringValue("global:admin"),
+				}
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+				resp := resource.ReadResponse{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+
+				ctx := context.Background()
+				req.State.Set(ctx, state)
+
+				r.Read(ctx, req, &resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors during read")
+
+				var readState models.Resource
+				resp.State.Get(ctx, &readState)
+				assert.Equal(t, "user-123", readState.ID.ValueString())
+				assert.Equal(t, "test@example.com", readState.Email.ValueString())
+			},
+		},
+		{
+			name: "error - invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Errorf("Should not make any API calls with invalid state")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{Raw: tftypes.NewValue(tftypes.String, "invalid"), Schema: createTestSchema(t)},
+				}
+				resp := resource.ReadResponse{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+
+				ctx := context.Background()
+				r.Read(ctx, req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+		{
+			name: "error - API read fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &UserResource{client: n8nClient}
+
+				state := &models.Resource{
+					ID:    types.StringValue("user-123"),
+					Email: types.StringValue("test@example.com"),
+					Role:  types.StringValue("global:member"),
+				}
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+				resp := resource.ReadResponse{
+					State: tfsdk.State{Schema: createTestSchema(t)},
+				}
+
+				ctx := context.Background()
+				req.State.Set(ctx, state)
+
+				r.Read(ctx, req, &resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API read fails")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			tt.testFunc(t)
+		})
+	}
+}

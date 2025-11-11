@@ -1037,6 +1037,105 @@ func TestProjectResource_Create_CRUD(t *testing.T) {
 				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
 			},
 		},
+		{
+			name: "error - API create fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/projects" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API create fails")
+			},
+		},
+		{
+			name: "error - project not found after create",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/projects" {
+						w.WriteHeader(http.StatusCreated)
+						return
+					}
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[]}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when project not found after create")
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1132,6 +1231,102 @@ func TestProjectResource_Read_CRUD(t *testing.T) {
 				r.Read(ctx, req, resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+		{
+			name: "error - API read fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API read fails")
+			},
+		},
+		{
+			name: "success - project not found (removed from state)",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[]}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors when project not found")
 			},
 		},
 	}
@@ -1448,6 +1643,53 @@ func TestProjectResource_Delete_CRUD(t *testing.T) {
 				r.Delete(ctx, req, resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+		{
+			name: "error - API delete fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/projects/proj-123" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.DeleteResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Delete(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API delete fails")
 			},
 		},
 	}
