@@ -82,6 +82,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- correct test function names for private functions (`e98f32e`)
 - correct workflow test mocks to match SDK requirements (`33a6035`)
 - remove duplicate test definition in src/BUILD.bazel (`314f1b3`)
 - enhance commit-msg hook to block AI attribution (`b99ff30`)
@@ -134,9 +135,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 97
+- **Total commits:** 98
 - **Features:** 29
-- **Bug fixes:** 10
+- **Bug fixes:** 11
 - **Tests:** 28
 - **Refactoring:** 15
 - **Test coverage:** N/A
@@ -147,4 +148,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 11:29:33*
+*Changelog generated automatically on 2025-11-11 14:06:27*

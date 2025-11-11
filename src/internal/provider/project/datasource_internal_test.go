@@ -3,114 +3,31 @@ package project
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
-// TestProjectsDataSource_schemaAttributes tests the schemaAttributes method.
-func TestProjectsDataSource_schemaAttributes(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{
-			name:    "returns valid schema attributes",
-			wantErr: false,
-		},
-		{
-			name:    "error case - validation checks",
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "returns valid schema attributes":
-				ds := &ProjectsDataSource{}
-				attrs := ds.schemaAttributes()
-				assert.NotNil(t, attrs)
-				assert.Contains(t, attrs, "projects")
-				assert.NotNil(t, attrs["projects"])
-
-			case "error case - validation checks":
-				ds := &ProjectsDataSource{}
-				attrs := ds.schemaAttributes()
-				assert.NotNil(t, attrs)
-				assert.NotEmpty(t, attrs)
-			}
-		})
-	}
-}
-
-// TestProjectsDataSource_projectAttributes tests the projectAttributes method.
-func TestProjectsDataSource_projectAttributes(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{
-			name:    "returns valid project attributes",
-			wantErr: false,
-		},
-		{
-			name:    "error case - validation checks",
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "returns valid project attributes":
-				ds := &ProjectsDataSource{}
-				attrs := ds.projectAttributes()
-				assert.NotNil(t, attrs)
-				assert.Contains(t, attrs, "id")
-				assert.Contains(t, attrs, "name")
-				assert.NotNil(t, attrs["id"])
-				assert.NotNil(t, attrs["name"])
-
-			case "error case - validation checks":
-				ds := &ProjectsDataSource{}
-				attrs := ds.projectAttributes()
-				assert.NotNil(t, attrs)
-				assert.NotEmpty(t, attrs)
-			}
-		})
-	}
-}
-
-// createTestDataSourcesSchema creates a test schema for projects datasource.
-func createTestDataSourcesSchema(t *testing.T) datasource.SchemaResponse {
+// createTestDataSourceSchema creates a test schema for project datasource.
+func createTestDataSourceSchema(t *testing.T) datasource.SchemaResponse {
 	t.Helper()
-	d := &ProjectsDataSource{}
+	d := &ProjectDataSource{}
 	req := datasource.SchemaRequest{}
 	resp := &datasource.SchemaResponse{}
 	d.Schema(context.Background(), req, resp)
 	return *resp
 }
 
-// setupTestDataSourcesClient creates a test N8nClient with httptest server.
-func setupTestDataSourcesClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+// setupTestDataSourceClient creates a test N8nClient with httptest server.
+func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
 	t.Helper()
 	server := httptest.NewServer(handler)
 
@@ -132,8 +49,8 @@ func setupTestDataSourcesClient(t *testing.T, handler http.HandlerFunc) (*client
 	return n8nClient, server
 }
 
-// TestProjectsDataSource_Read tests the Read method.
-func TestProjectsDataSource_Read(t *testing.T) {
+// TestProjectDataSource_Read tests the Read method.
+func TestProjectDataSource_Read(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
@@ -141,34 +58,28 @@ func TestProjectsDataSource_Read(t *testing.T) {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
+		idValue     interface{}
+		nameValue   interface{}
 		wantErr     bool
 		errContains string
 	}{
 		{
-			name: "successful read with multiple projects",
+			name: "successful read by id",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					projectType1 := "team"
-					projectType2 := "personal"
+					projectType := "team"
 					icon := "icon-test"
 					description := "test description"
 					projects := map[string]interface{}{
 						"data": []map[string]interface{}{
 							{
 								"id":          "proj-123",
-								"name":        "Test Project 1",
-								"type":        projectType1,
+								"name":        "Test Project",
+								"type":        projectType,
 								"createdAt":   now.Format(time.RFC3339),
 								"updatedAt":   now.Format(time.RFC3339),
 								"icon":        icon,
 								"description": description,
-							},
-							{
-								"id":        "proj-456",
-								"name":      "Test Project 2",
-								"type":      projectType2,
-								"createdAt": now.Format(time.RFC3339),
-								"updatedAt": now.Format(time.RFC3339),
 							},
 						},
 					}
@@ -178,10 +89,60 @@ func TestProjectsDataSource_Read(t *testing.T) {
 				}
 				w.WriteHeader(http.StatusNotFound)
 			}),
-			wantErr: false,
+			idValue:   "proj-123",
+			nameValue: nil,
+			wantErr:   false,
 		},
 		{
-			name: "successful read with empty list",
+			name: "successful read by name",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+					projectType := "team"
+					projects := map[string]interface{}{
+						"data": []map[string]interface{}{
+							{
+								"id":   "proj-123",
+								"name": "Test Project",
+								"type": projectType,
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(projects)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			idValue:   nil,
+			nameValue: "Test Project",
+			wantErr:   false,
+		},
+		{
+			name: "missing required attribute",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			idValue:     nil,
+			nameValue:   nil,
+			wantErr:     true,
+			errContains: "Missing Required Attribute",
+		},
+		{
+			name: "api error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			idValue:     "proj-123",
+			nameValue:   nil,
+			wantErr:     true,
+			errContains: "Error listing projects",
+		},
+		{
+			name: "project not found",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
 					projects := map[string]interface{}{
@@ -193,34 +154,10 @@ func TestProjectsDataSource_Read(t *testing.T) {
 				}
 				w.WriteHeader(http.StatusNotFound)
 			}),
-			wantErr: false,
-		},
-		{
-			name: "api error",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			}),
+			idValue:     "proj-123",
+			nameValue:   nil,
 			wantErr:     true,
-			errContains: "Error listing projects",
-		},
-		{
-			name: "successful read with nil data",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
-					projects := map[string]interface{}{
-						"data": nil,
-					}
-					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(projects)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			}),
-			wantErr: false,
+			errContains: "Project Not Found",
 		},
 	}
 
@@ -229,37 +166,29 @@ func TestProjectsDataSource_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			n8nClient, server := setupTestDataSourcesClient(t, tt.handler)
+			n8nClient, server := setupTestDataSourceClient(t, tt.handler)
 			defer server.Close()
 
-			d := &ProjectsDataSource{client: n8nClient}
+			d := &ProjectDataSource{client: n8nClient}
 
-			schemaResp := createTestDataSourcesSchema(t)
-
-			// Create a simplified state structure for projects list
-			projectType := tftypes.Object{
-				AttributeTypes: map[string]tftypes.Type{
-					"id":          tftypes.String,
-					"name":        tftypes.String,
-					"type":        tftypes.String,
-					"created_at":  tftypes.String,
-					"updated_at":  tftypes.String,
-					"icon":        tftypes.String,
-					"description": tftypes.String,
-				},
-			}
+			schemaResp := createTestDataSourceSchema(t)
 
 			rawConfig := map[string]tftypes.Value{
-				"projects": tftypes.NewValue(tftypes.List{ElementType: projectType}, nil),
+				"id":          tftypes.NewValue(tftypes.String, tt.idValue),
+				"name":        tftypes.NewValue(tftypes.String, tt.nameValue),
+				"type":        tftypes.NewValue(tftypes.String, nil),
+				"created_at":  tftypes.NewValue(tftypes.String, nil),
+				"updated_at":  tftypes.NewValue(tftypes.String, nil),
+				"icon":        tftypes.NewValue(tftypes.String, nil),
+				"description": tftypes.NewValue(tftypes.String, nil),
 			}
-
 			config := tfsdk.Config{
-				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"projects": tftypes.List{ElementType: projectType}}}, rawConfig),
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String, "icon": tftypes.String, "description": tftypes.String}}, rawConfig),
 				Schema: schemaResp.Schema,
 			}
 
 			state := tfsdk.State{
-				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"projects": tftypes.List{ElementType: projectType}}}, nil),
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "name": tftypes.String, "type": tftypes.String, "created_at": tftypes.String, "updated_at": tftypes.String, "icon": tftypes.String, "description": tftypes.String}}, nil),
 				Schema: schemaResp.Schema,
 			}
 
@@ -291,8 +220,8 @@ func TestProjectsDataSource_Read(t *testing.T) {
 	}
 }
 
-// TestProjectsDataSource_Configure tests the Configure method.
-func TestProjectsDataSource_Configure(t *testing.T) {
+// TestProjectDataSource_Configure tests the Configure method.
+func TestProjectDataSource_Configure(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -324,7 +253,7 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			d := &ProjectsDataSource{}
+			d := &ProjectDataSource{}
 
 			req := datasource.ConfigureRequest{
 				ProviderData: tt.providerData,

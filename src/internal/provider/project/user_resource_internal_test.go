@@ -3,17 +3,18 @@ package project
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/project/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // TestNewProjectUserResource is now in external test file - refactored to test behavior only.
@@ -99,8 +100,9 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 				req := resource.CreateRequest{
 					Plan: plan,
 				}
+				schemaResp := createTestUserResourceSchema(t)
 				resp := resource.CreateResponse{
-					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+					State: tfsdk.State{Schema: schemaResp.Schema},
 				}
 
 				r.Create(context.Background(), req, &resp)
@@ -128,9 +130,10 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
 					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
 				}
+				schemaResp2 := createTestUserResourceSchema(t)
 				plan := tfsdk.Plan{
 					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-					Schema: createTestUserResourceSchema(t),
+					Schema: schemaResp2.Schema,
 				}
 
 				// Create state with incompatible schema
@@ -175,11 +178,12 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 					Schema: wrongSchema,
 				}
 
+				schemaResp := createTestUserResourceSchema(t)
 				req := resource.ReadRequest{
 					State: state,
 				}
 				resp := resource.ReadResponse{
-					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+					State: tfsdk.State{Schema: schemaResp.Schema},
 				}
 
 				r.Read(context.Background(), req, &resp)
@@ -215,9 +219,10 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
 					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
 				}
+				schemaResp3 := createTestUserResourceSchema(t)
 				state := tfsdk.State{
 					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-					Schema: createTestUserResourceSchema(t),
+					Schema: schemaResp3.Schema,
 				}
 
 				// Create response state with incompatible schema
@@ -262,8 +267,9 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 					Schema: wrongSchema,
 				}
 
+				schemaResp := createTestUserResourceSchema(t)
 				state := tfsdk.State{
-					Schema: createTestUserResourceSchema(t),
+					Schema: schemaResp.Schema,
 				}
 
 				req := resource.UpdateRequest{
@@ -293,6 +299,7 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 
 				r := &ProjectUserResource{client: n8nClient}
 
+				schemaResp := createTestUserResourceSchema(t)
 				rawPlan := map[string]tftypes.Value{
 					"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
 					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
@@ -301,7 +308,7 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 				}
 				plan := tfsdk.Plan{
 					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawPlan),
-					Schema: createTestUserResourceSchema(t),
+					Schema: schemaResp.Schema,
 				}
 
 				rawState := map[string]tftypes.Value{
@@ -312,7 +319,7 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 				}
 				state := tfsdk.State{
 					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
-					Schema: createTestUserResourceSchema(t),
+					Schema: schemaResp.Schema,
 				}
 
 				// Create response state with incompatible schema
@@ -362,8 +369,9 @@ func TestProjectUserResource_EdgeCasesForCoverage(t *testing.T) {
 				req := resource.CreateRequest{
 					Plan: plan,
 				}
+				schemaResp := createTestUserResourceSchema(t)
 				resp := resource.CreateResponse{
-					State: tfsdk.State{Schema: createTestUserResourceSchema(t)},
+					State: tfsdk.State{Schema: schemaResp.Schema},
 				}
 
 				r.Create(context.Background(), req, &resp)
@@ -420,13 +428,13 @@ func TestProjectUserResource_Interfaces(t *testing.T) {
 }
 
 // createTestUserResourceSchema creates a test schema for project user resource.
-func createTestUserResourceSchema(t *testing.T) schema.Schema {
+func createTestUserResourceSchema(t *testing.T) resource.SchemaResponse {
 	t.Helper()
 	r := &ProjectUserResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), req, resp)
-	return resp.Schema
+	return *resp
 }
 
 // setupTestUserResourceClient creates a test N8nClient with httptest server.
@@ -452,16 +460,39 @@ func setupTestUserResourceClient(t *testing.T, handler http.HandlerFunc) (*clien
 	return n8nClient, server
 }
 
-// TestProjectUserResource_findUserInProject tests the findUserInProject private method.
-func TestProjectUserResource_findUserInProject(t *testing.T) {
+// TestProjectUserResource_Delete tests the Delete method.
+func TestProjectUserResource_Delete(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name        string
+		handler     http.HandlerFunc
+		wantErr     bool
+		errContains string
 	}{
-		{name: "validates method exists", wantErr: false},
-		{name: "error case - validation checks", wantErr: false},
+		{
+			name: "successful deletion",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			wantErr: false,
+		},
+		{
+			name: "api error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects/proj-123/users/user-456" && r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			wantErr:     true,
+			errContains: "Error removing user from project",
+		},
 	}
 
 	for _, tt := range tests {
@@ -469,14 +500,228 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			switch tt.name {
-			case "validates method exists":
-				r := &ProjectUserResource{}
-				assert.NotNil(t, r)
+			n8nClient, server := setupTestUserResourceClient(t, tt.handler)
+			defer server.Close()
 
-			case "error case - validation checks":
-				r := &ProjectUserResource{}
-				assert.NotNil(t, r)
+			r := &ProjectUserResource{client: n8nClient}
+
+			schemaResp := createTestUserResourceSchema(t)
+
+			rawState := map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+			}
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+				Schema: schemaResp.Schema,
+			}
+
+			req := resource.DeleteRequest{
+				State: state,
+			}
+			resp := resource.DeleteResponse{
+				State: state,
+			}
+
+			r.Delete(context.Background(), req, &resp)
+
+			if tt.wantErr {
+				assert.True(t, resp.Diagnostics.HasError(), "expected error but got none")
+				if tt.errContains != "" {
+					found := false
+					for _, diag := range resp.Diagnostics.Errors() {
+						if assert.Contains(t, diag.Summary(), tt.errContains) {
+							found = true
+							break
+						}
+					}
+					assert.True(t, found, "expected error containing %s", tt.errContains)
+				}
+			} else {
+				assert.False(t, resp.Diagnostics.HasError(), "unexpected error: %v", resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// TestProjectUserResource_ImportState tests the ImportState method.
+func TestProjectUserResource_ImportState(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		importID    string
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name:     "successful import",
+			importID: "proj-123/user-456",
+			wantErr:  false,
+		},
+		{
+			name:        "invalid import id format",
+			importID:    "proj-123",
+			wantErr:     true,
+			errContains: "Invalid Import ID",
+		},
+		{
+			name:        "invalid import id with too many parts",
+			importID:    "proj-123/user-456/extra",
+			wantErr:     true,
+			errContains: "Invalid Import ID",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &ProjectUserResource{}
+
+			schemaResp := createTestUserResourceSchema(t)
+
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, nil),
+				Schema: schemaResp.Schema,
+			}
+
+			req := resource.ImportStateRequest{
+				ID: tt.importID,
+			}
+			resp := resource.ImportStateResponse{
+				State: state,
+			}
+
+			r.ImportState(context.Background(), req, &resp)
+
+			if tt.wantErr {
+				assert.True(t, resp.Diagnostics.HasError(), "expected error but got none")
+				if tt.errContains != "" {
+					found := false
+					for _, diag := range resp.Diagnostics.Errors() {
+						if assert.Contains(t, diag.Summary(), tt.errContains) {
+							found = true
+							break
+						}
+					}
+					assert.True(t, found, "expected error containing %s", tt.errContains)
+				}
+			} else {
+				assert.False(t, resp.Diagnostics.HasError(), "unexpected error: %v", resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// TestProjectUserResource_findUserInProject tests the findUserInProject private method.
+func TestProjectUserResource_findUserInProject(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		wantFound   bool
+		errContains string
+	}{
+		{
+			name: "user found in project",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/users" && r.Method == http.MethodGet {
+					role := "project:admin"
+					users := map[string]interface{}{
+						"data": []map[string]interface{}{
+							{
+								"id":    "user-456",
+								"email": "user@example.com",
+								"role":  role,
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(users)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			wantFound: true,
+		},
+		{
+			name: "user not found in project",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/users" && r.Method == http.MethodGet {
+					users := map[string]interface{}{
+						"data": []map[string]interface{}{},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(users)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			wantFound: false,
+		},
+		{
+			name: "api error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/users" && r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			wantFound:   false,
+			errContains: "Error reading project users",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupTestUserResourceClient(t, tt.handler)
+			defer server.Close()
+
+			r := &ProjectUserResource{client: n8nClient}
+
+			schemaResp := createTestUserResourceSchema(t)
+
+			rawState := map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, "proj-123/user-456"),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+			}
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "project_id": tftypes.String, "user_id": tftypes.String, "role": tftypes.String}}, rawState),
+				Schema: schemaResp.Schema,
+			}
+
+			req := resource.ReadRequest{
+				State: state,
+			}
+			resp := resource.ReadResponse{
+				State: state,
+			}
+
+			r.Read(context.Background(), req, &resp)
+
+			if tt.errContains != "" {
+				assert.True(t, resp.Diagnostics.HasError(), "expected error but got none")
+				found := false
+				for _, diag := range resp.Diagnostics.Errors() {
+					if assert.Contains(t, diag.Summary(), tt.errContains) {
+						found = true
+						break
+					}
+				}
+				assert.True(t, found, "expected error containing %s", tt.errContains)
+			} else {
+				assert.False(t, resp.Diagnostics.HasError(), "unexpected error: %v", resp.Diagnostics)
 			}
 		})
 	}
@@ -487,11 +732,73 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name      string
+		userList  *n8nsdk.UserList
+		userID    string
+		wantFound bool
 	}{
-		{name: "validates method exists", wantErr: false},
-		{name: "error case - validation checks", wantErr: false},
+		{
+			name: "user found with role",
+			userList: &n8nsdk.UserList{
+				Data: []n8nsdk.User{
+					{
+						Id: func() *string {
+							s := "user-123"
+							return &s
+						}(),
+						Role: func() *string {
+							s := "project:admin"
+							return &s
+						}(),
+					},
+				},
+			},
+			userID:    "user-123",
+			wantFound: true,
+		},
+		{
+			name: "user not found",
+			userList: &n8nsdk.UserList{
+				Data: []n8nsdk.User{
+					{
+						Id: func() *string {
+							s := "user-456"
+							return &s
+						}(),
+					},
+				},
+			},
+			userID:    "user-123",
+			wantFound: false,
+		},
+		{
+			name: "nil data",
+			userList: &n8nsdk.UserList{
+				Data: nil,
+			},
+			userID:    "user-123",
+			wantFound: false,
+		},
+		{
+			name: "empty list",
+			userList: &n8nsdk.UserList{
+				Data: []n8nsdk.User{},
+			},
+			userID:    "user-123",
+			wantFound: false,
+		},
+		{
+			name: "user with nil id",
+			userList: &n8nsdk.UserList{
+				Data: []n8nsdk.User{
+					{
+						Id: nil,
+					},
+				},
+			},
+			userID:    "user-123",
+			wantFound: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -499,15 +806,14 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			switch tt.name {
-			case "validates method exists":
-				r := &ProjectUserResource{}
-				assert.NotNil(t, r)
-
-			case "error case - validation checks":
-				r := &ProjectUserResource{}
-				assert.NotNil(t, r)
+			r := &ProjectUserResource{}
+			state := &models.UserResource{
+				UserID: types.StringValue(tt.userID),
 			}
+
+			found := r.searchUserInList(tt.userList, state)
+
+			assert.Equal(t, tt.wantFound, found, "searchUserInList returned unexpected result")
 		})
 	}
 }

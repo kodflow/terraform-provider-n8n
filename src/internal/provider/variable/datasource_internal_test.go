@@ -306,7 +306,8 @@ func BenchmarkVariableDataSource_Configure(b *testing.B) {
 	}
 }
 
-// TestVariableDataSource_Read is now in external test file - refactored to test behavior only.
+// TestVariableDataSource_Read is tested via external tests and helper method tests.
+// This ensures coverage of the Read method through the private methods it calls.
 
 func TestVariableDataSource_validateIdentifiers(t *testing.T) {
 	t.Parallel()
