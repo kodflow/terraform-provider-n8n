@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/credential/models"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
@@ -1775,5 +1777,209 @@ func TestCredentialResource_CRUD_ErrorHandling(t *testing.T) {
 			assert.NotNil(t, r, "Resource should not be nil")
 			assert.NotNil(t, r.client, "Client should be configured")
 		})
+	}
+}
+
+// TestCredentialResource_Read_CRUD tests the Read method with full CRUD coverage.
+func TestCredentialResource_Read_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "read with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/credentials/cred-123" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"id":"cred-123","name":"test-credential","type":"httpHeaderAuth","data":{"key":"value"},"createdAt":"2024-01-01T00:00:00Z","updatedAt":"2024-01-01T00:00:00Z"}`))
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - read with invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestCredentialResource_Delete_CRUD tests the Delete method with full CRUD coverage.
+func TestCredentialResource_Delete_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "delete with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/credentials/cred-123" {
+						w.WriteHeader(http.StatusNoContent)
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.DeleteResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Delete(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - delete with invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.DeleteResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Delete(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
 	}
 }

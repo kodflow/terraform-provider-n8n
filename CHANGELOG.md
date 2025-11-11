@@ -9,8 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
+### 📝 Other
+
+- save (`09a1fcc`)
+
 ### ✅ Tests
 
+- improve CRUD method coverage (`429898d`)
 - achieve 100% coverage for Delete method (`249516e`)
 - achieve 100% coverage for pull_resource CRUD methods (`d23a600`)
 - complete coverage to 85.3% and improve reporting (`145785b`)
@@ -143,10 +148,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 106
+- **Total commits:** 108
 - **Features:** 30
 - **Bug fixes:** 11
-- **Tests:** 35
+- **Tests:** 36
 - **Refactoring:** 15
 - **Test coverage:** N/A
 
@@ -156,4 +161,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 20:11:19*
+*Changelog generated automatically on 2025-11-11 21:07:19*

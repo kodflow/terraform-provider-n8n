@@ -941,3 +941,465 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 
 	return n8nClient, server
 }
+
+// TestProjectResource_Create_CRUD tests the Create method with full CRUD coverage.
+func TestProjectResource_Create_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "create with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/projects" {
+						w.WriteHeader(http.StatusCreated)
+						return
+					}
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[{"id":"proj-123","name":"test-project","type":"team"}]}`))
+						return
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - create with invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestProjectResource_Read_CRUD tests the Read method with full CRUD coverage.
+func TestProjectResource_Read_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "read with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[{"id":"proj-123","name":"test-project","type":"team"}]}`))
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - read with invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Read(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestProjectResource_Update_CRUD tests the Update method with full CRUD coverage.
+func TestProjectResource_Update_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "update with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPut && r.URL.Path == "/projects/proj-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+					if r.Method == http.MethodGet && r.URL.Path == "/projects" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[{"id":"proj-123","name":"updated-project","type":"team"}]}`))
+						return
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "updated-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.UpdateRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - update with invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.UpdateRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestProjectResource_Delete_CRUD tests the Delete method with full CRUD coverage.
+func TestProjectResource_Delete_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "delete with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/projects/proj-123" {
+						w.WriteHeader(http.StatusNoContent)
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "test-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.DeleteResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Delete(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "error - delete with invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &ProjectResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.DeleteResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Delete(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestProjectResource_ImportState_CRUD tests the ImportState method with full CRUD coverage.
+func TestProjectResource_ImportState_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "import state with valid ID",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := &ProjectResource{}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, nil),
+					"type": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.ImportStateRequest{
+					ID: "proj-123",
+				}
+
+				resp := &resource.ImportStateResponse{
+					State: tfsdk.State{
+						Raw:    emptyValue,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.ImportState(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
