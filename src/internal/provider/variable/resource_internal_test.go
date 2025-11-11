@@ -618,6 +618,212 @@ func TestVariableResource_Delete_CRUD(t *testing.T) {
 	}
 }
 
+// TestVariableResource_Update_CRUD tests the Update method with full coverage.
+func TestVariableResource_Update_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "error - invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+				resp := &resource.UpdateResponse{}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
+		{
+			name: "error - API update fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// PUT /variables/{id} - fail
+					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.UpdateResponse{}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API update fails")
+			},
+		},
+		{
+			name: "error - variable not found after update",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+
+					// Step 1: PUT /variables/{id} - update succeeds
+					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+
+					// Step 2: GET /variables - list returns empty (variable not found)
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`[]`))
+						return
+					}
+
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.UpdateResponse{}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when variable not found after update")
+			},
+		},
+		{
+			name: "error - list API fails after update",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// Step 1: PUT /variables/{id} - update succeeds
+					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+
+					// Step 2: GET /variables - list fails
+					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestResourceClient(t, handler)
+				defer server.Close()
+
+				r := &VariableResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
+					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
+					"type":       tftypes.NewValue(tftypes.String, "string"),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+						Raw:    planRaw,
+					},
+				}
+				resp := &resource.UpdateResponse{}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when list API fails")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
 // TestVariableResource_ImportState_CRUD tests the full ImportState method execution.
 func TestVariableResource_ImportState_CRUD(t *testing.T) {
 	t.Run("import state passthrough", func(t *testing.T) {

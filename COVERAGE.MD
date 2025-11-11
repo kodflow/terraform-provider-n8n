@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **76.4%** |
+| **Total Coverage** | **77.5%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -24,7 +24,7 @@ Rapport de couverture généré automatiquement.
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 100.0% |
-| 🔴 | `github.com/kodflow/n8n/src/internal/provider/credential` | 66.5% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 71.4% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/execution` | 79.2% |
 | 🔴 | `github.com/kodflow/n8n/src/internal/provider/project` | 67.2% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
@@ -32,7 +32,7 @@ Rapport de couverture généré automatiquement.
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/tag` | 79.9% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 73.5% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 74.0% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 77.6% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 87.4% |
 
 ---
@@ -106,7 +106,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Read` | 🟢 100.0% | 🟡 88.9% | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🔴 0.0% | 🟢 100.0% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Update` | 🔴 0.0% | 🟡 81.8% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🔴 0.0% | 🟢 100.0% |
+| `Update` | 🟠 36.7% | 🟡 81.8% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟡 81.8% | 🟢 100.0% |
 
 ### 📄 retry_resource.go
 

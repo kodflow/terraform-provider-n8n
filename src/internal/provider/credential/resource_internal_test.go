@@ -1983,3 +1983,225 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 		t.Run(tt.name, tt.testFunc)
 	}
 }
+
+// TestCredentialResource_Update_CRUD tests the Update method with full coverage.
+func TestCredentialResource_Update_CRUD(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "error - invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+
+				validStateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "old-cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "old-cred"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+					State: tfsdk.State{
+						Raw:    validStateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
+		{
+			name: "error - create new credential fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// POST /credentials - fail
+					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "old-cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "updated-cred"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "old-cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "old-cred"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when creating new credential fails")
+			},
+		},
+		{
+			name: "error - workflow scan fails",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				callCount := 0
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					callCount++
+					w.Header().Set("Content-Type", "application/json")
+
+					// Step 1: POST /credentials - create new credential successfully
+					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+						w.WriteHeader(http.StatusCreated)
+						w.Write([]byte(`{"id":"new-cred-123","name":"updated-cred","type":"httpHeaderAuth","createdAt":"2024-01-02T00:00:00Z","updatedAt":"2024-01-02T00:00:00Z"}`))
+						return
+					}
+
+					// Step 2: GET /workflows - fail
+					if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(`{"message":"Internal server error"}`))
+						return
+					}
+
+					// Rollback: DELETE /credentials/{id} - delete new credential
+					if r.Method == http.MethodDelete && r.URL.Path == "/credentials/new-cred-123" {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+
+					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "old-cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "updated-cred"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "old-cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "old-cred"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when workflow scan fails")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}

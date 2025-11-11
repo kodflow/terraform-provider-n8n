@@ -9,12 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
-### 📝 Other
-
-- save (`09a1fcc`)
-
 ### ✅ Tests
 
+- add Update method coverage tests (`5da12ab`)
 - improve CRUD method coverage (`429898d`)
 - achieve 100% coverage for Delete method (`249516e`)
 - achieve 100% coverage for pull_resource CRUD methods (`d23a600`)
@@ -118,6 +115,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- move CRUD tests to external test file (`d6eec56`)
 - rename n8n_lib to src_lib for gazelle compatibility (`84cc3dc`)
 - merge test files and clean up per linter requirements (`1467db5`)
 - optimize code for Go 1.25.4 and improve pre-push hook (`160308b`)
@@ -148,11 +146,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 108
+- **Total commits:** 109
 - **Features:** 30
 - **Bug fixes:** 11
-- **Tests:** 36
-- **Refactoring:** 15
+- **Tests:** 37
+- **Refactoring:** 16
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -161,4 +159,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 21:07:19*
+*Changelog generated automatically on 2025-11-11 21:34:34*
