@@ -8,17 +8,15 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/variable/models"
 	"github.com/stretchr/testify/assert"
 )
 
-// setupTestResourceClient creates a test N8nClient with httptest server.
-func setupTestResourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+// setupTestClient creates a test N8nClient with httptest server.
+func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
 	t.Helper()
 	server := httptest.NewServer(handler)
 
@@ -40,19 +38,414 @@ func setupTestResourceClient(t *testing.T, handler http.HandlerFunc) (*client.N8
 	return n8nClient, server
 }
 
-// TestVariableResource_Create is tested via external tests and helper method tests.
-// This ensures coverage of the Create method through the private methods it calls.
+// TestVariableResource_executeCreateLogic tests the executeCreateLogic method with error cases.
+func TestVariableResource_executeCreateLogic(t *testing.T) {
+	t.Parallel()
 
-// TestVariableResource_executeVariableCreate tests the executeVariableCreate method.
+	tests := []struct {
+		name         string
+		variableKey  string
+		variableVal  string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectID     string
+	}{
+		{
+			name:        "successful creation",
+			variableKey: "TEST_VAR",
+			variableVal: "test_value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+					w.WriteHeader(http.StatusCreated)
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-123",
+								"key":   "TEST_VAR",
+								"value": "test_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectID:    "var-123",
+		},
+		{
+			name:        "API error on create",
+			variableKey: "FAILED_VAR",
+			variableVal: "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:        "error finding created variable",
+			variableKey: "MISSING_VAR",
+			variableVal: "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+					w.WriteHeader(http.StatusCreated)
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Key:   types.StringValue(tt.variableKey),
+				Value: types.StringValue(tt.variableVal),
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			result := r.executeCreateLogic(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectID, plan.ID.ValueString(), "Variable ID should match")
+			}
+		})
+	}
+}
+
+// TestVariableResource_executeReadLogic tests the executeReadLogic method with error cases.
+func TestVariableResource_executeReadLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		variableID   string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectKey    string
+	}{
+		{
+			name:       "successful read",
+			variableID: "var-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-123",
+								"key":   "RETRIEVED_VAR",
+								"value": "retrieved_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectKey:   "RETRIEVED_VAR",
+		},
+		{
+			name:       "API error on list",
+			variableID: "var-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error not found",
+			variableID: "var-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Variable not found"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			state := &models.Resource{
+				ID: types.StringValue(tt.variableID),
+			}
+			resp := &resource.ReadResponse{
+				State: resource.ReadResponse{}.State,
+			}
+
+			result := r.executeReadLogic(ctx, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectKey, state.Key.ValueString(), "Variable key should match")
+			}
+		})
+	}
+}
+
+// TestVariableResource_executeUpdateLogic tests the executeUpdateLogic method with error cases.
+func TestVariableResource_executeUpdateLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		variableID   string
+		newKey       string
+		newValue     string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:       "successful update",
+			variableID: "var-123",
+			newKey:     "UPDATED_VAR",
+			newValue:   "updated_value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-123",
+								"key":   "UPDATED_VAR",
+								"value": "updated_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:       "variable not found",
+			variableID: "var-404",
+			newKey:     "UPDATED_VAR",
+			newValue:   "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Variable not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error",
+			variableID: "var-500",
+			newKey:     "UPDATED_VAR",
+			newValue:   "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				ID:    types.StringValue(tt.variableID),
+				Key:   types.StringValue(tt.newKey),
+				Value: types.StringValue(tt.newValue),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
+
+			result := r.executeUpdateLogic(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestVariableResource_executeDeleteLogic tests the executeDeleteLogic method with error cases.
+func TestVariableResource_executeDeleteLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		variableID   string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:       "successful deletion",
+			variableID: "var-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodDelete && r.URL.Path == "/variables/var-123" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:       "variable not found",
+			variableID: "var-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Variable not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error",
+			variableID: "var-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			state := &models.Resource{
+				ID: types.StringValue(tt.variableID),
+			}
+			resp := &resource.DeleteResponse{
+				State: resource.DeleteResponse{}.State,
+			}
+
+			result := r.executeDeleteLogic(ctx, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestVariableResource_executeVariableCreate tests the executeVariableCreate helper method.
 func TestVariableResource_executeVariableCreate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name         string
+		variableKey  string
+		variableVal  string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
 	}{
-		{name: "success - create variable"},
-		{name: "error - API error", wantErr: true},
+		{
+			name:        "successful create",
+			variableKey: "TEST_VAR",
+			variableVal: "test_value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/variables" {
+					w.WriteHeader(http.StatusCreated)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:        "API error 500",
+			variableKey: "FAILED_VAR",
+			variableVal: "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:        "API error 400",
+			variableKey: "INVALID_VAR",
+			variableVal: "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(`{"message": "Bad request"}`))
+			},
+			expectError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -60,66 +453,100 @@ func TestVariableResource_executeVariableCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			switch tt.name {
-			case "success - create variable":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/variables" && r.Method == http.MethodPost {
-						w.WriteHeader(http.StatusCreated)
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
 
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Key:   types.StringValue(tt.variableKey),
+				Value: types.StringValue(tt.variableVal),
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
 
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					Key:   types.StringValue("test-key"),
-					Value: types.StringValue("test-value"),
-				}
-				resp := &resource.CreateResponse{}
+			result := r.executeVariableCreate(ctx, plan, resp)
 
-				result := r.executeVariableCreate(context.Background(), plan, resp)
-
-				assert.True(t, result)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					Key:   types.StringValue("test-key"),
-					Value: types.StringValue("test-value"),
-				}
-				resp := &resource.CreateResponse{}
-
-				result := r.executeVariableCreate(context.Background(), plan, resp)
-
-				assert.False(t, result)
-				assert.True(t, resp.Diagnostics.HasError())
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
 			}
 		})
 	}
 }
 
-// TestVariableResource_findCreatedVariable tests the findCreatedVariable method.
+// TestVariableResource_findCreatedVariable tests the findCreatedVariable helper method.
 func TestVariableResource_findCreatedVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name         string
+		variableKey  string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectNil    bool
+		expectID     string
 	}{
-		{name: "success - variable found"},
-		{name: "error - API error", wantErr: true},
-		{name: "error - variable not found", wantErr: true},
+		{
+			name:        "successfully finds variable",
+			variableKey: "TEST_VAR",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-123",
+								"key":   "TEST_VAR",
+								"value": "test_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil: false,
+			expectID:  "var-123",
+		},
+		{
+			name:        "API error on list",
+			variableKey: "FAILED_VAR",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectNil: true,
+		},
+		{
+			name:        "variable not found in list",
+			variableKey: "MISSING_VAR",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-999",
+								"key":   "OTHER_VAR",
+								"value": "other_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -127,260 +554,190 @@ func TestVariableResource_findCreatedVariable(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			switch tt.name {
-			case "success - variable found":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/variables" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.VariableList{
-							Data: []n8nsdk.Variable{
-								{Id: ptrString("var-123"), Key: "test-key", Value: "test-value"},
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
 
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Key: types.StringValue(tt.variableKey),
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
 
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					Key: types.StringValue("test-key"),
-				}
-				resp := &resource.CreateResponse{}
+			result := r.findCreatedVariable(ctx, plan, resp)
 
-				variable := r.findCreatedVariable(context.Background(), plan, resp)
-
-				assert.NotNil(t, variable)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					Key: types.StringValue("test-key"),
-				}
-				resp := &resource.CreateResponse{}
-
-				variable := r.findCreatedVariable(context.Background(), plan, resp)
-
-				assert.Nil(t, variable)
-				assert.True(t, resp.Diagnostics.HasError())
-
-			case "error - variable not found":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/variables" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.VariableList{
-							Data: []n8nsdk.Variable{},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					Key: types.StringValue("test-key"),
-				}
-				resp := &resource.CreateResponse{}
-
-				variable := r.findCreatedVariable(context.Background(), plan, resp)
-
-				assert.Nil(t, variable)
-				assert.True(t, resp.Diagnostics.HasError())
+			if tt.expectNil {
+				assert.Nil(t, result, "Should return nil")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.NotNil(t, result, "Should return variable")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectID, *result.Id, "Variable ID should match")
 			}
 		})
 	}
 }
 
-// TestVariableResource_Read is tested via external tests and helper method tests.
-// This ensures coverage of the Read method through the private methods it calls.
-
-// TestVariableResource_findVariableByID tests the findVariableByID method.
-func TestVariableResource_findVariableByID(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "success - variable found",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				variableList := &n8nsdk.VariableList{
-					Data: []n8nsdk.Variable{
-						{Id: ptrString("var-123"), Key: "key1", Value: "value1"},
-						{Id: ptrString("var-456"), Key: "key2", Value: "value2"},
-					},
-				}
-
-				variable := r.findVariableByID(variableList, "var-123")
-
-				assert.NotNil(t, variable)
-				assert.Equal(t, "var-123", *variable.Id)
-			},
-		},
-		{
-			name: "variable not found",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				variableList := &n8nsdk.VariableList{
-					Data: []n8nsdk.Variable{
-						{Id: ptrString("var-456"), Key: "key2", Value: "value2"},
-					},
-				}
-
-				variable := r.findVariableByID(variableList, "var-123")
-
-				assert.Nil(t, variable)
-			},
-		},
-		{
-			name: "nil data",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				variableList := &n8nsdk.VariableList{
-					Data: nil,
-				}
-
-				variable := r.findVariableByID(variableList, "var-123")
-
-				assert.Nil(t, variable)
-			},
-		},
-		{
-			name: "error case - empty list",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				variableList := &n8nsdk.VariableList{
-					Data: []n8nsdk.Variable{},
-				}
-
-				variable := r.findVariableByID(variableList, "var-123")
-
-				assert.Nil(t, variable)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			tt.testFunc(t)
-		})
-	}
-}
-
-// TestVariableResource_updateStateFromVariable tests the updateStateFromVariable method.
+// TestVariableResource_updateStateFromVariable tests the updateStateFromVariable helper method.
 func TestVariableResource_updateStateFromVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name             string
+		variable         *n8nsdk.Variable
+		expectedKey      string
+		expectedValue    string
+		expectedType     string
+		expectedTypeNull bool
+		expectedProjID   string
+		expectedProjNull bool
 	}{
 		{
-			name: "complete variable data",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				typeStr := "string"
-				projectID := "proj-123"
-				variable := &n8nsdk.Variable{
-					Id:    ptrString("var-123"),
-					Key:   "test-key",
-					Value: "test-value",
-					Type:  &typeStr,
-					Project: &n8nsdk.Project{
-						Id: &projectID,
-					},
-				}
-				state := &models.Resource{}
-
-				r.updateStateFromVariable(variable, state)
-
-				assert.Equal(t, "test-key", state.Key.ValueString())
-				assert.Equal(t, "test-value", state.Value.ValueString())
-				assert.Equal(t, "string", state.Type.ValueString())
-				assert.Equal(t, "proj-123", state.ProjectID.ValueString())
+			name: "updates all fields",
+			variable: &n8nsdk.Variable{
+				Id:    stringPtr("var-123"),
+				Key:   "TEST_VAR",
+				Value: "test_value",
+				Type:  stringPtr("string"),
+				Project: &n8nsdk.Project{
+					Id: stringPtr("proj-456"),
+				},
 			},
+			expectedKey:      "TEST_VAR",
+			expectedValue:    "test_value",
+			expectedType:     "string",
+			expectedTypeNull: false,
+			expectedProjID:   "proj-456",
+			expectedProjNull: false,
 		},
 		{
-			name: "minimal variable data",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				variable := &n8nsdk.Variable{
-					Key:   "test-key",
-					Value: "test-value",
-				}
-				state := &models.Resource{}
-
-				r.updateStateFromVariable(variable, state)
-
-				assert.Equal(t, "test-key", state.Key.ValueString())
-				assert.Equal(t, "test-value", state.Value.ValueString())
+			name: "handles nil type",
+			variable: &n8nsdk.Variable{
+				Id:    stringPtr("var-123"),
+				Key:   "TEST_VAR",
+				Value: "test_value",
+				Type:  nil,
 			},
+			expectedKey:      "TEST_VAR",
+			expectedValue:    "test_value",
+			expectedTypeNull: true,
+			expectedProjNull: true,
 		},
 		{
-			name: "error case - nil project",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := &VariableResource{}
-				variable := &n8nsdk.Variable{
-					Key:     "test-key",
-					Value:   "test-value",
-					Project: nil,
-				}
-				state := &models.Resource{}
-
-				r.updateStateFromVariable(variable, state)
-
-				assert.Equal(t, "test-key", state.Key.ValueString())
+			name: "handles nil project",
+			variable: &n8nsdk.Variable{
+				Id:      stringPtr("var-123"),
+				Key:     "TEST_VAR",
+				Value:   "test_value",
+				Type:    stringPtr("string"),
+				Project: nil,
 			},
+			expectedKey:      "TEST_VAR",
+			expectedValue:    "test_value",
+			expectedType:     "string",
+			expectedTypeNull: false,
+			expectedProjNull: true,
+		},
+		{
+			name: "error case - handles project with nil ID",
+			variable: &n8nsdk.Variable{
+				Id:    stringPtr("var-123"),
+				Key:   "TEST_VAR",
+				Value: "test_value",
+				Type:  stringPtr("string"),
+				Project: &n8nsdk.Project{
+					Id: nil,
+				},
+			},
+			expectedKey:      "TEST_VAR",
+			expectedValue:    "test_value",
+			expectedType:     "string",
+			expectedTypeNull: false,
+			expectedProjNull: true,
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tt.testFunc(t)
+
+			r := &VariableResource{}
+			state := &models.Resource{
+				ID: types.StringValue("var-123"),
+			}
+
+			r.updateStateFromVariable(tt.variable, state)
+
+			assert.Equal(t, tt.expectedKey, state.Key.ValueString(), "Key should match")
+			assert.Equal(t, tt.expectedValue, state.Value.ValueString(), "Value should match")
+
+			if tt.expectedTypeNull {
+				assert.True(t, state.Type.IsNull(), "Type should be null")
+			} else {
+				assert.Equal(t, tt.expectedType, state.Type.ValueString(), "Type should match")
+			}
+
+			if tt.expectedProjNull {
+				assert.True(t, state.ProjectID.IsNull(), "ProjectID should be null")
+			} else {
+				assert.Equal(t, tt.expectedProjID, state.ProjectID.ValueString(), "ProjectID should match")
+			}
 		})
 	}
 }
 
-// TestVariableResource_Update is tested via external tests and helper method tests.
-// This ensures coverage of the Update method through the private methods it calls.
-
-// TestVariableResource_executeVariableUpdate tests the executeVariableUpdate method.
+// TestVariableResource_executeVariableUpdate tests the executeVariableUpdate helper method.
 func TestVariableResource_executeVariableUpdate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name         string
+		variableID   string
+		newKey       string
+		newValue     string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
 	}{
-		{name: "success - update variable"},
-		{name: "error - API error", wantErr: true},
+		{
+			name:       "successful update",
+			variableID: "var-123",
+			newKey:     "UPDATED_VAR",
+			newValue:   "updated_value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:       "API error 404",
+			variableID: "var-404",
+			newKey:     "UPDATED_VAR",
+			newValue:   "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Variable not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error 500",
+			variableID: "var-500",
+			newKey:     "UPDATED_VAR",
+			newValue:   "value",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -388,68 +745,101 @@ func TestVariableResource_executeVariableUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			switch tt.name {
-			case "success - update variable":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/variables/var-123" && r.Method == http.MethodPut {
-						w.WriteHeader(http.StatusNoContent)
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
 
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				ID:    types.StringValue(tt.variableID),
+				Key:   types.StringValue(tt.newKey),
+				Value: types.StringValue(tt.newValue),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
 
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					ID:    types.StringValue("var-123"),
-					Key:   types.StringValue("test-key"),
-					Value: types.StringValue("test-value"),
-				}
-				resp := &resource.UpdateResponse{}
+			result := r.executeVariableUpdate(ctx, plan, resp)
 
-				result := r.executeVariableUpdate(context.Background(), plan, resp)
-
-				assert.True(t, result)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					ID:    types.StringValue("var-123"),
-					Key:   types.StringValue("test-key"),
-					Value: types.StringValue("test-value"),
-				}
-				resp := &resource.UpdateResponse{}
-
-				result := r.executeVariableUpdate(context.Background(), plan, resp)
-
-				assert.False(t, result)
-				assert.True(t, resp.Diagnostics.HasError())
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
 			}
 		})
 	}
 }
 
-// TestVariableResource_findUpdatedVariable tests the findUpdatedVariable method.
+// TestVariableResource_findUpdatedVariable tests the findUpdatedVariable helper method.
 func TestVariableResource_findUpdatedVariable(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		wantErr bool
+		name         string
+		variableID   string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectNil    bool
+		expectedKey  string
 	}{
-		{name: "success - variable found"},
-		{name: "error - API error", wantErr: true},
-		{name: "error - variable not found", wantErr: true},
+		{
+			name:       "successfully finds updated variable",
+			variableID: "var-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-123",
+								"key":   "UPDATED_VAR",
+								"value": "updated_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil:   false,
+			expectedKey: "UPDATED_VAR",
+		},
+		{
+			name:       "API error on list",
+			variableID: "var-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectNil: true,
+		},
+		{
+			name:       "variable not found in list",
+			variableID: "var-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/variables" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []map[string]any{
+							{
+								"id":    "var-999",
+								"key":   "OTHER_VAR",
+								"value": "other_value",
+								"type":  "string",
+							},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -457,906 +847,34 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			switch tt.name {
-			case "success - variable found":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/variables" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.VariableList{
-							Data: []n8nsdk.Variable{
-								{Id: ptrString("var-123"), Key: "test-key", Value: "test-value"},
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
 
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
+			r := &VariableResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				ID: types.StringValue(tt.variableID),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
 
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					ID: types.StringValue("var-123"),
-				}
-				resp := &resource.UpdateResponse{}
+			result := r.findUpdatedVariable(ctx, plan, resp)
 
-				variable := r.findUpdatedVariable(context.Background(), plan, resp)
-
-				assert.NotNil(t, variable)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					ID: types.StringValue("var-123"),
-				}
-				resp := &resource.UpdateResponse{}
-
-				variable := r.findUpdatedVariable(context.Background(), plan, resp)
-
-				assert.Nil(t, variable)
-				assert.True(t, resp.Diagnostics.HasError())
-
-			case "error - variable not found":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/variables" && r.Method == http.MethodGet {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(n8nsdk.VariableList{
-							Data: []n8nsdk.Variable{},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				plan := &models.Resource{
-					ID: types.StringValue("var-123"),
-				}
-				resp := &resource.UpdateResponse{}
-
-				variable := r.findUpdatedVariable(context.Background(), plan, resp)
-
-				assert.Nil(t, variable)
-				assert.True(t, resp.Diagnostics.HasError())
+			if tt.expectNil {
+				assert.Nil(t, result, "Should return nil")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.NotNil(t, result, "Should return variable")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectedKey, result.Key, "Variable key should match")
 			}
 		})
 	}
 }
 
-// TestVariableResource_Create_CRUD tests the Create method with full coverage.
-func TestVariableResource_Create_CRUD(t *testing.T) {
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "success - create variable",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.Header().Set("Content-Type", "application/json")
-
-					// Step 1: POST /variables - create variable (returns 201)
-					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusCreated)
-						return
-					}
-
-					// Step 2: GET /variables - list to verify creation
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`{"data":[{"id":"var-123","key":"MY_VAR","value":"test-value","type":"string"}]}`))
-						return
-					}
-
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, nil),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.CreateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.CreateResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Create(ctx, req, resp)
-
-				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
-			},
-		},
-		{
-			name: "error - invalid plan",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					t.Fatal("Should not reach API")
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(tftypes.String, "invalid")
-
-				req := resource.CreateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.CreateResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Create(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
-			},
-		},
-		{
-			name: "error - API create fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, nil),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.CreateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.CreateResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Create(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API create fails")
-			},
-		},
-		{
-			name: "error - variable not found after create",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodPost && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusCreated)
-						return
-					}
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`{"data":[]}`))
-						return
-					}
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, nil),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.CreateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.CreateResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Create(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when variable not found after create")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, tt.testFunc)
-	}
-}
-
-// TestVariableResource_Delete_CRUD tests the full Delete method execution.
-func TestVariableResource_Delete_CRUD(t *testing.T) {
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "delete with successful API call",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusNoContent)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := NewVariableResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
-					ProviderData: n8nClient,
-				}, &resource.ConfigureResponse{})
-
-				ctx := context.Background()
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "test-key"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.DeleteRequest{
-					State: state,
-				}
-				resp := &resource.DeleteResponse{}
-
-				r.Delete(ctx, req, resp)
-				assert.False(t, resp.Diagnostics.HasError())
-			},
-		},
-		{
-			name: "error - delete with invalid state",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := NewVariableResource()
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.DeleteRequest{
-					State: state,
-				}
-				resp := &resource.DeleteResponse{}
-
-				r.Delete(ctx, req, resp)
-				assert.True(t, resp.Diagnostics.HasError())
-			},
-		},
-		{
-			name: "error - API delete fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodDelete && r.URL.Path == "/variables/var-123" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := NewVariableResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
-					ProviderData: n8nClient,
-				}, &resource.ConfigureResponse{})
-
-				ctx := context.Background()
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "test-key"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.DeleteRequest{
-					State: state,
-				}
-				resp := &resource.DeleteResponse{}
-
-				r.Delete(ctx, req, resp)
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API delete fails")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, tt.testFunc)
-	}
-}
-
-// TestVariableResource_Update_CRUD tests the Update method with full coverage.
-func TestVariableResource_Update_CRUD(t *testing.T) {
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "success - update variable",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.Header().Set("Content-Type", "application/json")
-
-					// Step 1: PUT /variables/{id} - update variable (returns 204)
-					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
-						w.WriteHeader(http.StatusNoContent)
-						return
-					}
-
-					// Step 2: GET /variables - list to verify update
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`{"data":[{"id":"var-123","key":"MY_VAR","value":"updated-value","type":"string"}]}`))
-						return
-					}
-
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.UpdateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.UpdateResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Update(ctx, req, resp)
-
-				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
-			},
-		},
-		{
-			name: "error - invalid plan",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					t.Fatal("Should not reach API")
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(tftypes.String, "invalid")
-
-				req := resource.UpdateRequest{
-					Plan: tfsdk.Plan{
-						Raw:    planRaw,
-						Schema: schemaResp.Schema,
-					},
-				}
-				resp := &resource.UpdateResponse{}
-
-				r.Update(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
-			},
-		},
-		{
-			name: "error - API update fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					// PUT /variables/{id} - fail
-					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.UpdateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.UpdateResponse{}
-
-				r.Update(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API update fails")
-			},
-		},
-		{
-			name: "error - variable not found after update",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.Header().Set("Content-Type", "application/json")
-
-					// Step 1: PUT /variables/{id} - update succeeds
-					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
-						w.WriteHeader(http.StatusNoContent)
-						return
-					}
-
-					// Step 2: GET /variables - list returns empty (variable not found)
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`[]`))
-						return
-					}
-
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.UpdateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.UpdateResponse{}
-
-				r.Update(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when variable not found after update")
-			},
-		},
-		{
-			name: "error - list API fails after update",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					// Step 1: PUT /variables/{id} - update succeeds
-					if r.Method == http.MethodPut && r.URL.Path == "/variables/var-123" {
-						w.WriteHeader(http.StatusNoContent)
-						return
-					}
-
-					// Step 2: GET /variables - list fails
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-
-					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := &VariableResource{client: n8nClient}
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "updated-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				req := resource.UpdateRequest{
-					Plan: tfsdk.Plan{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-						Raw:    planRaw,
-					},
-				}
-				resp := &resource.UpdateResponse{}
-
-				r.Update(ctx, req, resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when list API fails")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, tt.testFunc)
-	}
-}
-
-// TestVariableResource_ImportState_CRUD tests the full ImportState method execution.
-func TestVariableResource_ImportState_CRUD(t *testing.T) {
-	t.Run("import state passthrough", func(t *testing.T) {
-		t.Helper()
-		r := NewVariableResource()
-		ctx := context.Background()
-
-		schemaResp := resource.SchemaResponse{}
-		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-		emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"key":        tftypes.NewValue(tftypes.String, nil),
-			"value":      tftypes.NewValue(tftypes.String, nil),
-			"type":       tftypes.NewValue(tftypes.String, nil),
-			"project_id": tftypes.NewValue(tftypes.String, nil),
-		})
-
-		req := resource.ImportStateRequest{
-			ID: "var-123",
-		}
-		resp := &resource.ImportStateResponse{
-			State: tfsdk.State{
-				Schema: schemaResp.Schema,
-				Raw:    emptyValue,
-			},
-		}
-
-		r.ImportState(ctx, req, resp)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
-}
-
-// TestVariableResource_Read_CRUD tests the Read method with comprehensive coverage.
-func TestVariableResource_Read_CRUD(t *testing.T) {
-	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
-	}{
-		{
-			name: "success - read variable",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`{"data":[{"id":"var-123","key":"MY_VAR","value":"test-value","type":"string"}]}`))
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := NewVariableResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
-					ProviderData: n8nClient,
-				}, &resource.ConfigureResponse{})
-
-				ctx := context.Background()
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "OLD_KEY"),
-					"value":      tftypes.NewValue(tftypes.String, "old-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.ReadRequest{
-					State: state,
-				}
-				resp := &resource.ReadResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Read(ctx, req, resp)
-				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors during read")
-			},
-		},
-		{
-			name: "error - invalid state",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				r := NewVariableResource()
-				ctx := context.Background()
-
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.ReadRequest{
-					State: state,
-				}
-				resp := &resource.ReadResponse{}
-
-				r.Read(ctx, req, resp)
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
-			},
-		},
-		{
-			name: "error - API read fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := NewVariableResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
-					ProviderData: n8nClient,
-				}, &resource.ConfigureResponse{})
-
-				ctx := context.Background()
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.ReadRequest{
-					State: state,
-				}
-				resp := &resource.ReadResponse{}
-
-				r.Read(ctx, req, resp)
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API read fails")
-			},
-		},
-		{
-			name: "success - variable not found (removed from state)",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodGet && r.URL.Path == "/variables" {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`{"data":[]}`))
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestResourceClient(t, handler)
-				defer server.Close()
-
-				r := NewVariableResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
-					ProviderData: n8nClient,
-				}, &resource.ConfigureResponse{})
-
-				ctx := context.Background()
-				schemaResp := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, "var-123"),
-					"key":        tftypes.NewValue(tftypes.String, "MY_VAR"),
-					"value":      tftypes.NewValue(tftypes.String, "test-value"),
-					"type":       tftypes.NewValue(tftypes.String, "string"),
-					"project_id": tftypes.NewValue(tftypes.String, nil),
-				})
-
-				state := tfsdk.State{
-					Schema: schemaResp.Schema,
-					Raw:    stateRaw,
-				}
-
-				req := resource.ReadRequest{
-					State: state,
-				}
-				resp := &resource.ReadResponse{
-					State: tfsdk.State{
-						Schema: schemaResp.Schema,
-					},
-				}
-
-				r.Read(ctx, req, resp)
-				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors when variable not found")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, tt.testFunc)
-	}
+// stringPtr is a helper function to create string pointers for test cases.
+func stringPtr(s string) *string {
+	return &s
 }

@@ -148,6 +148,9 @@ for pkg in $PACKAGES; do
   done
 done
 
+# Define all provider packages for complete overview
+ALL_PROVIDER_PACKAGES="credential execution project sourcecontrol tag user variable workflow"
+
 # Second pass: generate tables organized by filename
 for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
   FILE_DATA="$TMP_DIR/$FILE_SHORT"
@@ -163,13 +166,24 @@ for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
     continue
   fi
 
-  # Get list of packages that have this file (restore original names)
-  PKG_LIST=$(ls "$FILE_DATA" | tr '_' '/' | sort)
+  # Determine which packages actually have this file in their source code
+  RELEVANT_PACKAGES=""
+  for pkg in $ALL_PROVIDER_PACKAGES; do
+    PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
+    if [ -f "$PKG_PATH" ]; then
+      RELEVANT_PACKAGES="$RELEVANT_PACKAGES $pkg"
+    fi
+  done
 
-  # Build table header
+  # Skip if file doesn't exist in any package (shouldn't happen but defensive)
+  if [ -z "$RELEVANT_PACKAGES" ]; then
+    continue
+  fi
+
+  # Build table header with only relevant packages
   HEADER="| Function |"
   SEPARATOR="|----------|"
-  for pkg in $PKG_LIST; do
+  for pkg in $RELEVANT_PACKAGES; do
     HEADER="$HEADER $pkg |"
     SEPARATOR="$SEPARATOR:--------:|"
   done
@@ -181,15 +195,24 @@ for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
   echo "$ALL_FUNCS" | while read -r func; do
     ROW="| \`$func\` |"
 
-    for pkg in $PKG_LIST; do
+    for pkg in $RELEVANT_PACKAGES; do
       # Convert package name back to safe version for file lookup
       PKG_SAFE=$(echo "$pkg" | tr '/' '_')
       # Get coverage for this function in this package
       COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
 
       if [ -z "$COV" ]; then
-        # Function doesn't exist in this package
-        ROW="$ROW - |"
+        # Function doesn't exist in coverage - check if it exists in source
+        PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
+        # Check if function exists in source code (method or function)
+        # Pattern matches both: "func FuncName(" and "func (r *Type) FuncName("
+        if [ -f "$PKG_PATH" ] && grep -q "func.*[[:space:]]$func(" "$PKG_PATH"; then
+          # Function exists in source but has 0% coverage
+          ROW="$ROW 🔴 0.0% |"
+        else
+          # Function doesn't exist in source (not in API for this package)
+          ROW="$ROW 🔵 N/A |"
+        fi
       else
         # Function exists, add icon based on coverage
         COV_VALUE=$(echo "$COV" | sed 's/%//')
@@ -222,7 +245,8 @@ cat >>COVERAGE.MD <<EOF
 - 🟢 **≥90%** - Excellente couverture
 - 🟡 **70-89%** - Bonne couverture
 - 🟠 **1-69%** - Couverture partielle (à améliorer)
-- 🔴 **0%** - Fonction non testée
+- 🔴 **0%** - Fonction non testée (implémentée mais pas de tests)
+- 🔵 **N/A** - Fonction non applicable (pas dans l'API pour ce type de ressource)
 
 **Note:** Seules les fonctions publiques (exportées) sont listées. Les fonctions privées et constructeurs (\`New*\`) sont exclus.
 

@@ -157,6 +157,26 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeCreateLogic contains the main logic for creating a tag.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *TagResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
 	tagRequest := n8nsdk.Tag{
 		Name: plan.Name.ValueString(),
 	}
@@ -175,8 +195,8 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 			"Error creating tag",
 			fmt.Sprintf("Could not create tag: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	plan.ID = types.StringPointerValue(tag.Id)
@@ -190,7 +210,8 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -212,6 +233,26 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
+	// Execute read logic
+	if !r.executeReadLogic(ctx, state, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// executeReadLogic contains the main logic for reading a tag.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Read response
+//
+// Returns:
+//   - bool: True if read succeeded, false otherwise
+func (r *TagResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdGet(ctx, state.ID.ValueString()).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -224,8 +265,8 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			"Error reading tag",
 			fmt.Sprintf("Could not read tag ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	state.Name = types.StringValue(tag.Name)
@@ -238,7 +279,8 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		state.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Return success.
+	return true
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -260,6 +302,26 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a tag.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *TagResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
 	tagRequest := n8nsdk.Tag{
 		Name: plan.Name.ValueString(),
 	}
@@ -278,8 +340,8 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 			"Error updating tag",
 			fmt.Sprintf("Could not update tag ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	plan.Name = types.StringValue(tag.Name)
@@ -292,7 +354,8 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -314,6 +377,21 @@ func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 
+	// Execute delete logic
+	r.executeDeleteLogic(ctx, state, resp)
+}
+
+// executeDeleteLogic contains the main logic for deleting a tag.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Delete response
+//
+// Returns:
+//   - bool: True if delete succeeded, false otherwise
+func (r *TagResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
 	_, httpResp, err := r.client.APIClient.TagsAPI.TagsIdDelete(ctx, state.ID.ValueString()).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -326,9 +404,12 @@ func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 			"Error deleting tag",
 			fmt.Sprintf("Could not delete tag ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
+
+	// Return success.
+	return true
 }
 
 // ImportState imports the resource into Terraform state.

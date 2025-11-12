@@ -8,25 +8,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/user/models"
 	"github.com/stretchr/testify/assert"
 )
-
-// createTestSchema creates a test schema for user resource.
-func createTestSchema(t *testing.T) schema.Schema {
-	t.Helper()
-	r := &UserResource{}
-	req := resource.SchemaRequest{}
-	resp := &resource.SchemaResponse{}
-	r.Schema(context.Background(), req, resp)
-	return resp.Schema
-}
 
 // setupTestClient creates a test N8nClient with httptest server.
 func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
@@ -34,7 +21,6 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	server := httptest.NewServer(handler)
 
 	cfg := n8nsdk.NewConfiguration()
-	// Parse server URL to extract host and port
 	cfg.Servers = n8nsdk.ServerConfigurations{
 		{
 			URL:         server.URL,
@@ -52,967 +38,675 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 	return n8nClient, server
 }
 
-// TestUserResource_Create tests user creation.
-// TestUserResource_Create is now in external test file - refactored to test behavior only.
-
-// TestUserResource_Read is now in external test file - refactored to test behavior only.
-
-// TestUserResource_Update is now in external test file - refactored to test behavior only.
-
-// TestUserResource_Delete is now in external test file - refactored to test behavior only.
-
-// TestUserResource_ImportState is now in external test file - refactored to test behavior only.
-
-// TestNewUserResource is now in external test file - refactored to test behavior only.
-
-// TestNewUserResourceWrapper is now in external test file - refactored to test behavior only.
-
-// TestUserResource_Metadata is now in external test file - refactored to test behavior only.
-
-// TestUserResource_Schema is now in external test file - refactored to test behavior only.
-
-// TestUserResource_Configure is now in external test file - refactored to test behavior only.
-
-func TestUserResource_CreateWithRole(t *testing.T) {
-	t.Helper()
+// TestUserResource_executeCreateLogic tests the executeCreateLogic method with error cases.
+func TestUserResource_executeCreateLogic(t *testing.T) {
+	t.Parallel()
 
 	tests := []struct {
-		name     string
-		testFunc func(*testing.T)
+		name         string
+		email        string
+		role         string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectID     string
 	}{
 		{
-			name: "creation with role",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					switch r.URL.Path {
-					case "/users":
-						if r.Method == http.MethodPost {
-							w.Header().Set("Content-Type", "application/json")
-							w.WriteHeader(http.StatusOK)
-							response := map[string]interface{}{
-								"user": map[string]interface{}{
-									"id": "user-123",
-								},
-							}
-							json.NewEncoder(w).Encode(response)
-							return
-						}
-					case "/users/user-123":
-						if r.Method == http.MethodGet {
-							user := map[string]interface{}{
-								"id":        "user-123",
-								"email":     "test@example.com",
-								"firstName": "Test",
-								"lastName":  "User",
-								"role":      "global:admin",
-								"isPending": false,
-								"createdAt": "2024-01-01T00:00:00Z",
-								"updatedAt": "2024-01-01T00:00:00Z",
-							}
-							w.Header().Set("Content-Type", "application/json")
-							json.NewEncoder(w).Encode(user)
-							return
-						}
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				rawPlan := map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, nil),
-					"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-					"first_name": tftypes.NewValue(tftypes.String, nil),
-					"last_name":  tftypes.NewValue(tftypes.String, nil),
-					"role":       tftypes.NewValue(tftypes.String, "global:admin"),
-					"is_pending": tftypes.NewValue(tftypes.Bool, nil),
-					"created_at": tftypes.NewValue(tftypes.String, nil),
-					"updated_at": tftypes.NewValue(tftypes.String, nil),
+			name:  "successful creation",
+			email: "test@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/users" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"user": map[string]any{
+							"id": "user-123",
+						},
+					})
+					return
 				}
-				plan := tfsdk.Plan{
-					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-					Schema: createTestSchema(t),
+				if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":        "user-123",
+						"email":     "test@example.com",
+						"firstName": "Test",
+						"lastName":  "User",
+						"role":      "global:member",
+						"isPending": false,
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-01T00:00:00Z",
+					})
+					return
 				}
-
-				state := tfsdk.State{
-					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
-					Schema: createTestSchema(t),
-				}
-
-				req := resource.CreateRequest{
-					Plan: plan,
-				}
-				resp := resource.CreateResponse{
-					State: state,
-				}
-
-				r.Create(context.Background(), req, &resp)
-
-				assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+				w.WriteHeader(http.StatusNotFound)
 			},
+			expectError: false,
+			expectID:    "user-123",
 		},
 		{
-			name: "creation with invalid response",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						response := map[string]interface{}{
-							"user": map[string]interface{}{},
-						}
-						json.NewEncoder(w).Encode(response)
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				rawPlan := map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, nil),
-					"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-					"first_name": tftypes.NewValue(tftypes.String, nil),
-					"last_name":  tftypes.NewValue(tftypes.String, nil),
-					"role":       tftypes.NewValue(tftypes.String, nil),
-					"is_pending": tftypes.NewValue(tftypes.Bool, nil),
-					"created_at": tftypes.NewValue(tftypes.String, nil),
-					"updated_at": tftypes.NewValue(tftypes.String, nil),
-				}
-				plan := tfsdk.Plan{
-					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-					Schema: createTestSchema(t),
-				}
-
-				state := tfsdk.State{
-					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
-					Schema: createTestSchema(t),
-				}
-
-				req := resource.CreateRequest{
-					Plan: plan,
-				}
-				resp := resource.CreateResponse{
-					State: state,
-				}
-
-				r.Create(context.Background(), req, &resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors when API returns invalid response")
+			name:  "API error on creation",
+			email: "failed@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
 			},
+			expectError: true,
 		},
 		{
-			name: "creation user fetch fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					switch r.URL.Path {
-					case "/users":
-						if r.Method == http.MethodPost {
-							w.Header().Set("Content-Type", "application/json")
-							w.WriteHeader(http.StatusOK)
-							response := map[string]interface{}{
-								"user": map[string]interface{}{
-									"id": "user-123",
-								},
-							}
-							json.NewEncoder(w).Encode(response)
-							return
-						}
-					case "/users/user-123":
-						if r.Method == http.MethodGet {
-							w.WriteHeader(http.StatusInternalServerError)
-							w.Write([]byte(`{"message": "Internal server error"}`))
-							return
-						}
-					}
+			name:  "missing user ID in response",
+			email: "noid@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/users" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"user": map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:  "error fetching full details",
+			email: "fetchfail@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/users" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"user": map[string]any{
+							"id": "user-456",
+						},
+					})
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/users/user-456" {
 					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				rawPlan := map[string]tftypes.Value{
-					"id":         tftypes.NewValue(tftypes.String, nil),
-					"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-					"first_name": tftypes.NewValue(tftypes.String, nil),
-					"last_name":  tftypes.NewValue(tftypes.String, nil),
-					"role":       tftypes.NewValue(tftypes.String, nil),
-					"is_pending": tftypes.NewValue(tftypes.Bool, nil),
-					"created_at": tftypes.NewValue(tftypes.String, nil),
-					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					w.Write([]byte(`{"message": "User not found"}`))
+					return
 				}
-				plan := tfsdk.Plan{
-					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-					Schema: createTestSchema(t),
-				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+	}
 
-				state := tfsdk.State{
-					Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, nil),
-					Schema: createTestSchema(t),
-				}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-				req := resource.CreateRequest{
-					Plan: plan,
-				}
-				resp := resource.CreateResponse{
-					State: state,
-				}
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
 
-				r.Create(context.Background(), req, &resp)
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Email: types.StringValue(tt.email),
+			}
+			if tt.role != "" {
+				plan.Role = types.StringValue(tt.role)
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
 
-				assert.True(t, resp.Diagnostics.HasError(), "Create should have errors when user fetch fails")
+			result := r.executeCreateLogic(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectID, plan.ID.ValueString(), "User ID should match")
+			}
+		})
+	}
+}
+
+// TestUserResource_executeReadLogic tests the executeReadLogic method with error cases.
+func TestUserResource_executeReadLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		userID       string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectEmail  string
+	}{
+		{
+			name:   "successful read",
+			userID: "user-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":        "user-123",
+						"email":     "retrieved@example.com",
+						"firstName": "Retrieved",
+						"lastName":  "User",
+						"role":      "global:admin",
+						"isPending": false,
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectEmail: "retrieved@example.com",
+		},
+		{
+			name:   "user not found",
+			userID: "user-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "User not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:   "API error",
+			userID: "user-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			state := &models.Resource{
+				ID: types.StringValue(tt.userID),
+			}
+			resp := &resource.ReadResponse{
+				State: resource.ReadResponse{}.State,
+			}
+
+			result := r.executeReadLogic(ctx, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectEmail, state.Email.ValueString(), "User email should match")
+			}
+		})
+	}
+}
+
+// TestUserResource_executeUpdateLogic tests the executeUpdateLogic method with error cases.
+func TestUserResource_executeUpdateLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		userID       string
+		oldEmail     string
+		newEmail     string
+		oldRole      string
+		newRole      string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:     "successful update with role change",
+			userID:   "user-123",
+			oldEmail: "test@example.com",
+			newEmail: "test@example.com",
+			oldRole:  "global:member",
+			newRole:  "global:admin",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPatch && r.URL.Path == "/users/user-123/role" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":        "user-123",
+						"email":     "test@example.com",
+						"firstName": "Test",
+						"lastName":  "User",
+						"role":      "global:admin",
+						"isPending": false,
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-02T00:00:00Z",
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:     "email change not supported",
+			userID:   "user-123",
+			oldEmail: "old@example.com",
+			newEmail: "new@example.com",
+			oldRole:  "global:member",
+			newRole:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:     "role update fails",
+			userID:   "user-404",
+			oldEmail: "test@example.com",
+			newEmail: "test@example.com",
+			oldRole:  "global:member",
+			newRole:  "global:admin",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPatch && r.URL.Path == "/users/user-404/role" {
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"message": "User not found"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:     "refresh after update fails",
+			userID:   "user-789",
+			oldEmail: "test@example.com",
+			newEmail: "test@example.com",
+			oldRole:  "global:member",
+			newRole:  "global:admin",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPatch && r.URL.Path == "/users/user-789/role" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/users/user-789" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:     "no role change",
+			userID:   "user-999",
+			oldEmail: "test@example.com",
+			newEmail: "test@example.com",
+			oldRole:  "global:member",
+			newRole:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/users/user-999" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":        "user-999",
+						"email":     "test@example.com",
+						"firstName": "Test",
+						"lastName":  "User",
+						"role":      "global:member",
+						"isPending": false,
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				ID:    types.StringValue(tt.userID),
+				Email: types.StringValue(tt.newEmail),
+				Role:  types.StringValue(tt.newRole),
+			}
+			state := &models.Resource{
+				ID:    types.StringValue(tt.userID),
+				Email: types.StringValue(tt.oldEmail),
+				Role:  types.StringValue(tt.oldRole),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
+
+			result := r.executeUpdateLogic(ctx, plan, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestUserResource_executeDeleteLogic tests the executeDeleteLogic method with error cases.
+func TestUserResource_executeDeleteLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		userID       string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:   "successful deletion",
+			userID: "user-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodDelete && r.URL.Path == "/users/user-123" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:   "user not found",
+			userID: "user-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "User not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:   "API error",
+			userID: "user-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			state := &models.Resource{
+				ID: types.StringValue(tt.userID),
+			}
+			resp := &resource.DeleteResponse{
+				State: resource.DeleteResponse{}.State,
+			}
+
+			result := r.executeDeleteLogic(ctx, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestUserResource_schemaAttributes tests the schemaAttributes method.
+func TestUserResource_schemaAttributes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		expectedFields []string
+	}{
+		{
+			name: "returns all expected schema attributes",
+			expectedFields: []string{
+				"id",
+				"email",
+				"first_name",
+				"last_name",
+				"role",
+				"is_pending",
+				"created_at",
+				"updated_at",
 			},
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt.testFunc(t)
+			t.Parallel()
+
+			r := &UserResource{}
+			attrs := r.schemaAttributes()
+
+			assert.NotNil(t, attrs, "Schema attributes should not be nil")
+			assert.Len(t, attrs, len(tt.expectedFields), "Should have correct number of fields")
+
+			for _, field := range tt.expectedFields {
+				assert.Contains(t, attrs, field, "Should contain field: %s", field)
+			}
+
+			// Verify specific attribute properties
+			assert.True(t, attrs["id"].IsComputed(), "id should be computed")
+			assert.True(t, attrs["email"].IsRequired(), "email should be required")
+			assert.True(t, attrs["role"].IsOptional(), "role should be optional")
+			assert.True(t, attrs["role"].IsComputed(), "role should be computed")
 		})
 	}
 }
 
-// TestUserResource_UpdateEmailChanged tests email change validation.
-func TestUserResource_UpdateEmailChanged(t *testing.T) {
-	t.Run("update with email change fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusNotFound)
+// TestUserResource_createUser tests the createUser method with error cases.
+func TestUserResource_createUser(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		email        string
+		role         string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectUserID string
+		expectError  bool
+	}{
+		{
+			name:  "successful user creation with role",
+			email: "test@example.com",
+			role:  "global:admin",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(map[string]any{
+					"user": map[string]any{
+						"id": "user-123",
+					},
+				})
+			},
+			expectUserID: "user-123",
+			expectError:  false,
+		},
+		{
+			name:  "successful user creation without role",
+			email: "norole@example.com",
+			role:  "",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(map[string]any{
+					"user": map[string]any{
+						"id": "user-456",
+					},
+				})
+			},
+			expectUserID: "user-456",
+			expectError:  false,
+		},
+		{
+			name:  "API error on creation",
+			email: "error@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(`{"message": "Invalid request"}`))
+			},
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:  "missing user ID in response",
+			email: "noid@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(map[string]any{
+					"user": map[string]any{},
+				})
+			},
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:  "nil user in response",
+			email: "niluser@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(map[string]any{})
+			},
+			expectUserID: "",
+			expectError:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Email: types.StringValue(tt.email),
+			}
+			if tt.role != "" {
+				plan.Role = types.StringValue(tt.role)
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			userID := r.createUser(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.Empty(t, userID, "Should return empty string on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.Equal(t, tt.expectUserID, userID, "User ID should match")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
 		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &UserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "newemail@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:member"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-			Schema: createTestSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:member"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when email changes")
-		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Email Change Not Supported")
-	})
+	}
 }
 
-// TestUserResource_UpdateNoRoleChange tests update without role change.
-func TestUserResource_UpdateNoRoleChange(t *testing.T) {
-	t.Run("update without role change", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/users/user-123" && r.Method == http.MethodGet {
-				user := map[string]interface{}{
+// TestUserResource_fetchFullUserDetails tests the fetchFullUserDetails method with error cases.
+func TestUserResource_fetchFullUserDetails(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		userID       string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectNil    bool
+		expectEmail  string
+	}{
+		{
+			name:   "successful fetch",
+			userID: "user-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
 					"id":        "user-123",
-					"email":     "test@example.com",
-					"firstName": "Test",
+					"email":     "fetched@example.com",
+					"firstName": "Fetched",
 					"lastName":  "User",
 					"role":      "global:member",
 					"isPending": false,
 					"createdAt": "2024-01-01T00:00:00Z",
 					"updatedAt": "2024-01-01T00:00:00Z",
-				}
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(user)
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &UserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:member"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-			Schema: createTestSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:member"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
-	})
-}
-
-// TestUserResource_UpdateRoleFails tests role update failure.
-func TestUserResource_UpdateRoleFails(t *testing.T) {
-	t.Run("update role fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/users/user-123/role" && r.Method == http.MethodPatch {
+				})
+			},
+			expectNil:   false,
+			expectEmail: "fetched@example.com",
+		},
+		{
+			name:   "user not found",
+			userID: "user-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "User not found"}`))
+			},
+			expectNil: true,
+		},
+		{
+			name:   "API error",
+			userID: "user-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(`{"message": "Internal server error"}`))
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &UserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:admin"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-			Schema: createTestSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:member"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when role update fails")
-	})
-}
-
-// TestUserResource_UpdateRefreshFails tests refresh failure after update.
-func TestUserResource_UpdateRefreshFails(t *testing.T) {
-	t.Run("update refresh fails", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch {
-			case r.URL.Path == "/users/user-123/role" && r.Method == http.MethodPatch:
-				w.WriteHeader(http.StatusOK)
-				return
-			case r.URL.Path == "/users/user-123" && r.Method == http.MethodGet:
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(`{"message": "Internal server error"}`))
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &UserResource{client: n8nClient}
-
-		rawPlan := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:admin"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		plan := tfsdk.Plan{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawPlan),
-			Schema: createTestSchema(t),
-		}
-
-		rawState := map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, "user-123"),
-			"email":      tftypes.NewValue(tftypes.String, "test@example.com"),
-			"first_name": tftypes.NewValue(tftypes.String, "Test"),
-			"last_name":  tftypes.NewValue(tftypes.String, "User"),
-			"role":       tftypes.NewValue(tftypes.String, "global:member"),
-			"is_pending": tftypes.NewValue(tftypes.Bool, false),
-			"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-			"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
-		}
-		state := tfsdk.State{
-			Raw:    tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{"id": tftypes.String, "email": tftypes.String, "first_name": tftypes.String, "last_name": tftypes.String, "role": tftypes.String, "is_pending": tftypes.Bool, "created_at": tftypes.String, "updated_at": tftypes.String}}, rawState),
-			Schema: createTestSchema(t),
-		}
-
-		req := resource.UpdateRequest{
-			Plan:  plan,
-			State: state,
-		}
-		resp := resource.UpdateResponse{
-			State: state,
-		}
-
-		r.Update(context.Background(), req, &resp)
-
-		assert.True(t, resp.Diagnostics.HasError(), "Update should have errors when refresh fails")
-	})
-}
-
-// TestUserResource_schemaAttributes tests the private schemaAttributes method.
-func TestUserResource_schemaAttributes(t *testing.T) {
-	t.Helper()
-
-	r := NewUserResource()
-	attrs := r.schemaAttributes()
-
-	assert.NotNil(t, attrs, "schemaAttributes should return non-nil attributes")
-	assert.NotEmpty(t, attrs, "schemaAttributes should return non-empty attributes")
-}
-
-// TestUserResource_createUser tests the private createUser method.
-func TestUserResource_createUser(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name string
-	}{
-		{name: "success - create user with role"},
-		{name: "success - create user without role"},
-		{name: "success - create user with null role"},
-		{name: "success - create user with unknown role"},
-		{name: "error - API error"},
-		{name: "error - nil user in response"},
-		{name: "error - nil user ID in response"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "success - create user with role":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(map[string]interface{}{
-							"user": map[string]interface{}{
-								"id":    "user-123",
-								"email": "test@example.com",
-								"role":  "admin",
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-					Role:  types.StringValue("admin"),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "user-123", userID)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "success - create user without role":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(map[string]interface{}{
-							"user": map[string]interface{}{
-								"id":    "user-123",
-								"email": "test@example.com",
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "user-123", userID)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "success - create user with null role":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(map[string]interface{}{
-							"user": map[string]interface{}{
-								"id":    "user-123",
-								"email": "test@example.com",
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-					Role:  types.StringNull(),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "user-123", userID)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "success - create user with unknown role":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(map[string]interface{}{
-							"user": map[string]interface{}{
-								"id":    "user-123",
-								"email": "test@example.com",
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-					Role:  types.StringUnknown(),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "user-123", userID)
-				assert.False(t, resp.Diagnostics.HasError())
-
-			case "error - API error":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusInternalServerError)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "", userID)
-				assert.True(t, resp.Diagnostics.HasError())
-
-			case "error - nil user in response":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(map[string]interface{}{
-							"user": nil,
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "", userID)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "API did not return user ID")
-
-			case "error - nil user ID in response":
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path == "/users" && r.Method == http.MethodPost {
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusOK)
-						json.NewEncoder(w).Encode(map[string]interface{}{
-							"user": map[string]interface{}{
-								"email": "test@example.com",
-							},
-						})
-						return
-					}
-					w.WriteHeader(http.StatusNotFound)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-				plan := &models.Resource{
-					Email: types.StringValue("test@example.com"),
-				}
-				resp := &resource.CreateResponse{}
-
-				userID := r.createUser(context.Background(), plan, resp)
-
-				assert.Equal(t, "", userID)
-				assert.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "API did not return user ID")
-			}
-		})
-	}
-}
-
-// TestUserResource_fetchFullUserDetails tests the private fetchFullUserDetails method.
-func TestUserResource_fetchFullUserDetails(t *testing.T) {
-	t.Helper()
-
-	tests := []struct {
-		name        string
-		userID      string
-		expectError bool
-	}{
-		{
-			name:        "empty user ID",
-			userID:      "",
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Helper()
-
-			// Note: Cannot test fetchFullUserDetails() with nil client as it would panic
-			// due to nil pointer dereference. In production, the client is always
-			// properly initialized via Configure().
-			// This test just verifies that the method exists and can be called
-			// with a properly configured resource.
-			r := &UserResource{}
-			assert.NotNil(t, r, "UserResource should not be nil")
-		})
-	}
-}
-
-// TestUserResource_validateEmailUnchanged tests the private validateEmailUnchanged method.
-func TestUserResource_validateEmailUnchanged(t *testing.T) {
-	t.Helper()
-
-	tests := []struct {
-		name        string
-		plan        *models.Resource
-		state       *models.Resource
-		expectError bool
-	}{
-		{
-			name: "email unchanged",
-			plan: &models.Resource{
-				Email: types.StringValue("test@example.com"),
 			},
-			state: &models.Resource{
-				Email: types.StringValue("test@example.com"),
-			},
-			expectError: false,
-		},
-		{
-			name: "email changed",
-			plan: &models.Resource{
-				Email: types.StringValue("new@example.com"),
-			},
-			state: &models.Resource{
-				Email: types.StringValue("test@example.com"),
-			},
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Helper()
-
-			r := &UserResource{}
-			resp := &resource.UpdateResponse{}
-
-			result := r.validateEmailUnchanged(tt.plan, tt.state, resp)
-
-			if tt.expectError {
-				assert.False(t, result, "validateEmailUnchanged should return false for changed email")
-				assert.True(t, resp.Diagnostics.HasError(), "should have error for changed email")
-			} else {
-				assert.True(t, result, "validateEmailUnchanged should return true for unchanged email")
-				assert.False(t, resp.Diagnostics.HasError(), "should not have error for unchanged email")
-			}
-		})
-	}
-}
-
-// TestUserResource_updateRoleIfChanged tests the private updateRoleIfChanged method.
-func TestUserResource_updateRoleIfChanged(t *testing.T) {
-	t.Helper()
-
-	tests := []struct {
-		name        string
-		plan        *models.Resource
-		state       *models.Resource
-		expectError bool
-	}{
-		{
-			name: "role unchanged",
-			plan: &models.Resource{
-				Role: types.StringValue("global:member"),
-			},
-			state: &models.Resource{
-				Role: types.StringValue("global:member"),
-			},
-			expectError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Helper()
-
-			r := &UserResource{}
-			resp := &resource.UpdateResponse{}
-
-			r.updateRoleIfChanged(context.Background(), tt.plan, tt.state, resp)
-
-			if !tt.expectError {
-				// Method should complete without panicking
-				assert.NotNil(t, resp, "response should not be nil")
-			}
-		})
-	}
-}
-
-// TestUserResource_refreshUserData tests the private refreshUserData method.
-func TestUserResource_refreshUserData(t *testing.T) {
-	t.Helper()
-
-	tests := []struct {
-		name        string
-		userID      string
-		expectError bool
-	}{
-		{
-			name:        "empty user ID",
-			userID:      "",
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Helper()
-
-			// Note: Cannot test refreshUserData() with nil client as it would panic
-			// due to nil pointer dereference. In production, the client is always
-			// properly initialized via Configure().
-			// This test just verifies that the method exists and can be called
-			// with a properly configured resource.
-			r := &UserResource{}
-			assert.NotNil(t, r, "UserResource should not be nil")
-		})
-	}
-}
-
-// TestUserResource_Create_FullCoverage ensures 100% coverage.
-func TestUserResource_Create_FullCoverage(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name         string
-		setupHandler func(w http.ResponseWriter, r *http.Request)
-		email        string
-		role         types.String
-		expectError  bool
-		useBadPlan   bool
-	}{
-		{
-			name: "create user with nil user in response",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/users" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": nil,
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			email:       "test@example.com",
-			role:        types.StringNull(),
-			expectError: true,
-		},
-		{
-			name: "create user with nil ID in response",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/users" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{
-							"email": "test@example.com",
-							"id":    nil,
-						},
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			email:       "test@example.com",
-			role:        types.StringNull(),
-			expectError: true,
-		},
-		{
-			name: "create user with get error",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/users" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{
-							"email": "test@example.com",
-							"id":    "user-1",
-						},
-					})
-					return
-				}
-				if r.Method == http.MethodGet {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			email:       "test@example.com",
-			role:        types.StringNull(),
-			expectError: true,
-		},
-		{
-			name: "plan get error",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			email:       "",
-			role:        types.StringNull(),
-			expectError: true,
-			useBadPlan:  true,
+			expectNil: true,
 		},
 	}
 
@@ -1026,188 +720,140 @@ func TestUserResource_Create_FullCoverage(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-
-			if tt.useBadPlan {
-				// Use schema mismatch to trigger plan get error
-				req := resource.CreateRequest{
-					Plan: tfsdk.Plan{
-						Raw:    tftypes.NewValue(tftypes.String, "bad"),
-						Schema: createTestSchema(t),
-					},
-				}
-				resp := resource.CreateResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				r.Create(context.Background(), req, &resp)
-				assert.True(t, resp.Diagnostics.HasError())
-				return
+			ctx := context.Background()
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
 			}
 
-			plan := &models.Resource{
-				Email: types.StringValue(tt.email),
-				Role:  tt.role,
-			}
+			user := r.fetchFullUserDetails(ctx, tt.userID, resp)
 
-			req := resource.CreateRequest{
-				Plan: tfsdk.Plan{Schema: createTestSchema(t)},
-			}
-			resp := resource.CreateResponse{
-				State: tfsdk.State{Schema: createTestSchema(t)},
-			}
-
-			req.Plan.Set(context.Background(), plan)
-
-			r.Create(context.Background(), req, &resp)
-
-			if tt.expectError {
-				assert.True(t, resp.Diagnostics.HasError())
+			if tt.expectNil {
+				assert.Nil(t, user, "Should return nil on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
 			} else {
-				assert.False(t, resp.Diagnostics.HasError())
+				assert.NotNil(t, user, "Should return user object")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				if user != nil {
+					assert.Equal(t, tt.expectEmail, user.Email, "Email should match")
+				}
 			}
 		})
 	}
 }
 
-// TestUserResource_Update_FullCoverage ensures 100% coverage.
-func TestUserResource_Update_FullCoverage(t *testing.T) {
+// TestUserResource_validateEmailUnchanged tests the validateEmailUnchanged method with error cases.
+func TestUserResource_validateEmailUnchanged(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		setupHandler func(w http.ResponseWriter, r *http.Request)
-		planEmail    string
-		stateEmail   string
-		planRole     types.String
-		stateRole    types.String
-		expectError  bool
+		name        string
+		planEmail   string
+		stateEmail  string
+		expectValid bool
+		expectError bool
 	}{
 		{
-			name: "update with email change error",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusNotFound)
-			},
+			name:        "email unchanged",
+			planEmail:   "test@example.com",
+			stateEmail:  "test@example.com",
+			expectValid: true,
+			expectError: false,
+		},
+		{
+			name:        "email changed",
 			planEmail:   "new@example.com",
 			stateEmail:  "old@example.com",
-			planRole:    types.StringValue("global:admin"),
-			stateRole:   types.StringValue("global:member"),
+			expectValid: false,
 			expectError: true,
 		},
 		{
-			name: "update role with no change",
+			name:        "email unchanged case sensitive",
+			planEmail:   "Test@Example.com",
+			stateEmail:  "Test@Example.com",
+			expectValid: true,
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &UserResource{}
+			plan := &models.Resource{
+				Email: types.StringValue(tt.planEmail),
+			}
+			state := &models.Resource{
+				Email: types.StringValue(tt.stateEmail),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
+
+			result := r.validateEmailUnchanged(plan, state, resp)
+
+			assert.Equal(t, tt.expectValid, result, "Validation result should match expected")
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error for email change")
+			} else {
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestUserResource_updateRoleIfChanged tests the updateRoleIfChanged method with error cases.
+func TestUserResource_updateRoleIfChanged(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		planRole     string
+		stateRole    string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:      "role changed successfully",
+			planRole:  "global:admin",
+			stateRole: "global:member",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodGet && r.URL.Path == "/users/user-1" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":    "user-1",
-						"email": "test@example.com",
-						"role":  "global:admin",
-					})
+				if r.Method == http.MethodPatch && r.URL.Path == "/users/user-123/role" {
+					w.WriteHeader(http.StatusNoContent)
 					return
 				}
 				w.WriteHeader(http.StatusNotFound)
 			},
-			planEmail:   "test@example.com",
-			stateEmail:  "test@example.com",
-			planRole:    types.StringValue("global:admin"),
-			stateRole:   types.StringValue("global:admin"),
 			expectError: false,
 		},
 		{
-			name: "update role with null plan role",
+			name:      "no role change",
+			planRole:  "global:member",
+			stateRole: "global:member",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodGet && r.URL.Path == "/users/user-1" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":    "user-1",
-						"email": "test@example.com",
-					})
-					return
-				}
 				w.WriteHeader(http.StatusNotFound)
 			},
-			planEmail:   "test@example.com",
-			stateEmail:  "test@example.com",
-			planRole:    types.StringNull(),
-			stateRole:   types.StringValue("global:admin"),
 			expectError: false,
 		},
 		{
-			name: "update role with null state role",
+			name:      "API error on role update",
+			planRole:  "global:admin",
+			stateRole: "global:member",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodGet && r.URL.Path == "/users/user-1" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":    "user-1",
-						"email": "test@example.com",
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(`{"message": "Invalid role"}`))
 			},
-			planEmail:   "test@example.com",
-			stateEmail:  "test@example.com",
-			planRole:    types.StringValue("global:admin"),
-			stateRole:   types.StringNull(),
-			expectError: false,
-		},
-		{
-			name: "update with role API error",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPatch {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			planEmail:   "test@example.com",
-			stateEmail:  "test@example.com",
-			planRole:    types.StringValue("global:admin"),
-			stateRole:   types.StringValue("global:member"),
 			expectError: true,
 		},
 		{
-			name: "update with refresh error",
+			name:      "user not found during role update",
+			planRole:  "global:admin",
+			stateRole: "global:member",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPatch && r.URL.Path == "/users/user-1/role" {
-					w.WriteHeader(http.StatusOK)
-					return
-				}
-				if r.Method == http.MethodGet {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
 				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "User not found"}`))
 			},
-			planEmail:   "test@example.com",
-			stateEmail:  "test@example.com",
-			planRole:    types.StringValue("global:admin"),
-			stateRole:   types.StringValue("global:member"),
-			expectError: true,
-		},
-		{
-			name: "plan get error",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			planEmail:   "",
-			stateEmail:  "",
-			planRole:    types.StringNull(),
-			stateRole:   types.StringNull(),
-			expectError: true,
-		},
-		{
-			name: "state get error",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			planEmail:   "",
-			stateEmail:  "",
-			planRole:    types.StringNull(),
-			stateRole:   types.StringNull(),
 			expectError: true,
 		},
 	}
@@ -1222,331 +868,108 @@ func TestUserResource_Update_FullCoverage(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-
-			// Handle error cases with bad plan/state
-			if tt.name == "plan get error" {
-				req := resource.UpdateRequest{
-					Plan:  tfsdk.Plan{Raw: tftypes.NewValue(tftypes.String, "bad"), Schema: createTestSchema(t)},
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				resp := resource.UpdateResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				r.Update(context.Background(), req, &resp)
-				assert.True(t, resp.Diagnostics.HasError())
-				return
-			}
-
-			if tt.name == "state get error" {
-				req := resource.UpdateRequest{
-					Plan:  tfsdk.Plan{Schema: createTestSchema(t)},
-					State: tfsdk.State{Raw: tftypes.NewValue(tftypes.String, "bad"), Schema: createTestSchema(t)},
-				}
-				resp := resource.UpdateResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				r.Update(context.Background(), req, &resp)
-				assert.True(t, resp.Diagnostics.HasError())
-				return
-			}
-
+			ctx := context.Background()
 			plan := &models.Resource{
-				ID:    types.StringValue("user-1"),
-				Email: types.StringValue(tt.planEmail),
-				Role:  tt.planRole,
+				ID:   types.StringValue("user-123"),
+				Role: types.StringValue(tt.planRole),
 			}
 			state := &models.Resource{
-				ID:    types.StringValue("user-1"),
-				Email: types.StringValue(tt.stateEmail),
-				Role:  tt.stateRole,
+				ID:   types.StringValue("user-123"),
+				Role: types.StringValue(tt.stateRole),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
 			}
 
-			req := resource.UpdateRequest{
-				Plan:  tfsdk.Plan{Schema: createTestSchema(t)},
-				State: tfsdk.State{Schema: createTestSchema(t)},
-			}
-			resp := resource.UpdateResponse{
-				State: tfsdk.State{Schema: createTestSchema(t)},
-			}
-
-			req.Plan.Set(context.Background(), plan)
-			req.State.Set(context.Background(), state)
-
-			r.Update(context.Background(), req, &resp)
+			r.updateRoleIfChanged(ctx, plan, state, resp)
 
 			if tt.expectError {
-				assert.True(t, resp.Diagnostics.HasError())
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
 			} else {
-				assert.False(t, resp.Diagnostics.HasError())
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
 			}
 		})
 	}
 }
 
-// TestUserResource_Delete_CRUD tests the Delete method with comprehensive coverage.
-func TestUserResource_Delete_CRUD(t *testing.T) {
+// TestUserResource_refreshUserData tests the refreshUserData method with error cases.
+func TestUserResource_refreshUserData(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		testFunc func(t *testing.T)
+		name         string
+		userID       string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectNil    bool
+		expectRole   string
 	}{
 		{
-			name: "success - delete user",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				t.Parallel()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodDelete && r.URL.Path == "/users/user-123" {
-						w.WriteHeader(http.StatusNoContent)
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+			name:   "successful refresh",
+			userID: "user-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":        "user-123",
+					"email":     "refreshed@example.com",
+					"firstName": "Refreshed",
+					"lastName":  "User",
+					"role":      "global:admin",
+					"isPending": false,
+					"createdAt": "2024-01-01T00:00:00Z",
+					"updatedAt": "2024-01-02T00:00:00Z",
 				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				state := &models.Resource{
-					ID:    types.StringValue("user-123"),
-					Email: types.StringValue("test@example.com"),
-					Role:  types.StringValue("global:member"),
-				}
-
-				req := resource.DeleteRequest{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				resp := resource.DeleteResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				ctx := context.Background()
-				req.State.Set(ctx, state)
-
-				r.Delete(ctx, req, &resp)
-
-				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors during delete")
 			},
+			expectNil:  false,
+			expectRole: "global:admin",
 		},
 		{
-			name: "error - invalid state",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				t.Parallel()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					t.Errorf("Should not make any API calls with invalid state")
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				req := resource.DeleteRequest{
-					State: tfsdk.State{Raw: tftypes.NewValue(tftypes.String, "invalid"), Schema: createTestSchema(t)},
-				}
-				resp := resource.DeleteResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				ctx := context.Background()
-				r.Delete(ctx, req, &resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
+			name:   "user not found",
+			userID: "user-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "User not found"}`))
 			},
+			expectNil: true,
 		},
 		{
-			name: "error - API delete fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				t.Parallel()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodDelete && r.URL.Path == "/users/user-123" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				state := &models.Resource{
-					ID:    types.StringValue("user-123"),
-					Email: types.StringValue("test@example.com"),
-					Role:  types.StringValue("global:member"),
-				}
-
-				req := resource.DeleteRequest{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				resp := resource.DeleteResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				ctx := context.Background()
-				req.State.Set(ctx, state)
-
-				r.Delete(ctx, req, &resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API delete fails")
+			name:   "API error on refresh",
+			userID: "user-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
 			},
+			expectNil: true,
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt.testFunc(t)
-		})
-	}
-}
+			t.Parallel()
 
-// TestUserResource_Read_CRUD tests the Read method with comprehensive coverage.
-func TestUserResource_Read_CRUD(t *testing.T) {
-	t.Parallel()
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
 
-	tests := []struct {
-		name     string
-		testFunc func(t *testing.T)
-	}{
-		{
-			name: "success - read user",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				t.Parallel()
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
 
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
-						user := map[string]interface{}{
-							"id":        "user-123",
-							"email":     "test@example.com",
-							"role":      "global:member",
-							"isPending": false,
-							"createdAt": "2024-01-01T00:00:00Z",
-							"updatedAt": "2024-01-01T00:00:00Z",
-						}
-						w.Header().Set("Content-Type", "application/json")
-						json.NewEncoder(w).Encode(user)
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
+			user := r.refreshUserData(ctx, tt.userID, resp)
 
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				state := &models.Resource{
-					ID:    types.StringValue("user-123"),
-					Email: types.StringValue("old@example.com"),
-					Role:  types.StringValue("global:admin"),
+			if tt.expectNil {
+				assert.Nil(t, user, "Should return nil on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.NotNil(t, user, "Should return user object")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				if user != nil && user.Role != nil {
+					assert.Equal(t, tt.expectRole, *user.Role, "Role should match")
 				}
-
-				req := resource.ReadRequest{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				resp := resource.ReadResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				ctx := context.Background()
-				req.State.Set(ctx, state)
-
-				r.Read(ctx, req, &resp)
-
-				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors during read")
-
-				var readState models.Resource
-				resp.State.Get(ctx, &readState)
-				assert.Equal(t, "user-123", readState.ID.ValueString())
-				assert.Equal(t, "test@example.com", readState.Email.ValueString())
-			},
-		},
-		{
-			name: "error - invalid state",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				t.Parallel()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					t.Errorf("Should not make any API calls with invalid state")
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				req := resource.ReadRequest{
-					State: tfsdk.State{Raw: tftypes.NewValue(tftypes.String, "invalid"), Schema: createTestSchema(t)},
-				}
-				resp := resource.ReadResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				ctx := context.Background()
-				r.Read(ctx, req, &resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
-			},
-		},
-		{
-			name: "error - API read fails",
-			testFunc: func(t *testing.T) {
-				t.Helper()
-				t.Parallel()
-
-				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.Method == http.MethodGet && r.URL.Path == "/users/user-123" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-					t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
-				})
-
-				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
-
-				r := &UserResource{client: n8nClient}
-
-				state := &models.Resource{
-					ID:    types.StringValue("user-123"),
-					Email: types.StringValue("test@example.com"),
-					Role:  types.StringValue("global:member"),
-				}
-
-				req := resource.ReadRequest{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-				resp := resource.ReadResponse{
-					State: tfsdk.State{Schema: createTestSchema(t)},
-				}
-
-				ctx := context.Background()
-				req.State.Set(ctx, state)
-
-				r.Read(ctx, req, &resp)
-
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when API read fails")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			tt.testFunc(t)
+			}
 		})
 	}
 }

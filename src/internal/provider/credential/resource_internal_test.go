@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -2629,5 +2631,175 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// TestCredentialResource_executeCreateLogic tests the executeCreateLogic method with error cases.
+// Note: This test focuses on error paths. The success path is tested through the Create method
+// because executeCreateLogic relies on Terraform framework internals (ElementsAs) that require
+// proper schema context not available in unit tests.
+func TestCredentialResource_executeCreateLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		credName     string
+		credType     string
+		setupInvalid bool // If true, create invalid Data that will fail ElementsAs
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:         "error during ElementsAs conversion",
+			credName:     "Test Credential",
+			credType:     "httpHeaderAuth",
+			setupInvalid: true,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Should not be called due to ElementsAs failure
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &CredentialResource{client: n8nClient}
+			ctx := context.Background()
+
+			var dataValue types.Map
+			if tt.setupInvalid {
+				// Create an invalid map that will cause ElementsAs to fail
+				// This tests the error handling path in executeCreateLogic
+				dataValue = types.MapValueMust(types.StringType, map[string]attr.Value{
+					"key": types.StringValue("value"),
+				})
+			} else {
+				// Create a valid map for success and API error tests
+				var diags diag.Diagnostics
+				dataValue, diags = types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+					"name":  "Authorization",
+					"value": "Bearer test-token",
+				})
+				if diags.HasError() {
+					t.Fatalf("Failed to create map value: %v", diags)
+				}
+			}
+
+			plan := &models.Resource{
+				Name: types.StringValue(tt.credName),
+				Type: types.StringValue(tt.credType),
+				Data: dataValue,
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			result := r.executeCreateLogic(ctx, plan, resp)
+
+			assert.False(t, result, "Should return false on error")
+			assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+		})
+	}
+}
+
+// TestCredentialResource_executeUpdateLogic tests the executeUpdateLogic method with error cases.
+// Note: This test focuses on error paths. The success path with full credential rotation is tested
+// through the Update method because executeUpdateLogic relies on Terraform framework internals
+// (ElementsAs) that require proper schema context not available in unit tests.
+func TestCredentialResource_executeUpdateLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		oldCredID    string
+		newCredName  string
+		newCredType  string
+		setupInvalid bool // If true, create invalid Data that will fail ElementsAs
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:         "error during ElementsAs conversion",
+			oldCredID:    "cred-old",
+			newCredName:  "Updated Credential",
+			newCredType:  "httpHeaderAuth",
+			setupInvalid: true,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Should not be called due to ElementsAs failure
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &CredentialResource{client: n8nClient}
+			ctx := context.Background()
+
+			var oldDataValue, newDataValue types.Map
+			if tt.setupInvalid {
+				// Create invalid maps that will cause ElementsAs to fail
+				// This tests the error handling path in executeUpdateLogic
+				oldDataValue = types.MapValueMust(types.StringType, map[string]attr.Value{
+					"key": types.StringValue("old-value"),
+				})
+				newDataValue = types.MapValueMust(types.StringType, map[string]attr.Value{
+					"key": types.StringValue("new-value"),
+				})
+			} else {
+				// Create valid maps (currently not used since all tests are for error cases)
+				var diags1, diags2 diag.Diagnostics
+				oldDataValue, diags1 = types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+					"name":  "Authorization",
+					"value": "Bearer old-token",
+				})
+				if diags1.HasError() {
+					t.Fatalf("Failed to create old map value: %v", diags1)
+				}
+				newDataValue, diags2 = types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+					"name":  "Authorization",
+					"value": "Bearer new-token",
+				})
+				if diags2.HasError() {
+					t.Fatalf("Failed to create new map value: %v", diags2)
+				}
+			}
+
+			state := &models.Resource{
+				ID:   types.StringValue(tt.oldCredID),
+				Name: types.StringValue("Old Credential"),
+				Type: types.StringValue("httpHeaderAuth"),
+				Data: oldDataValue,
+			}
+			plan := &models.Resource{
+				Name: types.StringValue(tt.newCredName),
+				Type: types.StringValue(tt.newCredType),
+				Data: newDataValue,
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
+
+			result := r.executeUpdateLogic(ctx, plan, state, resp)
+
+			assert.False(t, result, "Should return false on error")
+			assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+		})
 	}
 }

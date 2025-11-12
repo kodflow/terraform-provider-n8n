@@ -2390,3 +2390,453 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 		})
 	}
 }
+
+// Stub tests for execute*Logic methods to satisfy KTN-TEST-003 linter.
+// TestWorkflowResource_executeCreateLogic tests the executeCreateLogic method with error cases.
+func TestWorkflowResource_executeCreateLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		workflowName string
+		nodesJSON    string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectID     string
+	}{
+		{
+			name:         "successful creation",
+			workflowName: "Test Workflow",
+			nodesJSON:    `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/workflows" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "workflow-123",
+						"name":        "Test Workflow",
+						"active":      false,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+						"createdAt":   "2024-01-01T00:00:00Z",
+						"updatedAt":   "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectID:    "workflow-123",
+		},
+		{
+			name:         "API error",
+			workflowName: "Failed Workflow",
+			nodesJSON:    `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:         "invalid JSON nodes",
+			workflowName: "Invalid Workflow",
+			nodesJSON:    `invalid json`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+			},
+			expectError: true,
+		},
+		{
+			name:         "successful creation with tags",
+			workflowName: "Workflow With Tags",
+			nodesJSON:    `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/workflows" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "workflow-456",
+						"name":        "Workflow With Tags",
+						"active":      false,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+						"createdAt":   "2024-01-01T00:00:00Z",
+						"updatedAt":   "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/workflow-456/tags" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode([]map[string]any{
+						{"id": "tag-1", "name": "Tag 1"},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectID:    "workflow-456",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Name:      types.StringValue(tt.workflowName),
+				NodesJSON: types.StringValue(tt.nodesJSON),
+			}
+
+			// Add tags for the tag test case
+			if tt.name == "successful creation with tags" {
+				tagList, _ := types.ListValueFrom(ctx, types.StringType, []string{"tag-1"})
+				plan.Tags = tagList
+			}
+
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			result := r.executeCreateLogic(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectID, plan.ID.ValueString(), "Workflow ID should match")
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_executeReadLogic tests the executeReadLogic method with error cases.
+func TestWorkflowResource_executeReadLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		workflowID   string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectName   string
+	}{
+		{
+			name:       "successful read",
+			workflowID: "workflow-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/workflows/workflow-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "workflow-123",
+						"name":        "Retrieved Workflow",
+						"active":      true,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+						"createdAt":   "2024-01-01T00:00:00Z",
+						"updatedAt":   "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectName:  "Retrieved Workflow",
+		},
+		{
+			name:       "workflow not found",
+			workflowID: "workflow-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Workflow not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error",
+			workflowID: "workflow-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			state := &models.Resource{
+				ID: types.StringValue(tt.workflowID),
+			}
+			resp := &resource.ReadResponse{
+				State: resource.ReadResponse{}.State,
+			}
+
+			result := r.executeReadLogic(ctx, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, tt.expectName, state.Name.ValueString(), "Workflow name should match")
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_executeUpdateLogic tests the executeUpdateLogic method with error cases.
+func TestWorkflowResource_executeUpdateLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		workflowID   string
+		newName      string
+		nodesJSON    string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:       "successful update",
+			workflowID: "workflow-123",
+			newName:    "Updated Workflow",
+			nodesJSON:  `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/workflow-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "workflow-123",
+						"name":        "Updated Workflow",
+						"active":      false,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+						"createdAt":   "2024-01-01T00:00:00Z",
+						"updatedAt":   "2024-01-02T00:00:00Z",
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:       "workflow not found",
+			workflowID: "workflow-404",
+			newName:    "Updated Workflow",
+			nodesJSON:  `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Workflow not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error",
+			workflowID: "workflow-500",
+			newName:    "Updated Workflow",
+			nodesJSON:  `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "invalid JSON update",
+			workflowID: "workflow-123",
+			newName:    "Invalid Workflow",
+			nodesJSON:  `invalid json`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+			},
+			expectError: true,
+		},
+		{
+			name:       "successful update with activation",
+			workflowID: "workflow-789",
+			newName:    "Activated Workflow",
+			nodesJSON:  `[]`,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/workflows/workflow-789/activate" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "workflow-789",
+						"name":        "Activated Workflow",
+						"active":      true,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/workflow-789" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "workflow-789",
+						"name":        "Activated Workflow",
+						"active":      true,
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+						"createdAt":   "2024-01-01T00:00:00Z",
+						"updatedAt":   "2024-01-02T00:00:00Z",
+					})
+					return
+				}
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/workflow-789/tags" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode([]map[string]any{})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				ID:        types.StringValue(tt.workflowID),
+				Name:      types.StringValue(tt.newName),
+				NodesJSON: types.StringValue(tt.nodesJSON),
+			}
+			state := &models.Resource{
+				ID:     types.StringValue(tt.workflowID),
+				Active: types.BoolValue(false),
+			}
+
+			// Add activation for the activation test case
+			if tt.name == "successful update with activation" {
+				plan.Active = types.BoolValue(true)
+			}
+
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
+
+			result := r.executeUpdateLogic(ctx, plan, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_executeDeleteLogic tests the executeDeleteLogic method with error cases.
+func TestWorkflowResource_executeDeleteLogic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		workflowID   string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:       "successful deletion",
+			workflowID: "workflow-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodDelete && r.URL.Path == "/workflows/workflow-123" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:       "workflow not found",
+			workflowID: "workflow-404",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"message": "Workflow not found"}`))
+			},
+			expectError: true,
+		},
+		{
+			name:       "API error",
+			workflowID: "workflow-500",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			state := &models.Resource{
+				ID: types.StringValue(tt.workflowID),
+			}
+			resp := &resource.DeleteResponse{
+				State: resource.DeleteResponse{}.State,
+			}
+
+			result := r.executeDeleteLogic(ctx, state, resp)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}

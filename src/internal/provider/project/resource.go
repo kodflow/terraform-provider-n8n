@@ -143,23 +143,44 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	// Create project via API
-	if !r.createProject(ctx, &plan, resp) {
-		// Return result.
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, &plan, resp) {
+		// Return with error.
 		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeCreateLogic contains the main logic for creating a project.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *ProjectResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
+	// Create project via API
+	if !r.createProject(ctx, plan, resp) {
+		// Return failure.
+		return false
 	}
 
 	// Retrieve created project details
-	foundProject := r.findCreatedProject(ctx, &plan, resp)
+	foundProject := r.findCreatedProject(ctx, plan, resp)
 	// Check for nil value.
 	if foundProject == nil {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
-	r.updatePlanFromProject(&plan, foundProject)
+	r.updatePlanFromProject(plan, foundProject)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // createProject sends the project creation request to the API.
@@ -294,16 +315,37 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	foundProject := r.findProjectByID(ctx, &state, resp)
-	// Check for nil value.
-	if foundProject == nil {
-		// Return result.
+	// Execute read logic
+	if !r.executeReadLogic(ctx, &state, resp) {
+		// Return with error.
 		return
 	}
 
-	r.updateStateFromProject(&state, foundProject)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// executeReadLogic contains the main logic for reading a project.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Read response
+//
+// Returns:
+//   - bool: True if read succeeded, false otherwise
+func (r *ProjectResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
+	foundProject := r.findProjectByID(ctx, state, resp)
+	// Check for nil value.
+	if foundProject == nil {
+		// Return failure.
+		return false
+	}
+
+	r.updateStateFromProject(state, foundProject)
+
+	// Return success.
+	return true
 }
 
 // findProjectByID finds a project by ID using the list endpoint.
@@ -395,24 +437,45 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// Execute the update API call
-	if !r.executeProjectUpdate(ctx, &plan, resp) {
-		// Return result.
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, &plan, resp) {
+		// Return with error.
 		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a project.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *ProjectResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
+	// Execute the update API call
+	if !r.executeProjectUpdate(ctx, plan, resp) {
+		// Return failure.
+		return false
 	}
 
 	// Verify the update by listing projects
-	foundProject := r.findProjectAfterUpdate(ctx, &plan, resp)
+	foundProject := r.findProjectAfterUpdate(ctx, plan, resp)
 	// Check for nil value.
 	if foundProject == nil {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update model with found project data
-	r.updateModelFromProject(foundProject, &plan)
+	r.updateModelFromProject(foundProject, plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // executeProjectUpdate performs the API call to update a project.
@@ -532,6 +595,21 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
+	// Execute delete logic
+	r.executeDeleteLogic(ctx, &state, resp)
+}
+
+// executeDeleteLogic contains the main logic for deleting a project.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Delete response
+//
+// Returns:
+//   - bool: True if delete succeeded, false otherwise
+func (r *ProjectResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdDelete(ctx, state.ID.ValueString()).Execute()
 	// Check for non-nil value.
@@ -545,9 +623,12 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 			"Error deleting project",
 			fmt.Sprintf("Could not delete project ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
+
+	// Return success.
+	return true
 }
 
 // ImportState imports the resource into Terraform state.

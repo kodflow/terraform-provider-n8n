@@ -251,12 +251,33 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	// Save data into Terraform state.
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeCreateLogic contains the main logic for creating a workflow.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
 	// Parse JSON fields.
 	nodes, connections, settings := parseWorkflowJSON(plan, &resp.Diagnostics)
 	// Check for JSON parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Create workflow
@@ -282,8 +303,8 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 			"Error creating workflow",
 			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update tags if provided.
@@ -291,8 +312,8 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, &resp.Diagnostics)
 		// Check for tag update errors.
 		if resp.Diagnostics.HasError() {
-			// Return with error.
-			return
+			// Return failure.
+			return false
 		}
 	}
 
@@ -300,8 +321,8 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	plan.ID = types.StringPointerValue(workflow.Id)
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
-	// Save data into Terraform state.
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -323,6 +344,27 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
+	// Execute read logic
+	if !r.executeReadLogic(ctx, state, resp) {
+		// Return with error.
+		return
+	}
+
+	// Save updated data into Terraform state.
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+}
+
+// executeReadLogic contains the main logic for reading a workflow.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Read response
+//
+// Returns:
+//   - bool: True if read succeeded, false otherwise
+func (r *WorkflowResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
 	// Get workflow from SDK.
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdGet(ctx, state.ID.ValueString()).Execute()
 
@@ -337,15 +379,15 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 			"Error reading workflow",
 			fmt.Sprintf("Could not read workflow ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map response to state.
 	mapWorkflowToModel(ctx, workflow, state, &resp.Diagnostics)
 
-	// Save updated data into Terraform state.
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Return success.
+	return true
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -369,20 +411,42 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, plan, state, resp) {
+		// Return with error.
+		return
+	}
+
+	// Save updated data into Terraform state.
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a workflow.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
 	// Parse JSON fields.
 	nodes, connections, settings := parseWorkflowJSON(plan, &resp.Diagnostics)
 	// Check for JSON parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Handle activation change.
 	r.handleWorkflowActivation(ctx, plan, state, &resp.Diagnostics)
 	// Check for activation change errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update workflow content.
@@ -408,23 +472,23 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 			"Error updating workflow",
 			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update tags.
 	r.updateWorkflowTags(ctx, plan.ID.ValueString(), plan, workflow, &resp.Diagnostics)
 	// Check for tag update errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map workflow response to state.
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
-	// Save updated data into Terraform state.
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -447,6 +511,21 @@ func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
+	// Execute delete logic
+	r.executeDeleteLogic(ctx, state, resp)
+}
+
+// executeDeleteLogic contains the main logic for deleting a workflow.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Delete response
+//
+// Returns:
+//   - bool: True if delete succeeded, false otherwise
+func (r *WorkflowResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
 	// Delete workflow using SDK.
 	_, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdDelete(ctx, state.ID.ValueString()).Execute()
 	// Check for non-nil HTTP response.
@@ -460,9 +539,12 @@ func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteReques
 			"Error deleting workflow",
 			fmt.Sprintf("Could not delete workflow ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return error status.
-		return
+		// Return failure.
+		return false
 	}
+
+	// Return success.
+	return true
 }
 
 // ImportState imports the resource into Terraform state.

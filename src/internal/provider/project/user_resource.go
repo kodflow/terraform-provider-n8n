@@ -156,6 +156,26 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeCreateLogic contains the main logic for adding a user to a project.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *ProjectUserResource) executeCreateLogic(ctx context.Context, plan *models.UserResource, resp *resource.CreateResponse) bool {
 	// Build request to add user to project.
 	relation := n8nsdk.NewProjectsProjectIdUsersPostRequestRelationsInner(
 		plan.UserID.ValueString(),
@@ -178,14 +198,15 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 			fmt.Sprintf("Could not add user %s to project %s: %s\nHTTP Response: %v",
 				plan.UserID.ValueString(), plan.ProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Set composite ID.
 	plan.ID = types.StringValue(fmt.Sprintf("%s/%s", plan.ProjectID.ValueString(), plan.UserID.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // Read refreshes the resource state by checking if the user is in the project.
@@ -206,14 +227,35 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	found := r.findUserInProject(ctx, state, resp)
-	// Check condition.
-	if !found {
-		// Return result.
+	// Execute read logic
+	if !r.executeReadLogic(ctx, state, resp) {
+		// Return with error.
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// executeReadLogic contains the main logic for reading a project user membership.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Read response
+//
+// Returns:
+//   - bool: True if read succeeded, false otherwise
+func (r *ProjectUserResource) executeReadLogic(ctx context.Context, state *models.UserResource, resp *resource.ReadResponse) bool {
+	found := r.findUserInProject(ctx, state, resp)
+	// Check condition.
+	if !found {
+		// Return failure.
+		return false
+	}
+
+	// Return success.
+	return true
 }
 
 // findUserInProject checks if the user is in the project and updates the state.
@@ -318,14 +360,35 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, plan, state, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a project user membership.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *ProjectUserResource) executeUpdateLogic(ctx context.Context, plan, state *models.UserResource, resp *resource.UpdateResponse) bool {
 	// Check if project or user changed - not supported.
 	if !plan.ProjectID.Equal(state.ProjectID) || !plan.UserID.Equal(state.UserID) {
 		resp.Diagnostics.AddError(
 			"Project/User Change Not Supported",
 			"Cannot change project_id or user_id. Please delete and recreate the resource.",
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update role if changed.
@@ -348,12 +411,13 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 				fmt.Sprintf("Could not update role for user %s in project %s: %s\nHTTP Response: %v",
 					plan.UserID.ValueString(), plan.ProjectID.ValueString(), err.Error(), httpResp),
 			)
-			// Return result.
-			return
+			// Return failure.
+			return false
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // Delete removes the user from the project.
@@ -374,6 +438,21 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
+	// Execute delete logic
+	r.executeDeleteLogic(ctx, state, resp)
+}
+
+// executeDeleteLogic contains the main logic for removing a user from a project.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Delete response
+//
+// Returns:
+//   - bool: True if delete succeeded, false otherwise
+func (r *ProjectUserResource) executeDeleteLogic(ctx context.Context, state *models.UserResource, resp *resource.DeleteResponse) bool {
 	// Remove user from project.
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersUserIdDelete(
 		ctx,
@@ -392,9 +471,12 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 			fmt.Sprintf("Could not remove user %s from project %s: %s\nHTTP Response: %v",
 				state.UserID.ValueString(), state.ProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
+
+	// Return success.
+	return true
 }
 
 // ImportState imports the resource using the composite ID format: project_id/user_id.

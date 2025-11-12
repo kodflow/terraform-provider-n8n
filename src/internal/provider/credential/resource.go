@@ -174,13 +174,33 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeCreateLogic contains the main logic for creating a credential.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *CredentialResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
 	// Prepare credential data
 	var credData map[string]any
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Create credential via API
@@ -196,14 +216,15 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 			"Error creating credential",
 			fmt.Sprintf("Could not create credential: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map response to plan
 	r.mapCreateResponseToPlan(plan, createResp)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // executeCreate executes the API call to create a credential.
@@ -298,6 +319,27 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, plan, state, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a credential using rotation strategy.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *CredentialResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
 	oldCredID := state.ID.ValueString()
 	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
 
@@ -306,16 +348,16 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// STEP 1: Create new credential
 	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData, &resp.Diagnostics)
 	// Check if new credential creation succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	newCredID := newCred.Id
@@ -325,22 +367,22 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	affectedWorkflows, success := r.scanAffectedWorkflows(ctx, oldCredID, newCredID, &resp.Diagnostics)
 	// Check if workflow scan succeeded.
 	if !success {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// STEP 3: Update each workflow
 	updatedWorkflows, success := r.updateAffectedWorkflows(ctx, affectedWorkflows, oldCredID, newCredID, &resp.Diagnostics)
 	// Check if all workflow updates succeeded.
 	if !success {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// STEP 4: Delete old credential
 	r.deleteOldCredential(ctx, oldCredID, newCredID)
 
-	// STEP 5: Update state
+	// STEP 5: Update plan with new values
 	plan.ID = types.StringValue(newCredID)
 	plan.Name = types.StringValue(newCred.Name)
 	plan.Type = types.StringValue(newCred.Type)
@@ -352,7 +394,8 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 		oldCredID, newCredID, len(updatedWorkflows),
 	))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Return success.
+	return true
 }
 
 // Delete deletes the resource and removes the Terraform state on success.

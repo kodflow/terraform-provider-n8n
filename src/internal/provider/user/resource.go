@@ -182,26 +182,47 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeCreateLogic contains the main logic for creating a user.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
 	// Create user and get ID
 	userID := r.createUser(ctx, plan, resp)
 	// Check condition.
 	if userID == "" {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Fetch full user details
 	user := r.fetchFullUserDetails(ctx, userID, resp)
 	// Check for nil value.
 	if user == nil {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map user to model
 	mapUserToResourceModel(user, plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // createUser creates a user and returns the user ID.
@@ -301,6 +322,26 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
+	// Execute read logic
+	if !r.executeReadLogic(ctx, state, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+}
+
+// executeReadLogic contains the main logic for reading a user.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Read response
+//
+// Returns:
+//   - bool: True if read succeeded, false otherwise
+func (r *UserResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
 	// Fetch user by ID
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
 	// Check for non-nil value.
@@ -313,14 +354,15 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			"Error reading user",
 			fmt.Sprintf("Could not read user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map user to model
 	mapUserToResourceModel(user, state)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Return success.
+	return true
 }
 
 // Update updates the user. Only role changes are supported by the API.
@@ -344,32 +386,54 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, plan, state, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a user.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *UserResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
 	// Validate email hasn't changed
 	if !r.validateEmailUnchanged(plan, state, resp) {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update role if changed
 	r.updateRoleIfChanged(ctx, plan, state, resp)
 	// Check for errors in diagnostics.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Refresh user data
 	user := r.refreshUserData(ctx, state.ID.ValueString(), resp)
 	// Check for nil value.
 	if user == nil {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map user to model
 	mapUserToResourceModel(user, plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // validateEmailUnchanged checks if email has changed and reports error.
@@ -475,6 +539,21 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
+	// Execute delete logic
+	r.executeDeleteLogic(ctx, state, resp)
+}
+
+// executeDeleteLogic contains the main logic for deleting a user.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Delete response
+//
+// Returns:
+//   - bool: True if delete succeeded, false otherwise
+func (r *UserResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
 	// Delete user
 	httpResp, err := r.client.APIClient.UserAPI.UsersIdDelete(ctx, state.ID.ValueString()).Execute()
 	// Check for non-nil value.
@@ -487,9 +566,12 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			"Error deleting user",
 			fmt.Sprintf("Could not delete user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
+
+	// Return success.
+	return true
 }
 
 // ImportState imports the resource into Terraform state.

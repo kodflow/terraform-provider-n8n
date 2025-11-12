@@ -170,24 +170,45 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeCreateLogic contains the main logic for creating a variable.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *VariableResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
 	// Execute create operation
 	if !r.executeVariableCreate(ctx, plan, resp) {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Find created variable
 	foundVariable := r.findCreatedVariable(ctx, plan, resp)
 	// Return early if variable not found.
 	if foundVariable == nil {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map variable to model
 	mapVariableToResourceModel(foundVariable, plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // executeVariableCreate performs the API call to create a variable.
@@ -291,6 +312,26 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
+	// Execute read logic
+	if !r.executeReadLogic(ctx, state, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+}
+
+// executeReadLogic contains the main logic for reading a variable.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Read response
+//
+// Returns:
+//   - bool: True if read succeeded, false otherwise
+func (r *VariableResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
 	// Fetch variable list from API
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
 	// Check for non-nil value.
@@ -304,8 +345,8 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 			"Error reading variable",
 			fmt.Sprintf("Could not read variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return with error.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Find variable by ID
@@ -314,13 +355,15 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if foundVariable == nil {
 		// Variable not found = deleted outside Terraform
 		resp.State.RemoveResource(ctx)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Update state with found variable data
 	r.updateStateFromVariable(foundVariable, state)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+
+	// Return success.
+	return true
 }
 
 // findVariableByID finds a variable in the list by ID.
@@ -388,24 +431,45 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Execute update logic
+	if !r.executeUpdateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeUpdateLogic contains the main logic for updating a variable.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *VariableResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
 	// Execute the update API call
 	if !r.executeVariableUpdate(ctx, plan, resp) {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Verify the update by listing variables
 	foundVariable := r.findUpdatedVariable(ctx, plan, resp)
 	// Return early if variable not found.
 	if foundVariable == nil {
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Map variable to model (only updates non-ID fields)
 	mapVariableToResourceModel(foundVariable, plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // executeVariableUpdate performs the API call to update a variable.
@@ -508,6 +572,21 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
+	// Execute delete logic
+	r.executeDeleteLogic(ctx, state, resp)
+}
+
+// executeDeleteLogic contains the main logic for deleting a variable.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - state: The current resource state
+//   - resp: Delete response
+//
+// Returns:
+//   - bool: True if delete succeeded, false otherwise
+func (r *VariableResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdDelete(ctx, state.ID.ValueString()).Execute()
 	// Check for non-nil value.
@@ -521,9 +600,12 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 			"Error deleting variable",
 			fmt.Sprintf("Could not delete variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
+
+	// Return success.
+	return true
 }
 
 // ImportState imports the resource into Terraform state.
