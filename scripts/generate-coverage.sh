@@ -90,15 +90,15 @@ echo "$COVERAGE_BY_PKG" | while IFS= read -r line; do
   echo "| $ICON | \`$pkg\` | $coverage |" >>COVERAGE.MD
 done
 
-# Add detailed coverage by file with public functions only
+# Add detailed coverage by category with public functions only
 cat >>COVERAGE.MD <<EOF
 
 ---
 
-## Coverage Détaillée par Fichier
+## Coverage Détaillée par Catégorie
 
 Cette section liste uniquement les **fonctions publiques** (exportées) pour identifier rapidement les fonctions non testées.
-Les tableaux sont organisés par type de fichier pour faciliter la comparaison entre packages.
+Les tableaux sont organisés par catégorie de ressources pour faciliter la compréhension de l'architecture du provider.
 
 EOF
 
@@ -151,39 +151,29 @@ done
 # Define all provider packages for complete overview
 ALL_PROVIDER_PACKAGES="credential execution project sourcecontrol tag user variable workflow"
 
-# Second pass: generate tables organized by filename
-for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
-  FILE_DATA="$TMP_DIR/$FILE_SHORT"
+# Helper function to generate coverage table for a file across packages
+generate_coverage_table() {
+  local FILE_SHORT="$1"
+  shift
+  local PACKAGES="$@"
 
-  echo "### 📄 $FILE_SHORT" >>COVERAGE.MD
-  echo "" >>COVERAGE.MD
+  local FILE_DATA="$TMP_DIR/$FILE_SHORT"
 
-  # Collect all unique function names across all packages for this file
-  ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
+  if [ ! -d "$FILE_DATA" ]; then
+    return
+  fi
 
-  # Skip if no functions
+  # Collect all unique function names for this file
+  local ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
+
   if [ -z "$ALL_FUNCS" ]; then
-    continue
+    return
   fi
 
-  # Determine which packages actually have this file in their source code
-  RELEVANT_PACKAGES=""
-  for pkg in $ALL_PROVIDER_PACKAGES; do
-    PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
-    if [ -f "$PKG_PATH" ]; then
-      RELEVANT_PACKAGES="$RELEVANT_PACKAGES $pkg"
-    fi
-  done
-
-  # Skip if file doesn't exist in any package (shouldn't happen but defensive)
-  if [ -z "$RELEVANT_PACKAGES" ]; then
-    continue
-  fi
-
-  # Build table header with only relevant packages
-  HEADER="| Function |"
-  SEPARATOR="|----------|"
-  for pkg in $RELEVANT_PACKAGES; do
+  # Build table header
+  local HEADER="| Function |"
+  local SEPARATOR="|----------|"
+  for pkg in $PACKAGES; do
     HEADER="$HEADER $pkg |"
     SEPARATOR="$SEPARATOR:--------:|"
   done
@@ -193,55 +183,41 @@ for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
 
   # Build table rows for each function
   echo "$ALL_FUNCS" | while read -r func; do
-    ROW="| \`$func\` |"
+    local ROW="| \`$func\` |"
 
-    for pkg in $RELEVANT_PACKAGES; do
-      # Convert package name back to safe version for file lookup
-      PKG_SAFE=$(echo "$pkg" | tr '/' '_')
-      # Get coverage for this function in this package
-      COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
+    for pkg in $PACKAGES; do
+      local PKG_SAFE=$(echo "$pkg" | tr '/' '_')
+      local COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
 
       if [ -z "$COV" ]; then
-        # Function doesn't exist in coverage - check if it exists in source
-        PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
-        # Check if function exists in source code (method or function)
-        # Pattern matches both: "func FuncName(" and "func (r *Type) FuncName("
+        local PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
         if [ -f "$PKG_PATH" ] && grep -q "func.*[[:space:]]$func(" "$PKG_PATH"; then
-          # Check if function is empty (only comments/whitespace, no executable code)
-          # Extract function body and check for executable statements
-          FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
-          # Count non-comment, non-empty lines in function body (excluding func declaration and closing brace)
-          EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+          local FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
+          local EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
 
           if [ "$EXECUTABLE_LINES" -eq 0 ]; then
-            # Function is intentionally empty (no executable code)
             ROW="$ROW 🔵 N/A |"
           else
-            # Function exists in source but has 0% coverage
             ROW="$ROW 🔴 0.0% |"
           fi
         else
-          # Function doesn't exist in source (not in API for this package)
           ROW="$ROW 🔵 N/A |"
         fi
       else
-        # Function exists, add icon based on coverage
-        COV_VALUE=$(echo "$COV" | sed 's/%//')
+        local COV_VALUE=$(echo "$COV" | sed 's/%//')
         if [ $(awk "BEGIN {print ($COV_VALUE >= 90.0)}") -eq 1 ]; then
-          ICON="🟢"
+          local ICON="🟢"
         elif [ $(awk "BEGIN {print ($COV_VALUE >= 70.0)}") -eq 1 ]; then
-          ICON="🟡"
+          local ICON="🟡"
         elif [ $(awk "BEGIN {print ($COV_VALUE > 0.0)}") -eq 1 ]; then
-          ICON="🟠"
+          local ICON="🟠"
         else
-          # Coverage is 0% - check if function is intentionally empty
-          PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
+          local PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
           if [ -f "$PKG_PATH" ]; then
-            FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
-            EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+            local FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
+            local EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
 
             if [ "$EXECUTABLE_LINES" -eq 0 ]; then
-              # Function is intentionally empty (no executable code)
               ICON="🔵"
               COV="N/A"
             else
@@ -259,7 +235,93 @@ for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
   done
 
   echo "" >>COVERAGE.MD
+}
+
+# Second pass: generate tables organized by resource category
+
+# === PRIMARY RESOURCES (CRUD Entities) ===
+echo "## 📦 Ressources Principales (CRUD Entities)" >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+echo "Gestion complète du cycle de vie des ressources n8n (Create, Read, Update, Delete)." >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+
+# Find all packages with resource.go
+PRIMARY_PACKAGES=""
+for pkg in $ALL_PROVIDER_PACKAGES; do
+  if [ -f "src/internal/provider/$pkg/resource.go" ]; then
+    PRIMARY_PACKAGES="$PRIMARY_PACKAGES $pkg"
+  fi
 done
+
+if [ -n "$PRIMARY_PACKAGES" ]; then
+  generate_coverage_table "resource.go" $PRIMARY_PACKAGES
+fi
+
+# === SECONDARY RESOURCES (Operations/Relations) ===
+echo "---" >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+echo "## 🔧 Ressources Secondaires (Operations/Relations)" >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+echo "Opérations spéciales et gestion des relations entre ressources." >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+
+# Find all *_resource.go files (excluding resource.go)
+SECONDARY_FILES=$(ls "$TMP_DIR" 2>/dev/null | grep "_resource.go$" | grep -v "^resource.go$" | sort)
+
+for FILE_SHORT in $SECONDARY_FILES; do
+  # Extract resource type (e.g., retry_resource.go -> retry)
+  RES_TYPE=$(echo "$FILE_SHORT" | sed 's/_resource\.go$//')
+
+  # Find packages that have this file
+  SEC_PACKAGES=""
+  for pkg in $ALL_PROVIDER_PACKAGES; do
+    if [ -f "src/internal/provider/$pkg/$FILE_SHORT" ]; then
+      SEC_PACKAGES="$SEC_PACKAGES $pkg"
+    fi
+  done
+
+  if [ -n "$SEC_PACKAGES" ]; then
+    echo "### $RES_TYPE" >>COVERAGE.MD
+    echo "" >>COVERAGE.MD
+    generate_coverage_table "$FILE_SHORT" $SEC_PACKAGES
+  fi
+done
+
+# === DATA SOURCES ===
+echo "---" >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+echo "## 📊 Sources de Données (Data Sources)" >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+echo "Lecture des ressources n8n sans gestion de leur cycle de vie." >>COVERAGE.MD
+echo "" >>COVERAGE.MD
+
+# datasource.go (singular)
+DS_PACKAGES=""
+for pkg in $ALL_PROVIDER_PACKAGES; do
+  if [ -f "src/internal/provider/$pkg/datasource.go" ]; then
+    DS_PACKAGES="$DS_PACKAGES $pkg"
+  fi
+done
+
+if [ -n "$DS_PACKAGES" ]; then
+  echo "### datasource (singular)" >>COVERAGE.MD
+  echo "" >>COVERAGE.MD
+  generate_coverage_table "datasource.go" $DS_PACKAGES
+fi
+
+# datasources.go (plural)
+DSS_PACKAGES=""
+for pkg in $ALL_PROVIDER_PACKAGES; do
+  if [ -f "src/internal/provider/$pkg/datasources.go" ]; then
+    DSS_PACKAGES="$DSS_PACKAGES $pkg"
+  fi
+done
+
+if [ -n "$DSS_PACKAGES" ]; then
+  echo "### datasources (plural)" >>COVERAGE.MD
+  echo "" >>COVERAGE.MD
+  generate_coverage_table "datasources.go" $DSS_PACKAGES
+fi
 
 # Add footer
 cat >>COVERAGE.MD <<EOF

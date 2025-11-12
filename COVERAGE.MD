@@ -37,47 +37,14 @@ Rapport de couverture généré automatiquement.
 
 ---
 
-## Coverage Détaillée par Fichier
+## Coverage Détaillée par Catégorie
 
 Cette section liste uniquement les **fonctions publiques** (exportées) pour identifier rapidement les fonctions non testées.
-Les tableaux sont organisés par type de fichier pour faciliter la comparaison entre packages.
+Les tableaux sont organisés par catégorie de ressources pour faciliter la compréhension de l'architecture du provider.
 
-### 📄 datasource.go
+## 📦 Ressources Principales (CRUD Entities)
 
-| Function | execution | project | tag | user | variable | workflow |
-|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
-| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-
-### 📄 datasources.go
-
-| Function | execution | project | tag | user | variable | workflow |
-|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
-| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-
-### 📄 pointers.go
-
-### 📄 provider.go
-
-### 📄 pull_resource.go
-
-| Function | sourcecontrol |
-|----------|:--------:|
-| `Configure` | 🟢 100.0% |
-| `Create` | 🟢 100.0% |
-| `Delete` | 🟢 100.0% |
-| `ImportState` | 🟢 100.0% |
-| `Metadata` | 🟢 100.0% |
-| `Read` | 🟢 100.0% |
-| `Schema` | 🟢 100.0% |
-| `Update` | 🟢 100.0% |
-
-### 📄 resource.go
+Gestion complète du cycle de vie des ressources n8n (Create, Read, Update, Delete).
 
 | Function | credential | project | tag | user | variable | workflow |
 |----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
@@ -90,7 +57,26 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Update` | 🟡 87.5% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 
-### 📄 retry_resource.go
+---
+
+## 🔧 Ressources Secondaires (Operations/Relations)
+
+Opérations spéciales et gestion des relations entre ressources.
+
+### pull
+
+| Function | sourcecontrol |
+|----------|:--------:|
+| `Configure` | 🟢 100.0% |
+| `Create` | 🟢 100.0% |
+| `Delete` | 🟢 100.0% |
+| `ImportState` | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% |
+| `Read` | 🟢 100.0% |
+| `Schema` | 🟢 100.0% |
+| `Update` | 🟢 100.0% |
+
+### retry
 
 | Function | execution |
 |----------|:--------:|
@@ -103,7 +89,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | `Schema` | 🟢 100.0% |
 | `Update` | 🟢 100.0% |
 
-### 📄 transfer_resource.go
+### transfer
 
 | Function | credential | workflow |
 |----------|:--------:|:--------:|
@@ -116,7 +102,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | `Schema` | 🔴 0.0% | 🟢 100.0% |
 | `Update` | 🔴 0.0% | 🟢 100.0% |
 
-### 📄 user_resource.go
+### user
 
 | Function | project |
 |----------|:--------:|
@@ -128,6 +114,30 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 | `Read` | 🔴 0.0% |
 | `Schema` | 🟢 100.0% |
 | `Update` | 🔴 0.0% |
+
+---
+
+## 📊 Sources de Données (Data Sources)
+
+Lecture des ressources n8n sans gestion de leur cycle de vie.
+
+### datasource (singular)
+
+| Function | execution | project | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+
+### datasources (plural)
+
+| Function | execution | project | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 
 
 ---

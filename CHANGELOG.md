@@ -99,6 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- detect empty functions in coverage report (🔴 → 🔵) (`29aa9cf`)
 - correct test function names for private functions (`e98f32e`)
 - correct workflow test mocks to match SDK requirements (`33a6035`)
 - remove duplicate test definition in src/BUILD.bazel (`314f1b3`)
@@ -153,9 +154,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 116
+- **Total commits:** 117
 - **Features:** 30
-- **Bug fixes:** 11
+- **Bug fixes:** 12
 - **Tests:** 43
 - **Refactoring:** 16
 - **Test coverage:** N/A
@@ -166,4 +167,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 22:09:39*
+*Changelog generated automatically on 2025-11-12 22:23:40*
