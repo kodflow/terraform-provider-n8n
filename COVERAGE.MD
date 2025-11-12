@@ -63,7 +63,7 @@ Gestion complète du cycle de vie des ressources n8n (Create, Read, Update, Dele
 
 Opérations spéciales et gestion des relations entre ressources.
 
-### pull
+### Source Control Pull
 
 | Function | sourcecontrol |
 |----------|:--------:|
@@ -76,7 +76,7 @@ Opérations spéciales et gestion des relations entre ressources.
 | `Schema` | 🟢 100.0% |
 | `Update` | 🟢 100.0% |
 
-### retry
+### Execution Retry
 
 | Function | execution |
 |----------|:--------:|
@@ -89,7 +89,7 @@ Opérations spéciales et gestion des relations entre ressources.
 | `Schema` | 🟢 100.0% |
 | `Update` | 🟢 100.0% |
 
-### transfer
+### Transfer
 
 | Function | credential | workflow |
 |----------|:--------:|:--------:|
@@ -102,7 +102,7 @@ Opérations spéciales et gestion des relations entre ressources.
 | `Schema` | 🔴 0.0% | 🟢 100.0% |
 | `Update` | 🔴 0.0% | 🟢 100.0% |
 
-### user
+### Project User
 
 | Function | project |
 |----------|:--------:|

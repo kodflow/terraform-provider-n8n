@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- reorganize report by semantic categories (`c8a22d0`)
 - improve coverage report with public function details (`2881515`)
 - convert workflow external tests to table-driven format (`81c9f30`)
 - convert sourcecontrol/models/resource_test.go to table-driven (`747010e`)
@@ -154,8 +155,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 117
-- **Features:** 30
+- **Total commits:** 118
+- **Features:** 31
 - **Bug fixes:** 12
 - **Tests:** 43
 - **Refactoring:** 16
@@ -167,4 +168,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 22:23:40*
+*Changelog generated automatically on 2025-11-12 22:26:42*

@@ -281,7 +281,27 @@ for FILE_SHORT in $SECONDARY_FILES; do
   done
 
   if [ -n "$SEC_PACKAGES" ]; then
-    echo "### $RES_TYPE" >>COVERAGE.MD
+    # Generate a nice title based on resource type and package
+    case "$RES_TYPE" in
+      pull)
+        TITLE="Source Control Pull"
+        ;;
+      retry)
+        TITLE="Execution Retry"
+        ;;
+      transfer)
+        TITLE="Transfer"
+        ;;
+      user)
+        TITLE="Project User"
+        ;;
+      *)
+        # Default: capitalize first letter
+        TITLE=$(echo "$RES_TYPE" | sed 's/\b\(.\)/\u\1/')
+        ;;
+    esac
+
+    echo "### $TITLE" >>COVERAGE.MD
     echo "" >>COVERAGE.MD
     generate_coverage_table "$FILE_SHORT" $SEC_PACKAGES
   fi
