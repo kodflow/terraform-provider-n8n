@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/execution"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
@@ -281,110 +283,149 @@ func TestExecutionRetryResource_Read(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
-		{name: "verify read method exists", wantErr: false},
-		{name: "error case - verify read behavior", wantErr: false},
+		{name: "success - read maintains state", wantErr: false},
+		{name: "error - invalid state", wantErr: true},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			switch tt.name {
-			case "verify read method exists":
+			case "success - read maintains state":
 				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-				assert.NotNil(t, r.Read)
+				ctx := context.Background()
 
-			case "error case - verify read behavior":
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Build state with execution data
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"execution_id":     tftypes.NewValue(tftypes.String, "exec-123"),
+					"new_execution_id": tftypes.NewValue(tftypes.String, "exec-456"),
+					"workflow_id":      tftypes.NewValue(tftypes.String, "workflow-1"),
+					"finished":         tftypes.NewValue(tftypes.Bool, true),
+					"mode":             tftypes.NewValue(tftypes.String, "manual"),
+					"started_at":       tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"stopped_at":       tftypes.NewValue(tftypes.String, "2024-01-01T00:01:00Z"),
+					"status":           tftypes.NewValue(tftypes.String, "success"),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{
+					State: tfsdk.State{Schema: schemaResp.Schema},
+				}
+
+				// Call Read
+				r.Read(ctx, req, resp)
+
+				// Verify success - Read should maintain state without errors
+				assert.False(t, resp.Diagnostics.HasError())
+
+			case "error - invalid state":
 				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
+				ctx := context.Background()
+
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				// Create invalid state
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
+				req := resource.ReadRequest{
+					State: state,
+				}
+				resp := &resource.ReadResponse{}
+
+				r.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
 			}
 		})
 	}
 }
 
 func TestExecutionRetryResource_Update(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "verify update method exists", wantErr: false},
-		{name: "error case - verify update behavior", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "verify update method exists":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-				assert.NotNil(t, r.Update)
+	t.Run("error - update not supported", func(t *testing.T) {
+		r := execution.NewExecutionRetryResource()
+		ctx := context.Background()
 
-			case "error case - verify update behavior":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-			}
-		})
-	}
+		req := resource.UpdateRequest{}
+		resp := &resource.UpdateResponse{}
+
+		// Call Update
+		r.Update(ctx, req, resp)
+
+		// Verify error - Update should always return an error
+		assert.True(t, resp.Diagnostics.HasError())
+		assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Update Not Supported")
+	})
 }
 
 func TestExecutionRetryResource_Delete(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "verify delete method exists", wantErr: false},
-		{name: "error case - verify delete behavior", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "verify delete method exists":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-				assert.NotNil(t, r.Delete)
+	t.Run("success - delete removes from state", func(t *testing.T) {
+		r := execution.NewExecutionRetryResource()
+		ctx := context.Background()
 
-			case "error case - verify delete behavior":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-			}
+		req := resource.DeleteRequest{}
+		resp := &resource.DeleteResponse{}
+
+		// Call Delete - should not panic and should not return errors
+		assert.NotPanics(t, func() {
+			r.Delete(ctx, req, resp)
 		})
-	}
+
+		// Verify no errors - Delete just removes from state without API call
+		assert.False(t, resp.Diagnostics.HasError())
+	})
 }
 
 func TestExecutionRetryResource_ImportState(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "resource implements ImportState interface", wantErr: false},
-		{name: "verify ImportState method exists", wantErr: false},
-		{name: "error case - verify import behavior", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "resource implements ImportState interface":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-				var _ resource.ResourceWithImportState = r
+	t.Run("import state passthrough", func(t *testing.T) {
+		r := execution.NewExecutionRetryResource()
+		ctx := context.Background()
 
-			case "verify ImportState method exists":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-				assert.NotNil(t, r.ImportState)
+		schemaResp := resource.SchemaResponse{}
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
-			case "error case - verify import behavior":
-				r := execution.NewExecutionRetryResource()
-				assert.NotNil(t, r)
-			}
+		// Build empty state
+		emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+			"execution_id":     tftypes.NewValue(tftypes.String, nil),
+			"new_execution_id": tftypes.NewValue(tftypes.String, nil),
+			"workflow_id":      tftypes.NewValue(tftypes.String, nil),
+			"finished":         tftypes.NewValue(tftypes.Bool, nil),
+			"mode":             tftypes.NewValue(tftypes.String, nil),
+			"started_at":       tftypes.NewValue(tftypes.String, nil),
+			"stopped_at":       tftypes.NewValue(tftypes.String, nil),
+			"status":           tftypes.NewValue(tftypes.String, nil),
 		})
-	}
+
+		req := resource.ImportStateRequest{
+			ID: "exec-123",
+		}
+		resp := &resource.ImportStateResponse{
+			State: tfsdk.State{
+				Schema: schemaResp.Schema,
+				Raw:    emptyValue,
+			},
+		}
+
+		// Call ImportState
+		r.ImportState(ctx, req, resp)
+
+		// Verify no errors (ImportStatePassthroughID doesn't return errors for valid IDs)
+		assert.False(t, resp.Diagnostics.HasError())
+	})
 }
