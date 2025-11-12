@@ -280,6 +280,7 @@ func TestProjectUserResource_Create(t *testing.T) {
 		name        string
 		handler     http.HandlerFunc
 		expectError bool
+		invalidPlan bool
 	}{
 		{
 			name: "successful creation",
@@ -291,6 +292,7 @@ func TestProjectUserResource_Create(t *testing.T) {
 				w.WriteHeader(http.StatusNotFound)
 			}),
 			expectError: false,
+			invalidPlan: false,
 		},
 		{
 			name: "API error",
@@ -298,6 +300,13 @@ func TestProjectUserResource_Create(t *testing.T) {
 				w.WriteHeader(http.StatusInternalServerError)
 			}),
 			expectError: true,
+			invalidPlan: false,
+		},
+		{
+			name:        "invalid plan data",
+			handler:     http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+			expectError: true,
+			invalidPlan: true,
 		},
 	}
 
@@ -320,12 +329,18 @@ func TestProjectUserResource_Create(t *testing.T) {
 			schemaResp := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
-			planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-				"id":         tftypes.NewValue(tftypes.String, nil),
-				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-			})
+			var planRaw tftypes.Value
+			if tt.invalidPlan {
+				// Create invalid plan with wrong type to trigger req.Plan.Get() error
+				planRaw = tftypes.NewValue(tftypes.String, "invalid")
+			} else {
+				planRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				})
+			}
 
 			req := resource.CreateRequest{
 				Plan: tfsdk.Plan{
@@ -353,9 +368,10 @@ func TestProjectUserResource_Read(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name        string
-		handler     http.HandlerFunc
-		expectError bool
+		name         string
+		handler      http.HandlerFunc
+		expectError  bool
+		invalidState bool
 	}{
 		{
 			name: "successful read",
@@ -377,14 +393,22 @@ func TestProjectUserResource_Read(t *testing.T) {
 				}
 				w.WriteHeader(http.StatusNotFound)
 			}),
-			expectError: false,
+			expectError:  false,
+			invalidState: false,
 		},
 		{
 			name: "API error",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			}),
-			expectError: true,
+			expectError:  true,
+			invalidState: false,
+		},
+		{
+			name:         "invalid state data",
+			handler:      http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+			expectError:  true,
+			invalidState: true,
 		},
 	}
 
@@ -407,12 +431,18 @@ func TestProjectUserResource_Read(t *testing.T) {
 			schemaResp := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
-			stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
-				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-			})
+			var stateRaw tftypes.Value
+			if tt.invalidState {
+				// Create invalid state with wrong type to trigger req.State.Get() error
+				stateRaw = tftypes.NewValue(tftypes.String, "invalid")
+			} else {
+				stateRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				})
+			}
 
 			req := resource.ReadRequest{
 				State: tfsdk.State{
@@ -440,9 +470,11 @@ func TestProjectUserResource_Update(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name        string
-		handler     http.HandlerFunc
-		expectError bool
+		name         string
+		handler      http.HandlerFunc
+		expectError  bool
+		invalidPlan  bool
+		invalidState bool
 	}{
 		{
 			name: "successful update",
@@ -468,14 +500,32 @@ func TestProjectUserResource_Update(t *testing.T) {
 				}
 				w.WriteHeader(http.StatusNotFound)
 			}),
-			expectError: false,
+			expectError:  false,
+			invalidPlan:  false,
+			invalidState: false,
 		},
 		{
 			name: "API error",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			}),
-			expectError: true,
+			expectError:  true,
+			invalidPlan:  false,
+			invalidState: false,
+		},
+		{
+			name:         "invalid plan data",
+			handler:      http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+			expectError:  true,
+			invalidPlan:  true,
+			invalidState: false,
+		},
+		{
+			name:         "invalid state data",
+			handler:      http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+			expectError:  true,
+			invalidPlan:  false,
+			invalidState: true,
 		},
 	}
 
@@ -498,19 +548,40 @@ func TestProjectUserResource_Update(t *testing.T) {
 			schemaResp := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
-			stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
-				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-			})
+			var stateRaw, planRaw tftypes.Value
+			if tt.invalidState {
+				// Create invalid state with wrong type to trigger req.State.Get() error
+				stateRaw = tftypes.NewValue(tftypes.String, "invalid")
+				planRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				})
+			} else if tt.invalidPlan {
+				// Create invalid plan with wrong type to trigger req.Plan.Get() error
+				stateRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				})
+				planRaw = tftypes.NewValue(tftypes.String, "invalid")
+			} else {
+				stateRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				})
 
-			planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
-				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-				"role":       tftypes.NewValue(tftypes.String, "project:editor"),
-			})
+				planRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+				})
+			}
 
 			req := resource.UpdateRequest{
 				State: tfsdk.State{
@@ -542,9 +613,10 @@ func TestProjectUserResource_Delete(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name        string
-		handler     http.HandlerFunc
-		expectError bool
+		name         string
+		handler      http.HandlerFunc
+		expectError  bool
+		invalidState bool
 	}{
 		{
 			name: "successful deletion",
@@ -555,14 +627,22 @@ func TestProjectUserResource_Delete(t *testing.T) {
 				}
 				w.WriteHeader(http.StatusNotFound)
 			}),
-			expectError: false,
+			expectError:  false,
+			invalidState: false,
 		},
 		{
 			name: "API error",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			}),
-			expectError: true,
+			expectError:  true,
+			invalidState: false,
+		},
+		{
+			name:         "invalid state data",
+			handler:      http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+			expectError:  true,
+			invalidState: true,
 		},
 	}
 
@@ -585,12 +665,18 @@ func TestProjectUserResource_Delete(t *testing.T) {
 			schemaResp := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
-			stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
-				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
-				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
-				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
-			})
+			var stateRaw tftypes.Value
+			if tt.invalidState {
+				// Create invalid state with wrong type to trigger req.State.Get() error
+				stateRaw = tftypes.NewValue(tftypes.String, "invalid")
+			} else {
+				stateRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+					"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+					"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+					"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+				})
+			}
 
 			req := resource.DeleteRequest{
 				State: tfsdk.State{

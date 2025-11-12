@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- improve coverage and fix linting issues (`e331ca1`)
 - improve secondary resources coverage from 0% to 100% (`1c6d6d8`)
 - improve execution retry_resource coverage to 100% (except Delete) (`220d73d`)
 - improve CRUD coverage to 83.6% with execute*Logic pattern (`298bfce`)
@@ -158,10 +159,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 121
+- **Total commits:** 122
 - **Features:** 31
 - **Bug fixes:** 13
-- **Tests:** 44
+- **Tests:** 45
 - **Refactoring:** 17
 - **Test coverage:** N/A
 
@@ -171,4 +172,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 23:04:48*
+*Changelog generated automatically on 2025-11-12 23:31:12*

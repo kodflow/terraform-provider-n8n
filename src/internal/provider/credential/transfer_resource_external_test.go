@@ -160,6 +160,7 @@ func TestCredentialTransferResource_Create(t *testing.T) {
 		name        string
 		handler     http.HandlerFunc
 		expectError bool
+		invalidPlan bool
 	}{
 		{
 			name: "successful creation",
@@ -171,6 +172,7 @@ func TestCredentialTransferResource_Create(t *testing.T) {
 				w.WriteHeader(http.StatusNotFound)
 			}),
 			expectError: false,
+			invalidPlan: false,
 		},
 		{
 			name: "API error",
@@ -178,6 +180,13 @@ func TestCredentialTransferResource_Create(t *testing.T) {
 				w.WriteHeader(http.StatusInternalServerError)
 			}),
 			expectError: true,
+			invalidPlan: false,
+		},
+		{
+			name:        "invalid plan data",
+			handler:     http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+			expectError: true,
+			invalidPlan: true,
 		},
 	}
 
@@ -201,12 +210,18 @@ func TestCredentialTransferResource_Create(t *testing.T) {
 			schemaResp := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
-			planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-				"id":                     tftypes.NewValue(tftypes.String, nil),
-				"credential_id":          tftypes.NewValue(tftypes.String, "cred-123"),
-				"destination_project_id": tftypes.NewValue(tftypes.String, "proj-456"),
-				"transferred_at":         tftypes.NewValue(tftypes.String, nil),
-			})
+			var planRaw tftypes.Value
+			if tt.invalidPlan {
+				// Create invalid plan with wrong type to trigger req.Plan.Get() error
+				planRaw = tftypes.NewValue(tftypes.String, "invalid")
+			} else {
+				planRaw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":                     tftypes.NewValue(tftypes.String, nil),
+					"credential_id":          tftypes.NewValue(tftypes.String, "cred-123"),
+					"destination_project_id": tftypes.NewValue(tftypes.String, "proj-456"),
+					"transferred_at":         tftypes.NewValue(tftypes.String, nil),
+				})
+			}
 
 			req := resource.CreateRequest{
 				Plan: tfsdk.Plan{
