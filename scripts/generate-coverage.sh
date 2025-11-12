@@ -207,8 +207,19 @@ for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
         # Check if function exists in source code (method or function)
         # Pattern matches both: "func FuncName(" and "func (r *Type) FuncName("
         if [ -f "$PKG_PATH" ] && grep -q "func.*[[:space:]]$func(" "$PKG_PATH"; then
-          # Function exists in source but has 0% coverage
-          ROW="$ROW 🔴 0.0% |"
+          # Check if function is empty (only comments/whitespace, no executable code)
+          # Extract function body and check for executable statements
+          FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
+          # Count non-comment, non-empty lines in function body (excluding func declaration and closing brace)
+          EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+
+          if [ "$EXECUTABLE_LINES" -eq 0 ]; then
+            # Function is intentionally empty (no executable code)
+            ROW="$ROW 🔵 N/A |"
+          else
+            # Function exists in source but has 0% coverage
+            ROW="$ROW 🔴 0.0% |"
+          fi
         else
           # Function doesn't exist in source (not in API for this package)
           ROW="$ROW 🔵 N/A |"
@@ -223,7 +234,22 @@ for FILE_SHORT in $(ls "$TMP_DIR" 2>/dev/null | sort); do
         elif [ $(awk "BEGIN {print ($COV_VALUE > 0.0)}") -eq 1 ]; then
           ICON="🟠"
         else
-          ICON="🔴"
+          # Coverage is 0% - check if function is intentionally empty
+          PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
+          if [ -f "$PKG_PATH" ]; then
+            FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
+            EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+
+            if [ "$EXECUTABLE_LINES" -eq 0 ]; then
+              # Function is intentionally empty (no executable code)
+              ICON="🔵"
+              COV="N/A"
+            else
+              ICON="🔴"
+            fi
+          else
+            ICON="🔴"
+          fi
         fi
         ROW="$ROW $ICON $COV |"
       fi
@@ -246,7 +272,7 @@ cat >>COVERAGE.MD <<EOF
 - 🟡 **70-89%** - Bonne couverture
 - 🟠 **1-69%** - Couverture partielle (à améliorer)
 - 🔴 **0%** - Fonction non testée (implémentée mais pas de tests)
-- 🔵 **N/A** - Fonction non applicable (pas dans l'API pour ce type de ressource)
+- 🔵 **N/A** - Fonction non applicable (pas dans l'API ou intentionnellement vide)
 
 **Note:** Seules les fonctions publiques (exportées) sont listées. Les fonctions privées et constructeurs (\`New*\`) sont exclus.
 

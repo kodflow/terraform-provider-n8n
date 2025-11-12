@@ -96,7 +96,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 |----------|:--------:|
 | `Configure` | 🟢 100.0% |
 | `Create` | 🟢 100.0% |
-| `Delete` | 🔴 0.0% |
+| `Delete` | 🔵 N/A |
 | `ImportState` | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% |
 | `Read` | 🟢 100.0% |
@@ -109,7 +109,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 |----------|:--------:|:--------:|
 | `Configure` | 🟢 100.0% | 🟢 100.0% |
 | `Create` | 🔴 0.0% | 🟢 100.0% |
-| `Delete` | 🔴 0.0% | 🔴 0.0% |
+| `Delete` | 🔵 N/A | 🔵 N/A |
 | `ImportState` | 🔴 0.0% | 🟢 100.0% |
 | `Metadata` | 🔴 0.0% | 🟢 100.0% |
 | `Read` | 🔴 0.0% | 🟢 100.0% |
@@ -138,7 +138,7 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 - 🟡 **70-89%** - Bonne couverture
 - 🟠 **1-69%** - Couverture partielle (à améliorer)
 - 🔴 **0%** - Fonction non testée (implémentée mais pas de tests)
-- 🔵 **N/A** - Fonction non applicable (pas dans l'API pour ce type de ressource)
+- 🔵 **N/A** - Fonction non applicable (pas dans l'API ou intentionnellement vide)
 
 **Note:** Seules les fonctions publiques (exportées) sont listées. Les fonctions privées et constructeurs (`New*`) sont exclus.
 

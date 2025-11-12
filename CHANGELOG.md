@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- improve execution retry_resource coverage to 100% (except Delete) (`220d73d`)
 - improve CRUD coverage to 83.6% with execute*Logic pattern (`298bfce`)
 - improve Create and Update test coverage with helper extraction (`200234b`)
 - improve credential resource coverage with extractable helpers (`2605765`)
@@ -152,10 +153,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 115
+- **Total commits:** 116
 - **Features:** 30
 - **Bug fixes:** 11
-- **Tests:** 42
+- **Tests:** 43
 - **Refactoring:** 16
 - **Test coverage:** N/A
 
@@ -165,4 +166,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 22:04:11*
+*Changelog generated automatically on 2025-11-12 22:09:39*
