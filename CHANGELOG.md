@@ -100,6 +100,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- improve secondary resource titles formatting (`81d3f78`)
 - detect empty functions in coverage report (🔴 → 🔵) (`29aa9cf`)
 - correct test function names for private functions (`e98f32e`)
 - correct workflow test mocks to match SDK requirements (`33a6035`)
@@ -155,9 +156,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 118
+- **Total commits:** 119
 - **Features:** 31
-- **Bug fixes:** 12
+- **Bug fixes:** 13
 - **Tests:** 43
 - **Refactoring:** 16
 - **Test coverage:** N/A
@@ -168,4 +169,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 22:26:42*
+*Changelog generated automatically on 2025-11-12 22:33:48*
