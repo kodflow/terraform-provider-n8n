@@ -1,3 +1,4 @@
+// Package user implements user management resources and data sources.
 package user
 
 import (
@@ -60,7 +61,7 @@ func NewUserDataSourceWrapper() datasource.DataSource {
 //   - ctx: context.Context for request lifecycle
 //   - req: datasource.MetadataRequest containing provider type name
 //   - resp: datasource.MetadataResponse to set the type name
-func (d *UserDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *UserDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
 
@@ -70,7 +71,7 @@ func (d *UserDataSource) Metadata(ctx context.Context, req datasource.MetadataRe
 //   - ctx: context.Context for request lifecycle
 //   - req: datasource.SchemaRequest for schema definition
 //   - resp: datasource.SchemaResponse to set the schema
-func (d *UserDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *UserDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n user by ID or email. The API accepts both ID and email as identifiers.",
 		Attributes:          d.schemaAttributes(),
@@ -127,7 +128,7 @@ func (d *UserDataSource) schemaAttributes() map[string]schema.Attribute {
 //   - ctx: context.Context for request lifecycle
 //   - req: datasource.ConfigureRequest containing provider data
 //   - resp: datasource.ConfigureResponse for diagnostics
-func (d *UserDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *UserDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.

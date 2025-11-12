@@ -1,3 +1,4 @@
+// Package execution implements data sources and resources for n8n workflow executions.
 package execution
 
 import (
@@ -63,7 +64,7 @@ func NewExecutionDataSourceWrapper() datasource.DataSource {
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.MetadataRequest containing provider type name
 //   - resp: datasource.MetadataResponse to populate with metadata
-func (d *ExecutionDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ExecutionDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_execution"
 }
 
@@ -73,7 +74,7 @@ func (d *ExecutionDataSource) Metadata(ctx context.Context, req datasource.Metad
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.SchemaRequest for schema definition
 //   - resp: datasource.SchemaResponse to populate with schema
-func (d *ExecutionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ExecutionDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n workflow execution by ID.",
 		Attributes:          d.schemaAttributes(),
@@ -128,7 +129,7 @@ func (d *ExecutionDataSource) schemaAttributes() map[string]schema.Attribute {
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.ConfigureRequest containing provider data
 //   - resp: datasource.ConfigureResponse to populate with diagnostics
-func (d *ExecutionDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *ExecutionDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.

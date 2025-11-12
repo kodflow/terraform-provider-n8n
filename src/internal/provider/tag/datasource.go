@@ -1,3 +1,4 @@
+// Package tag implements tag management resources and data sources.
 package tag
 
 import (
@@ -62,7 +63,7 @@ func NewTagDataSourceWrapper() datasource.DataSource {
 //
 // Returns:
 //   - None
-func (d *TagDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *TagDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_tag"
 }
 
@@ -75,7 +76,7 @@ func (d *TagDataSource) Metadata(ctx context.Context, req datasource.MetadataReq
 //
 // Returns:
 //   - None
-func (d *TagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TagDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n tag by ID or name. When using ID, the API's GET /tags/{id} endpoint is used directly. When using name, the LIST endpoint is used with client-side filtering.",
 
@@ -111,7 +112,7 @@ func (d *TagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 //
 // Returns:
 //   - None
-func (d *TagDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *TagDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil provider data.
 	if req.ProviderData == nil {
 		// Return result.

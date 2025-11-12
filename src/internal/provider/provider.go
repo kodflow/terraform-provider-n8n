@@ -1,3 +1,4 @@
+// Package provider implements the n8n Terraform provider.
 package provider
 
 import (
@@ -59,7 +60,7 @@ type N8nProvider struct {
 //   - ctx: context for the operation
 //   - req: metadata request from Terraform
 //   - resp: response object to populate with provider metadata
-func (p *N8nProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *N8nProvider) Metadata(_ctx context.Context, _req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "n8n"
 	resp.Version = p.version
 }
@@ -71,7 +72,7 @@ func (p *N8nProvider) Metadata(ctx context.Context, req provider.MetadataRequest
 //   - ctx: context for the operation
 //   - req: schema request from Terraform
 //   - resp: response object to populate with the provider schema
-func (p *N8nProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *N8nProvider) Schema(_ctx context.Context, _req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Terraform provider for n8n automation platform",
 		Attributes: map[string]schema.Attribute{
@@ -145,7 +146,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 //
 // Returns:
 //   - []func() resource.Resource: list of resource factory functions
-func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource {
+func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource {
 	// Return result.
 	return []func() resource.Resource{
 		// Workflow domain
@@ -178,7 +179,7 @@ func (p *N8nProvider) Resources(ctx context.Context) []func() resource.Resource 
 //
 // Returns:
 //   - []func() datasource.DataSource: list of data source factory functions
-func (p *N8nProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+func (p *N8nProvider) DataSources(_ctx context.Context) []func() datasource.DataSource {
 	// Return result.
 	return []func() datasource.DataSource{
 		// Workflow domain

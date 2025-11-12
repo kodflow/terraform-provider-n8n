@@ -1,3 +1,4 @@
+// Package models defines data structures for variable resources.
 package models
 
 import (

@@ -1,3 +1,4 @@
+// Package workflow implements workflow management resources and data sources.
 package workflow
 
 import (

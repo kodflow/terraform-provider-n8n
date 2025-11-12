@@ -1,3 +1,4 @@
+// Package credential provides helper functions for credential operations including rotation and workflow updates.
 package credential
 
 import (

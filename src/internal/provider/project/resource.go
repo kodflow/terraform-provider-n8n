@@ -1,3 +1,4 @@
+// Package project implements n8n project management resources and data sources.
 package project
 
 import (
@@ -67,7 +68,7 @@ func NewProjectResourceWrapper() resource.Resource {
 //   - ctx: context for request cancellation
 //   - req: metadata request
 //   - resp: metadata response
-func (r *ProjectResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ProjectResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_project"
 }
 
@@ -77,7 +78,7 @@ func (r *ProjectResource) Metadata(ctx context.Context, req resource.MetadataReq
 //   - ctx: context for request cancellation
 //   - req: schema request
 //   - resp: schema response
-func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ProjectResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n project resource. Note: API limitations require workarounds for Read operations.",
 
@@ -104,7 +105,7 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 //   - ctx: context for request cancellation
 //   - req: configure request
 //   - resp: configure response
-func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ProjectResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

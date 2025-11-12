@@ -1,3 +1,4 @@
+// Package main provides the entry point for the n8n Terraform provider.
 package main
 
 import (

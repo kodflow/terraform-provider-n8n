@@ -1,3 +1,4 @@
+// Package models defines shared data structures for the provider.
 package models
 
 import "github.com/hashicorp/terraform-plugin-framework/types"

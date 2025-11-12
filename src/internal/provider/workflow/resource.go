@@ -1,3 +1,4 @@
+// Package workflow implements workflow management resources and data sources.
 package workflow
 
 import (
@@ -82,7 +83,7 @@ func NewWorkflowResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - None: Updates resp in-place
-func (r *WorkflowResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *WorkflowResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workflow"
 }
 
@@ -95,7 +96,7 @@ func (r *WorkflowResource) Metadata(ctx context.Context, req resource.MetadataRe
 //
 // Returns:
 //   - None: Updates resp in-place
-func (r *WorkflowResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *WorkflowResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n workflow resource using generated SDK",
 		Attributes:          r.schemaAttributes(),
@@ -210,7 +211,7 @@ func (r *WorkflowResource) addMetadataAttributes(attrs map[string]schema.Attribu
 //
 // Returns:
 //   - None: Updates resource in-place, populates resp with errors if any
-func (r *WorkflowResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *WorkflowResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		// Return with error.

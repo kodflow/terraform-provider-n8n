@@ -2100,22 +2100,59 @@ func TestCredentialResource_mapCreateResponseToPlan(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		testFunc     func(*testing.T)
-		expectedID   string
-		expectedName string
-		expectedType string
+		name              string
+		testFunc          func(*testing.T)
+		expectedID        string
+		expectedName      string
+		expectedType      string
+		createdAt         time.Time
+		updatedAt         time.Time
+		expectedCreatedAt string
+		expectedUpdatedAt string
 	}{
 		{
-			name:         "success - map all fields correctly",
-			expectedID:   "test-id-123",
-			expectedName: "Test Credential",
-			expectedType: "httpHeaderAuth",
+			name:              "success - map all fields correctly",
+			expectedID:        "test-id-123",
+			expectedName:      "Test Credential",
+			expectedType:      "httpHeaderAuth",
+			createdAt:         must(time.Parse(time.RFC3339, "2024-01-01T10:00:00Z")),
+			updatedAt:         must(time.Parse(time.RFC3339, "2024-01-02T15:30:45Z")),
+			expectedCreatedAt: "2024-01-01T10:00:00Z",
+			expectedUpdatedAt: "2024-01-02T15:30:45Z",
+		},
+		{
+			name:              "error case - empty string values",
+			expectedID:        "",
+			expectedName:      "",
+			expectedType:      "",
+			createdAt:         must(time.Parse(time.RFC3339, "2024-01-01T00:00:00Z")),
+			updatedAt:         must(time.Parse(time.RFC3339, "2024-01-01T00:00:00Z")),
+			expectedCreatedAt: "2024-01-01T00:00:00Z",
+			expectedUpdatedAt: "2024-01-01T00:00:00Z",
+		},
+		{
+			name:              "error case - epoch zero time",
+			expectedID:        "zero-time-id",
+			expectedName:      "Zero Time Test",
+			expectedType:      "testType",
+			createdAt:         time.Unix(0, 0).UTC(),
+			updatedAt:         time.Unix(0, 0).UTC(),
+			expectedCreatedAt: "1970-01-01T00:00:00Z",
+			expectedUpdatedAt: "1970-01-01T00:00:00Z",
+		},
+		{
+			name:              "exception case - future dates",
+			expectedID:        "future-id",
+			expectedName:      "Future Credential",
+			expectedType:      "futureType",
+			createdAt:         must(time.Parse(time.RFC3339, "2099-12-31T23:59:59Z")),
+			updatedAt:         must(time.Parse(time.RFC3339, "2099-12-31T23:59:59Z")),
+			expectedCreatedAt: "2099-12-31T23:59:59Z",
+			expectedUpdatedAt: "2099-12-31T23:59:59Z",
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2135,8 +2172,8 @@ func TestCredentialResource_mapCreateResponseToPlan(t *testing.T) {
 				Id:        tt.expectedID,
 				Name:      tt.expectedName,
 				Type:      tt.expectedType,
-				CreatedAt: must(time.Parse(time.RFC3339, "2024-01-01T10:00:00Z")),
-				UpdatedAt: must(time.Parse(time.RFC3339, "2024-01-02T15:30:45Z")),
+				CreatedAt: tt.createdAt,
+				UpdatedAt: tt.updatedAt,
 			}
 
 			// Call the helper function
@@ -2146,10 +2183,57 @@ func TestCredentialResource_mapCreateResponseToPlan(t *testing.T) {
 			assert.Equal(t, tt.expectedID, plan.ID.ValueString(), "ID should be mapped")
 			assert.Equal(t, tt.expectedName, plan.Name.ValueString(), "Name should be mapped")
 			assert.Equal(t, tt.expectedType, plan.Type.ValueString(), "Type should be mapped")
-			assert.Equal(t, "2024-01-01T10:00:00Z", plan.CreatedAt.ValueString(), "CreatedAt should be mapped")
-			assert.Equal(t, "2024-01-02T15:30:45Z", plan.UpdatedAt.ValueString(), "UpdatedAt should be mapped")
+			assert.Equal(t, tt.expectedCreatedAt, plan.CreatedAt.ValueString(), "CreatedAt should be mapped")
+			assert.Equal(t, tt.expectedUpdatedAt, plan.UpdatedAt.ValueString(), "UpdatedAt should be mapped")
 		})
 	}
+}
+
+// TestCredentialResource_mapCreateResponseToPlan_ErrorCases tests error conditions.
+func TestCredentialResource_mapCreateResponseToPlan_ErrorCases(t *testing.T) {
+	t.Parallel()
+
+	t.Run("handles nil createResp gracefully - should panic", func(t *testing.T) {
+		t.Parallel()
+
+		// This test documents that nil response will panic
+		// In production, this should never happen as the API client validates responses
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic with nil createResp, but did not panic")
+			}
+		}()
+
+		r := &CredentialResource{}
+		plan := &models.Resource{}
+
+		// This WILL panic - which is expected behavior for nil pointer dereference
+		r.mapCreateResponseToPlan(plan, nil)
+	})
+
+	t.Run("handles nil plan gracefully - should panic", func(t *testing.T) {
+		t.Parallel()
+
+		// This test documents that nil plan will panic
+		// In production, this should never happen as Terraform framework validates state
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic with nil plan, but did not panic")
+			}
+		}()
+
+		r := &CredentialResource{}
+		createResp := &n8nsdk.CreateCredentialResponse{
+			Id:        "test",
+			Name:      "test",
+			Type:      "test",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+
+		// This WILL panic - which is expected behavior for nil pointer dereference
+		r.mapCreateResponseToPlan(nil, createResp)
+	})
 }
 
 // must is a helper to panic on time.Parse errors in tests.
@@ -2169,6 +2253,44 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 		name     string
 		testFunc func(*testing.T)
 	}{
+		{
+			name: "error - invalid plan",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				planRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    planRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Create(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
 		{
 			name: "error - API create fails",
 			testFunc: func(t *testing.T) {
@@ -2292,6 +2414,61 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				r.Update(ctx, req, resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid plan")
+			},
+		},
+		{
+			name: "error - invalid state",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Fatal("Should not reach API")
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+
+				validPlanRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "old-cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "updated-cred"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw:    validPlanRaw,
+						Schema: schemaResp.Schema,
+					},
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Update(ctx, req, resp)
+
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error with invalid state")
 			},
 		},
 		{

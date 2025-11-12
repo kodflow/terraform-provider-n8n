@@ -1,3 +1,4 @@
+// Package variable contains helper functions for variable operations.
 package variable
 
 import (

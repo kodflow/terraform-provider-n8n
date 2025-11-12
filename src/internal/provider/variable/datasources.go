@@ -1,3 +1,4 @@
+// Package variable implements environment variable management resources and data sources.
 package variable
 
 import (
@@ -64,7 +65,7 @@ func NewVariablesDataSourceWrapper() datasource.DataSource {
 //
 // Returns:
 //   - (none)
-func (d *VariablesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *VariablesDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_variables"
 }
 
@@ -77,7 +78,7 @@ func (d *VariablesDataSource) Metadata(ctx context.Context, req datasource.Metad
 //
 // Returns:
 //   - (none)
-func (d *VariablesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *VariablesDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n variables with optional filtering",
 		Attributes:          d.schemaAttributes(),
@@ -147,7 +148,7 @@ func (d *VariablesDataSource) variableItemAttributes() map[string]schema.Attribu
 //
 // Returns:
 //   - (none)
-func (d *VariablesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *VariablesDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// If no provider data is available, exit early
 	if req.ProviderData == nil {
 		// Return result.

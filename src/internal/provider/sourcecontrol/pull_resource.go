@@ -1,3 +1,4 @@
+// Package sourcecontrol implements source control operations for n8n workflows.
 package sourcecontrol
 
 import (
@@ -67,7 +68,7 @@ func NewSourceControlPullResourceWrapper() resource.Resource {
 //   - ctx: context.Context
 //   - req: resource.MetadataRequest
 //   - resp: *resource.MetadataResponse
-func (r *SourceControlPullResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *SourceControlPullResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_source_control_pull"
 }
 
@@ -76,7 +77,7 @@ func (r *SourceControlPullResource) Metadata(ctx context.Context, req resource.M
 //   - ctx: context.Context
 //   - req: resource.SchemaRequest
 //   - resp: *resource.SchemaResponse
-func (r *SourceControlPullResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *SourceControlPullResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Pulls changes from the remote source control repository. Requires the Source Control feature to be licensed and connected to a repository. This resource triggers a pull operation and captures the import results.",
 		Attributes:          r.schemaAttributes(),
@@ -114,7 +115,7 @@ func (r *SourceControlPullResource) schemaAttributes() map[string]schema.Attribu
 //   - ctx: context.Context
 //   - req: resource.ConfigureRequest
 //   - resp: *resource.ConfigureResponse
-func (r *SourceControlPullResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *SourceControlPullResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.
@@ -326,7 +327,7 @@ func (r *SourceControlPullResource) Read(ctx context.Context, req resource.ReadR
 //   - ctx: context.Context
 //   - req: resource.UpdateRequest
 //   - resp: *resource.UpdateResponse
-func (r *SourceControlPullResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *SourceControlPullResource) Update(_ctx context.Context, _req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	resp.Diagnostics.AddError(
 		"Update Not Supported",
 		"Source control pull resources cannot be updated. To pull again, create a new resource.",
@@ -338,7 +339,7 @@ func (r *SourceControlPullResource) Update(ctx context.Context, req resource.Upd
 //   - ctx: context.Context
 //   - req: resource.DeleteRequest
 //   - resp: *resource.DeleteResponse
-func (r *SourceControlPullResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *SourceControlPullResource) Delete(ctx context.Context, _req resource.DeleteRequest, _resp *resource.DeleteResponse) {
 	// Pull operations cannot be undone, so we just remove from state
 	// No-op: intentionally empty
 	_ = ctx

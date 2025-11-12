@@ -1,3 +1,4 @@
+// Package models defines data structures for project resources.
 package models
 
 // DataSources maps the Terraform schema to the datasource response.

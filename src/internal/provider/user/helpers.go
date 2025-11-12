@@ -1,3 +1,4 @@
+// Package user contains helper functions for user operations.
 package user
 
 import (

@@ -1,3 +1,4 @@
+// Package execution implements the retry resource for re-executing failed n8n workflows.
 package execution
 
 import (
@@ -69,7 +70,7 @@ type ExecutionRetryResource struct {
 //
 // Returns:
 //   - void
-func (r *ExecutionRetryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ExecutionRetryResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_execution_retry"
 }
 
@@ -81,7 +82,7 @@ func (r *ExecutionRetryResource) Metadata(ctx context.Context, req resource.Meta
 //
 // Returns:
 //   - void
-func (r *ExecutionRetryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ExecutionRetryResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retries a failed n8n workflow execution. This resource triggers a retry operation and captures the resulting execution details.",
 		Attributes:          r.schemaAttributes(),
@@ -138,7 +139,7 @@ func (r *ExecutionRetryResource) schemaAttributes() map[string]schema.Attribute 
 //
 // Returns:
 //   - void
-func (r *ExecutionRetryResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ExecutionRetryResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.
@@ -241,7 +242,7 @@ func (r *ExecutionRetryResource) Read(ctx context.Context, req resource.ReadRequ
 //
 // Returns:
 //   - void
-func (r *ExecutionRetryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *ExecutionRetryResource) Update(_ctx context.Context, _req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	resp.Diagnostics.AddError(
 		"Update Not Supported",
 		"Execution retry resources cannot be updated. To retry again, create a new resource.",
@@ -256,7 +257,7 @@ func (r *ExecutionRetryResource) Update(ctx context.Context, req resource.Update
 //
 // Returns:
 //   - void
-func (r *ExecutionRetryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *ExecutionRetryResource) Delete(_ctx context.Context, _req resource.DeleteRequest, _resp *resource.DeleteResponse) {
 	// Retry operations cannot be undone, so we just remove from state
 }
 

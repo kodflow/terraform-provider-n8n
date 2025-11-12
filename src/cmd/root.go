@@ -1,3 +1,4 @@
+// Package cmd provides the CLI entry point for the n8n Terraform provider.
 package cmd
 
 import (
@@ -45,7 +46,7 @@ func init() {
 //
 // Returns:
 //   - error: Error if provider server fails to start
-func run(cmd *cobra.Command, args []string) error {
+func run(_cmd *cobra.Command, _args []string) error {
 	opts := providerserver.ServeOpts{
 		Address: "registry.terraform.io/kodflow/n8n",
 		Debug:   debug,

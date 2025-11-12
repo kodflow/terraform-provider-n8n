@@ -1,3 +1,4 @@
+// Package tag implements tag management resources and data sources.
 package tag
 
 import (
@@ -60,7 +61,7 @@ func NewTagsDataSourceWrapper() datasource.DataSource {
 //   - ctx: contexte de la requête
 //   - req: requête de métadonnées
 //   - resp: réponse de métadonnées
-func (d *TagsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *TagsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_tags"
 }
 
@@ -70,7 +71,7 @@ func (d *TagsDataSource) Metadata(ctx context.Context, req datasource.MetadataRe
 //   - ctx: contexte de la requête
 //   - req: requête de schéma
 //   - resp: réponse de schéma
-func (d *TagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TagsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n tags",
 
@@ -109,7 +110,7 @@ func (d *TagsDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 //   - ctx: contexte de la requête
 //   - req: requête de configuration
 //   - resp: réponse de configuration
-func (d *TagsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *TagsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.
@@ -136,7 +137,7 @@ func (d *TagsDataSource) Configure(ctx context.Context, req datasource.Configure
 //   - ctx: contexte de la requête
 //   - req: requête de lecture
 //   - resp: réponse de lecture
-func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *TagsDataSource) Read(ctx context.Context, _req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data models.DataSources
 
 	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()

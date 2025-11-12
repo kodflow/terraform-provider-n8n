@@ -1,3 +1,4 @@
+// Package models defines execution list data structures.
 package models
 
 import (

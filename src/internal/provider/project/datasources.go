@@ -1,3 +1,4 @@
+// Package project implements n8n project management resources and data sources.
 package project
 
 import (
@@ -59,7 +60,7 @@ func NewProjectsDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the request
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to populate
-func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ProjectsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_projects"
 }
 
@@ -69,7 +70,7 @@ func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.Metada
 //   - ctx: context for the request
 //   - req: schema request from the framework
 //   - resp: schema response to populate with schema definition
-func (d *ProjectsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ProjectsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n projects",
 		Attributes:          d.schemaAttributes(),
@@ -137,7 +138,7 @@ func (d *ProjectsDataSource) projectAttributes() map[string]schema.Attribute {
 //   - ctx: context for the request
 //   - req: configure request containing provider data
 //   - resp: configure response to report errors
-func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *ProjectsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.
@@ -164,7 +165,7 @@ func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.Confi
 //   - ctx: context for the request
 //   - req: read request from Terraform
 //   - resp: read response to populate with data
-func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *ProjectsDataSource) Read(ctx context.Context, _req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data models.DataSources
 
 	projectList, httpResp, err := d.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()

@@ -1,3 +1,4 @@
+// Package credential implements the n8n credential resource with rotation support.
 package credential
 
 import (
@@ -71,7 +72,7 @@ func NewCredentialResourceWrapper() resource.Resource {
 //   - ctx: Context for the request
 //   - req: Metadata request
 //   - resp: Metadata response
-func (r *CredentialResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *CredentialResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_credential"
 }
 
@@ -81,7 +82,7 @@ func (r *CredentialResource) Metadata(ctx context.Context, req resource.Metadata
 //   - ctx: Context for the request
 //   - req: Schema request
 //   - resp: Schema response
-func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *CredentialResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n credential resource with automatic rotation on update.\n\n" +
 			"**Update Behavior**: When updated, the credential is rotated:\n" +
@@ -136,7 +137,7 @@ func (r *CredentialResource) schemaAttributes() map[string]schema.Attribute {
 //   - ctx: Context for the request
 //   - req: Configure request with provider data
 //   - resp: Configure response
-func (r *CredentialResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CredentialResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

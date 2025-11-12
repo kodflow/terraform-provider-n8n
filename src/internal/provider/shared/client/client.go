@@ -1,3 +1,4 @@
+// Package client provides the n8n API client wrapper.
 package client
 
 import (

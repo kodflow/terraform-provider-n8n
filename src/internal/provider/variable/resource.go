@@ -1,3 +1,4 @@
+// Package variable implements environment variable management resources and data sources.
 package variable
 
 import (
@@ -71,7 +72,7 @@ func NewVariableResourceWrapper() resource.Resource {
 // Returns:
 //
 //	(none, modifies resp parameter in place)
-func (r *VariableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *VariableResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_variable"
 }
 
@@ -85,7 +86,7 @@ func (r *VariableResource) Metadata(ctx context.Context, req resource.MetadataRe
 // Returns:
 //
 //	(none, modifies resp parameter in place)
-func (r *VariableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *VariableResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n variable resource. Note: API limitations require workarounds for Read operations.",
 
@@ -127,7 +128,7 @@ func (r *VariableResource) Schema(ctx context.Context, req resource.SchemaReques
 // Returns:
 //
 //	(none, modifies resp parameter in place)
-func (r *VariableResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *VariableResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

@@ -1,3 +1,4 @@
+// Package models defines data structures for workflow resources.
 package models
 
 import (

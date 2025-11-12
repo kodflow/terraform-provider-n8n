@@ -1,3 +1,4 @@
+// Package user implements user management resources and data sources.
 package user
 
 import (
@@ -58,7 +59,7 @@ func NewUsersDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the request
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to be populated with the datasource type name
-func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *UsersDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_users"
 }
 
@@ -67,7 +68,7 @@ func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataR
 //   - ctx: context for the request
 //   - req: schema request for the data source
 //   - resp: schema response to be populated with the datasource schema
-func (d *UsersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *UsersDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n users. Only available for instance owners.",
 		Attributes:          d.schemaAttributes(),
@@ -136,7 +137,7 @@ func (d *UsersDataSource) userItemAttributes() map[string]schema.Attribute {
 //   - ctx: context for the request
 //   - req: configure request containing the provider data
 //   - resp: configure response for diagnostics
-func (d *UsersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *UsersDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.
@@ -162,7 +163,7 @@ func (d *UsersDataSource) Configure(ctx context.Context, req datasource.Configur
 //   - ctx: context for the request
 //   - req: read request containing current state
 //   - resp: read response to be populated with latest data
-func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *UsersDataSource) Read(ctx context.Context, _req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data models.DataSources
 
 	userList, httpResp, err := d.client.APIClient.UserAPI.UsersGet(ctx).Execute()

@@ -1,3 +1,4 @@
+// Package tag contains helper functions for tag operations.
 package tag
 
 import (

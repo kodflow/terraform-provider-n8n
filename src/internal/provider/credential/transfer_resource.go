@@ -1,3 +1,4 @@
+// Package credential implements credential transfer operations for n8n projects.
 package credential
 
 import (
@@ -66,7 +67,7 @@ func NewCredentialTransferResourceWrapper() resource.Resource {
 //   - ctx: context for cancellation and timeouts
 //   - req: metadata request from Terraform
 //   - resp: metadata response to populate
-func (r *CredentialTransferResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *CredentialTransferResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_credential_transfer"
 }
 
@@ -76,7 +77,7 @@ func (r *CredentialTransferResource) Metadata(ctx context.Context, req resource.
 //   - ctx: context for cancellation and timeouts
 //   - req: schema request from Terraform
 //   - resp: schema response to populate
-func (r *CredentialTransferResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *CredentialTransferResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Transfers a credential to another project. This is a one-time operation resource that triggers the transfer when created.",
 
@@ -107,7 +108,7 @@ func (r *CredentialTransferResource) Schema(ctx context.Context, req resource.Sc
 //   - ctx: context for cancellation and timeouts
 //   - req: configure request from Terraform with provider data
 //   - resp: configure response to populate with errors if any
-func (r *CredentialTransferResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CredentialTransferResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.
@@ -198,7 +199,7 @@ func (r *CredentialTransferResource) Read(ctx context.Context, req resource.Read
 //   - ctx: context for cancellation and timeouts
 //   - req: update request from Terraform with plan and state data
 //   - resp: update response to populate with errors
-func (r *CredentialTransferResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *CredentialTransferResource) Update(_ctx context.Context, _req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	resp.Diagnostics.AddError(
 		"Update Not Supported",
 		"Credential transfer resources cannot be updated. To transfer again, create a new resource.",
@@ -211,7 +212,7 @@ func (r *CredentialTransferResource) Update(ctx context.Context, req resource.Up
 //   - ctx: context for cancellation and timeouts
 //   - req: delete request from Terraform with state data
 //   - resp: delete response to populate with errors if any
-func (r *CredentialTransferResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *CredentialTransferResource) Delete(_ctx context.Context, _req resource.DeleteRequest, _resp *resource.DeleteResponse) {
 	// Transfer operations cannot be undone, so we just remove from state
 }
 

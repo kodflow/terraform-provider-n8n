@@ -1,3 +1,4 @@
+// Package variable implements environment variable management resources and data sources.
 package variable
 
 import (
@@ -62,7 +63,7 @@ func NewVariableDataSourceWrapper() datasource.DataSource {
 //
 // Returns:
 //   - None
-func (d *VariableDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *VariableDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_variable"
 }
 
@@ -75,7 +76,7 @@ func (d *VariableDataSource) Metadata(ctx context.Context, req datasource.Metada
 //
 // Returns:
 //   - None
-func (d *VariableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *VariableDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n variable by ID or key. Since the n8n API doesn't provide a GET /variables/{id} endpoint, this datasource uses the LIST endpoint with client-side filtering.",
 
@@ -117,7 +118,7 @@ func (d *VariableDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 //
 // Returns:
 //   - None
-func (d *VariableDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *VariableDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

@@ -1,3 +1,4 @@
+// Package execution contains helper functions for execution data processing.
 package execution
 
 import (

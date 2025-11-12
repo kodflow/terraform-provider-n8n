@@ -1,3 +1,4 @@
+// Package models defines data structures for tag resources.
 package models
 
 // DataSources maps Terraform schema attributes for tag list data.

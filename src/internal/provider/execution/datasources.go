@@ -1,3 +1,4 @@
+// Package execution provides data sources for querying n8n workflow executions.
 package execution
 
 import (
@@ -59,7 +60,7 @@ func NewExecutionsDataSourceWrapper() datasource.DataSource {
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.MetadataRequest containing provider type name
 //   - resp: datasource.MetadataResponse to populate with metadata
-func (d *ExecutionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ExecutionsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_executions"
 }
 
@@ -69,7 +70,7 @@ func (d *ExecutionsDataSource) Metadata(ctx context.Context, req datasource.Meta
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.SchemaRequest for schema definition
 //   - resp: datasource.SchemaResponse to populate with schema
-func (d *ExecutionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ExecutionsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n workflow executions with optional filtering",
 		Attributes:          d.schemaAttributes(),
@@ -153,7 +154,7 @@ func (d *ExecutionsDataSource) executionItemAttributes() map[string]schema.Attri
 //   - ctx: context.Context for cancellation and timeout control
 //   - req: datasource.ConfigureRequest containing provider data
 //   - resp: datasource.ConfigureResponse to populate with diagnostics
-func (d *ExecutionsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *ExecutionsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.

@@ -1,3 +1,4 @@
+// Package user implements user management resources and data sources.
 package user
 
 import (
@@ -68,7 +69,7 @@ func NewUserResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - (none)
-func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *UserResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// Set resource type name.
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
@@ -82,7 +83,7 @@ func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataReques
 //
 // Returns:
 //   - (none)
-func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *UserResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages n8n users. Only available for the instance owner. Note: The API only supports updating the user's role, not other fields.",
 		Attributes:          r.schemaAttributes(),
@@ -141,7 +142,7 @@ func (r *UserResource) schemaAttributes() map[string]schema.Attribute {
 //
 // Returns:
 //   - (none)
-func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *UserResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

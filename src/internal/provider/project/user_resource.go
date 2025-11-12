@@ -1,3 +1,4 @@
+// Package project implements n8n project management resources and data sources.
 package project
 
 import (
@@ -71,7 +72,7 @@ func NewProjectUserResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - none
-func (r *ProjectUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ProjectUserResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_project_user"
 }
 
@@ -83,7 +84,7 @@ func (r *ProjectUserResource) Metadata(ctx context.Context, req resource.Metadat
 //
 // Returns:
 //   - none
-func (r *ProjectUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ProjectUserResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages user membership and roles within n8n projects. Allows adding users to projects, changing their roles, and removing them from projects.",
 
@@ -116,7 +117,7 @@ func (r *ProjectUserResource) Schema(ctx context.Context, req resource.SchemaReq
 //
 // Returns:
 //   - none
-func (r *ProjectUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ProjectUserResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

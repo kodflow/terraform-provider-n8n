@@ -1,3 +1,4 @@
+// Package tag implements tag management resources and data sources.
 package tag
 
 import (
@@ -69,7 +70,7 @@ func NewTagResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - none
-func (r *TagResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *TagResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_tag"
 }
 
@@ -82,7 +83,7 @@ func (r *TagResource) Metadata(ctx context.Context, req resource.MetadataRequest
 //
 // Returns:
 //   - none
-func (r *TagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *TagResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n tag resource using generated SDK",
 
@@ -116,7 +117,7 @@ func (r *TagResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 //
 // Returns:
 //   - none
-func (r *TagResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *TagResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

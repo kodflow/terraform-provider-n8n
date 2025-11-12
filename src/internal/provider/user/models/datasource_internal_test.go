@@ -1,3 +1,4 @@
+// Package models defines data structures for user resources.
 package models
 
 import (

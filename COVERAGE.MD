@@ -161,5 +161,5 @@ Les tableaux sont organisés par type de fichier pour faciliter la comparaison e
 
 ---
 
-*Rapport généré le: 2025-11-11*
+*Rapport généré le: 2025-11-12*
 *Threshold: 70.0%*

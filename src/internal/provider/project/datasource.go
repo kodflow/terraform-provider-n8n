@@ -1,3 +1,4 @@
+// Package project implements n8n project management resources and data sources.
 package project
 
 import (
@@ -59,7 +60,7 @@ func NewProjectDataSourceWrapper() datasource.DataSource {
 //   - ctx: Context for the request
 //   - req: Metadata request
 //   - resp: Metadata response to populate
-func (d *ProjectDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ProjectDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_project"
 }
 
@@ -69,7 +70,7 @@ func (d *ProjectDataSource) Metadata(ctx context.Context, req datasource.Metadat
 //   - ctx: Context for the request
 //   - req: Schema request
 //   - resp: Schema response to populate
-func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ProjectDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n project by ID or name. Since the n8n API doesn't provide a GET /projects/{id} endpoint, this datasource uses the LIST endpoint with client-side filtering.",
 
@@ -114,7 +115,7 @@ func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 //   - ctx: Context for the request
 //   - req: Configure request
 //   - resp: Configure response to populate
-func (d *ProjectDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *ProjectDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

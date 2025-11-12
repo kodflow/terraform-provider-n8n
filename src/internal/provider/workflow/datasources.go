@@ -1,3 +1,4 @@
+// Package workflow implements workflow management resources and data sources.
 package workflow
 
 import (
@@ -60,7 +61,7 @@ func NewWorkflowsDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the operation
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to populate with type name
-func (d *WorkflowsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *WorkflowsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workflows"
 }
 
@@ -70,7 +71,7 @@ func (d *WorkflowsDataSource) Metadata(ctx context.Context, req datasource.Metad
 //   - ctx: context for the operation
 //   - req: schema request
 //   - resp: schema response to populate with schema definition
-func (d *WorkflowsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *WorkflowsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n workflows",
 
@@ -109,7 +110,7 @@ func (d *WorkflowsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 //   - ctx: context for the operation
 //   - req: configure request containing provider data
 //   - resp: configure response for error handling
-func (d *WorkflowsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *WorkflowsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return with error.

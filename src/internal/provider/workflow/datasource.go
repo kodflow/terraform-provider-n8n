@@ -1,3 +1,4 @@
+// Package workflow implements workflow management resources and data sources.
 package workflow
 
 import (
@@ -59,7 +60,7 @@ func NewWorkflowDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the operation
 //   - req: metadata request from Terraform
 //   - resp: metadata response to populate
-func (d *WorkflowDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *WorkflowDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workflow"
 }
 
@@ -69,7 +70,7 @@ func (d *WorkflowDataSource) Metadata(ctx context.Context, req datasource.Metada
 //   - ctx: context for the operation
 //   - req: schema request from Terraform
 //   - resp: schema response to populate
-func (d *WorkflowDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *WorkflowDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n workflow by ID",
 
@@ -96,7 +97,7 @@ func (d *WorkflowDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 //   - ctx: context for the operation
 //   - req: configure request from Terraform
 //   - resp: configure response to populate
-func (d *WorkflowDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *WorkflowDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Check for nil value.
 	if req.ProviderData == nil {
 		// Return result.

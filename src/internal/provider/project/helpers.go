@@ -1,3 +1,4 @@
+// Package project implements n8n project management resources and data sources.
 package project
 
 import (

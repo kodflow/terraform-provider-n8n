@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- improve credential resource coverage with extractable helpers (`2605765`)
 - improve project Update method coverage to 100% (`40a5e3e`)
 - improve Update method test coverage to 100% for variable (`0c9a124`)
 - add Update method coverage tests (`d9c6c52`)
@@ -149,10 +150,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 112
+- **Total commits:** 113
 - **Features:** 30
 - **Bug fixes:** 11
-- **Tests:** 39
+- **Tests:** 40
 - **Refactoring:** 16
 - **Test coverage:** N/A
 
@@ -162,4 +163,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-11 23:49:08*
+*Changelog generated automatically on 2025-11-12 19:35:34*

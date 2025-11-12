@@ -1,3 +1,4 @@
+// Package models defines data structures for credential resources.
 package models
 
 import (
