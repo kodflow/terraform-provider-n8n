@@ -2,11 +2,15 @@ package project_test
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/project"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
@@ -116,21 +120,34 @@ func TestProjectUserResource_Metadata(t *testing.T) {
 func TestProjectUserResource_Schema(t *testing.T) {
 	t.Parallel()
 
-	r := project.NewProjectUserResource()
-	req := resource.SchemaRequest{}
-	resp := &resource.SchemaResponse{}
+	tests := []struct {
+		name string
+	}{
+		{name: "schema has required attributes"},
+	}
 
-	r.Schema(context.Background(), req, resp)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	assert.NotNil(t, resp.Schema)
-	assert.Contains(t, resp.Schema.MarkdownDescription, "user")
+			r := project.NewProjectUserResource()
+			req := resource.SchemaRequest{}
+			resp := &resource.SchemaResponse{}
 
-	// Verify required attributes exist
-	attrs := resp.Schema.Attributes
-	assert.Contains(t, attrs, "id")
-	assert.Contains(t, attrs, "project_id")
-	assert.Contains(t, attrs, "user_id")
-	assert.Contains(t, attrs, "role")
+			r.Schema(context.Background(), req, resp)
+
+			assert.NotNil(t, resp.Schema)
+			assert.Contains(t, resp.Schema.MarkdownDescription, "user")
+
+			// Verify required attributes exist
+			attrs := resp.Schema.Attributes
+			assert.Contains(t, attrs, "id")
+			assert.Contains(t, attrs, "project_id")
+			assert.Contains(t, attrs, "user_id")
+			assert.Contains(t, attrs, "role")
+		})
+	}
 }
 
 // TestProjectUserResource_Configure tests the Configure method.
@@ -179,106 +196,6 @@ func TestProjectUserResource_Configure(t *testing.T) {
 				r.Configure(context.Background(), req, resp)
 				assert.True(t, resp.Diagnostics.HasError())
 				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
-			}
-		})
-	}
-}
-
-// TestProjectUserResource_Create tests the Create method.
-func TestProjectUserResource_Create(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "validates method exists", wantErr: false},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "validates method exists":
-				r := project.NewProjectUserResource()
-				assert.NotNil(t, r)
-			}
-		})
-	}
-}
-
-// TestProjectUserResource_Read tests the Read method.
-func TestProjectUserResource_Read(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "validates method exists", wantErr: false},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "validates method exists":
-				r := project.NewProjectUserResource()
-				assert.NotNil(t, r)
-			}
-		})
-	}
-}
-
-// TestProjectUserResource_Update tests the Update method.
-func TestProjectUserResource_Update(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "validates method exists", wantErr: false},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "validates method exists":
-				r := project.NewProjectUserResource()
-				assert.NotNil(t, r)
-			}
-		})
-	}
-}
-
-// TestProjectUserResource_Delete tests the Delete method.
-func TestProjectUserResource_Delete(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "validates method exists", wantErr: false},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			switch tt.name {
-			case "validates method exists":
-				r := project.NewProjectUserResource()
-				assert.NotNil(t, r)
 			}
 		})
 	}
@@ -353,4 +270,365 @@ func TestProjectUserResource_ImportState(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestProjectUserResource_Create tests the public Create method.
+func TestProjectUserResource_Create(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectError bool
+	}{
+		{
+			name: "successful creation",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/projects/proj-123/users" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectError: false,
+		},
+		{
+			name: "API error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}),
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupUserTestClient(t, tt.handler)
+			defer server.Close()
+
+			r := project.NewProjectUserResource()
+			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
+			configResp := &resource.ConfigureResponse{}
+			r.Configure(context.Background(), configReq, configResp)
+
+			ctx := context.Background()
+
+			// Build schema and plan
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, nil),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+			})
+
+			req := resource.CreateRequest{
+				Plan: tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				},
+			}
+			resp := &resource.CreateResponse{
+				State: tfsdk.State{Schema: schemaResp.Schema},
+			}
+
+			r.Create(ctx, req, resp)
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
+}
+
+// TestProjectUserResource_Read tests the public Read method.
+func TestProjectUserResource_Read(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectError bool
+	}{
+		{
+			name: "successful read",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/users" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":    "user-456",
+								"email": "user@example.com",
+								"role":  "project:admin",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectError: false,
+		},
+		{
+			name: "API error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}),
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupUserTestClient(t, tt.handler)
+			defer server.Close()
+
+			r := project.NewProjectUserResource()
+			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
+			configResp := &resource.ConfigureResponse{}
+			r.Configure(context.Background(), configReq, configResp)
+
+			ctx := context.Background()
+
+			// Build schema and state
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+			})
+
+			req := resource.ReadRequest{
+				State: tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				},
+			}
+			resp := &resource.ReadResponse{
+				State: tfsdk.State{Schema: schemaResp.Schema},
+			}
+
+			r.Read(ctx, req, resp)
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
+}
+
+// TestProjectUserResource_Update tests the public Update method.
+func TestProjectUserResource_Update(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectError bool
+	}{
+		{
+			name: "successful update",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPatch && r.URL.Path == "/projects/proj-123/users/user-456" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				if r.URL.Path == "/users" && r.Method == http.MethodGet {
+					response := map[string]interface{}{
+						"data": []interface{}{
+							map[string]interface{}{
+								"id":    "user-456",
+								"email": "user@example.com",
+								"role":  "project:editor",
+							},
+						},
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectError: false,
+		},
+		{
+			name: "API error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}),
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupUserTestClient(t, tt.handler)
+			defer server.Close()
+
+			r := project.NewProjectUserResource()
+			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
+			configResp := &resource.ConfigureResponse{}
+			r.Configure(context.Background(), configReq, configResp)
+
+			ctx := context.Background()
+
+			// Build schema and plan/state
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+			})
+
+			planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:editor"),
+			})
+
+			req := resource.UpdateRequest{
+				State: tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				},
+				Plan: tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				},
+			}
+			resp := &resource.UpdateResponse{
+				State: tfsdk.State{Schema: schemaResp.Schema},
+			}
+
+			r.Update(ctx, req, resp)
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
+}
+
+// TestProjectUserResource_Delete tests the public Delete method.
+func TestProjectUserResource_Delete(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectError bool
+	}{
+		{
+			name: "successful deletion",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodDelete && r.URL.Path == "/projects/proj-123/users/user-456" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectError: false,
+		},
+		{
+			name: "API error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}),
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupUserTestClient(t, tt.handler)
+			defer server.Close()
+
+			r := project.NewProjectUserResource()
+			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
+			configResp := &resource.ConfigureResponse{}
+			r.Configure(context.Background(), configReq, configResp)
+
+			ctx := context.Background()
+
+			// Build schema and state
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, "proj-123-user-456"),
+				"project_id": tftypes.NewValue(tftypes.String, "proj-123"),
+				"user_id":    tftypes.NewValue(tftypes.String, "user-456"),
+				"role":       tftypes.NewValue(tftypes.String, "project:admin"),
+			})
+
+			req := resource.DeleteRequest{
+				State: tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				},
+			}
+			resp := &resource.DeleteResponse{}
+
+			r.Delete(ctx, req, resp)
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
+}
+
+func setupUserTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

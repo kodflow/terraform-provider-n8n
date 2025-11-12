@@ -126,6 +126,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- extract transfer Create logic for testability (`a7a7f7b`)
 - move CRUD tests to external test file (`d6eec56`)
 - rename n8n_lib to src_lib for gazelle compatibility (`84cc3dc`)
 - merge test files and clean up per linter requirements (`1467db5`)
@@ -157,11 +158,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 120
+- **Total commits:** 121
 - **Features:** 31
 - **Bug fixes:** 13
 - **Tests:** 44
-- **Refactoring:** 16
+- **Refactoring:** 17
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -170,4 +171,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 22:42:00*
+*Changelog generated automatically on 2025-11-12 23:04:48*

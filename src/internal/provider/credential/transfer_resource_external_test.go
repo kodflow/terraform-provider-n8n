@@ -2,11 +2,14 @@ package credential_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/credential"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/stretchr/testify/assert"
@@ -70,21 +73,34 @@ func TestCredentialTransferResource_Metadata(t *testing.T) {
 func TestCredentialTransferResource_Schema(t *testing.T) {
 	t.Parallel()
 
-	r := credential.NewCredentialTransferResource()
-	req := resource.SchemaRequest{}
-	resp := &resource.SchemaResponse{}
+	tests := []struct {
+		name string
+	}{
+		{name: "schema has required attributes"},
+	}
 
-	r.Schema(context.Background(), req, resp)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	assert.NotNil(t, resp.Schema)
-	assert.Contains(t, resp.Schema.MarkdownDescription, "transfer")
+			r := credential.NewCredentialTransferResource()
+			req := resource.SchemaRequest{}
+			resp := &resource.SchemaResponse{}
 
-	// Verify required attributes exist
-	attrs := resp.Schema.Attributes
-	assert.Contains(t, attrs, "id")
-	assert.Contains(t, attrs, "credential_id")
-	assert.Contains(t, attrs, "destination_project_id")
-	assert.Contains(t, attrs, "transferred_at")
+			r.Schema(context.Background(), req, resp)
+
+			assert.NotNil(t, resp.Schema)
+			assert.Contains(t, resp.Schema.MarkdownDescription, "transfer")
+
+			// Verify required attributes exist
+			attrs := resp.Schema.Attributes
+			assert.Contains(t, attrs, "id")
+			assert.Contains(t, attrs, "credential_id")
+			assert.Contains(t, attrs, "destination_project_id")
+			assert.Contains(t, attrs, "transferred_at")
+		})
+	}
 }
 
 func TestCredentialTransferResource_Configure(t *testing.T) {
@@ -140,10 +156,99 @@ func TestCredentialTransferResource_Configure(t *testing.T) {
 func TestCredentialTransferResource_Create(t *testing.T) {
 	t.Parallel()
 
-	// Note: Comprehensive testing is done in integration tests.
-	// This test just ensures the function exists and is accessible.
-	resource := credential.NewCredentialTransferResource()
-	assert.NotNil(t, resource, "resource should not be nil")
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectError bool
+	}{
+		{
+			name: "successful creation",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/credentials/cred-123/transfer" {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectError: false,
+		},
+		{
+			name: "API error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}),
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupTransferTestClient(t, tt.handler)
+			defer server.Close()
+
+			r := credential.NewCredentialTransferResource()
+			// Configure the resource with the mock client
+			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
+			configResp := &resource.ConfigureResponse{}
+			r.Configure(context.Background(), configReq, configResp)
+
+			ctx := context.Background()
+
+			// Build schema and plan
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":                     tftypes.NewValue(tftypes.String, nil),
+				"credential_id":          tftypes.NewValue(tftypes.String, "cred-123"),
+				"destination_project_id": tftypes.NewValue(tftypes.String, "proj-456"),
+				"transferred_at":         tftypes.NewValue(tftypes.String, nil),
+			})
+
+			req := resource.CreateRequest{
+				Plan: tfsdk.Plan{
+					Schema: schemaResp.Schema,
+					Raw:    planRaw,
+				},
+			}
+			resp := &resource.CreateResponse{
+				State: tfsdk.State{Schema: schemaResp.Schema},
+			}
+
+			r.Create(ctx, req, resp)
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError())
+			} else {
+				assert.False(t, resp.Diagnostics.HasError())
+			}
+		})
+	}
+}
+
+func setupTransferTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }
 
 func TestCredentialTransferResource_Read(t *testing.T) {

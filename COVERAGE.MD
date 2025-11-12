@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **85.1%** |
+| **Total Coverage** | **86.7%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -24,9 +24,9 @@ Rapport de couverture généré automatiquement.
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 100.0% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 84.9% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 87.4% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/execution` | 81.2% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/project` | 79.9% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/project` | 86.8% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared/client` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |
@@ -94,7 +94,7 @@ Opérations spéciales et gestion des relations entre ressources.
 | Function | credential | workflow |
 |----------|:--------:|:--------:|
 | `Configure` | 🟢 100.0% | 🟢 100.0% |
-| `Create` | 🔴 0.0% | 🟢 100.0% |
+| `Create` | 🟡 85.7% | 🟢 100.0% |
 | `Delete` | 🔵 N/A | 🔵 N/A |
 | `ImportState` | 🟢 100.0% | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% | 🟢 100.0% |
@@ -107,13 +107,13 @@ Opérations spéciales et gestion des relations entre ressources.
 | Function | project |
 |----------|:--------:|
 | `Configure` | 🟢 100.0% |
-| `Create` | 🔴 0.0% |
-| `Delete` | 🔴 0.0% |
+| `Create` | 🟡 85.7% |
+| `Delete` | 🟡 80.0% |
 | `ImportState` | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% |
-| `Read` | 🔴 0.0% |
+| `Read` | 🟡 85.7% |
 | `Schema` | 🟢 100.0% |
-| `Update` | 🔴 0.0% |
+| `Update` | 🟡 87.5% |
 
 ---
 
