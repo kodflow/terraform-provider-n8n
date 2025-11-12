@@ -145,6 +145,26 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// Execute create logic
+	if !r.executeCreateLogic(ctx, plan, resp) {
+		// Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// executeCreateLogic contains the main logic for transferring a credential.
+// This helper function is separated for testability.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - resp: Create response
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *CredentialTransferResource) executeCreateLogic(ctx context.Context, plan *models.TransferResource, resp *resource.CreateResponse) bool {
 	// Build transfer request
 	transferReq := n8nsdk.NewCredentialsIdTransferPutRequest(plan.DestinationProjectID.ValueString())
 
@@ -162,15 +182,16 @@ func (r *CredentialTransferResource) Create(ctx context.Context, req resource.Cr
 			fmt.Sprintf("Could not transfer credential %s to project %s: %s\nHTTP Response: %v",
 				plan.CredentialID.ValueString(), plan.DestinationProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		// Return failure.
+		return false
 	}
 
 	// Set computed fields
 	plan.ID = types.StringValue(fmt.Sprintf("%s-to-%s", plan.CredentialID.ValueString(), plan.DestinationProjectID.ValueString()))
 	plan.TransferredAt = types.StringValue(fmt.Sprintf("transfer-response-%d", httpResp.StatusCode))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Return success.
+	return true
 }
 
 // Read refreshes the resource state. For transfer operations, we just keep the current state.

@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **84.7%** |
+| **Total Coverage** | **85.1%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -24,7 +24,7 @@ Rapport de couverture généré automatiquement.
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 100.0% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 81.7% |
+| 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 84.9% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/execution` | 81.2% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/project` | 79.9% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
