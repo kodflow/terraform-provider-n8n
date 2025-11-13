@@ -222,9 +222,15 @@ update: ## Update ktn-linter to latest version
 # ============================================================================
 
 .PHONY: openapi
-openapi: ## Generate SDK from n8n OpenAPI specification
+openapi: ## Download and prepare OpenAPI spec from n8n
 	@echo ""
-	@python3 codegen/build-sdk.py
+	@python3 codegen/download-openapi.py
+	@echo ""
+
+.PHONY: sdk
+sdk: ## Generate Go SDK from OpenAPI spec
+	@echo ""
+	@python3 codegen/generate-sdk.py
 	@echo ""
 
 .PHONY: clean
