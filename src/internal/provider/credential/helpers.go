@@ -1,3 +1,7 @@
+// Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+// Licensed under the Sustainable Use License 1.0
+// See LICENSE.md in the project root for license information.
+
 // Package credential provides helper functions for credential operations including rotation and workflow updates.
 package credential
 

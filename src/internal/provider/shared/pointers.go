@@ -1,3 +1,7 @@
+// Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+// Licensed under the Sustainable Use License 1.0
+// See LICENSE.md in the project root for license information.
+
 // Package shared provides utilities shared across the provider.
 // The pointer utilities are inspired by github.com/kitsunium/sdk/pkg/lib/pointer
 // but implemented locally for Bazel compatibility.

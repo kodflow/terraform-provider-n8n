@@ -1,3 +1,7 @@
+// Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+// Licensed under the Sustainable Use License 1.0
+// See LICENSE.md in the project root for license information.
+
 // Package execution implements the retry resource for re-executing failed n8n workflows.
 package execution
 

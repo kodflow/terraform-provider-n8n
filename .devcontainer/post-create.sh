@@ -3,6 +3,11 @@ set -e
 
 echo "🔧 Installing development tools..."
 
+# Configure git identity
+echo "👤 Configuring git identity..."
+git config --global user.name "Kodflow"
+git config --global user.email "133899878+kodflow@users.noreply.github.com"
+
 # Configure npm for local global packages (no sudo needed)
 # Using environment variable instead of npm config to avoid conflicts with nvm
 echo "⚙️  Configuring npm..."
