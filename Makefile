@@ -235,6 +235,14 @@ openapi/version: ## Check n8n OpenAPI version info
 openapi/update: ## Update to latest n8n version
 	@python3 codegen/download-openapi.py --update
 
+.PHONY: openapi/patch/create
+openapi/patch/create: ## Create patch from current git diff
+	@python3 codegen/patch-openapi.py --create
+
+.PHONY: openapi/patch/from-commit
+openapi/patch/from-commit: ## Create patch from specific commit (usage: make openapi/patch/from-commit COMMIT=hash)
+	@python3 codegen/patch-openapi.py --from-commit $(COMMIT)
+
 .PHONY: sdk
 sdk: ## Generate Go SDK from OpenAPI spec
 	@echo ""

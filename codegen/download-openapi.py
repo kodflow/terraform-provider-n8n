@@ -240,8 +240,9 @@ def main():
     print("🩹 Applying openapi.patch...")
     patch_file = API_DIR / "openapi.patch"
     if patch_file.exists():
+        # Try with fuzzy matching to allow for line number differences
         result = subprocess.run(
-            f"patch -p0 < {patch_file}",
+            f"patch -p0 --fuzz=3 < {patch_file}",
             shell=True,
             capture_output=True,
             text=True
