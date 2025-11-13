@@ -7,33 +7,180 @@ Downloads OpenAPI spec from n8n repo, bundles it, fixes aliases, and applies pat
 import subprocess
 import sys
 import shutil
+import json
+import argparse
 from pathlib import Path
 
-def run(cmd, cwd=None):
-    """Run command and exit on error"""
+def run(cmd, cwd=None, check=True):
+    """Run command and optionally exit on error"""
     result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
-    if result.returncode != 0:
+    if check and result.returncode != 0:
         print(f"❌ Command failed: {cmd}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
-    return result.stdout
+    return result.stdout.strip()
+
+def get_n8n_version(temp_dir, commit):
+    """Extract n8n version from package.json at specific commit"""
+    try:
+        package_json = Path(temp_dir) / "package.json"
+        if package_json.exists():
+            with open(package_json, 'r') as f:
+                data = json.load(f)
+                return data.get('version', 'unknown')
+    except:
+        pass
+    return 'unknown'
+
+def get_latest_version():
+    """Get latest n8n version from GitHub API"""
+    try:
+        result = run("curl -s https://api.github.com/repos/n8n-io/n8n/releases/latest", check=False)
+        data = json.loads(result)
+        return data.get('tag_name', 'unknown').lstrip('n8n@')
+    except:
+        return 'unknown'
+
+def check_version():
+    """Display version information from OpenAPI spec"""
+    import yaml
+
+    API_DIR = Path("sdk/n8nsdk/api")
+    spec_file = API_DIR / "openapi.yaml"
+
+    if not spec_file.exists():
+        print("❌ OpenAPI file not found: sdk/n8nsdk/api/openapi.yaml")
+        print("   Run 'make openapi' to generate it")
+        sys.exit(1)
+
+    try:
+        with open(spec_file, 'r') as f:
+            spec = yaml.safe_load(f)
+
+        info = spec.get('info', {})
+        version_info = info.get('x-n8n-version-info', {})
+
+        if not version_info:
+            print("⚠️  No version info found in OpenAPI spec")
+            print("   Run 'make openapi' to regenerate with version tracking")
+            sys.exit(1)
+
+        frozen_version = version_info.get('frozenVersion', 'unknown')
+        frozen_commit = version_info.get('frozenCommit', 'unknown')
+        latest_version = version_info.get('latestVersion', 'unknown')
+        in_sync = version_info.get('inSync', False)
+
+        print("\n🔍 N8N Version Check\n")
+        print(f"📌 Frozen Version:  {frozen_version}")
+        print(f"🔒 Frozen Commit:   {frozen_commit[:8] if len(frozen_commit) > 8 else frozen_commit}")
+        print(f"🆕 Latest Version:  {latest_version}")
+        print()
+
+        if in_sync:
+            print("✅ Versions are in sync!")
+        else:
+            print("⚠️  Version mismatch detected!")
+            print(f"   Consider updating by changing N8N_COMMIT in codegen/download-openapi.py")
+            print(f"   From: {frozen_version} ({frozen_commit[:8]})")
+            print(f"   To:   {latest_version}")
+        print()
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
+
+def update_to_latest():
+    """Update N8N_COMMIT to latest version"""
+    print("\n🔄 Updating to Latest n8n Version\n")
+
+    # Get latest version and commit
+    latest_version = get_latest_version()
+    if latest_version == 'unknown':
+        print("❌ Failed to fetch latest version from GitHub")
+        sys.exit(1)
+
+    print(f"📥 Fetching commit hash for n8n@{latest_version}...")
+
+    try:
+        result = run(f"curl -s https://api.github.com/repos/n8n-io/n8n/git/refs/tags/n8n@{latest_version}", check=False)
+        data = json.loads(result)
+        latest_commit = data.get('object', {}).get('sha', None)
+
+        if not latest_commit:
+            print("❌ Failed to get commit hash for latest version")
+            sys.exit(1)
+
+        print(f"   ✓ Found commit: {latest_commit[:8]}\n")
+
+    except Exception as e:
+        print(f"❌ Error fetching commit: {e}")
+        sys.exit(1)
+
+    # Read current script
+    script_path = Path(__file__)
+    with open(script_path, 'r') as f:
+        content = f.read()
+
+    # Find and replace N8N_COMMIT line
+    import re
+    pattern = r'N8N_COMMIT = "[a-f0-9]+".*?# Frozen commit[^\n]*'
+    replacement = f'N8N_COMMIT = "{latest_commit}"  # Frozen commit for API stability (n8n@{latest_version})'
+
+    if not re.search(pattern, content):
+        print("❌ Could not find N8N_COMMIT in script")
+        sys.exit(1)
+
+    new_content = re.sub(pattern, replacement, content)
+
+    # Write back
+    with open(script_path, 'w') as f:
+        f.write(new_content)
+
+    print(f"✅ Updated codegen/download-openapi.py")
+    print(f"   📌 New commit: {latest_commit[:8]} (n8n@{latest_version})")
+    print()
+    print("Next steps:")
+    print("  1. Run 'make openapi' to regenerate OpenAPI spec")
+    print("  2. Run 'make sdk' to regenerate Go SDK")
+    print("  3. Test the provider with the new version")
+    print("  4. Commit changes if everything works")
+    print()
 
 def main():
     print("🚀 N8N OpenAPI Download Pipeline\n")
 
     # Config
-    N8N_COMMIT = "0ccf47044a2ba5b94140bfdd2ba36b868091288d"
+    N8N_COMMIT = "53fd5c94c8798292cc981508a937b09532bbcf64"  # Frozen commit for API stability (n8n@1.119.1)
     TEMP_DIR = "/tmp/n8n-openapi-download"
     API_DIR = Path("sdk/n8nsdk/api")
 
     # 1. Download from GitHub
     print("📥 Downloading OpenAPI from GitHub...")
+    print(f"   🔒 Using frozen commit: {N8N_COMMIT[:8]}\n")
+
     if Path(TEMP_DIR).exists():
         shutil.rmtree(TEMP_DIR)
 
     run(f"git clone --depth 1 --filter=blob:none --sparse https://github.com/n8n-io/n8n.git {TEMP_DIR}")
     run("git sparse-checkout set packages/cli/src/public-api", cwd=TEMP_DIR)
     run(f"git checkout {N8N_COMMIT}", cwd=TEMP_DIR)
+
+    # Get package.json separately to extract version
+    run(f"git checkout {N8N_COMMIT} -- package.json", cwd=TEMP_DIR, check=False)
+
+    # Get version from the frozen commit
+    frozen_version = get_n8n_version(TEMP_DIR, N8N_COMMIT)
+    print(f"   📌 Frozen n8n version: {frozen_version}")
+
+    # Get latest version from GitHub
+    latest_version = get_latest_version()
+    print(f"   🆕 Latest n8n version: {latest_version}")
+
+    if frozen_version != latest_version and frozen_version != 'unknown' and latest_version != 'unknown':
+        print(f"   ⚠️  Version mismatch detected!")
+        print(f"      Consider updating to latest by changing N8N_COMMIT\n")
+    else:
+        print(f"   ✓ Versions in sync\n")
 
     source_path = API_DIR / "openapi-source"
     if source_path.exists():
@@ -111,9 +258,48 @@ def main():
     else:
         print("   ⚠️  No patch file found\n")
 
+    # 5. Add version info to OpenAPI spec
+    print("📝 Adding version information...")
+    with open(spec_file, 'r') as f:
+        openapi_content = f.read()
+
+    # Add x-n8n-version-info extension to info section
+    import yaml
+    spec = yaml.safe_load(openapi_content)
+
+    if 'info' not in spec:
+        spec['info'] = {}
+
+    spec['info']['x-n8n-version-info'] = {
+        'frozenVersion': frozen_version,
+        'frozenCommit': N8N_COMMIT,
+        'latestVersion': latest_version,
+        'inSync': frozen_version == latest_version,
+        'note': 'This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.'
+    }
+
+    # Write back
+    with open(spec_file, 'w') as f:
+        yaml.dump(spec, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+    print(f"   ✓ Added version info\n")
+
     print("✅ OpenAPI spec ready!\n")
-    print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + patched)")
+    print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + patched + versioned)")
+    print(f"   📌 Based on n8n {frozen_version} (commit {N8N_COMMIT[:8]})")
+    if frozen_version != latest_version and latest_version != 'unknown':
+        print(f"   🆕 Latest available: {latest_version}")
     print("\nNext step: Run 'make sdk' to generate the Go SDK\n")
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='N8N OpenAPI Download & Version Check')
+    parser.add_argument('--version', action='store_true', help='Check version information')
+    parser.add_argument('--update', action='store_true', help='Update N8N_COMMIT to latest version')
+    args = parser.parse_args()
+
+    if args.version:
+        check_version()
+    elif args.update:
+        update_to_latest()
+    else:
+        main()

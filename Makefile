@@ -227,6 +227,14 @@ openapi: ## Download and prepare OpenAPI spec from n8n
 	@python3 codegen/download-openapi.py
 	@echo ""
 
+.PHONY: openapi/version
+openapi/version: ## Check n8n OpenAPI version info
+	@python3 codegen/download-openapi.py --version
+
+.PHONY: openapi/update
+openapi/update: ## Update to latest n8n version
+	@python3 codegen/download-openapi.py --update
+
 .PHONY: sdk
 sdk: ## Generate Go SDK from OpenAPI spec
 	@echo ""
