@@ -384,7 +384,7 @@ func TestVersionVariable(t *testing.T) {
 }
 
 func TestOsExitVariable(t *testing.T) {
-	t.Parallel()
+	// Note: No t.Parallel() at function level because this test modifies global OsExit
 
 	tests := []struct {
 		name    string
@@ -400,7 +400,7 @@ func TestOsExitVariable(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+			// Note: No t.Parallel() here because subtests manipulate shared global state
 
 			originalOsExit := OsExit
 			defer func() { OsExit = originalOsExit }()
