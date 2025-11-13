@@ -36,7 +36,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install Python dependencies
         run: pip install pyyaml requests
@@ -53,6 +53,9 @@ jobs:
 
       - name: Run gazelle to update BUILD files
         run: bazel run //:gazelle
+
+      - name: Clean Bazel cache after SDK generation
+        run: bazel clean
 
       - name: Download Go dependencies
         run: go mod download
@@ -90,7 +93,7 @@ jobs:
         run: make lint
 
       - name: Run unit tests
-        run: make test/unit
+        run: bazel test --test_output=all --test_verbose_timeout_warnings //src/...
 
       - name: Build provider
         run: make build
