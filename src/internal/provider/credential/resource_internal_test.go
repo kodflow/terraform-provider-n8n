@@ -2918,3 +2918,293 @@ func TestCredentialResource_executeUpdateLogic(t *testing.T) {
 		})
 	}
 }
+
+// TestCredentialResource_executeCreateLogicWithData tests the executeCreateLogicWithData method.
+// This function is fully testable because it takes credData as a direct parameter,
+// bypassing the Terraform framework's ElementsAs conversion.
+func TestCredentialResource_executeCreateLogicWithData(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		credName      string
+		credType      string
+		credData      map[string]any
+		setupHandler  func(w http.ResponseWriter, r *http.Request)
+		expectSuccess bool
+		expectError   bool
+	}{
+		{
+			name:     "success - credential created",
+			credName: "Test Credential",
+			credType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer test-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				now := time.Now()
+				w.Write([]byte(`{
+					"id": "cred-123",
+					"name": "Test Credential",
+					"type": "httpHeaderAuth",
+					"createdAt": "` + now.Format(time.RFC3339) + `",
+					"updatedAt": "` + now.Format(time.RFC3339) + `"
+				}`))
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+		{
+			name:     "error - API call fails",
+			credName: "Test Credential",
+			credType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer test-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			},
+			expectSuccess: false,
+			expectError:   true,
+		},
+		{
+			name:     "error - API returns bad request",
+			credName: "Test Credential",
+			credType: "invalid-type",
+			credData: map[string]any{
+				"invalid": "data",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(`{"message": "Invalid credential type"}`))
+			},
+			expectSuccess: false,
+			expectError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &CredentialResource{client: n8nClient}
+			ctx := context.Background()
+
+			plan := &models.Resource{
+				Name: types.StringValue(tt.credName),
+				Type: types.StringValue(tt.credType),
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			result := r.executeCreateLogicWithData(ctx, plan, tt.credData, resp)
+
+			if tt.expectSuccess {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, "cred-123", plan.ID.ValueString(), "Should set credential ID")
+				assert.Equal(t, tt.credName, plan.Name.ValueString(), "Should preserve credential name")
+			} else {
+				assert.False(t, result, "Should return false on error")
+			}
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestCredentialResource_executeUpdateLogicWithData tests the executeUpdateLogicWithData method.
+// This function is fully testable because it takes credData as a direct parameter,
+// bypassing the Terraform framework's ElementsAs conversion.
+func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		oldCredID     string
+		newCredName   string
+		newCredType   string
+		credData      map[string]any
+		setupHandler  func(w http.ResponseWriter, r *http.Request)
+		expectSuccess bool
+		expectError   bool
+	}{
+		{
+		},
+		{
+			name:        "error - createNewCredential fails",
+			oldCredID:   "cred-old-123",
+			newCredName: "Updated Credential",
+			newCredType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer updated-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "POST" && r.URL.Path == "/credentials" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to create credential"}`))
+				}
+			},
+			expectSuccess: false,
+			expectError:   true,
+		},
+		{
+			name:        "error - scanAffectedWorkflows fails",
+			oldCredID:   "cred-old-123",
+			newCredName: "Updated Credential",
+			newCredType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer updated-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				
+				switch {
+				case r.Method == "POST" && r.URL.Path == "/credentials":
+					// Create succeeds
+					w.WriteHeader(http.StatusCreated)
+					now := time.Now()
+					w.Write([]byte(`{
+						"id": "cred-new-456",
+						"name": "Updated Credential",
+						"type": "httpHeaderAuth",
+						"createdAt": "` + now.Format(time.RFC3339) + `",
+						"updatedAt": "` + now.Format(time.RFC3339) + `"
+					}`))
+				case r.Method == "GET" && r.URL.Path == "/workflows":
+					// Workflow listing fails
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to list workflows"}`))
+				default:
+					w.WriteHeader(http.StatusNotFound)
+				}
+			},
+			expectSuccess: false,
+			expectError:   true,
+		},
+		{
+			name:        "error - updateAffectedWorkflows fails",
+			oldCredID:   "cred-old-123",
+			newCredName: "Updated Credential",
+			newCredType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer updated-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				
+				switch {
+				case r.Method == "POST" && r.URL.Path == "/credentials":
+					// Create succeeds
+					w.WriteHeader(http.StatusCreated)
+					now := time.Now()
+					w.Write([]byte(`{
+						"id": "cred-new-456",
+						"name": "Updated Credential",
+						"type": "httpHeaderAuth",
+						"createdAt": "` + now.Format(time.RFC3339) + `",
+						"updatedAt": "` + now.Format(time.RFC3339) + `"
+					}`))
+				case r.Method == "GET" && r.URL.Path == "/workflows":
+					// List workflows succeeds
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{
+						"data": [
+							{
+								"id": "workflow-1",
+								"name": "Test Workflow",
+								"active": true,
+								"nodes": [
+									{
+										"credentials": {
+											"httpHeaderAuth": {
+												"id": "cred-old-123"
+											}
+										}
+									}
+								],
+								"connections": {},
+								"settings": {}
+							}
+						]
+					}`))
+				case r.Method == "PUT" && r.URL.Path == "/workflows/workflow-1":
+					// Workflow update fails
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to update workflow"}`))
+				default:
+					w.WriteHeader(http.StatusNotFound)
+				}
+			},
+			expectSuccess: false,
+			expectError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &CredentialResource{client: n8nClient}
+			ctx := context.Background()
+
+			oldDataValue, diags := types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+				"name":  "Authorization",
+				"value": "Bearer old-token",
+			})
+			if diags.HasError() {
+				t.Fatalf("Failed to create old data map: %v", diags)
+			}
+
+			state := &models.Resource{
+				ID:   types.StringValue(tt.oldCredID),
+				Name: types.StringValue("Old Credential"),
+				Type: types.StringValue("httpHeaderAuth"),
+				Data: oldDataValue,
+			}
+			plan := &models.Resource{
+				Name: types.StringValue(tt.newCredName),
+				Type: types.StringValue(tt.newCredType),
+			}
+			resp := &resource.UpdateResponse{
+				State: resource.UpdateResponse{}.State,
+			}
+
+			result := r.executeUpdateLogicWithData(ctx, plan, state, tt.credData, resp)
+
+			if tt.expectSuccess {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, "cred-new-456", plan.ID.ValueString(), "Should set new credential ID")
+				assert.Equal(t, tt.newCredName, plan.Name.ValueString(), "Should preserve credential name")
+			} else {
+				assert.False(t, result, "Should return false on error")
+			}
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			}
+		})
+	}
+}

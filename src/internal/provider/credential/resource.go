@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -183,6 +184,24 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
+// extractCredentialData extracts credential data from Terraform types.Map.
+// This function isolates the ElementsAs conversion which requires Terraform framework context.
+//
+// Params:
+//   - ctx: Context for the request
+//   - data: The Terraform types.Map containing credential data
+//
+// Returns:
+//   - map[string]any: The extracted credential data
+//   - diag.Diagnostics: Any diagnostics from the conversion
+func extractCredentialData(ctx context.Context, data types.Map) (map[string]any, diag.Diagnostics) {
+	var credData map[string]any
+	var diags diag.Diagnostics
+	diags.Append(data.ElementsAs(ctx, &credData, false)...)
+	// Return extracted data and diagnostics.
+	return credData, diags
+}
+
 // executeCreateLogic contains the main logic for creating a credential.
 // This helper function is separated for testability.
 //
@@ -194,15 +213,31 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 // Returns:
 //   - bool: True if creation succeeded, false otherwise
 func (r *CredentialResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
-	// Prepare credential data
-	var credData map[string]any
-	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
+	// Extract credential data from Terraform types
+	credData, diags := extractCredentialData(ctx, plan.Data)
+	resp.Diagnostics.Append(diags...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
 		// Return failure.
 		return false
 	}
 
+	// Execute creation with extracted data
+	return r.executeCreateLogicWithData(ctx, plan, credData, resp)
+}
+
+// executeCreateLogicWithData executes the creation logic with pre-extracted credential data.
+// This function is fully testable as it takes credData as a parameter, bypassing ElementsAs.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The Terraform plan
+//   - credData: The credential data (already extracted)
+//   - resp: The create response to populate with diagnostics
+//
+// Returns:
+//   - bool: True if creation succeeded, false otherwise
+func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, plan *models.Resource, credData map[string]any, resp *resource.CreateResponse) bool {
 	// Create credential via API
 	createResp, httpResp, err := r.executeCreate(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData)
 	// Close HTTP response body if present.
@@ -340,17 +375,34 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 // Returns:
 //   - bool: True if update succeeded, false otherwise
 func (r *CredentialResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	oldCredID := state.ID.ValueString()
-	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
-
-	// Prepare credential data
-	var credData map[string]any
-	resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &credData, false)...)
+	// Extract credential data from Terraform types
+	credData, diags := extractCredentialData(ctx, plan.Data)
+	resp.Diagnostics.Append(diags...)
 	// Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
 		// Return failure.
 		return false
 	}
+
+	// Execute update with extracted data
+	return r.executeUpdateLogicWithData(ctx, plan, state, credData, resp)
+}
+
+// executeUpdateLogicWithData executes the update logic with pre-extracted credential data.
+// This function is fully testable as it takes credData as a parameter, bypassing ElementsAs.
+//
+// Params:
+//   - ctx: Context for the request
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - credData: The credential data (already extracted)
+//   - resp: Update response
+//
+// Returns:
+//   - bool: True if update succeeded, false otherwise
+func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, plan, state *models.Resource, credData map[string]any, resp *resource.UpdateResponse) bool {
+	oldCredID := state.ID.ValueString()
+	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
 
 	// STEP 1: Create new credential
 	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData, &resp.Diagnostics)

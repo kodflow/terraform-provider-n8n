@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- achieve 100% coverage for all datasource Read methods (`1c85a71`)
 - improve datasource Read coverage from 0% to ~95% (`28de8a4`)
 - achieve 100% coverage for transfer and project user resources (`0858404`)
 - improve coverage and fix linting issues (`e331ca1`)
@@ -161,10 +162,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 124
+- **Total commits:** 125
 - **Features:** 31
 - **Bug fixes:** 13
-- **Tests:** 47
+- **Tests:** 48
 - **Refactoring:** 17
 - **Test coverage:** N/A
 
@@ -174,4 +175,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-13 07:45:47*
+*Changelog generated automatically on 2025-11-13 08:24:01*
