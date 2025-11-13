@@ -96,11 +96,8 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 		return tagList
 	}
 
-	// Empty list if no tags
-	emptyList, emptyDiags := types.ListValueFrom(ctx, types.StringType, []types.String{})
-	diags.Append(emptyDiags...)
-	// Return result.
-	return emptyList
+	// Return null list if no tags to avoid inconsistent result errors.
+	return types.ListNull(types.StringType)
 }
 
 // mapWorkflowBasicFields maps basic workflow fields to the model.
@@ -173,6 +170,9 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *mo
 		if !diags.HasError() {
 			plan.Meta = metaMap
 		}
+	} else {
+		// Set null map when API returns nil to ensure attribute is known.
+		plan.Meta = types.MapNull(types.StringType)
 	}
 	// Check for non-nil value.
 	if workflow.PinData != nil {
@@ -182,6 +182,9 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *mo
 		if !diags.HasError() {
 			plan.PinData = pinDataMap
 		}
+	} else {
+		// Set null map when API returns nil to ensure attribute is known.
+		plan.PinData = types.MapNull(types.StringType)
 	}
 
 	// Serialize JSON fields

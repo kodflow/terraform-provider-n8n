@@ -195,9 +195,23 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 //   - map[string]any: The extracted credential data
 //   - diag.Diagnostics: Any diagnostics from the conversion
 func extractCredentialData(ctx context.Context, data types.Map) (map[string]any, diag.Diagnostics) {
-	var credData map[string]any
+	// First convert to map[string]string since schema ElementType is types.StringType
+	var credDataString map[string]string
 	var diags diag.Diagnostics
-	diags.Append(data.ElementsAs(ctx, &credData, false)...)
+	diags.Append(data.ElementsAs(ctx, &credDataString, false)...)
+	// Check if conversion succeeded.
+	if diags.HasError() {
+		// Return empty map with diagnostics on conversion error.
+		return map[string]any{}, diags
+	}
+
+	// Convert map[string]string to map[string]any for API compatibility
+	credData := make(map[string]any, len(credDataString))
+	// Iterate over credential data to convert string values to any.
+	for key, value := range credDataString {
+		credData[key] = value
+	}
+
 	// Return extracted data and diagnostics.
 	return credData, diags
 }
@@ -472,17 +486,20 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 		defer httpResp.Body.Close()
 	}
 
+	// Check HTTP status code first - 200/204 means success even if SDK parsing fails.
+	if httpResp != nil && (httpResp.StatusCode == http.StatusOK || httpResp.StatusCode == http.StatusNoContent) {
+		tflog.Info(ctx, fmt.Sprintf("Deleted credential %s", state.ID.ValueString()))
+		// Return success.
+		return
+	}
+
 	// Check if credential deletion failed.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting credential",
 			fmt.Sprintf("Could not delete credential ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
-		return
 	}
-
-	tflog.Info(ctx, fmt.Sprintf("Deleted credential %s", state.ID.ValueString()))
 }
 
 // ImportState imports the resource into Terraform state.

@@ -100,8 +100,7 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 		./src/internal/provider/credential/... \
 		./src/internal/provider/tag/... \
 		./src/internal/provider/variable/... \
-		./src/internal/provider/workflow/... || \
-		(printf "  $(RED)✗$(RESET) Acceptance tests failed (this is expected if n8n instance is not accessible)\n"; exit 0)
+		./src/internal/provider/workflow/...
 	@echo "$(GREEN)✓$(RESET) E2E tests completed"
 	@echo ""
 

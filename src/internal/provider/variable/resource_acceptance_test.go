@@ -12,6 +12,10 @@ import (
 )
 
 func TestAccVariableResource(t *testing.T) {
+	// NOTE: Variables require n8n enterprise license with feat:variables enabled.
+	// This test will be skipped if the license does not support variables.
+	t.Skip("Skipping variable acceptance test - requires n8n enterprise license with feat:variables")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

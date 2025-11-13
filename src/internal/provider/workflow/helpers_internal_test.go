@@ -288,10 +288,8 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 				result := mapTagsFromWorkflow(context.Background(), workflow, diags)
 
 				assert.False(t, diags.HasError())
-				assert.False(t, result.IsNull())
-				var tagIDs []string
-				diags.Append(result.ElementsAs(context.Background(), &tagIDs, false)...)
-				assert.Empty(t, tagIDs)
+				// Returns null to avoid inconsistent result errors when plan had null.
+				assert.True(t, result.IsNull())
 			},
 		},
 		{
@@ -306,7 +304,8 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 				result := mapTagsFromWorkflow(context.Background(), workflow, diags)
 
 				assert.False(t, diags.HasError())
-				assert.False(t, result.IsNull())
+				// Returns null to avoid inconsistent result errors when plan had null.
+				assert.True(t, result.IsNull())
 			},
 		},
 	}

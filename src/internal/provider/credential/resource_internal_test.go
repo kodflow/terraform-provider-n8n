@@ -524,7 +524,7 @@ func Test_extractCredentialData(t *testing.T) {
 		checkFn  func(*testing.T, map[string]any, diag.Diagnostics)
 	}{
 		{
-			name: "null map returns nil data without errors",
+			name: "null map returns empty data without errors",
 			setupMap: func(ctx context.Context) types.Map {
 				return types.MapNull(types.StringType)
 			},
@@ -532,7 +532,8 @@ func Test_extractCredentialData(t *testing.T) {
 				t.Helper()
 				// Null maps should not cause errors
 				assert.False(t, diags.HasError(), "null map should not cause errors")
-				assert.Nil(t, data, "null map should return nil data")
+				assert.NotNil(t, data, "null map should return empty map, not nil")
+				assert.Empty(t, data, "null map should return empty map")
 			},
 		},
 		{
@@ -553,8 +554,8 @@ func Test_extractCredentialData(t *testing.T) {
 				t.Helper()
 				// We're testing that extractCredentialData calls ElementsAs,
 				// not that ElementsAs works (that's Terraform framework's responsibility)
-				// The function should return whatever ElementsAs returns
-				assert.NotNil(t, diags, "diagnostics should be returned")
+				// The function should return a map and diagnostics (even if empty)
+				assert.NotNil(t, data, "data should be returned")
 			},
 		},
 	}
@@ -2006,6 +2007,57 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 				r.Delete(ctx, req, resp)
 
 				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors")
+			},
+		},
+		{
+			name: "delete with 200 OK response",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodDelete && r.URL.Path == "/credentials/cred-123" {
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"message":"Deleted successfully"}`))
+					}
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := &CredentialResource{client: n8nClient}
+				ctx := context.Background()
+
+				schemaReq := resource.SchemaRequest{}
+				schemaResp := &resource.SchemaResponse{}
+				r.Schema(ctx, schemaReq, schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				req := resource.DeleteRequest{
+					State: tfsdk.State{
+						Raw:    stateRaw,
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				resp := &resource.DeleteResponse{
+					State: tfsdk.State{
+						Schema: schemaResp.Schema,
+					},
+				}
+
+				r.Delete(ctx, req, resp)
+
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors with 200 OK")
 			},
 		},
 		{
