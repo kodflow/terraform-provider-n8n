@@ -48,6 +48,61 @@ help: ## Display available commands
 	@echo ""
 
 # ============================================================================
+# Dependencies
+# ============================================================================
+
+.PHONY: deps
+deps: ## Download Go module dependencies
+	@echo ""
+	@echo "$(BOLD)Downloading Go dependencies...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Running go mod download\n"
+	@go mod download
+	@echo "$(GREEN)✓$(RESET) Dependencies downloaded"
+	@echo ""
+
+.PHONY: tools
+tools: ## Install development tools
+	@echo ""
+	@echo "$(BOLD)Installing development tools...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) goimports\n"
+	@go install golang.org/x/tools/cmd/goimports@latest
+	@printf "  $(CYAN)→$(RESET) buildifier\n"
+	@go install github.com/bazelbuild/buildtools/buildifier@latest
+	@printf "  $(CYAN)→$(RESET) shfmt\n"
+	@go install mvdan.cc/sh/v3/cmd/shfmt@latest
+	@printf "  $(CYAN)→$(RESET) prettier (requires npm)\n"
+	@npm install -g prettier 2>/dev/null || echo "  $(YELLOW)⚠$(RESET)  npm not found, skipping prettier"
+	@echo "$(GREEN)✓$(RESET) Tools installed"
+	@echo ""
+
+.PHONY: tools/lint
+tools/lint: ## Install linting tools
+	@echo ""
+	@echo "$(BOLD)Installing linting tools...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin
+	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
+	@$(MAKE) update
+	@echo "$(GREEN)✓$(RESET) Linting tools installed"
+	@echo ""
+
+.PHONY: tools/sdk
+tools/sdk: ## Install SDK generation dependencies
+	@echo ""
+	@echo "$(BOLD)Installing SDK generation tools...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Python dependencies (pyyaml, requests)\n"
+	@pip install -q pyyaml requests 2>/dev/null || echo "  $(YELLOW)⚠$(RESET)  pip not found, skipping Python deps"
+	@printf "  $(CYAN)→$(RESET) OpenAPI Generator CLI\n"
+	@if [ ! -f /tmp/openapi-generator-cli.jar ]; then \
+		wget -q https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar -O /tmp/openapi-generator-cli.jar; \
+		echo '#!/bin/bash' | sudo tee /usr/local/bin/openapi-generator > /dev/null; \
+		echo 'java -jar /tmp/openapi-generator-cli.jar "$$@"' | sudo tee -a /usr/local/bin/openapi-generator > /dev/null; \
+		sudo chmod +x /usr/local/bin/openapi-generator; \
+	fi
+	@echo "$(GREEN)✓$(RESET) SDK tools installed"
+	@echo ""
+
+# ============================================================================
 # Build
 # ============================================================================
 
@@ -81,6 +136,15 @@ test/unit: ## Run unit tests
 	@echo "$(BOLD)Running unit tests...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Executing Bazel tests\n"
 	@bazel test --test_verbose_timeout_warnings //src/...
+	@echo "$(GREEN)✓$(RESET) Unit tests completed"
+	@echo ""
+
+.PHONY: test/unit/ci
+test/unit/ci: ## Run unit tests with CI-friendly output
+	@echo ""
+	@echo "$(BOLD)Running unit tests...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Executing Bazel tests\n"
+	@bazel test --test_output=all --test_verbose_timeout_warnings //src/...
 	@echo "$(GREEN)✓$(RESET) Unit tests completed"
 	@echo ""
 
@@ -163,6 +227,15 @@ openapi: ## Generate SDK from n8n OpenAPI specification
 	@python3 codegen/build-sdk.py
 	@echo ""
 	@$(MAKE) fmt
+
+.PHONY: clean
+clean: ## Clean Bazel build artifacts
+	@echo ""
+	@echo "$(BOLD)Cleaning build artifacts...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Removing Bazel cache\n"
+	@bazel clean
+	@echo "$(GREEN)✓$(RESET) Clean completed"
+	@echo ""
 
 # ============================================================================
 # Documentation
