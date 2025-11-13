@@ -37,16 +37,16 @@ REPORT_DATE=$(date +%Y-%m-%d)
 cat >COVERAGE.MD <<EOF
 # Coverage Report
 
-Rapport de couverture généré automatiquement.
+Automatically generated coverage report.
 
-**Légende:**
-- 🟢 ≥90% - Excellente couverture
-- 🟡 70-89% - Bonne couverture
-- 🔴 <70% - Couverture insuffisante
+**Legend:**
+- 🟢 ≥90% - Excellent coverage
+- 🟡 70-89% - Good coverage
+- 🔴 <70% - Insufficient coverage
 
 ---
 
-## Coverage Global
+## Global Coverage
 
 | Metric | Value |
 |--------|-------|
@@ -56,9 +56,9 @@ Rapport de couverture généré automatiquement.
 
 ---
 
-## Tests d'Acceptance (E2E)
+## Acceptance Tests (E2E)
 
-Les tests d'acceptance valident le comportement réel du provider contre une instance n8n.
+Acceptance tests validate the real behavior of the provider against an n8n instance.
 
 | Resource | Status | Tests |
 |----------|:------:|-------|
@@ -86,13 +86,13 @@ done
 
 cat >>COVERAGE.MD <<'EOF'
 
-**Légende:**
-- ✅ Tests d'acceptance présents
-- Les tests d'acceptance vérifient les opérations réelles via l'API n8n
+**Legend:**
+- ✅ Acceptance tests present
+- Acceptance tests verify real operations via the n8n API
 
 ---
 
-## Coverage par Package
+## Coverage by Package
 
 | Icon | Package | Coverage |
 |:----:|---------|----------|
@@ -131,10 +131,10 @@ cat >>COVERAGE.MD <<EOF
 
 ---
 
-## Coverage Détaillée par Catégorie
+## Detailed Coverage by Category
 
-Cette section liste uniquement les **fonctions publiques** (exportées) pour identifier rapidement les fonctions non testées.
-Les tableaux sont organisés par catégorie de ressources pour faciliter la compréhension de l'architecture du provider.
+This section lists only **public functions** (exported) to quickly identify untested functions.
+Tables are organized by resource category to facilitate understanding of the provider architecture.
 
 EOF
 
@@ -276,9 +276,9 @@ generate_coverage_table() {
 # Second pass: generate tables organized by resource category
 
 # === PRIMARY RESOURCES (CRUD Entities) ===
-echo "## 📦 Ressources Principales (CRUD Entities)" >>COVERAGE.MD
+echo "## 📦 Primary Resources (CRUD Entities)" >>COVERAGE.MD
 echo "" >>COVERAGE.MD
-echo "Gestion complète du cycle de vie des ressources n8n (Create, Read, Update, Delete)." >>COVERAGE.MD
+echo "Complete lifecycle management of n8n resources (Create, Read, Update, Delete)." >>COVERAGE.MD
 echo "" >>COVERAGE.MD
 
 # Find all packages with resource.go
@@ -296,9 +296,9 @@ fi
 # === SECONDARY RESOURCES (Operations/Relations) ===
 echo "---" >>COVERAGE.MD
 echo "" >>COVERAGE.MD
-echo "## 🔧 Ressources Secondaires (Operations/Relations)" >>COVERAGE.MD
+echo "## 🔧 Secondary Resources (Operations/Relations)" >>COVERAGE.MD
 echo "" >>COVERAGE.MD
-echo "Opérations spéciales et gestion des relations entre ressources." >>COVERAGE.MD
+echo "Special operations and resource relationship management." >>COVERAGE.MD
 echo "" >>COVERAGE.MD
 
 # Find all *_resource.go files (excluding resource.go)
@@ -346,9 +346,9 @@ done
 # === DATA SOURCES ===
 echo "---" >>COVERAGE.MD
 echo "" >>COVERAGE.MD
-echo "## 📊 Sources de Données (Data Sources)" >>COVERAGE.MD
+echo "## 📊 Data Sources" >>COVERAGE.MD
 echo "" >>COVERAGE.MD
-echo "Lecture des ressources n8n sans gestion de leur cycle de vie." >>COVERAGE.MD
+echo "Reading n8n resources without managing their lifecycle." >>COVERAGE.MD
 echo "" >>COVERAGE.MD
 
 # datasource.go (singular)
@@ -384,19 +384,19 @@ cat >>COVERAGE.MD <<EOF
 
 ---
 
-## Légende des Icônes
+## Icon Legend
 
-- 🟢 **≥90%** - Excellente couverture
-- 🟡 **70-89%** - Bonne couverture
-- 🟠 **1-69%** - Couverture partielle (à améliorer)
-- 🔴 **0%** - Fonction non testée (implémentée mais pas de tests)
-- 🔵 **N/A** - Fonction non applicable (pas dans l'API ou intentionnellement vide)
+- 🟢 **≥90%** - Excellent coverage
+- 🟡 **70-89%** - Good coverage
+- 🟠 **1-69%** - Partial coverage (needs improvement)
+- 🔴 **0%** - Untested function (implemented but no tests)
+- 🔵 **N/A** - Not applicable (not in API or intentionally empty)
 
-**Note:** Seules les fonctions publiques (exportées) sont listées. Les fonctions privées et constructeurs (\`New*\`) sont exclus.
+**Note:** Only public functions (exported) are listed. Private functions and constructors (\`New*\`) are excluded.
 
 ---
 
-*Rapport généré le: ${REPORT_DATE}*
+*Report generated on: ${REPORT_DATE}*
 *Threshold: 70.0%*
 EOF
 

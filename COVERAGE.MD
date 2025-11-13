@@ -1,15 +1,15 @@
 # Coverage Report
 
-Rapport de couverture généré automatiquement.
+Automatically generated coverage report.
 
-**Légende:**
-- 🟢 ≥90% - Excellente couverture
-- 🟡 70-89% - Bonne couverture
-- 🔴 <70% - Couverture insuffisante
+**Legend:**
+- 🟢 ≥90% - Excellent coverage
+- 🟡 70-89% - Good coverage
+- 🔴 <70% - Insufficient coverage
 
 ---
 
-## Coverage Global
+## Global Coverage
 
 | Metric | Value |
 |--------|-------|
@@ -19,9 +19,9 @@ Rapport de couverture généré automatiquement.
 
 ---
 
-## Tests d'Acceptance (E2E)
+## Acceptance Tests (E2E)
 
-Les tests d'acceptance valident le comportement réel du provider contre une instance n8n.
+Acceptance tests validate the real behavior of the provider against an n8n instance.
 
 | Resource | Status | Tests |
 |----------|:------:|-------|
@@ -30,13 +30,13 @@ Les tests d'acceptance valident le comportement réel du provider contre une ins
 | `variable` | ✅ | `TestAccVariableResource` |
 | `workflow` | ✅ | `TestAccWorkflowResource` |
 
-**Légende:**
-- ✅ Tests d'acceptance présents
-- Les tests d'acceptance vérifient les opérations réelles via l'API n8n
+**Legend:**
+- ✅ Acceptance tests present
+- Acceptance tests verify real operations via the n8n API
 
 ---
 
-## Coverage par Package
+## Coverage by Package
 
 | Icon | Package | Coverage |
 |:----:|---------|----------|
@@ -54,14 +54,14 @@ Les tests d'acceptance valident le comportement réel du provider contre une ins
 
 ---
 
-## Coverage Détaillée par Catégorie
+## Detailed Coverage by Category
 
-Cette section liste uniquement les **fonctions publiques** (exportées) pour identifier rapidement les fonctions non testées.
-Les tableaux sont organisés par catégorie de ressources pour faciliter la compréhension de l'architecture du provider.
+This section lists only **public functions** (exported) to quickly identify untested functions.
+Tables are organized by resource category to facilitate understanding of the provider architecture.
 
-## 📦 Ressources Principales (CRUD Entities)
+## 📦 Primary Resources (CRUD Entities)
 
-Gestion complète du cycle de vie des ressources n8n (Create, Read, Update, Delete).
+Complete lifecycle management of n8n resources (Create, Read, Update, Delete).
 
 | Function | credential | project | tag | user | variable | workflow |
 |----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
@@ -76,9 +76,9 @@ Gestion complète du cycle de vie des ressources n8n (Create, Read, Update, Dele
 
 ---
 
-## 🔧 Ressources Secondaires (Operations/Relations)
+## 🔧 Secondary Resources (Operations/Relations)
 
-Opérations spéciales et gestion des relations entre ressources.
+Special operations and resource relationship management.
 
 ### Source Control Pull
 
@@ -134,9 +134,9 @@ Opérations spéciales et gestion des relations entre ressources.
 
 ---
 
-## 📊 Sources de Données (Data Sources)
+## 📊 Data Sources
 
-Lecture des ressources n8n sans gestion de leur cycle de vie.
+Reading n8n resources without managing their lifecycle.
 
 ### datasource (singular)
 
@@ -159,17 +159,17 @@ Lecture des ressources n8n sans gestion de leur cycle de vie.
 
 ---
 
-## Légende des Icônes
+## Icon Legend
 
-- 🟢 **≥90%** - Excellente couverture
-- 🟡 **70-89%** - Bonne couverture
-- 🟠 **1-69%** - Couverture partielle (à améliorer)
-- 🔴 **0%** - Fonction non testée (implémentée mais pas de tests)
-- 🔵 **N/A** - Fonction non applicable (pas dans l'API ou intentionnellement vide)
+- 🟢 **≥90%** - Excellent coverage
+- 🟡 **70-89%** - Good coverage
+- 🟠 **1-69%** - Partial coverage (needs improvement)
+- 🔴 **0%** - Untested function (implemented but no tests)
+- 🔵 **N/A** - Not applicable (not in API or intentionally empty)
 
-**Note:** Seules les fonctions publiques (exportées) sont listées. Les fonctions privées et constructeurs (`New*`) sont exclus.
+**Note:** Only public functions (exported) are listed. Private functions and constructors (`New*`) are excluded.
 
 ---
 
-*Rapport généré le: 2025-11-13*
+*Report generated on: 2025-11-13*
 *Threshold: 70.0%*

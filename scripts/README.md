@@ -1,34 +1,34 @@
-# Scripts de Documentation Automatique
+# Automatic Documentation Scripts
 
-Ce répertoire contient des scripts pour générer automatiquement la documentation du projet.
+This directory contains scripts to automatically generate project documentation.
 
 ## 📝 generate-changelog.sh
 
 ### Description
 
-Génère automatiquement le fichier `CHANGELOG.md` basé sur l'historique Git en utilisant les conventions **Conventional Commits**.
+Automatically generates the `CHANGELOG.md` file based on Git history using **Conventional Commits** conventions.
 
-### Utilisation
+### Usage
 
 ```bash
-# Générer le changelog pour la branche courante
+# Generate changelog for current branch
 ./scripts/generate-changelog.sh
 
-# Spécifier une branche source et une branche de base
-./scripts/generate-changelog.sh feat/ma-branche main
+# Specify source branch and base branch
+./scripts/generate-changelog.sh feat/my-branch main
 ```
 
-### Ou via Makefile
+### Or via Makefile
 
 ```bash
 make changelog
 ```
 
-### Format des Commits
+### Commit Format
 
-Le script reconnaît les types de commits suivants :
+The script recognizes the following commit types:
 
-| Type        | Emoji | Catégorie     | Exemple                    |
+| Type        | Emoji | Category      | Example                    |
 | ----------- | ----- | ------------- | -------------------------- |
 | `feat:`     | 🚀    | Features      | `feat: add new resource`   |
 | `fix:`      | 🐛    | Bug Fixes     | `fix: resolve nil pointer` |
@@ -41,18 +41,18 @@ Le script reconnaît les types de commits suivants :
 | `chore:`    | 🔨    | Chore         | `chore: update deps`       |
 | `style:`    | 💄    | Style         | `style: format code`       |
 
-### Fonctionnalités
+### Features
 
-- ✅ Catégorisation automatique par type de commit
-- ✅ Hash courts pour traçabilité
-- ✅ Statistiques (nombre de commits par type)
-- ✅ Intégration avec COVERAGE.MD (affiche le taux de couverture)
-- ✅ Liste des contributeurs
-- ✅ Timestamp de génération
+- ✅ Automatic categorization by commit type
+- ✅ Short hashes for traceability
+- ✅ Statistics (number of commits by type)
+- ✅ Integration with COVERAGE.MD (displays coverage rate)
+- ✅ Contributors list
+- ✅ Generation timestamp
 
-### Sortie
+### Output
 
-Le fichier généré suit le format [Keep a Changelog](https://keepachangelog.com/):
+The generated file follows the [Keep a Changelog](https://keepachangelog.com/) format:
 
 ```markdown
 # Changelog
@@ -82,68 +82,68 @@ All notable changes to this project will be documented in this file.
 - Florent <contact@making.codes>
 ```
 
-## 🔄 Automatisation
+## 🔄 Automation
 
-### Configuration des Hooks Git
+### Git Hooks Configuration
 
-Les hooks Git sont stockés dans **`.devcontainer/hooks/`** et intégrés dans l'image Docker avec les permissions correctes.
+Git hooks are stored in **`.devcontainer/hooks/`** and integrated into the Docker image with correct permissions.
 
-**Avantages :**
+**Advantages:**
 
-- ✅ **Versionnés** : Source dans `.devcontainer/hooks/` tracké en git
-- ✅ **Maintenables** : Édition dans `.devcontainer/hooks/`, rebuild pour appliquer
-- ✅ **Synchronisés** : Toute l'équipe utilise les mêmes hooks avec les bonnes permissions
-- ✅ **Compatibles GUI** : Fonctionne avec GitKraken, SourceTree, etc. sans problème de permissions
-- ✅ **Cross-platform** : Permissions figées dans l'image Docker, pas de chmod nécessaire
+- ✅ **Versioned**: Source in `.devcontainer/hooks/` tracked in git
+- ✅ **Maintainable**: Edit in `.devcontainer/hooks/`, rebuild to apply
+- ✅ **Synchronized**: Entire team uses the same hooks with correct permissions
+- ✅ **GUI Compatible**: Works with GitKraken, SourceTree, etc. without permission issues
+- ✅ **Cross-platform**: Permissions fixed in Docker image, no chmod needed
 
-Les hooks sont **automatiquement configurés** lors du rebuild du devcontainer et copiés dans `$HOME/.git-hooks/`.
+Hooks are **automatically configured** during devcontainer rebuild and copied to `$HOME/.git-hooks/`.
 
-Si vous avez besoin de les reconfigurer manuellement :
+If you need to reconfigure them manually:
 
 ```bash
 ./scripts/install-hooks.sh
 ```
 
-Ou directement :
+Or directly:
 
 ```bash
 git config core.hooksPath $HOME/.git-hooks
 ```
 
-Les hooks disponibles dans `$HOME/.git-hooks/` (source: `.devcontainer/hooks/`) :
+Available hooks in `$HOME/.git-hooks/` (source: `.devcontainer/hooks/`):
 
-1. **pre-commit** : Génère automatiquement CHANGELOG.md et rapport de coverage
-2. **prepare-commit-msg** : Suggère le format conventional commits
-3. **commit-msg** : Valide le message avec commitlint
-4. **pre-push** : Bloque le push si des mentions d'IA ou Co-Authored-By sont détectées
+1. **pre-commit**: Automatically generates CHANGELOG.md and coverage report
+2. **prepare-commit-msg**: Suggests conventional commits format
+3. **commit-msg**: Validates message with commitlint
+4. **pre-push**: Blocks push if AI mentions or Co-Authored-By are detected
 
-### Configuration Automatique au DevContainer
+### Automatic DevContainer Configuration
 
-Les hooks sont automatiquement configurés lors du rebuild du devcontainer via `.devcontainer/post-create.sh` qui exécute `./scripts/install-hooks.sh`
+Hooks are automatically configured during devcontainer rebuild via `.devcontainer/post-create.sh` which executes `./scripts/install-hooks.sh`
 
-### Dépendances
+### Dependencies
 
-Pour la validation des commits, commitlint doit être installé :
+For commit validation, commitlint must be installed:
 
 ```bash
 npm install -g @commitlint/cli @commitlint/config-conventional
 ```
 
-Cette dépendance est automatiquement installée dans le devcontainer.
+This dependency is automatically installed in the devcontainer.
 
-### Validation des Commits (Pre-Push)
+### Commit Validation (Pre-Push)
 
-Le hook **pre-push** empêche le push de commits contenant des mentions d'IA ou de Co-Authored-By indésirables.
+The **pre-push** hook prevents pushing commits containing AI mentions or unwanted Co-Authored-By.
 
-**Mots-clés détectés (insensible à la casse) :**
+**Detected keywords (case insensitive):**
 
 - `claude`, `chatgpt`, `gpt-`, `copilot`
 - `ai generated`, `generated by ai`, `generated with ai`
 - `with the help of`, `assisted by`
 - `co-authored-by: claude`, `co-authored-by: github-actions`, `co-authored-by: bot`
-- Emoji robot `🤖`
+- Robot emoji `🤖`
 
-**Si un commit problématique est détecté :**
+**If a problematic commit is detected:**
 
 ```bash
 ❌ Found commits with AI mentions or Co-Authored-By:
@@ -171,20 +171,20 @@ To fix these commits, use one of the following methods:
    git filter-branch --msg-filter 'sed "s/Co-Authored-By.*//g"' HEAD~N..HEAD
 ```
 
-**Pour corriger un commit :**
+**To fix a commit:**
 
 ```bash
-# Si c'est le dernier commit
+# If it's the last commit
 git commit --amend
 git push --force-with-lease
 
-# Si c'est un ancien commit
-git rebase -i HEAD~5  # Remplacer 5 par le nombre de commits
-# Changer 'pick' en 'reword' pour les commits à modifier
+# If it's an old commit
+git rebase -i HEAD~5  # Replace 5 with number of commits
+# Change 'pick' to 'reword' for commits to modify
 git push --force-with-lease
 ```
 
-**Pour bypass temporairement (NON recommandé) :**
+**To bypass temporarily (NOT recommended):**
 
 ```bash
 git push --no-verify
@@ -192,7 +192,7 @@ git push --no-verify
 
 ### GitHub Actions
 
-Exemple de workflow pour générer le changelog dans CI/CD :
+Example workflow to generate changelog in CI/CD:
 
 ```yaml
 name: Update Documentation
@@ -207,7 +207,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Important pour l'historique Git complet
+          fetch-depth: 0 # Important for complete Git history
 
       - name: Generate Changelog
         run: |
@@ -225,27 +225,27 @@ jobs:
 
 ## 📊 Makefile Integration
 
-Le Makefile fournit des commandes pratiques :
+The Makefile provides convenient commands:
 
 ```bash
-# Générer uniquement le changelog
+# Generate only changelog
 make changelog
 
-# Générer le rapport de couverture
+# Generate coverage report
 make coverage-report
 
-# Générer toute la documentation
+# Generate all documentation
 make docs
 ```
 
-## 🎯 Bonnes Pratiques
+## 🎯 Best Practices
 
-1. **Commits conventionnels** : Utilisez toujours le format `type: description`
-2. **Génération régulière** : Exécutez `make changelog` avant chaque PR
-3. **Review** : Vérifiez le changelog généré pour cohérence
-4. **Versioning** : Mettez à jour `[Unreleased]` en version release lors des tags
+1. **Conventional commits**: Always use the format `type: description`
+2. **Regular generation**: Run `make changelog` before each PR
+3. **Review**: Check generated changelog for consistency
+4. **Versioning**: Update `[Unreleased]` to release version when creating tags
 
-## 📚 Références
+## 📚 References
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Keep a Changelog](https://keepachangelog.com/)
