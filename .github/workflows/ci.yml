@@ -28,6 +28,11 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
+      - name: Install Bazelisk
+        run: |
+          sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          sudo chmod +x /usr/local/bin/bazel
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -46,13 +51,11 @@ jobs:
       - name: Generate SDK
         run: python3 codegen/build-sdk.py
 
+      - name: Run gazelle to update BUILD files
+        run: bazel run //:gazelle
+
       - name: Download Go dependencies
         run: go mod download
-
-      - name: Install Bazelisk
-        run: |
-          sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-          sudo chmod +x /usr/local/bin/bazel
 
       - name: Install formatting tools
         run: |
