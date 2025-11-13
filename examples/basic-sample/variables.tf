@@ -13,6 +13,6 @@ variable "n8n_base_url" {
 variable "api_key" {
   description = "API key for Mocky.io (can be any value for testing)"
   type        = string
-  default     = "test-api-key-12345"
+  default     = "test-api-key-12345" # ggignore
   sensitive   = true
 }

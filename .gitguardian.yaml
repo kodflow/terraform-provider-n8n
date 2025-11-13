@@ -5,7 +5,7 @@ version: 2
 
 secret:
   # Paths to ignore during secret scanning
-  ignored_paths:
+  ignored-paths:
     # OpenAPI specification examples contain fake tokens for documentation
     - "sdk/n8nsdk/api/openapi-source/**/*.yml"
 
@@ -14,7 +14,7 @@ secret:
     - "examples/**/*.tfvars"
 
   # Specific secrets to ignore by their value
-  ignored_matches:
+  ignored-matches:
     - name: OpenAPI example token
       match: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
     - name: Terraform test API key
