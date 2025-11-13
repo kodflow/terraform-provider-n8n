@@ -19,6 +19,23 @@ Rapport de couverture généré automatiquement.
 
 ---
 
+## Tests d'Acceptance (E2E)
+
+Les tests d'acceptance valident le comportement réel du provider contre une instance n8n.
+
+| Resource | Status | Tests |
+|----------|:------:|-------|
+| `credential` | ✅ | `TestAccCredentialResource` |
+| `tag` | ✅ | `TestAccTagResource` |
+| `variable` | ✅ | `TestAccVariableResource` |
+| `workflow` | ✅ | `TestAccWorkflowResource` |
+
+**Légende:**
+- ✅ Tests d'acceptance présents
+- Les tests d'acceptance vérifient les opérations réelles via l'API n8n
+
+---
+
 ## Coverage par Package
 
 | Icon | Package | Coverage |

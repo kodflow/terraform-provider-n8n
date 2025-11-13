@@ -56,6 +56,42 @@ Rapport de couverture généré automatiquement.
 
 ---
 
+## Tests d'Acceptance (E2E)
+
+Les tests d'acceptance valident le comportement réel du provider contre une instance n8n.
+
+| Resource | Status | Tests |
+|----------|:------:|-------|
+EOF
+
+# Find all acceptance tests
+ACCEPTANCE_TESTS=$(find src/internal/provider -name "*_acceptance_test.go" -type f | sort)
+
+for test_file in $ACCEPTANCE_TESTS; do
+  # Extract package name (e.g., credential, workflow, tag)
+  pkg_name=$(echo "$test_file" | sed 's|src/internal/provider/||' | sed 's|/.*||')
+
+  # Count TestAcc* functions in the file
+  test_count=$(grep -c "^func TestAcc" "$test_file" 2>/dev/null || echo "0")
+
+  # Get test function names
+  test_names=$(grep "^func TestAcc" "$test_file" 2>/dev/null | sed 's/func //' | sed 's/(.*$//' || echo "")
+
+  if [ "$test_count" -gt 0 ]; then
+    # Format test names as a comma-separated list with backticks
+    test_list=$(echo "$test_names" | sed 's/^/`/' | sed 's/$/`/' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+    echo "| \`$pkg_name\` | ✅ | $test_list |" >>COVERAGE.MD
+  fi
+done
+
+cat >>COVERAGE.MD <<'EOF'
+
+**Légende:**
+- ✅ Tests d'acceptance présents
+- Les tests d'acceptance vérifient les opérations réelles via l'API n8n
+
+---
+
 ## Coverage par Package
 
 | Icon | Package | Coverage |
