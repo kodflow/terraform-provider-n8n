@@ -190,7 +190,7 @@ paths:
         description: Destination project for the credential transfer.
         required: true
       responses:
-        "200":
+        "204":
           description: Operation successful.
         "400":
           description: The request is invalid or provides malformed data.
@@ -828,7 +828,7 @@ paths:
         description: Destination project information for the workflow transfer.
         required: true
       responses:
-        "200":
+        "204":
           description: Operation successful.
         "400":
           description: The request is invalid or provides malformed data.
@@ -978,7 +978,7 @@ paths:
         description: Array of users to be created.
         required: true
       responses:
-        "200":
+        "201":
           content:
             application/json:
               schema:
@@ -1078,7 +1078,7 @@ paths:
         description: New role for the user
         required: true
       responses:
-        "200":
+        "204":
           description: Operation successful.
         "401":
           description: Unauthorized
@@ -1111,6 +1111,8 @@ paths:
           description: Import result
         "400":
           description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
         "409":
           description: Conflict
       summary: Pull changes from the remote repository
@@ -1805,7 +1807,11 @@ components:
           example:
             token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
           type: object
-          writeOnly: true
+        isManaged:
+          type: boolean
+          default: false
+          readOnly: true
+          description: Whether the credential is managed by n8n
         createdAt:
           example: 2022-04-29T11:02:29.842Z
           format: date-time
@@ -1879,6 +1885,7 @@ components:
         finished:
           example: true
           type: boolean
+          description: Deprecated - use status instead
         mode:
           enum:
           - cli
@@ -1897,9 +1904,16 @@ components:
           example: 2
           nullable: true
           type: number
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+          description: The time at which the execution was created
         startedAt:
           format: date-time
+          nullable: true
           type: string
+          description: The time at which the execution started
         stoppedAt:
           description: The time at which the execution stopped. Will only be null
             for executions that still have the status 'running'.
@@ -1983,6 +1997,8 @@ components:
         name:
           example: Production
           type: string
+          maxLength: 24
+          description: Tag name (1-24 characters, must be unique)
         createdAt:
           format: date-time
           readOnly: true
@@ -2396,6 +2412,26 @@ components:
           items:
             $ref: '#/components/schemas/sharedWorkflow'
           type: array
+        versionId:
+          type: string
+          readOnly: true
+          description: Version identifier (36 characters)
+          maxLength: 36
+        isArchived:
+          type: boolean
+          readOnly: true
+          description: Whether the workflow is archived (soft-deleted)
+        triggerCount:
+          type: number
+          readOnly: true
+          default: 0
+          description: Number of triggers in the workflow
+        meta:
+          type: object
+          description: Frontend metadata
+        pinData:
+          type: object
+          description: Pinned data for workflow nodes
       required:
       - connections
       - name
@@ -2799,6 +2835,42 @@ components:
         type:
           readOnly: true
           type: string
+          enum:
+            - personal
+            - team
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Project creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Project last update timestamp
+        icon:
+          type: object
+          nullable: true
+          description: Project icon (emoji or icon with value)
+          properties:
+            type:
+              type: string
+              enum:
+                - emoji
+                - icon
+            value:
+              type: string
+        description:
+          type: string
+          nullable: true
+          maxLength: 512
+          description: Project description
+        projectRelations:
+          type: array
+          readOnly: true
+          description: Project relations
+          items:
+            type: object
       required:
       - name
       type: object
@@ -3448,7 +3520,11 @@ components:
           example:
             token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
           type: object
-          writeOnly: true
+        isManaged:
+          type: boolean
+          default: false
+          readOnly: true
+          description: Whether the credential is managed by n8n
         createdAt:
           example: 2022-04-29T11:02:29.842Z
           format: date-time
