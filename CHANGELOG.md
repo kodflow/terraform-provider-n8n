@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- add environment variable support for provider configuration (`840d689`)
 - reorganize report by semantic categories (`c8a22d0`)
 - improve coverage report with public function details (`2881515`)
 - convert workflow external tests to table-driven format (`81c9f30`)
@@ -164,8 +165,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 127
-- **Features:** 31
+- **Total commits:** 128
+- **Features:** 32
 - **Bug fixes:** 13
 - **Tests:** 48
 - **Refactoring:** 18
@@ -177,4 +178,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-13 09:40:39*
+*Changelog generated automatically on 2025-11-13 09:41:47*
