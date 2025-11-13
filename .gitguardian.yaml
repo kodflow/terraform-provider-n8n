@@ -1,0 +1,17 @@
+# GitGuardian configuration
+# This file excludes false positives from secret detection
+
+version: 2
+
+# Paths to ignore during secret scanning
+paths-ignore:
+  # OpenAPI specification examples contain fake tokens for documentation
+  - sdk/n8nsdk/api/openapi-source/**/*.yml
+
+  # Terraform examples contain test values with "test-" prefix
+  - examples/**/*.tf
+  - examples/**/*.tfvars
+# Specific secrets to ignore (if needed)
+# matches-ignore:
+#   - name: Example token in OpenAPI spec
+#     match: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
