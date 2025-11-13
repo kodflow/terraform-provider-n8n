@@ -107,7 +107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/credential'
+                $ref: '#/components/schemas/create-credential-response'
           description: Operation successful.
         "401":
           description: Unauthorized
@@ -190,7 +190,7 @@ paths:
         description: Destination project for the credential transfer.
         required: true
       responses:
-        "200":
+        "204":
           description: Operation successful.
         "400":
           description: The request is invalid or provides malformed data.
@@ -258,12 +258,12 @@ paths:
           maximum: 250
           type: number
         style: form
-      - description: Paginate by setting the cursor parameter to the nextCursor attribute
+      - description: Paginate by setting the lastId parameter to the nextCursor attribute
           returned by the previous request's response. Default value fetches the first
           "page" of the collection. See pagination for more detail.
         explode: true
         in: query
-        name: cursor
+        name: lastId
         required: false
         schema:
           type: string
@@ -359,12 +359,16 @@ paths:
         schema:
           type: number
         style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_executions__id__retry_post_request'
+      - description: Whether to load the currently saved workflow to execute instead
+          of the one saved at the time of the execution. If set to true, it will
+          retry with the latest version of the workflow.
+        explode: true
+        in: query
+        name: loadWorkflow
         required: false
+        schema:
+          type: boolean
+        style: form
       responses:
         "200":
           content:
@@ -398,15 +402,14 @@ paths:
           maximum: 250
           type: number
         style: form
-      - description: Paginate by setting the cursor parameter to the nextCursor attribute
-          returned by the previous request's response. Default value fetches the first
-          "page" of the collection. See pagination for more detail.
+      - description: Paginate by setting the offset parameter. Default value is 0.
         explode: true
         in: query
-        name: cursor
+        name: offset
         required: false
         schema:
-          type: string
+          default: 0
+          type: number
         style: form
       responses:
         "200":
@@ -603,15 +606,14 @@ paths:
           maximum: 250
           type: number
         style: form
-      - description: Paginate by setting the cursor parameter to the nextCursor attribute
-          returned by the previous request's response. Default value fetches the first
-          "page" of the collection. See pagination for more detail.
+      - description: Paginate by setting the offset parameter. Default value is 0.
         explode: true
         in: query
-        name: cursor
+        name: offset
         required: false
         schema:
-          type: string
+          default: 0
+          type: number
         style: form
       responses:
         "200":
@@ -828,7 +830,7 @@ paths:
         description: Destination project information for the workflow transfer.
         required: true
       responses:
-        "200":
+        "204":
           description: Operation successful.
         "400":
           description: The request is invalid or provides malformed data.
@@ -923,15 +925,14 @@ paths:
           maximum: 250
           type: number
         style: form
-      - description: Paginate by setting the cursor parameter to the nextCursor attribute
-          returned by the previous request's response. Default value fetches the first
-          "page" of the collection. See pagination for more detail.
+      - description: Paginate by setting the offset parameter. Default value is 0.
         explode: true
         in: query
-        name: cursor
+        name: offset
         required: false
         schema:
-          type: string
+          default: 0
+          type: number
         style: form
       - description: Whether to include the user's role or not.
         explode: true
@@ -1133,15 +1134,14 @@ paths:
           maximum: 250
           type: number
         style: form
-      - description: Paginate by setting the cursor parameter to the nextCursor attribute
-          returned by the previous request's response. Default value fetches the first
-          "page" of the collection. See pagination for more detail.
+      - description: Paginate by setting the offset parameter. Default value is 0.
         explode: true
         in: query
-        name: cursor
+        name: offset
         required: false
         schema:
-          type: string
+          default: 0
+          type: number
         style: form
       - allowReserved: true
         explode: false
@@ -1269,15 +1269,14 @@ paths:
           maximum: 250
           type: number
         style: form
-      - description: Paginate by setting the cursor parameter to the nextCursor attribute
-          returned by the previous request's response. Default value fetches the first
-          "page" of the collection. See pagination for more detail.
+      - description: Paginate by setting the offset parameter. Default value is 0.
         explode: true
         in: query
-        name: cursor
+        name: offset
         required: false
         schema:
-          type: string
+          default: 0
+          type: number
         style: form
       responses:
         "200":
