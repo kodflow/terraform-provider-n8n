@@ -11,7 +11,7 @@ vendor/
 # Generated files
 *.pb.go
 *.gen.go
-sdk/n8nsdk/
+sdk/n8nsdk/**
 
 # Go module files
 go.sum

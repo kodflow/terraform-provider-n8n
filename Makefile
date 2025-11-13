@@ -124,7 +124,7 @@ fmt: ## Format all source files
 	@printf "  $(CYAN)→$(RESET) Shell scripts\n"
 	@find . -name "*.sh" ! -path "./bazel-*" ! -name "p10k.sh" -exec shfmt -w -i 2 -ci -bn {} \; 2>/dev/null
 	@printf "  $(CYAN)→$(RESET) YAML, JSON, Markdown\n"
-	@prettier --write "**/*.{json,yaml,yml,md}" --log-level silent
+	@prettier --write "**/*.{json,yaml,yml,md}" --ignore-path .prettierignore --log-level silent
 	@printf "  $(CYAN)→$(RESET) Terraform files\n"
 	@terraform fmt -recursive examples/ > /dev/null 2>&1 || true
 	@echo "$(GREEN)✓$(RESET) Formatting completed"
