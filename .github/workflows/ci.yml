@@ -107,8 +107,11 @@ jobs:
 
       - name: Check for uncommitted changes
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
+          # Exclude auto-generated documentation files from the check
+          CHANGED_FILES=$(git status --porcelain | grep -v "CHANGELOG.md" | grep -v "COVERAGE.MD" || true)
+          if [ -n "$CHANGED_FILES" ]; then
             echo "Error: There are uncommitted changes after running CI pipeline"
-            git status --porcelain
+            echo "$CHANGED_FILES"
             exit 1
           fi
+          echo "✓ No unexpected file changes detected"
