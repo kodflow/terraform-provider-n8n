@@ -5,18 +5,18 @@
 # Exclude patterns - files that should not be analyzed
 exclude_paths:
   # DevContainer generated files with secrets
-  - '.devcontainer/mcp.json'
+  - ".devcontainer/mcp.json"
 
   # Standard exclusions
-  - 'node_modules/**'
-  - 'vendor/**'
-  - 'dist/**'
-  - 'build/**'
-  - '*.min.js'
-  - '*.min.css'
+  - "node_modules/**"
+  - "vendor/**"
+  - "dist/**"
+  - "build/**"
+  - "*.min.js"
+  - "*.min.css"
 
 # Engines configuration
 engines:
   trivy:
     exclude_paths:
-      - '.devcontainer/mcp.json'
+      - ".devcontainer/mcp.json"

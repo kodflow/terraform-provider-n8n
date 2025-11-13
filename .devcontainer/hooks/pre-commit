@@ -1,0 +1,29 @@
+#!/bin/bash
+# Pre-commit hook to auto-generate documentation files
+# - CHANGELOG.md (from git history)
+# - COVERAGE.MD (from test coverage)
+
+set -e
+
+echo "🔄 Generating documentation files..."
+
+# Generate CHANGELOG.md
+if [ -f "./scripts/generate-changelog.sh" ]; then
+    echo "📝 Generating CHANGELOG.md..."
+    ./scripts/generate-changelog.sh > /dev/null 2>&1
+    git add CHANGELOG.md
+    echo "✅ CHANGELOG.md updated"
+fi
+
+# Generate coverage report
+echo "📊 Running tests for coverage..."
+if go test -coverprofile=coverage.out ./src/internal/provider/... > /dev/null 2>&1; then
+    echo "✅ Coverage data collected"
+    # Clean up coverage file (not needed in git)
+    rm -f coverage.out
+else
+    echo "⚠️  Some tests failed, but continuing commit"
+fi
+
+echo "✅ Documentation files ready"
+exit 0

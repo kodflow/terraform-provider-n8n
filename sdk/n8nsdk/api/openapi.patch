@@ -1,0 +1,73 @@
+--- sdk/n8nsdk/api/openapi.yaml.orig	2025-11-05 16:07:03.285779009 +0000
++++ sdk/n8nsdk/api/openapi.yaml	2025-11-05 16:07:55.743887005 +0000
+@@ -1331,7 +1331,6 @@
+           example: github
+         data:
+           type: object
+-          writeOnly: true
+           example:
+             token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+         createdAt:
+@@ -1344,6 +1343,9 @@
+           format: date-time
+           readOnly: true
+           example: '2022-04-29T11:02:29.842Z'
++        isManaged:
++          type: boolean
++          readOnly: true
+     create-credential-response:
+       required:
+         - id
+@@ -1373,6 +1375,9 @@
+           format: date-time
+           readOnly: true
+           example: '2022-04-29T11:02:29.842Z'
++        isManaged:
++          type: boolean
++          readOnly: true
+     execution:
+       type: object
+       properties:
+@@ -1715,6 +1720,19 @@
+           type: array
+           items:
+             $ref: '#/components/schemas/sharedWorkflow'
++        versionId:
++          type: string
++          readOnly: true
++        isArchived:
++          type: boolean
++          readOnly: true
++        triggerCount:
++          type: integer
++          readOnly: true
++        meta:
++          type: object
++        pinData:
++          type: object
+     workflowList:
+       type: object
+       properties:
+@@ -1877,6 +1895,22 @@
+         type:
+           type: string
+           readOnly: true
++        createdAt:
++          type: string
++          format: date-time
++          readOnly: true
++        updatedAt:
++          type: string
++          format: date-time
++          readOnly: true
++        icon:
++          type: string
++        description:
++          type: string
++        projectRelations:
++          type: array
++          items:
++            type: object
+     variable:
+       type: object
+       additionalProperties: false
