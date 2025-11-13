@@ -28,6 +28,14 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate SDK
+        run: python3 codegen/build-sdk.py
+
       - name: Download Go dependencies
         run: go mod download
 
