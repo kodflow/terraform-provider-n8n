@@ -19,14 +19,14 @@ delete:
       schema:
         type: string
   responses:
-    "204":
+    '204':
       description: Operation successful.
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
-    "403":
-      $ref: "../../../../shared/spec/responses/forbidden.yml"
-    "404":
-      $ref: "../../../../shared/spec/responses/notFound.yml"
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    '403':
+      $ref: '../../../../shared/spec/responses/forbidden.yml'
+    '404':
+      $ref: '../../../../shared/spec/responses/notFound.yml'
 patch:
   x-eov-operation-id: changeUserRoleInProject
   x-eov-operation-handler: v1/handlers/projects/projects.handler
@@ -57,15 +57,15 @@ patch:
             role:
               type: string
               description: The role assigned to the user in the project.
-              example: "project:viewer"
+              example: 'project:viewer'
           required:
             - role
   responses:
-    "204":
+    '204':
       description: Operation successful.
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
-    "403":
-      $ref: "../../../../shared/spec/responses/forbidden.yml"
-    "404":
-      $ref: "../../../../shared/spec/responses/notFound.yml"
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    '403':
+      $ref: '../../../../shared/spec/responses/forbidden.yml'
+    '404':
+      $ref: '../../../../shared/spec/responses/notFound.yml'

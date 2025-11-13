@@ -226,7 +226,6 @@ openapi: ## Generate SDK from n8n OpenAPI specification
 	@echo ""
 	@python3 codegen/build-sdk.py
 	@echo ""
-	@$(MAKE) fmt
 
 .PHONY: clean
 clean: ## Clean Bazel build artifacts

@@ -1,18 +1,18 @@
 Cursor:
-  $ref: "./cursor.yml"
+  $ref: './cursor.yml'
 Limit:
-  $ref: "./limit.yml"
+  $ref: './limit.yml'
 ExecutionId:
-  $ref: "../../../handlers/executions/spec/schemas/parameters/executionId.yml"
+  $ref: '../../../handlers/executions/spec/schemas/parameters/executionId.yml'
 WorkflowId:
-  $ref: "../../../handlers/workflows/spec/schemas/parameters/workflowId.yml"
+  $ref: '../../../handlers/workflows/spec/schemas/parameters/workflowId.yml'
 TagId:
-  $ref: "../../../handlers/tags/spec/schemas/parameters/tagId.yml"
+  $ref: '../../../handlers/tags/spec/schemas/parameters/tagId.yml'
 IncludeData:
-  $ref: "../../../handlers/executions/spec/schemas/parameters/includeData.yml"
+  $ref: '../../../handlers/executions/spec/schemas/parameters/includeData.yml'
 UserIdentifier:
-  $ref: "../../../handlers/users/spec/schemas/parameters/userIdentifier.yml"
+  $ref: '../../../handlers/users/spec/schemas/parameters/userIdentifier.yml'
 IncludeRole:
-  $ref: "../../../handlers/users/spec/schemas/parameters/includeRole.yml"
+  $ref: '../../../handlers/users/spec/schemas/parameters/includeRole.yml'
 VariableId:
-  $ref: "../../../handlers/variables/spec/schemas/parameters/variableId.yml"
+  $ref: '../../../handlers/variables/spec/schemas/parameters/variableId.yml'

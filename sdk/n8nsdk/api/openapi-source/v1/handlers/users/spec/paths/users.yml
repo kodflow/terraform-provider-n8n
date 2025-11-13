@@ -6,9 +6,9 @@ get:
   summary: Retrieve all users
   description: Retrieve all users from your instance. Only available for the instance owner.
   parameters:
-    - $ref: "../../../../shared/spec/parameters/limit.yml"
-    - $ref: "../../../../shared/spec/parameters/cursor.yml"
-    - $ref: "../schemas/parameters/includeRole.yml"
+    - $ref: '../../../../shared/spec/parameters/limit.yml'
+    - $ref: '../../../../shared/spec/parameters/cursor.yml'
+    - $ref: '../schemas/parameters/includeRole.yml'
     - name: projectId
       in: query
       required: false
@@ -18,14 +18,14 @@ get:
         type: string
         example: VmwOO9HeTEj20kxM
   responses:
-    "200":
+    '200':
       description: Operation successful.
       content:
         application/json:
           schema:
-            $ref: "../schemas/userList.yml"
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
+            $ref: '../schemas/userList.yml'
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
 post:
   x-eov-operation-id: createUser
   x-eov-operation-handler: v1/handlers/users/users.handler.ee
@@ -52,7 +52,7 @@ post:
             required:
               - email
   responses:
-    "200":
+    '200':
       description: Operation successful.
       content:
         application/json:
@@ -72,7 +72,7 @@ post:
                     type: boolean
               error:
                 type: string
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
-    "403":
-      $ref: "../../../../shared/spec/responses/forbidden.yml"
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    '403':
+      $ref: '../../../../shared/spec/responses/forbidden.yml'

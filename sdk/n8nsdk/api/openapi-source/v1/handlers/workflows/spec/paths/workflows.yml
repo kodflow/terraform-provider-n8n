@@ -10,19 +10,19 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../schemas/workflow.yml"
+          $ref: '../schemas/workflow.yml'
     required: true
   responses:
-    "200":
+    '200':
       description: A workflow object
       content:
         application/json:
           schema:
-            $ref: "../schemas/workflow.yml"
-    "400":
-      $ref: "../../../../shared/spec/responses/badRequest.yml"
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
+            $ref: '../schemas/workflow.yml'
+    '400':
+      $ref: '../../../../shared/spec/responses/badRequest.yml'
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
 get:
   x-eov-operation-id: getWorkflows
   x-eov-operation-handler: v1/handlers/workflows/workflows.handler
@@ -67,14 +67,14 @@ get:
       schema:
         type: boolean
         example: true
-    - $ref: "../../../../shared/spec/parameters/limit.yml"
-    - $ref: "../../../../shared/spec/parameters/cursor.yml"
+    - $ref: '../../../../shared/spec/parameters/limit.yml'
+    - $ref: '../../../../shared/spec/parameters/cursor.yml'
   responses:
-    "200":
+    '200':
       description: Operation successful.
       content:
         application/json:
           schema:
-            $ref: "../schemas/workflowList.yml"
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
+            $ref: '../schemas/workflowList.yml'
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'

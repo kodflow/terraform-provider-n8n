@@ -13,14 +13,14 @@ delete:
       schema:
         type: string
   responses:
-    "204":
+    '204':
       description: Operation successful.
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
-    "403":
-      $ref: "../../../../shared/spec/responses/forbidden.yml"
-    "404":
-      $ref: "../../../../shared/spec/responses/notFound.yml"
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    '403':
+      $ref: '../../../../shared/spec/responses/forbidden.yml'
+    '404':
+      $ref: '../../../../shared/spec/responses/notFound.yml'
 put:
   x-eov-operation-id: updateProject
   x-eov-operation-handler: v1/handlers/projects/projects.handler
@@ -40,16 +40,16 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../schemas/project.yml"
+          $ref: '../schemas/project.yml'
     required: true
   responses:
-    "204":
+    '204':
       description: Operation successful.
-    "400":
-      $ref: "../../../../shared/spec/responses/badRequest.yml"
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
-    "403":
-      $ref: "../../../../shared/spec/responses/forbidden.yml"
-    "404":
-      $ref: "../../../../shared/spec/responses/notFound.yml"
+    '400':
+      $ref: '../../../../shared/spec/responses/badRequest.yml'
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    '403':
+      $ref: '../../../../shared/spec/responses/forbidden.yml'
+    '404':
+      $ref: '../../../../shared/spec/responses/notFound.yml'

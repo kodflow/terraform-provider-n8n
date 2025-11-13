@@ -22,15 +22,15 @@ post:
                   type: array
                   items:
                     type: string
-                    enum: ["credentials", "database", "nodes", "filesystem", "instance"]
+                    enum: ['credentials', 'database', 'nodes', 'filesystem', 'instance']
   responses:
-    "200":
+    '200':
       description: Operation successful.
       content:
         application/json:
           schema:
-            $ref: "../schemas/audit.yml"
-    "401":
-      $ref: "../../../../shared/spec/responses/unauthorized.yml"
-    "500":
+            $ref: '../schemas/audit.yml'
+    '401':
+      $ref: '../../../../shared/spec/responses/unauthorized.yml'
+    '500':
       description: Internal server error.
