@@ -31,33 +31,33 @@ IGNORE_PATTERNS=(
   "^bazel-"
   "^vendor/"
   "^node_modules/"
-  "/\..*"                    # Hidden files/dirs
-  "\.md$"                    # Markdown files
-  "\.txt$"                   # Text files
-  "\.json$"                  # JSON files
-  "\.lock$"                  # Lock files
-  "\.sum$"                   # Checksum files
-  "\.mod$"                   # Go module files
-  "^LICENSE"                 # License files
-  "^CHANGELOG"               # Changelog files
-  "^COVERAGE"                # Coverage files
-  "\.gitignore$"            # Gitignore files
-  "\.prettierignore$"       # Prettier ignore
-  "^sdk/n8nsdk/"            # Generated SDK code
-  "^codegen/"               # Code generation scripts
-  "_test\.go$"              # Test files (already have package declaration)
-  "BUILD\.bazel$"           # Bazel BUILD files
-  "WORKSPACE$"              # Bazel WORKSPACE
-  "\.bzl$"                  # Bazel .bzl files
-  "^examples/"              # Example files
-  "\.tfvars$"               # Terraform variables
-  "\.hcl$"                  # HCL files
-  "^\.devcontainer/"        # Devcontainer config
-  "^\.github/"              # GitHub workflows (YAML with specific syntax)
-  "^scripts/generate-"      # Auto-generated script output
-  "\.patch$"                # Patch files
-  "\.diff$"                 # Diff files
-  "openapi.*\.ya?ml$"       # OpenAPI spec files
+  "/\..*"              # Hidden files/dirs
+  "\.md$"              # Markdown files
+  "\.txt$"             # Text files
+  "\.json$"            # JSON files
+  "\.lock$"            # Lock files
+  "\.sum$"             # Checksum files
+  "\.mod$"             # Go module files
+  "^LICENSE"           # License files
+  "^CHANGELOG"         # Changelog files
+  "^COVERAGE"          # Coverage files
+  "\.gitignore$"       # Gitignore files
+  "\.prettierignore$"  # Prettier ignore
+  "^sdk/n8nsdk/"       # Generated SDK code
+  "^codegen/"          # Code generation scripts
+  "_test\.go$"         # Test files (already have package declaration)
+  "BUILD\.bazel$"      # Bazel BUILD files
+  "WORKSPACE$"         # Bazel WORKSPACE
+  "\.bzl$"             # Bazel .bzl files
+  "^examples/"         # Example files
+  "\.tfvars$"          # Terraform variables
+  "\.hcl$"             # HCL files
+  "^\.devcontainer/"   # Devcontainer config
+  "^\.github/"         # GitHub workflows (YAML with specific syntax)
+  "^scripts/generate-" # Auto-generated script output
+  "\.patch$"           # Patch files
+  "\.diff$"            # Diff files
+  "openapi.*\.ya?ml$"  # OpenAPI spec files
 )
 
 # Check if file should be ignored
@@ -84,23 +84,23 @@ add_go_header() {
   # Check if file starts with package declaration
   if head -n 1 "$file" | grep -q "^package "; then
     # Insert header before package declaration
-    echo "$GO_HEADER" > "$file.tmp"
-    echo "" >> "$file.tmp"
-    cat "$file" >> "$file.tmp"
+    echo "$GO_HEADER" >"$file.tmp"
+    echo "" >>"$file.tmp"
+    cat "$file" >>"$file.tmp"
     mv "$file.tmp" "$file"
   elif head -n 1 "$file" | grep -q "^//go:build "; then
     # Insert header after build constraint
-    head -n 1 "$file" > "$file.tmp"
-    echo "" >> "$file.tmp"
-    echo "$GO_HEADER" >> "$file.tmp"
-    echo "" >> "$file.tmp"
-    tail -n +2 "$file" >> "$file.tmp"
+    head -n 1 "$file" >"$file.tmp"
+    echo "" >>"$file.tmp"
+    echo "$GO_HEADER" >>"$file.tmp"
+    echo "" >>"$file.tmp"
+    tail -n +2 "$file" >>"$file.tmp"
     mv "$file.tmp" "$file"
   else
     # Insert at beginning
-    echo "$GO_HEADER" > "$file.tmp"
-    echo "" >> "$file.tmp"
-    cat "$file" >> "$file.tmp"
+    echo "$GO_HEADER" >"$file.tmp"
+    echo "" >>"$file.tmp"
+    cat "$file" >>"$file.tmp"
     mv "$file.tmp" "$file"
   fi
 }
@@ -112,14 +112,14 @@ add_shell_header() {
   # Check if file starts with shebang
   if head -n 1 "$file" | grep -q "^#!/"; then
     # Insert header after shebang
-    head -n 1 "$file" > "$file.tmp"
-    echo "$SHELL_HEADER" | tail -n +2 >> "$file.tmp"
-    tail -n +2 "$file" >> "$file.tmp"
+    head -n 1 "$file" >"$file.tmp"
+    echo "$SHELL_HEADER" | tail -n +2 >>"$file.tmp"
+    tail -n +2 "$file" >>"$file.tmp"
     mv "$file.tmp" "$file"
   else
     # Insert at beginning
-    echo "$SHELL_HEADER" > "$file.tmp"
-    cat "$file" >> "$file.tmp"
+    echo "$SHELL_HEADER" >"$file.tmp"
+    cat "$file" >>"$file.tmp"
     mv "$file.tmp" "$file"
   fi
 }
@@ -127,9 +127,9 @@ add_shell_header() {
 # Add copyright header to YAML/other files
 add_yaml_header() {
   local file="$1"
-  echo "$YAML_HEADER" > "$file.tmp"
-  echo "" >> "$file.tmp"
-  cat "$file" >> "$file.tmp"
+  echo "$YAML_HEADER" >"$file.tmp"
+  echo "" >>"$file.tmp"
+  cat "$file" >>"$file.tmp"
   mv "$file.tmp" "$file"
 }
 
@@ -157,24 +157,24 @@ process_file() {
     *.go)
       echo -e "  ${CYAN}→${RESET} Adding header to: $file"
       add_go_header "$file"
-      return 1  # File was modified
+      return 1 # File was modified
       ;;
     *.sh)
       echo -e "  ${CYAN}→${RESET} Adding header to: $file"
       add_shell_header "$file"
-      return 1  # File was modified
+      return 1 # File was modified
       ;;
-    *.yml|*.yaml)
+    *.yml | *.yaml)
       # Skip GitHub workflows and OpenAPI specs
       if [[ "$file" =~ ^\.github/ ]] || [[ "$file" =~ openapi ]]; then
         return 0
       fi
       echo -e "  ${CYAN}→${RESET} Adding header to: $file"
       add_yaml_header "$file"
-      return 1  # File was modified
+      return 1 # File was modified
       ;;
     *)
-      return 0  # Unknown file type, skip
+      return 0 # Unknown file type, skip
       ;;
   esac
 }
@@ -184,12 +184,12 @@ main() {
   local files_modified=0
 
   # Get list of staged files or all files if not in git hook mode
-  if git rev-parse --git-dir > /dev/null 2>&1 && [ -n "$(git diff --cached --name-only)" ]; then
+  if git rev-parse --git-dir >/dev/null 2>&1 && [ -n "$(git diff --cached --name-only)" ]; then
     # Git hook mode: process staged files
     files=$(git diff --cached --name-only --diff-filter=ACM)
   else
     # Manual mode: process all tracked files
-    if git rev-parse --git-dir > /dev/null 2>&1; then
+    if git rev-parse --git-dir >/dev/null 2>&1; then
       files=$(git ls-files)
     else
       # Not in a git repo, process all files in current directory
@@ -205,7 +205,7 @@ main() {
     else
       files_modified=$((files_modified + 1))
       # Re-stage the file if in git hook mode
-      if git rev-parse --git-dir > /dev/null 2>&1; then
+      if git rev-parse --git-dir >/dev/null 2>&1; then
         git add "$file"
       fi
     fi

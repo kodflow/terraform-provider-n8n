@@ -26,7 +26,7 @@ echo -e "${BOLD}${CYAN}━━━━━━━━━━━━━━━━━━━
 echo ""
 
 # Check if we're in a git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
   echo -e "${RED}✗${RESET} Not in a git repository"
   exit 1
 fi
@@ -37,9 +37,9 @@ echo -e "${CYAN}Current branch:${RESET} $CURRENT_BRANCH"
 
 # Get base branch (usually main or master)
 BASE_BRANCH="main"
-if ! git rev-parse --verify $BASE_BRANCH > /dev/null 2>&1; then
+if ! git rev-parse --verify $BASE_BRANCH >/dev/null 2>&1; then
   BASE_BRANCH="master"
-  if ! git rev-parse --verify $BASE_BRANCH > /dev/null 2>&1; then
+  if ! git rev-parse --verify $BASE_BRANCH >/dev/null 2>&1; then
     echo -e "${RED}✗${RESET} Could not find base branch (main or master)"
     exit 1
   fi
