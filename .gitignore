@@ -179,6 +179,7 @@ sdk/n8nsdk/*
 !sdk/n8nsdk/api/
 sdk/n8nsdk/api/*
 !sdk/n8nsdk/api/openapi.yaml
+!sdk/n8nsdk/api/openapi-generated.yaml
 !sdk/n8nsdk/api/openapi.patch
 !sdk/n8nsdk/api/openapi-source/
 !sdk/n8nsdk/api/openapi-source/**/*.yml

@@ -22,16 +22,22 @@ def main():
     print("🚀 N8N SDK Generation Pipeline\n")
 
     # Config
-    OPENAPI_SPEC = "sdk/n8nsdk/api/openapi.yaml"
+    OPENAPI_SOURCE = "sdk/n8nsdk/api/openapi.yaml"
+    OPENAPI_SPEC = "sdk/n8nsdk/api/openapi-generated.yaml"
     GENERATOR_JAR = "/tmp/openapi-generator-cli.jar"
     GENERATOR_VERSION = "7.11.0"
     sdk_dir = Path("sdk/n8nsdk")
 
-    # Check if OpenAPI spec exists
-    if not Path(OPENAPI_SPEC).exists():
-        print(f"❌ Error: {OPENAPI_SPEC} not found", file=sys.stderr)
+    # Check if OpenAPI source exists
+    if not Path(OPENAPI_SOURCE).exists():
+        print(f"❌ Error: {OPENAPI_SOURCE} not found", file=sys.stderr)
         print("Run 'make openapi' first to download and prepare the OpenAPI spec", file=sys.stderr)
         sys.exit(1)
+
+    # Copy source to generated version
+    print("📋 Copying OpenAPI spec for generation...")
+    shutil.copy(OPENAPI_SOURCE, OPENAPI_SPEC)
+    print(f"   ✓ Copied {OPENAPI_SOURCE} → {OPENAPI_SPEC}\n")
 
     # 1. Generate SDK
     print("🔨 Generating SDK...\n")

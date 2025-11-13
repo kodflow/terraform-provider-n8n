@@ -112,7 +112,8 @@ def main():
         print("   ⚠️  No patch file found\n")
 
     print("✅ OpenAPI spec ready!\n")
-    print("Next step: Run 'make sdk' to generate the Go SDK\n")
+    print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + patched)")
+    print("\nNext step: Run 'make sdk' to generate the Go SDK\n")
 
 if __name__ == '__main__':
     main()
