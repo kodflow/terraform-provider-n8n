@@ -45,6 +45,15 @@ jobs:
         with:
           terraform_version: latest
 
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --version
+          skip-cache: false
+          skip-build-cache: false
+          skip-pkg-cache: false
+
       - name: Install ktn-linter
         run: |
           KTN_ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
