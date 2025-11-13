@@ -1,0 +1,87 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "lint",
+      "type": "shell",
+      "command": "make",
+      "args": ["lint"],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [
+        {
+          "owner": "go",
+          "fileLocation": ["relative", "${workspaceFolder}"],
+          "pattern": {
+            "regexp": "^(.+):(\\d+):(\\d+):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "message": 4
+          }
+        }
+      ]
+    },
+    {
+      "label": "lint-file",
+      "type": "shell",
+      "command": "golangci-lint",
+      "args": ["run", "${file}"],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        {
+          "owner": "go",
+          "fileLocation": ["relative", "${workspaceFolder}"],
+          "pattern": {
+            "regexp": "^(.+):(\\d+):(\\d+):\\s+(.+)\\s+\\((.+)\\)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "message": 4,
+            "code": 5
+          }
+        }
+      ]
+    },
+    {
+      "label": "ktn-lint",
+      "type": "shell",
+      "command": "ktn-linter",
+      "args": ["lint", "--simple", "./..."],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        {
+          "owner": "ktn-linter",
+          "fileLocation": ["relative", "${workspaceFolder}"],
+          "pattern": {
+            "regexp": "^(.+):(\\d+):(\\d+):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "message": 4
+          }
+        }
+      ]
+    }
+  ]
+}

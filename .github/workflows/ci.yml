@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI Pipeline
+    runs-on: ubuntu-latest
+    env:
+      N8N_URL: ${{ secrets.N8N_URL }}
+      N8N_API_TOKEN: ${{ secrets.N8N_API_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Install Bazelisk
+        run: |
+          sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          sudo chmod +x /usr/local/bin/bazel
+
+      - name: Install formatting tools
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install github.com/bazelbuild/buildtools/buildifier@latest
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          npm install -g prettier
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+
+      - name: Install ktn-linter
+        run: |
+          KTN_ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          KTN_VERSION=$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+          mkdir -p $HOME/.local/bin
+          curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v${KTN_VERSION}/ktn-linter-linux-${KTN_ARCH}" -o "$HOME/.local/bin/ktn-linter"
+          chmod +x "$HOME/.local/bin/ktn-linter"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Check formatting
+        run: make fmt
+
+      - name: Run linters
+        run: make lint
+
+      - name: Run unit tests
+        run: make test/unit
+
+      - name: Build provider
+        run: make build
+
+      - name: Run acceptance tests
+        run: make test/acceptance
+        if: ${{ env.N8N_URL != '' && env.N8N_API_TOKEN != '' }}
+
+      - name: Generate documentation
+        run: make docs
+
+      - name: Check for uncommitted changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Error: There are uncommitted changes after running CI pipeline"
+            git status --porcelain
+            exit 1
+          fi

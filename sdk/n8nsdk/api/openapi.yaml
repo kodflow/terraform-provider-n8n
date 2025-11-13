@@ -1,0 +1,4012 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: hello@n8n.io
+  description: n8n Public API
+  license:
+    name: Sustainable Use License
+    url: https://github.com/n8n-io/n8n/blob/master/LICENSE.md
+  termsOfService: https://n8n.io/legal/#terms
+  title: n8n Public API
+  version: 1.1.1
+externalDocs:
+  description: n8n API documentation
+  url: https://docs.n8n.io/api/
+servers:
+  - url: /api/v1
+security:
+  - ApiKeyAuth: []
+tags:
+  - description: Operations about users
+    name: User
+  - description: Operations about security audit
+    name: Audit
+  - description: Operations about executions
+    name: Execution
+  - description: Operations about workflows
+    name: Workflow
+  - description: Operations about credentials
+    name: Credential
+  - description: Operations about tags
+    name: Tags
+  - description: Operations about source control
+    name: SourceControl
+  - description: Operations about variables
+    name: Variables
+  - description: Operations about projects
+    name: Projects
+paths:
+  /audit:
+    post:
+      description: Generate a security audit for your n8n instance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_audit_post_request"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/audit"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal server error.
+      summary: Generate an audit
+      tags:
+        - Audit
+      x-eov-operation-id: generateAudit
+      x-eov-operation-handler: v1/handlers/audit/audit.handler
+  /credentials:
+    post:
+      description: Creates a credential that can be used by nodes of the specified
+        type.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/credential"
+        description: Credential to be created.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/create-credential-response"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "415":
+          description: Unsupported media type.
+      summary: Create a credential
+      tags:
+        - Credential
+      x-eov-operation-id: createCredential
+      x-eov-operation-handler: v1/handlers/credentials/credentials.handler
+  /credentials/{id}:
+    delete:
+      description: Deletes a credential from your instance. You must be the owner
+        of the credentials
+      operationId: deleteCredential
+      parameters:
+        - description: The credential ID that needs to be deleted
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/credential"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Delete credential by ID
+      tags:
+        - Credential
+      x-eov-operation-id: deleteCredential
+      x-eov-operation-handler: v1/handlers/credentials/credentials.handler
+  /credentials/schema/{credentialTypeName}:
+    get:
+      parameters:
+        - description: The credential type name that you want to get the schema for
+          explode: false
+          in: path
+          name: credentialTypeName
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                freshdeskApi:
+                  value:
+                    additionalProperties: false
+                    type: object
+                    properties:
+                      apiKey:
+                        type: string
+                      domain:
+                        type: string
+                    required:
+                      - apiKey
+                      - domain
+                slackOAuth2Api:
+                  value:
+                    additionalProperties: false
+                    type: object
+                    properties:
+                      clientId:
+                        type: string
+                      clientSecret:
+                        type: string
+                    required:
+                      - clientId
+                      - clientSecret
+              schema:
+                type: object
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Show credential data schema
+      tags:
+        - Credential
+      x-eov-operation-id: getCredentialType
+      x-eov-operation-handler: v1/handlers/credentials/credentials.handler
+  /credentials/{id}/transfer:
+    put:
+      description: Transfer a credential to another project.
+      parameters:
+        - description: The ID of the credential.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_credentials__id__transfer_put_request"
+        description: Destination project for the credential transfer.
+        required: true
+      responses:
+        "200":
+          description: Operation successful.
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Transfer a credential to another project.
+      tags:
+        - Credential
+      x-eov-operation-id: transferCredential
+      x-eov-operation-handler: v1/handlers/credentials/credentials.handler
+  /executions:
+    get:
+      description: Retrieve all executions from your instance.
+      parameters:
+        - description: Whether or not to include the execution's detailed data.
+          explode: true
+          in: query
+          name: includeData
+          required: false
+          schema:
+            type: boolean
+          style: form
+        - description: Status to filter the executions by.
+          explode: true
+          in: query
+          name: status
+          required: false
+          schema:
+            enum:
+              - canceled
+              - error
+              - running
+              - success
+              - waiting
+            type: string
+          style: form
+        - description: Workflow to filter the executions by.
+          explode: true
+          in: query
+          name: workflowId
+          required: false
+          schema:
+            example: "1000"
+            type: string
+          style: form
+        - allowReserved: true
+          explode: false
+          in: query
+          name: projectId
+          required: false
+          schema:
+            example: VmwOO9HeTEj20kxM
+            type: string
+          style: form
+        - description: The maximum number of items to return.
+          explode: true
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            example: 100
+            maximum: 250
+            type: number
+          style: form
+        - description: Paginate by setting the cursor parameter to the nextCursor attribute
+            returned by the previous request's response. Default value fetches the first
+            "page" of the collection. See pagination for more detail.
+          explode: true
+          in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/executionList"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Retrieve all executions
+      tags:
+        - Execution
+      x-eov-operation-id: getExecutions
+      x-eov-operation-handler: v1/handlers/executions/executions.handler
+  /executions/{id}:
+    delete:
+      description: Deletes an execution from your instance.
+      parameters:
+        - description: The ID of the execution.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: number
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/execution"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Delete an execution
+      tags:
+        - Execution
+      x-eov-operation-id: deleteExecution
+      x-eov-operation-handler: v1/handlers/executions/executions.handler
+    get:
+      description: Retrieve an execution from your instance.
+      parameters:
+        - description: The ID of the execution.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: number
+          style: simple
+        - description: Whether or not to include the execution's detailed data.
+          explode: true
+          in: query
+          name: includeData
+          required: false
+          schema:
+            type: boolean
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/execution"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Retrieve an execution
+      tags:
+        - Execution
+      x-eov-operation-id: getExecution
+      x-eov-operation-handler: v1/handlers/executions/executions.handler
+  /executions/{id}/retry:
+    post:
+      description: Retry an execution from your instance.
+      parameters:
+        - description: The ID of the execution.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: number
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_executions__id__retry_post_request"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/execution"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+        "409":
+          description: Conflict
+      summary: Retry an execution
+      tags:
+        - Execution
+      x-eov-operation-id: retryExecution
+      x-eov-operation-handler: v1/handlers/executions/executions.handler
+  /tags:
+    get:
+      description: Retrieve all tags from your instance.
+      parameters:
+        - description: The maximum number of items to return.
+          explode: true
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            example: 100
+            maximum: 250
+            type: number
+          style: form
+        - description: Paginate by setting the cursor parameter to the nextCursor attribute
+            returned by the previous request's response. Default value fetches the first
+            "page" of the collection. See pagination for more detail.
+          explode: true
+          in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tagList"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+      summary: Retrieve all tags
+      tags:
+        - Tags
+      x-eov-operation-id: getTags
+      x-eov-operation-handler: v1/handlers/tags/tags.handler
+    post:
+      description: Create a tag in your instance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/tag"
+        description: Created tag object.
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tag"
+          description: A tag object
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "409":
+          description: Conflict
+      summary: Create a tag
+      tags:
+        - Tags
+      x-eov-operation-id: createTag
+      x-eov-operation-handler: v1/handlers/tags/tags.handler
+  /tags/{id}:
+    delete:
+      description: Deletes a tag.
+      parameters:
+        - description: The ID of the tag.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tag"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Delete a tag
+      tags:
+        - Tags
+      x-eov-operation-id: deleteTag
+      x-eov-operation-handler: v1/handlers/tags/tags.handler
+    get:
+      description: Retrieves a tag.
+      parameters:
+        - description: The ID of the tag.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tag"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Retrieves a tag
+      tags:
+        - Tags
+      x-eov-operation-id: getTag
+      x-eov-operation-handler: v1/handlers/tags/tags.handler
+    put:
+      description: Update a tag.
+      parameters:
+        - description: The ID of the tag.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/tag"
+        description: Updated tag object.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tag"
+          description: Tag object
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+        "409":
+          description: Conflict
+      summary: Update a tag
+      tags:
+        - Tags
+      x-eov-operation-id: updateTag
+      x-eov-operation-handler: v1/handlers/tags/tags.handler
+  /workflows:
+    get:
+      description: Retrieve all workflows from your instance.
+      parameters:
+        - explode: true
+          in: query
+          name: active
+          required: false
+          schema:
+            example: true
+            type: boolean
+          style: form
+        - allowReserved: true
+          explode: false
+          in: query
+          name: tags
+          required: false
+          schema:
+            example: "test,production"
+            type: string
+          style: form
+        - allowReserved: true
+          explode: false
+          in: query
+          name: name
+          required: false
+          schema:
+            example: My Workflow
+            type: string
+          style: form
+        - allowReserved: true
+          explode: false
+          in: query
+          name: projectId
+          required: false
+          schema:
+            example: VmwOO9HeTEj20kxM
+            type: string
+          style: form
+        - description: Set this to avoid retrieving pinned data
+          explode: true
+          in: query
+          name: excludePinnedData
+          required: false
+          schema:
+            example: true
+            type: boolean
+          style: form
+        - description: The maximum number of items to return.
+          explode: true
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            example: 100
+            maximum: 250
+            type: number
+          style: form
+        - description: Paginate by setting the cursor parameter to the nextCursor attribute
+            returned by the previous request's response. Default value fetches the first
+            "page" of the collection. See pagination for more detail.
+          explode: true
+          in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflowList"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+      summary: Retrieve all workflows
+      tags:
+        - Workflow
+      x-eov-operation-id: getWorkflows
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+    post:
+      description: Create a workflow in your instance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/workflow"
+        description: Created workflow object.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflow"
+          description: A workflow object
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+      summary: Create a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: createWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+  /workflows/{id}:
+    delete:
+      description: Deletes a workflow.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflow"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Delete a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: deleteWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+    get:
+      description: Retrieves a workflow.
+      parameters:
+        - description: Set this to avoid retrieving pinned data
+          explode: true
+          in: query
+          name: excludePinnedData
+          required: false
+          schema:
+            example: true
+            type: boolean
+          style: form
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflow"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Retrieves a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: getWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+    put:
+      description: Update a workflow.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/workflow"
+        description: Updated workflow object.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflow"
+          description: Workflow object
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Update a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: updateWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+  /workflows/{id}/activate:
+    post:
+      description: Active a workflow.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflow"
+          description: Workflow object
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Activate a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: activateWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+  /workflows/{id}/deactivate:
+    post:
+      description: Deactivate a workflow.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflow"
+          description: Workflow object
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Deactivate a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: deactivateWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+  /workflows/{id}/transfer:
+    put:
+      description: Transfer a workflow to another project.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_workflows__id__transfer_put_request"
+        description: Destination project information for the workflow transfer.
+        required: true
+      responses:
+        "200":
+          description: Operation successful.
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Transfer a workflow to another project.
+      tags:
+        - Workflow
+      x-eov-operation-id: transferWorkflow
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+  /workflows/{id}/tags:
+    get:
+      description: Get workflow tags.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflowTags"
+          description: List of tags
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Get workflow tags
+      tags:
+        - Workflow
+      x-eov-operation-id: getWorkflowTags
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+    put:
+      description: Update tags of a workflow.
+      parameters:
+        - description: The ID of the workflow.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/tagIds"
+        description: List of tags
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workflowTags"
+          description: List of tags after add the tag
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Update tags of a workflow
+      tags:
+        - Workflow
+      x-eov-operation-id: updateWorkflowTags
+      x-eov-operation-handler: v1/handlers/workflows/workflows.handler
+  /users:
+    get:
+      description: Retrieve all users from your instance. Only available for the instance
+        owner.
+      parameters:
+        - description: The maximum number of items to return.
+          explode: true
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            example: 100
+            maximum: 250
+            type: number
+          style: form
+        - description: Paginate by setting the cursor parameter to the nextCursor attribute
+            returned by the previous request's response. Default value fetches the first
+            "page" of the collection. See pagination for more detail.
+          explode: true
+          in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+          style: form
+        - description: Whether to include the user's role or not.
+          explode: true
+          in: query
+          name: includeRole
+          required: false
+          schema:
+            default: false
+            example: true
+            type: boolean
+          style: form
+        - allowReserved: true
+          explode: false
+          in: query
+          name: projectId
+          required: false
+          schema:
+            example: VmwOO9HeTEj20kxM
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/userList"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+      summary: Retrieve all users
+      tags:
+        - User
+      x-eov-operation-id: getUsers
+      x-eov-operation-handler: v1/handlers/users/users.handler.ee
+    post:
+      description: Create one or more users.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/_users_post_request_inner"
+              type: array
+        description: Array of users to be created.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_users_post_200_response"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      summary: Create multiple users
+      tags:
+        - User
+      x-eov-operation-id: createUser
+      x-eov-operation-handler: v1/handlers/users/users.handler.ee
+  /users/{id}:
+    delete:
+      description: Delete a user from your instance.
+      parameters:
+        - description: The ID or email of the user.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            format: identifier
+            type: string
+          style: simple
+      responses:
+        "204":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Delete a user
+      tags:
+        - User
+      x-eov-operation-id: deleteUser
+      x-eov-operation-handler: v1/handlers/users/users.handler.ee
+    get:
+      description: Retrieve a user from your instance. Only available for the instance
+        owner.
+      parameters:
+        - description: The ID or email of the user.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            format: identifier
+            type: string
+          style: simple
+        - description: Whether to include the user's role or not.
+          explode: true
+          in: query
+          name: includeRole
+          required: false
+          schema:
+            default: false
+            example: true
+            type: boolean
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+      summary: Get user by ID/Email
+      tags:
+        - User
+      x-eov-operation-id: getUser
+      x-eov-operation-handler: v1/handlers/users/users.handler.ee
+  /users/{id}/role:
+    patch:
+      description: Change a user's global role
+      parameters:
+        - description: The ID or email of the user.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            format: identifier
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_users__id__role_patch_request"
+        description: New role for the user
+        required: true
+      responses:
+        "200":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Change a user's global role
+      tags:
+        - User
+      x-eov-operation-id: changeRole
+      x-eov-operation-handler: v1/handlers/users/users.handler.ee
+  /source-control/pull:
+    post:
+      description: Requires the Source Control feature to be licensed and connected
+        to a repository.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/pull"
+        description: Pull options
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/importResult"
+          description: Import result
+        "400":
+          description: The request is invalid or provides malformed data.
+        "409":
+          description: Conflict
+      summary: Pull changes from the remote repository
+      tags:
+        - SourceControl
+      x-eov-operation-id: pull
+      x-eov-operation-handler: v1/handlers/source-control/source-control.handler
+  /variables:
+    get:
+      description: Retrieve variables from your instance.
+      parameters:
+        - description: The maximum number of items to return.
+          explode: true
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            example: 100
+            maximum: 250
+            type: number
+          style: form
+        - description: Paginate by setting the cursor parameter to the nextCursor attribute
+            returned by the previous request's response. Default value fetches the first
+            "page" of the collection. See pagination for more detail.
+          explode: true
+          in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+          style: form
+        - allowReserved: true
+          explode: false
+          in: query
+          name: projectId
+          required: false
+          schema:
+            example: VmwOO9HeTEj20kxM
+            type: string
+          style: form
+        - explode: true
+          in: query
+          name: state
+          required: false
+          schema:
+            enum:
+              - empty
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/variableList"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+      summary: Retrieve variables
+      tags:
+        - Variables
+      x-eov-operation-id: getVariables
+      x-eov-operation-handler: v1/handlers/variables/variables.handler
+    post:
+      description: Create a variable in your instance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/variable.create"
+        description: Payload for variable to create.
+        required: true
+      responses:
+        "201":
+          description: Operation successful.
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+      summary: Create a variable
+      tags:
+        - Variables
+      x-eov-operation-id: createVariable
+      x-eov-operation-handler: v1/handlers/variables/variables.handler
+  /variables/{id}:
+    delete:
+      description: Delete a variable from your instance.
+      parameters:
+        - description: The ID of the variable.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "204":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "404":
+          description: The specified resource was not found.
+      summary: Delete a variable
+      tags:
+        - Variables
+      x-eov-operation-id: deleteVariable
+      x-eov-operation-handler: v1/handlers/variables/variables.handler
+    put:
+      description: Update a variable from your instance.
+      parameters:
+        - description: The ID of the variable.
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/variable.create"
+        description: Payload for variable to update.
+        required: true
+      responses:
+        "204":
+          description: Operation successful.
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Update a variable
+      tags:
+        - Variables
+      x-eov-operation-id: updateVariable
+      x-eov-operation-handler: v1/handlers/variables/variables.handler
+  /projects:
+    get:
+      description: Retrieve projects from your instance.
+      parameters:
+        - description: The maximum number of items to return.
+          explode: true
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            example: 100
+            maximum: 250
+            type: number
+          style: form
+        - description: Paginate by setting the cursor parameter to the nextCursor attribute
+            returned by the previous request's response. Default value fetches the first
+            "page" of the collection. See pagination for more detail.
+          explode: true
+          in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/projectList"
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+      summary: Retrieve projects
+      tags:
+        - Projects
+      x-eov-operation-id: getProjects
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+    post:
+      description: Create a project on your instance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/project"
+        description: Payload for project to create.
+        required: true
+      responses:
+        "201":
+          description: Operation successful.
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+      summary: Create a project
+      tags:
+        - Projects
+      x-eov-operation-id: createProject
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+  /projects/{projectId}:
+    delete:
+      description: Delete a project from your instance.
+      parameters:
+        - description: The ID of the project.
+          explode: false
+          in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "204":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Delete a project
+      tags:
+        - Projects
+      x-eov-operation-id: deleteProject
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+    put:
+      description: Update a project on your instance.
+      parameters:
+        - description: The ID of the project.
+          explode: false
+          in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/project"
+        description: Updated project object.
+        required: true
+      responses:
+        "204":
+          description: Operation successful.
+        "400":
+          description: The request is invalid or provides malformed data.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Update a project
+      tags:
+        - Projects
+      x-eov-operation-id: updateProject
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+  /projects/{projectId}/users:
+    post:
+      description: Add one or more users to a project on your instance.
+      parameters:
+        - description: The ID of the project.
+          explode: false
+          in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_projects__projectId__users_post_request"
+        description: Payload containing an array of one or more users to add to the
+          project.
+      responses:
+        "201":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Add one or more users to a project
+      tags:
+        - Projects
+      x-eov-operation-id: addUsersToProject
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+  /projects/{projectId}/users/{userId}:
+    delete:
+      description: Delete a user from a project on your instance.
+      parameters:
+        - description: The ID of the project.
+          explode: false
+          in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+          style: simple
+        - description: The ID of the user.
+          explode: false
+          in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "204":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Delete a user from a project
+      tags:
+        - Projects
+      x-eov-operation-id: deleteUserFromProject
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+    patch:
+      description: Change a user's role in a project.
+      parameters:
+        - description: The ID of the project.
+          explode: false
+          in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+          style: simple
+        - description: The ID of the user.
+          explode: false
+          in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_projects__projectId__users__userId__patch_request"
+        description: Payload containing the new role to assign to the project user.
+      responses:
+        "204":
+          description: Operation successful.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: The specified resource was not found.
+      summary: Change a user's role in a project
+      tags:
+        - Projects
+      x-eov-operation-id: changeUserRoleInProject
+      x-eov-operation-handler: v1/handlers/projects/projects.handler
+components:
+  parameters:
+    credentialId:
+      description: The ID of the credential.
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      style: simple
+    includeData:
+      description: Whether or not to include the execution's detailed data.
+      explode: true
+      in: query
+      name: includeData
+      required: false
+      schema:
+        type: boolean
+      style: form
+    limit:
+      description: The maximum number of items to return.
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        default: 100
+        example: 100
+        maximum: 250
+        type: number
+      style: form
+    cursor:
+      description: Paginate by setting the cursor parameter to the nextCursor attribute
+        returned by the previous request's response. Default value fetches the first
+        "page" of the collection. See pagination for more detail.
+      explode: true
+      in: query
+      name: cursor
+      required: false
+      schema:
+        type: string
+      style: form
+    executionId:
+      description: The ID of the execution.
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        type: number
+      style: simple
+    tagId:
+      description: The ID of the tag.
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      style: simple
+    workflowId:
+      description: The ID of the workflow.
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      style: simple
+    includeRole:
+      description: Whether to include the user's role or not.
+      explode: true
+      in: query
+      name: includeRole
+      required: false
+      schema:
+        default: false
+        example: true
+        type: boolean
+      style: form
+    userIdentifier:
+      description: The ID or email of the user.
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        format: identifier
+        type: string
+      style: simple
+    variableId:
+      description: The ID of the variable.
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      style: simple
+    Cursor:
+      $ref: "#/components/parameters/cursor"
+    Limit:
+      $ref: "#/components/parameters/limit"
+    ExecutionId:
+      $ref: "#/components/parameters/executionId"
+    WorkflowId:
+      $ref: "#/components/parameters/workflowId"
+    TagId:
+      $ref: "#/components/parameters/tagId"
+    IncludeData:
+      $ref: "#/components/parameters/includeData"
+    UserIdentifier:
+      $ref: "#/components/parameters/userIdentifier"
+    IncludeRole:
+      $ref: "#/components/parameters/includeRole"
+    VariableId:
+      $ref: "#/components/parameters/variableId"
+  responses:
+    unauthorized:
+      description: Unauthorized
+    notFound:
+      description: The specified resource was not found.
+    badRequest:
+      description: The request is invalid or provides malformed data.
+    conflict:
+      description: Conflict
+    forbidden:
+      description: Forbidden
+    NotFound:
+      $ref: "#/components/responses/notFound"
+    Unauthorized:
+      $ref: "#/components/responses/unauthorized"
+    BadRequest:
+      $ref: "#/components/responses/badRequest"
+    Conflict:
+      $ref: "#/components/responses/conflict"
+    Forbidden:
+      $ref: "#/components/responses/forbidden"
+  schemas:
+    audit:
+      example:
+        Instance Risk Report:
+          risk: execution
+          sections:
+            - title: Unprotected webhooks in instance
+              description: These webhook nodes have the "Authentication" field set to
+                "None" and are not directly connected to a node to validate the payload.
+                Every unprotected webhook allows your workflow to be called by any third
+                party who knows the webhook URL.
+              recommendation: Consider setting the "Authentication" field to an option
+                other than "None"
+              or validating the payload with one of the following nodes.: null
+              location:
+                - kind: community
+                  nodeType: n8n-nodes-test.test
+                  packageUrl: https://www.npmjs.com/package/n8n-nodes-test
+        Filesystem Risk Report:
+          risk: filesystem
+          sections:
+            - title: Nodes that interact with the filesystem
+              description: This node reads from and writes to any accessible file in
+                the host filesystem. Sensitive file content may be manipulated through
+                a node operation.
+              recommendation: Consider protecting any sensitive files in the host filesystem
+              or refactoring the workflow so that it does not require host filesystem interaction.: null
+              location:
+                - kind: node
+                  workflowId: "1"
+                  workflowName: My Workflow
+                  nodeId: 51eb5852-ce0b-4806-b4ff-e41322a4041a
+                  nodeName: Ready Binary file
+                  nodeType: n8n-nodes-base.readBinaryFile
+        Credentials Risk Report:
+          risk: credentials
+          sections:
+            - title: Credentials not used in any workflow
+              description: These credentials are not used in any workflow. Keeping unused
+                credentials in your instance is an unneeded security risk.
+              recommendation: Consider deleting these credentials if you no longer need
+                them.
+              location:
+                - kind: credential
+                  id: "1"
+                  name: My Test Account
+        Database Risk Report:
+          risk: database
+          sections:
+            - title: Expressions in "Execute Query" fields in SQL nodes
+              description: This SQL node has an expression in the "Query" field of an
+                "Execute Query" operation. Building a SQL query with an expression may
+                lead to a SQL injection attack.
+              recommendation: Consider using the "Query Parameters" field to pass parameters
+                to the query
+              or validating the input of the expression in the "Query" field.: null
+              location:
+                - kind: node
+                  workflowId: "1"
+                  workflowName: My Workflow
+                  nodeId: 51eb5852-ce0b-4806-b4ff-e41322a4041a
+                  nodeName: MySQL
+                  nodeType: n8n-nodes-base.mySql
+        Nodes Risk Report:
+          risk: nodes
+          sections:
+            - title: Community nodes
+              description: This node is sourced from the community. Community nodes
+                are not vetted by the n8n team and have full access to the host system.
+              recommendation: Consider reviewing the source code in any community nodes
+                installed in this n8n instance
+              and uninstalling any community nodes no longer used.: null
+              location:
+                - kind: community
+                  nodeType: n8n-nodes-test.test
+                  packageUrl: https://www.npmjs.com/package/n8n-nodes-test
+      properties:
+        Credentials Risk Report:
+          example:
+            risk: credentials
+            sections:
+              - title: Credentials not used in any workflow
+                description: These credentials are not used in any workflow. Keeping
+                  unused credentials in your instance is an unneeded security risk.
+                recommendation: Consider deleting these credentials if you no longer
+                  need them.
+                location:
+                  - kind: credential
+                    id: "1"
+                    name: My Test Account
+          type: object
+        Database Risk Report:
+          example:
+            risk: database
+            sections:
+              - title: Expressions in "Execute Query" fields in SQL nodes
+                description: This SQL node has an expression in the "Query" field of
+                  an "Execute Query" operation. Building a SQL query with an expression
+                  may lead to a SQL injection attack.
+                recommendation: Consider using the "Query Parameters" field to pass
+                  parameters to the query
+                or validating the input of the expression in the "Query" field.: null
+                location:
+                  - kind: node
+                    workflowId: "1"
+                    workflowName: My Workflow
+                    nodeId: 51eb5852-ce0b-4806-b4ff-e41322a4041a
+                    nodeName: MySQL
+                    nodeType: n8n-nodes-base.mySql
+          type: object
+        Filesystem Risk Report:
+          example:
+            risk: filesystem
+            sections:
+              - title: Nodes that interact with the filesystem
+                description: This node reads from and writes to any accessible file
+                  in the host filesystem. Sensitive file content may be manipulated
+                  through a node operation.
+                recommendation: Consider protecting any sensitive files in the host
+                  filesystem
+                or refactoring the workflow so that it does not require host filesystem interaction.: null
+                location:
+                  - kind: node
+                    workflowId: "1"
+                    workflowName: My Workflow
+                    nodeId: 51eb5852-ce0b-4806-b4ff-e41322a4041a
+                    nodeName: Ready Binary file
+                    nodeType: n8n-nodes-base.readBinaryFile
+          type: object
+        Nodes Risk Report:
+          example:
+            risk: nodes
+            sections:
+              - title: Community nodes
+                description: This node is sourced from the community. Community nodes
+                  are not vetted by the n8n team and have full access to the host system.
+                recommendation: Consider reviewing the source code in any community
+                  nodes installed in this n8n instance
+                and uninstalling any community nodes no longer used.: null
+                location:
+                  - kind: community
+                    nodeType: n8n-nodes-test.test
+                    packageUrl: https://www.npmjs.com/package/n8n-nodes-test
+          type: object
+        Instance Risk Report:
+          example:
+            risk: execution
+            sections:
+              - title: Unprotected webhooks in instance
+                description: These webhook nodes have the "Authentication" field set
+                  to "None" and are not directly connected to a node to validate the
+                  payload. Every unprotected webhook allows your workflow to be called
+                  by any third party who knows the webhook URL.
+                recommendation: Consider setting the "Authentication" field to an option
+                  other than "None"
+                or validating the payload with one of the following nodes.: null
+                location:
+                  - kind: community
+                    nodeType: n8n-nodes-test.test
+                    packageUrl: https://www.npmjs.com/package/n8n-nodes-test
+          type: object
+      type: object
+    credential:
+      example:
+        createdAt: 2022-04-29T11:02:29.842Z
+        data:
+          token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+        name: Joe's Github Credentials
+        id: R2DjclaysHbqn778
+        type: github
+        updatedAt: 2022-04-29T11:02:29.842Z
+        isManaged: true
+      properties:
+        id:
+          example: R2DjclaysHbqn778
+          readOnly: true
+          type: string
+        name:
+          example: Joe's Github Credentials
+          type: string
+        type:
+          example: github
+          type: string
+        data:
+          example:
+            token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+          type: object
+        createdAt:
+          example: 2022-04-29T11:02:29.842Z
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          example: 2022-04-29T11:02:29.842Z
+          format: date-time
+          readOnly: true
+          type: string
+        isManaged:
+          readOnly: true
+          type: boolean
+      required:
+        - data
+        - name
+        - type
+      type: object
+    create-credential-response:
+      example:
+        createdAt: 2022-04-29T11:02:29.842Z
+        name: John's Github account
+        id: vHxaz5UaCghVYl9C
+        type: github
+        updatedAt: 2022-04-29T11:02:29.842Z
+        isManaged: true
+      properties:
+        id:
+          example: vHxaz5UaCghVYl9C
+          readOnly: true
+          type: string
+        name:
+          example: John's Github account
+          type: string
+        type:
+          example: github
+          type: string
+        createdAt:
+          example: 2022-04-29T11:02:29.842Z
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          example: 2022-04-29T11:02:29.842Z
+          format: date-time
+          readOnly: true
+          type: string
+        isManaged:
+          readOnly: true
+          type: boolean
+      required:
+        - createdAt
+        - id
+        - name
+        - type
+        - updatedAt
+      type: object
+    execution:
+      example:
+        mode: cli
+        stoppedAt: 2000-01-23T04:56:07.000+00:00
+        data: "{}"
+        waitTill: 2000-01-23T04:56:07.000+00:00
+        retryOf: 0.8008281904610115
+        startedAt: 2000-01-23T04:56:07.000+00:00
+        finished: true
+        customData: "{}"
+        id: 1000
+        workflowId: 1000
+        retrySuccessId: 2
+        status: canceled
+      properties:
+        id:
+          example: 1000
+          type: number
+        data:
+          type: object
+        finished:
+          example: true
+          type: boolean
+        mode:
+          enum:
+            - cli
+            - error
+            - integrated
+            - internal
+            - manual
+            - retry
+            - trigger
+            - webhook
+          type: string
+        retryOf:
+          nullable: true
+          type: number
+        retrySuccessId:
+          example: 2
+          nullable: true
+          type: number
+        startedAt:
+          format: date-time
+          type: string
+        stoppedAt:
+          description: The time at which the execution stopped. Will only be null
+            for executions that still have the status 'running'.
+          format: date-time
+          nullable: true
+          type: string
+        workflowId:
+          example: 1000
+          type: number
+        waitTill:
+          format: date-time
+          nullable: true
+          type: string
+        customData:
+          type: object
+        status:
+          enum:
+            - canceled
+            - crashed
+            - error
+            - new
+            - running
+            - success
+            - unknown
+            - waiting
+          type: string
+      type: object
+    executionList:
+      example:
+        nextCursor: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+        data:
+          - mode: cli
+            stoppedAt: 2000-01-23T04:56:07.000+00:00
+            data: "{}"
+            waitTill: 2000-01-23T04:56:07.000+00:00
+            retryOf: 0.8008281904610115
+            startedAt: 2000-01-23T04:56:07.000+00:00
+            finished: true
+            customData: "{}"
+            id: 1000
+            workflowId: 1000
+            retrySuccessId: 2
+            status: canceled
+          - mode: cli
+            stoppedAt: 2000-01-23T04:56:07.000+00:00
+            data: "{}"
+            waitTill: 2000-01-23T04:56:07.000+00:00
+            retryOf: 0.8008281904610115
+            startedAt: 2000-01-23T04:56:07.000+00:00
+            finished: true
+            customData: "{}"
+            id: 1000
+            workflowId: 1000
+            retrySuccessId: 2
+            status: canceled
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/execution"
+          type: array
+        nextCursor:
+          description: Paginate through executions by setting the cursor parameter
+            to a nextCursor attribute returned by a previous request. Default value
+            fetches the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    tag:
+      additionalProperties: false
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: Production
+        id: 2tUt1wbLX592XDdX
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          example: 2tUt1wbLX592XDdX
+          readOnly: true
+          type: string
+        name:
+          example: Production
+          type: string
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+      required:
+        - name
+      type: object
+    tagList:
+      example:
+        nextCursor: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+        data:
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            name: Production
+            id: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            name: Production
+            id: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/tag"
+          type: array
+        nextCursor:
+          description: Paginate through tags by setting the cursor parameter to a
+            nextCursor attribute returned by a previous request. Default value fetches
+            the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    node:
+      additionalProperties: false
+      example:
+        maxTries: 0.8008281904610115
+        webhookId: webhookId
+        notes: notes
+        onError: stopWorkflow
+        credentials:
+          jiraSoftwareCloudApi:
+            id: "35"
+            name: jiraApi
+        continueOnFail: false
+        type: n8n-nodes-base.jira
+        retryOnFail: false
+        executeOnce: false
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        typeVersion: 1
+        notesInFlow: true
+        name: Jira
+        disabled: true
+        waitBetweenTries: 6.027456183070403
+        id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+        position:
+          - -100
+          - 80
+        parameters:
+          additionalProperties: {}
+        alwaysOutputData: false
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          example: 0f5532f9-36ba-4bef-86c7-30d607400b15
+          type: string
+        name:
+          example: Jira
+          type: string
+        webhookId:
+          type: string
+        disabled:
+          type: boolean
+        notesInFlow:
+          type: boolean
+        notes:
+          type: string
+        type:
+          example: n8n-nodes-base.jira
+          type: string
+        typeVersion:
+          example: 1
+          type: number
+        executeOnce:
+          example: false
+          type: boolean
+        alwaysOutputData:
+          example: false
+          type: boolean
+        retryOnFail:
+          example: false
+          type: boolean
+        maxTries:
+          type: number
+        waitBetweenTries:
+          type: number
+        continueOnFail:
+          deprecated: true
+          description: use onError instead
+          example: false
+          type: boolean
+        onError:
+          example: stopWorkflow
+          type: string
+        position:
+          example:
+            - -100
+            - 80
+          items:
+            type: number
+          type: array
+        parameters:
+          additionalProperties: true
+          example:
+            additionalProperties: {}
+          type: object
+        credentials:
+          example:
+            jiraSoftwareCloudApi:
+              id: "35"
+              name: jiraApi
+          type: object
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+      type: object
+    workflowSettings:
+      additionalProperties: false
+      example:
+        saveDataErrorExecution: all
+        saveDataSuccessExecution: all
+        executionTimeout: 3600
+        saveManualExecutions: true
+        saveExecutionProgress: true
+        callerIds: "14, 18, 23"
+        timeSavedPerExecution: 1.4658129805029452
+        timezone: America/New_York
+        availableInMCP: false
+        callerPolicy: workflowsFromSameOwner
+        errorWorkflow: VzqKEW0ShTXA5vPj
+        executionOrder: v1
+      properties:
+        saveExecutionProgress:
+          type: boolean
+        saveManualExecutions:
+          type: boolean
+        saveDataErrorExecution:
+          enum:
+            - all
+            - none
+          type: string
+        saveDataSuccessExecution:
+          enum:
+            - all
+            - none
+          type: string
+        executionTimeout:
+          example: 3600
+          maxLength: 3600
+          type: number
+        errorWorkflow:
+          description: The ID of the workflow that contains the error trigger node.
+          example: VzqKEW0ShTXA5vPj
+          type: string
+        timezone:
+          example: America/New_York
+          type: string
+        executionOrder:
+          example: v1
+          type: string
+        callerPolicy:
+          default: workflowsFromSameOwner
+          description: |
+            Controls which workflows are allowed to call this workflow using the Execute Workflow node.
+
+            Available options:
+            - `any`: Any workflow can call this workflow (no restrictions)
+            - `none`: No other workflows can call this workflow (completely blocked)
+            - `workflowsFromSameOwner` (default): Only workflows owned by the same project can call this workflow
+              * For personal projects: Only workflows created by the same user
+              * For team projects: Only workflows within the same team project
+            - `workflowsFromAList`: Only specific workflows listed in the `callerIds` field can call this workflow
+              * Requires the `callerIds` field to specify which workflow IDs are allowed
+              * See `callerIds` field documentation for usage
+          enum:
+            - any
+            - none
+            - workflowsFromAList
+            - workflowsFromSameOwner
+          example: workflowsFromSameOwner
+          type: string
+        callerIds:
+          description: Comma-separated list of workflow IDs allowed to call this workflow
+            (only used with workflowsFromAList policy)
+          example: "14, 18, 23"
+          type: string
+        timeSavedPerExecution:
+          description: Estimated time saved per execution in minutes
+          type: number
+        availableInMCP:
+          default: false
+          description: |
+            Controls whether this workflow is accessible via the Model Context Protocol (MCP).
+
+            When enabled, this workflow can be called by MCP clients (AI assistants and other tools
+            that support MCP). This allows external AI tools to discover and execute this workflow
+            as part of their capabilities.
+
+            Requirements for enabling MCP access:
+            - The workflow must be active (not deactivated)
+            - The workflow must contain at least one active Webhook node
+            - Only webhook-triggered workflows can be exposed via MCP
+
+            Security note: When a workflow is available in MCP, it can be discovered and executed
+            by any MCP client that has the appropriate API credentials for your n8n instance.
+          example: false
+          type: boolean
+      type: object
+    sharedWorkflow:
+      additionalProperties: false
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        role: workflow:owner
+        project:
+          name: name
+          id: id
+          type: type
+        projectId: 2tUt1wbLX592XDdX
+        workflowId: 2tUt1wbLX592XDdX
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        role:
+          example: workflow:owner
+          type: string
+        workflowId:
+          example: 2tUt1wbLX592XDdX
+          type: string
+        projectId:
+          example: 2tUt1wbLX592XDdX
+          type: string
+        project:
+          $ref: "#/components/schemas/sharedWorkflow_project"
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+      type: object
+    workflow:
+      additionalProperties: false
+      example:
+        settings:
+          saveDataErrorExecution: all
+          saveDataSuccessExecution: all
+          executionTimeout: 3600
+          saveManualExecutions: true
+          saveExecutionProgress: true
+          callerIds: "14, 18, 23"
+          timeSavedPerExecution: 1.4658129805029452
+          timezone: America/New_York
+          availableInMCP: false
+          callerPolicy: workflowsFromSameOwner
+          errorWorkflow: VzqKEW0ShTXA5vPj
+          executionOrder: v1
+        shared:
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            role: workflow:owner
+            project:
+              name: name
+              id: id
+              type: type
+            projectId: 2tUt1wbLX592XDdX
+            workflowId: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            role: workflow:owner
+            project:
+              name: name
+              id: id
+              type: type
+            projectId: 2tUt1wbLX592XDdX
+            workflowId: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        isArchived: true
+        active: true
+        pinData: "{}"
+        triggerCount: 5
+        tags:
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            name: Production
+            id: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            name: Production
+            id: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        versionId: versionId
+        nodes:
+          - maxTries: 0.8008281904610115
+            webhookId: webhookId
+            notes: notes
+            onError: stopWorkflow
+            credentials:
+              jiraSoftwareCloudApi:
+                id: "35"
+                name: jiraApi
+            continueOnFail: false
+            type: n8n-nodes-base.jira
+            retryOnFail: false
+            executeOnce: false
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            typeVersion: 1
+            notesInFlow: true
+            name: Jira
+            disabled: true
+            waitBetweenTries: 6.027456183070403
+            id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+            position:
+              - -100
+              - 80
+            parameters:
+              additionalProperties: {}
+            alwaysOutputData: false
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - maxTries: 0.8008281904610115
+            webhookId: webhookId
+            notes: notes
+            onError: stopWorkflow
+            credentials:
+              jiraSoftwareCloudApi:
+                id: "35"
+                name: jiraApi
+            continueOnFail: false
+            type: n8n-nodes-base.jira
+            retryOnFail: false
+            executeOnce: false
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            typeVersion: 1
+            notesInFlow: true
+            name: Jira
+            disabled: true
+            waitBetweenTries: 6.027456183070403
+            id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+            position:
+              - -100
+              - 80
+            parameters:
+              additionalProperties: {}
+            alwaysOutputData: false
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        meta: "{}"
+        name: Workflow 1
+        id: 2tUt1wbLX592XDdX
+        staticData:
+          lastId: 1
+        connections:
+          Jira:
+            main:
+              - - node: Jira
+                  type: main
+                  index: 0
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          example: 2tUt1wbLX592XDdX
+          readOnly: true
+          type: string
+        name:
+          example: Workflow 1
+          type: string
+        active:
+          readOnly: true
+          type: boolean
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+        nodes:
+          items:
+            $ref: "#/components/schemas/node"
+          type: array
+        connections:
+          example:
+            Jira:
+              main:
+                - - node: Jira
+                    type: main
+                    index: 0
+          type: object
+        settings:
+          $ref: "#/components/schemas/workflowSettings"
+        staticData:
+          $ref: "#/components/schemas/workflow_staticData"
+        tags:
+          items:
+            $ref: "#/components/schemas/tag"
+          readOnly: true
+          type: array
+        shared:
+          items:
+            $ref: "#/components/schemas/sharedWorkflow"
+          type: array
+        versionId:
+          readOnly: true
+          type: string
+        isArchived:
+          readOnly: true
+          type: boolean
+        triggerCount:
+          readOnly: true
+          type: integer
+        meta:
+          type: object
+        pinData:
+          type: object
+      required:
+        - connections
+        - name
+        - nodes
+        - settings
+      type: object
+    workflowList:
+      example:
+        nextCursor: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+        data:
+          - settings:
+              saveDataErrorExecution: all
+              saveDataSuccessExecution: all
+              executionTimeout: 3600
+              saveManualExecutions: true
+              saveExecutionProgress: true
+              callerIds: "14, 18, 23"
+              timeSavedPerExecution: 1.4658129805029452
+              timezone: America/New_York
+              availableInMCP: false
+              callerPolicy: workflowsFromSameOwner
+              errorWorkflow: VzqKEW0ShTXA5vPj
+              executionOrder: v1
+            shared:
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                role: workflow:owner
+                project:
+                  name: name
+                  id: id
+                  type: type
+                projectId: 2tUt1wbLX592XDdX
+                workflowId: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                role: workflow:owner
+                project:
+                  name: name
+                  id: id
+                  type: type
+                projectId: 2tUt1wbLX592XDdX
+                workflowId: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+            isArchived: true
+            active: true
+            pinData: "{}"
+            triggerCount: 5
+            tags:
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                name: Production
+                id: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                name: Production
+                id: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            versionId: versionId
+            nodes:
+              - maxTries: 0.8008281904610115
+                webhookId: webhookId
+                notes: notes
+                onError: stopWorkflow
+                credentials:
+                  jiraSoftwareCloudApi:
+                    id: "35"
+                    name: jiraApi
+                continueOnFail: false
+                type: n8n-nodes-base.jira
+                retryOnFail: false
+                executeOnce: false
+                createdAt: 2000-01-23T04:56:07.000+00:00
+                typeVersion: 1
+                notesInFlow: true
+                name: Jira
+                disabled: true
+                waitBetweenTries: 6.027456183070403
+                id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+                position:
+                  - -100
+                  - 80
+                parameters:
+                  additionalProperties: {}
+                alwaysOutputData: false
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+              - maxTries: 0.8008281904610115
+                webhookId: webhookId
+                notes: notes
+                onError: stopWorkflow
+                credentials:
+                  jiraSoftwareCloudApi:
+                    id: "35"
+                    name: jiraApi
+                continueOnFail: false
+                type: n8n-nodes-base.jira
+                retryOnFail: false
+                executeOnce: false
+                createdAt: 2000-01-23T04:56:07.000+00:00
+                typeVersion: 1
+                notesInFlow: true
+                name: Jira
+                disabled: true
+                waitBetweenTries: 6.027456183070403
+                id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+                position:
+                  - -100
+                  - 80
+                parameters:
+                  additionalProperties: {}
+                alwaysOutputData: false
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+            meta: "{}"
+            name: Workflow 1
+            id: 2tUt1wbLX592XDdX
+            staticData:
+              lastId: 1
+            connections:
+              Jira:
+                main:
+                  - - node: Jira
+                      type: main
+                      index: 0
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - settings:
+              saveDataErrorExecution: all
+              saveDataSuccessExecution: all
+              executionTimeout: 3600
+              saveManualExecutions: true
+              saveExecutionProgress: true
+              callerIds: "14, 18, 23"
+              timeSavedPerExecution: 1.4658129805029452
+              timezone: America/New_York
+              availableInMCP: false
+              callerPolicy: workflowsFromSameOwner
+              errorWorkflow: VzqKEW0ShTXA5vPj
+              executionOrder: v1
+            shared:
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                role: workflow:owner
+                project:
+                  name: name
+                  id: id
+                  type: type
+                projectId: 2tUt1wbLX592XDdX
+                workflowId: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                role: workflow:owner
+                project:
+                  name: name
+                  id: id
+                  type: type
+                projectId: 2tUt1wbLX592XDdX
+                workflowId: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+            isArchived: true
+            active: true
+            pinData: "{}"
+            triggerCount: 5
+            tags:
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                name: Production
+                id: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+              - createdAt: 2000-01-23T04:56:07.000+00:00
+                name: Production
+                id: 2tUt1wbLX592XDdX
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            versionId: versionId
+            nodes:
+              - maxTries: 0.8008281904610115
+                webhookId: webhookId
+                notes: notes
+                onError: stopWorkflow
+                credentials:
+                  jiraSoftwareCloudApi:
+                    id: "35"
+                    name: jiraApi
+                continueOnFail: false
+                type: n8n-nodes-base.jira
+                retryOnFail: false
+                executeOnce: false
+                createdAt: 2000-01-23T04:56:07.000+00:00
+                typeVersion: 1
+                notesInFlow: true
+                name: Jira
+                disabled: true
+                waitBetweenTries: 6.027456183070403
+                id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+                position:
+                  - -100
+                  - 80
+                parameters:
+                  additionalProperties: {}
+                alwaysOutputData: false
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+              - maxTries: 0.8008281904610115
+                webhookId: webhookId
+                notes: notes
+                onError: stopWorkflow
+                credentials:
+                  jiraSoftwareCloudApi:
+                    id: "35"
+                    name: jiraApi
+                continueOnFail: false
+                type: n8n-nodes-base.jira
+                retryOnFail: false
+                executeOnce: false
+                createdAt: 2000-01-23T04:56:07.000+00:00
+                typeVersion: 1
+                notesInFlow: true
+                name: Jira
+                disabled: true
+                waitBetweenTries: 6.027456183070403
+                id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+                position:
+                  - -100
+                  - 80
+                parameters:
+                  additionalProperties: {}
+                alwaysOutputData: false
+                updatedAt: 2000-01-23T04:56:07.000+00:00
+            meta: "{}"
+            name: Workflow 1
+            id: 2tUt1wbLX592XDdX
+            staticData:
+              lastId: 1
+            connections:
+              Jira:
+                main:
+                  - - node: Jira
+                      type: main
+                      index: 0
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/workflow"
+          type: array
+        nextCursor:
+          description: Paginate through workflows by setting the cursor parameter
+            to a nextCursor attribute returned by a previous request. Default value
+            fetches the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    workflowTags:
+      items:
+        $ref: "#/components/schemas/tag"
+      type: array
+    tagIds:
+      items:
+        $ref: "#/components/schemas/tagIds_inner"
+      type: array
+    user:
+      example:
+        firstName: john
+        lastName: Doe
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        role: global:owner
+        id: 123e4567-e89b-12d3-a456-426614174000
+        isPending: true
+        email: john.doe@company.com
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          readOnly: true
+          type: string
+        email:
+          example: john.doe@company.com
+          format: email
+          type: string
+        firstName:
+          description: User's first name
+          example: john
+          maxLength: 32
+          readOnly: true
+          type: string
+        lastName:
+          description: User's last name
+          example: Doe
+          maxLength: 32
+          readOnly: true
+          type: string
+        isPending:
+          description: Whether the user finished setting up their account in response
+            to the invitation (true) or not (false).
+          readOnly: true
+          type: boolean
+        createdAt:
+          description: Time the user was created.
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          description: Last time the user was updated.
+          format: date-time
+          readOnly: true
+          type: string
+        role:
+          example: global:owner
+          readOnly: true
+          type: string
+      required:
+        - email
+      type: object
+    userList:
+      example:
+        nextCursor: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+        data:
+          - firstName: john
+            lastName: Doe
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            role: global:owner
+            id: 123e4567-e89b-12d3-a456-426614174000
+            isPending: true
+            email: john.doe@company.com
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - firstName: john
+            lastName: Doe
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            role: global:owner
+            id: 123e4567-e89b-12d3-a456-426614174000
+            isPending: true
+            email: john.doe@company.com
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/user"
+          type: array
+        nextCursor:
+          description: Paginate through users by setting the cursor parameter to a
+            nextCursor attribute returned by a previous request. Default value fetches
+            the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    pull:
+      properties:
+        force:
+          example: true
+          type: boolean
+        variables:
+          example:
+            foo: bar
+          type: object
+      type: object
+    importResult:
+      additionalProperties: true
+      example:
+        variables:
+          added:
+            - added
+            - added
+          changed:
+            - changed
+            - changed
+        credentials:
+          - name: name
+            id: id
+            type: type
+          - name: name
+            id: id
+            type: type
+        workflows:
+          - name: name
+            id: id
+          - name: name
+            id: id
+        tags:
+          mappings:
+            - tagId: tagId
+              workflowId: workflowId
+            - tagId: tagId
+              workflowId: workflowId
+          tags:
+            - name: name
+              id: id
+            - name: name
+              id: id
+      properties:
+        variables:
+          $ref: "#/components/schemas/importResult_variables"
+        credentials:
+          items:
+            $ref: "#/components/schemas/importResult_credentials_inner"
+          type: array
+        workflows:
+          items:
+            $ref: "#/components/schemas/importResult_workflows_inner"
+          type: array
+        tags:
+          $ref: "#/components/schemas/importResult_tags"
+      type: object
+    project:
+      additionalProperties: false
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        projectRelations:
+          - "{}"
+          - "{}"
+        name: name
+        icon: icon
+        description: description
+        id: id
+        type: type
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          readOnly: true
+          type: string
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+        icon:
+          type: string
+        description:
+          type: string
+        projectRelations:
+          items:
+            type: object
+          type: array
+      required:
+        - name
+      type: object
+    variable:
+      additionalProperties: false
+      example:
+        project:
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          projectRelations:
+            - "{}"
+            - "{}"
+          name: name
+          icon: icon
+          description: description
+          id: id
+          type: type
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        id: id
+        type: type
+        value: test
+        key: key
+      properties:
+        id:
+          readOnly: true
+          type: string
+        key:
+          type: string
+        value:
+          example: test
+          type: string
+        type:
+          readOnly: true
+          type: string
+        project:
+          $ref: "#/components/schemas/project"
+      required:
+        - key
+        - value
+      type: object
+    variableList:
+      example:
+        nextCursor: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+        data:
+          - project:
+              createdAt: 2000-01-23T04:56:07.000+00:00
+              projectRelations:
+                - "{}"
+                - "{}"
+              name: name
+              icon: icon
+              description: description
+              id: id
+              type: type
+              updatedAt: 2000-01-23T04:56:07.000+00:00
+            id: id
+            type: type
+            value: test
+            key: key
+          - project:
+              createdAt: 2000-01-23T04:56:07.000+00:00
+              projectRelations:
+                - "{}"
+                - "{}"
+              name: name
+              icon: icon
+              description: description
+              id: id
+              type: type
+              updatedAt: 2000-01-23T04:56:07.000+00:00
+            id: id
+            type: type
+            value: test
+            key: key
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/variable"
+          type: array
+        nextCursor:
+          description: Paginate through variables by setting the cursor parameter
+            to a nextCursor attribute returned by a previous request. Default value
+            fetches the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    variable.create:
+      additionalProperties: false
+      properties:
+        id:
+          readOnly: true
+          type: string
+        key:
+          type: string
+        value:
+          example: test
+          type: string
+        type:
+          readOnly: true
+          type: string
+        projectId:
+          example: VmwOO9HeTEj20kxM
+          nullable: true
+          type: string
+      required:
+        - key
+        - value
+      type: object
+    projectList:
+      example:
+        nextCursor: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+        data:
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            projectRelations:
+              - "{}"
+              - "{}"
+            name: name
+            icon: icon
+            description: description
+            id: id
+            type: type
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            projectRelations:
+              - "{}"
+              - "{}"
+            name: name
+            icon: icon
+            description: description
+            id: id
+            type: type
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/project"
+          type: array
+        nextCursor:
+          description: Paginate through projects by setting the cursor parameter to
+            a nextCursor attribute returned by a previous request. Default value fetches
+            the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    error:
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        description:
+          type: string
+      required:
+        - message
+      type: object
+    role:
+      properties:
+        id:
+          example: 1
+          readOnly: true
+          type: number
+        name:
+          example: owner
+          readOnly: true
+          type: string
+        scope:
+          example: global
+          readOnly: true
+          type: string
+        createdAt:
+          description: Time the role was created.
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          description: Last time the role was updated.
+          format: date-time
+          readOnly: true
+          type: string
+      readOnly: true
+      type: object
+    credentialType:
+      properties:
+        displayName:
+          example: Email
+          readOnly: true
+          type: string
+        name:
+          example: email
+          readOnly: true
+          type: string
+        type:
+          example: string
+          readOnly: true
+          type: string
+        default:
+          example: string
+          readOnly: true
+          type: string
+      type: object
+    Error:
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        description:
+          type: string
+      required:
+        - message
+      type: object
+    Role:
+      properties:
+        id:
+          example: 1
+          readOnly: true
+          type: number
+        name:
+          example: owner
+          readOnly: true
+          type: string
+        scope:
+          example: global
+          readOnly: true
+          type: string
+        createdAt:
+          description: Time the role was created.
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          description: Last time the role was updated.
+          format: date-time
+          readOnly: true
+          type: string
+      readOnly: true
+      type: object
+    Execution:
+      properties:
+        id:
+          example: 1000
+          type: number
+        data:
+          type: object
+        finished:
+          example: true
+          type: boolean
+        mode:
+          enum:
+            - cli
+            - error
+            - integrated
+            - internal
+            - manual
+            - retry
+            - trigger
+            - webhook
+          type: string
+        retryOf:
+          nullable: true
+          type: number
+        retrySuccessId:
+          example: 2
+          nullable: true
+          type: number
+        startedAt:
+          format: date-time
+          type: string
+        stoppedAt:
+          description: The time at which the execution stopped. Will only be null
+            for executions that still have the status 'running'.
+          format: date-time
+          nullable: true
+          type: string
+        workflowId:
+          example: 1000
+          type: number
+        waitTill:
+          format: date-time
+          nullable: true
+          type: string
+        customData:
+          type: object
+        status:
+          enum:
+            - canceled
+            - crashed
+            - error
+            - new
+            - running
+            - success
+            - unknown
+            - waiting
+          type: string
+      type: object
+    Node:
+      additionalProperties: false
+      properties:
+        id:
+          example: 0f5532f9-36ba-4bef-86c7-30d607400b15
+          type: string
+        name:
+          example: Jira
+          type: string
+        webhookId:
+          type: string
+        disabled:
+          type: boolean
+        notesInFlow:
+          type: boolean
+        notes:
+          type: string
+        type:
+          example: n8n-nodes-base.jira
+          type: string
+        typeVersion:
+          example: 1
+          type: number
+        executeOnce:
+          example: false
+          type: boolean
+        alwaysOutputData:
+          example: false
+          type: boolean
+        retryOnFail:
+          example: false
+          type: boolean
+        maxTries:
+          type: number
+        waitBetweenTries:
+          type: number
+        continueOnFail:
+          deprecated: true
+          description: use onError instead
+          example: false
+          type: boolean
+        onError:
+          example: stopWorkflow
+          type: string
+        position:
+          example:
+            - -100
+            - 80
+          items:
+            type: number
+          type: array
+        parameters:
+          additionalProperties: true
+          example:
+            additionalProperties: {}
+          type: object
+        credentials:
+          example:
+            jiraSoftwareCloudApi:
+              id: "35"
+              name: jiraApi
+          type: object
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+      type: object
+    Tag:
+      additionalProperties: false
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: Production
+        id: 2tUt1wbLX592XDdX
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          example: 2tUt1wbLX592XDdX
+          readOnly: true
+          type: string
+        name:
+          example: Production
+          type: string
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+      required:
+        - name
+      type: object
+    Workflow:
+      additionalProperties: false
+      example:
+        settings:
+          saveDataErrorExecution: all
+          saveDataSuccessExecution: all
+          executionTimeout: 3600
+          saveManualExecutions: true
+          saveExecutionProgress: true
+          callerIds: "14, 18, 23"
+          timeSavedPerExecution: 1.4658129805029452
+          timezone: America/New_York
+          availableInMCP: false
+          callerPolicy: workflowsFromSameOwner
+          errorWorkflow: VzqKEW0ShTXA5vPj
+          executionOrder: v1
+        shared:
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            role: workflow:owner
+            project:
+              name: name
+              id: id
+              type: type
+            projectId: 2tUt1wbLX592XDdX
+            workflowId: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            role: workflow:owner
+            project:
+              name: name
+              id: id
+              type: type
+            projectId: 2tUt1wbLX592XDdX
+            workflowId: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        isArchived: true
+        active: true
+        pinData: "{}"
+        triggerCount: 0
+        tags:
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            name: Production
+            id: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - createdAt: 2000-01-23T04:56:07.000+00:00
+            name: Production
+            id: 2tUt1wbLX592XDdX
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        versionId: versionId
+        nodes:
+          - maxTries: 0.8008281904610115
+            webhookId: webhookId
+            notes: notes
+            onError: stopWorkflow
+            credentials:
+              jiraSoftwareCloudApi:
+                id: "35"
+                name: jiraApi
+            continueOnFail: false
+            type: n8n-nodes-base.jira
+            retryOnFail: false
+            executeOnce: false
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            typeVersion: 1
+            notesInFlow: true
+            name: Jira
+            disabled: true
+            waitBetweenTries: 6.027456183070403
+            id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+            position:
+              - -100
+              - 80
+            parameters:
+              additionalProperties: {}
+            alwaysOutputData: false
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - maxTries: 0.8008281904610115
+            webhookId: webhookId
+            notes: notes
+            onError: stopWorkflow
+            credentials:
+              jiraSoftwareCloudApi:
+                id: "35"
+                name: jiraApi
+            continueOnFail: false
+            type: n8n-nodes-base.jira
+            retryOnFail: false
+            executeOnce: false
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            typeVersion: 1
+            notesInFlow: true
+            name: Jira
+            disabled: true
+            waitBetweenTries: 6.027456183070403
+            id: 0f5532f9-36ba-4bef-86c7-30d607400b15
+            position:
+              - -100
+              - 80
+            parameters:
+              additionalProperties: {}
+            alwaysOutputData: false
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        meta: "{}"
+        name: Workflow 1
+        id: 2tUt1wbLX592XDdX
+        staticData:
+          lastId: 1
+        connections:
+          Jira:
+            main:
+              - - node: Jira
+                  type: main
+                  index: 0
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          example: 2tUt1wbLX592XDdX
+          readOnly: true
+          type: string
+        name:
+          example: Workflow 1
+          type: string
+        active:
+          readOnly: true
+          type: boolean
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          format: date-time
+          readOnly: true
+          type: string
+        nodes:
+          items:
+            $ref: "#/components/schemas/node"
+          type: array
+        connections:
+          example:
+            Jira:
+              main:
+                - - node: Jira
+                    type: main
+                    index: 0
+          type: object
+        settings:
+          $ref: "#/components/schemas/workflowSettings"
+        staticData:
+          $ref: "#/components/schemas/workflow_staticData"
+        tags:
+          items:
+            $ref: "#/components/schemas/tag"
+          readOnly: true
+          type: array
+        shared:
+          items:
+            $ref: "#/components/schemas/sharedWorkflow"
+          type: array
+        versionId:
+          readOnly: true
+          type: string
+        isArchived:
+          readOnly: true
+          type: boolean
+        triggerCount:
+          readOnly: true
+          type: integer
+        meta:
+          type: object
+        pinData:
+          type: object
+      required:
+        - connections
+        - name
+        - nodes
+        - settings
+      type: object
+    WorkflowSettings:
+      additionalProperties: false
+      properties:
+        saveExecutionProgress:
+          type: boolean
+        saveManualExecutions:
+          type: boolean
+        saveDataErrorExecution:
+          enum:
+            - all
+            - none
+          type: string
+        saveDataSuccessExecution:
+          enum:
+            - all
+            - none
+          type: string
+        executionTimeout:
+          example: 3600
+          maxLength: 3600
+          type: number
+        errorWorkflow:
+          description: The ID of the workflow that contains the error trigger node.
+          example: VzqKEW0ShTXA5vPj
+          type: string
+        timezone:
+          example: America/New_York
+          type: string
+        executionOrder:
+          example: v1
+          type: string
+        callerPolicy:
+          default: workflowsFromSameOwner
+          description: |
+            Controls which workflows are allowed to call this workflow using the Execute Workflow node.
+
+            Available options:
+            - `any`: Any workflow can call this workflow (no restrictions)
+            - `none`: No other workflows can call this workflow (completely blocked)
+            - `workflowsFromSameOwner` (default): Only workflows owned by the same project can call this workflow
+              * For personal projects: Only workflows created by the same user
+              * For team projects: Only workflows within the same team project
+            - `workflowsFromAList`: Only specific workflows listed in the `callerIds` field can call this workflow
+              * Requires the `callerIds` field to specify which workflow IDs are allowed
+              * See `callerIds` field documentation for usage
+          enum:
+            - any
+            - none
+            - workflowsFromAList
+            - workflowsFromSameOwner
+          example: workflowsFromSameOwner
+          type: string
+        callerIds:
+          description: Comma-separated list of workflow IDs allowed to call this workflow
+            (only used with workflowsFromAList policy)
+          example: "14, 18, 23"
+          type: string
+        timeSavedPerExecution:
+          description: Estimated time saved per execution in minutes
+          type: number
+        availableInMCP:
+          default: false
+          description: |
+            Controls whether this workflow is accessible via the Model Context Protocol (MCP).
+
+            When enabled, this workflow can be called by MCP clients (AI assistants and other tools
+            that support MCP). This allows external AI tools to discover and execute this workflow
+            as part of their capabilities.
+
+            Requirements for enabling MCP access:
+            - The workflow must be active (not deactivated)
+            - The workflow must contain at least one active Webhook node
+            - Only webhook-triggered workflows can be exposed via MCP
+
+            Security note: When a workflow is available in MCP, it can be discovered and executed
+            by any MCP client that has the appropriate API credentials for your n8n instance.
+          example: false
+          type: boolean
+      type: object
+    ExecutionList:
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/execution"
+          type: array
+        nextCursor:
+          description: Paginate through executions by setting the cursor parameter
+            to a nextCursor attribute returned by a previous request. Default value
+            fetches the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    WorkflowList:
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/workflow"
+          type: array
+        nextCursor:
+          description: Paginate through workflows by setting the cursor parameter
+            to a nextCursor attribute returned by a previous request. Default value
+            fetches the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    Credential:
+      example:
+        createdAt: 2022-04-29T11:02:29.842Z
+        data:
+          token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+        name: Joe's Github Credentials
+        id: R2DjclaysHbqn778
+        type: github
+        updatedAt: 2022-04-29T11:02:29.842Z
+        isManaged: true
+      properties:
+        id:
+          example: R2DjclaysHbqn778
+          readOnly: true
+          type: string
+        name:
+          example: Joe's Github Credentials
+          type: string
+        type:
+          example: github
+          type: string
+        data:
+          example:
+            token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+          type: object
+        createdAt:
+          example: 2022-04-29T11:02:29.842Z
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          example: 2022-04-29T11:02:29.842Z
+          format: date-time
+          readOnly: true
+          type: string
+        isManaged:
+          readOnly: true
+          type: boolean
+      required:
+        - data
+        - name
+        - type
+      type: object
+    CredentialType:
+      properties:
+        displayName:
+          example: Email
+          readOnly: true
+          type: string
+        name:
+          example: email
+          readOnly: true
+          type: string
+        type:
+          example: string
+          readOnly: true
+          type: string
+        default:
+          example: string
+          readOnly: true
+          type: string
+      type: object
+    Audit:
+      properties:
+        Credentials Risk Report:
+          example:
+            risk: credentials
+            sections:
+              - title: Credentials not used in any workflow
+                description: These credentials are not used in any workflow. Keeping
+                  unused credentials in your instance is an unneeded security risk.
+                recommendation: Consider deleting these credentials if you no longer
+                  need them.
+                location:
+                  - kind: credential
+                    id: "1"
+                    name: My Test Account
+          type: object
+        Database Risk Report:
+          example:
+            risk: database
+            sections:
+              - title: Expressions in "Execute Query" fields in SQL nodes
+                description: This SQL node has an expression in the "Query" field of
+                  an "Execute Query" operation. Building a SQL query with an expression
+                  may lead to a SQL injection attack.
+                recommendation: Consider using the "Query Parameters" field to pass
+                  parameters to the query
+                or validating the input of the expression in the "Query" field.: null
+                location:
+                  - kind: node
+                    workflowId: "1"
+                    workflowName: My Workflow
+                    nodeId: 51eb5852-ce0b-4806-b4ff-e41322a4041a
+                    nodeName: MySQL
+                    nodeType: n8n-nodes-base.mySql
+          type: object
+        Filesystem Risk Report:
+          example:
+            risk: filesystem
+            sections:
+              - title: Nodes that interact with the filesystem
+                description: This node reads from and writes to any accessible file
+                  in the host filesystem. Sensitive file content may be manipulated
+                  through a node operation.
+                recommendation: Consider protecting any sensitive files in the host
+                  filesystem
+                or refactoring the workflow so that it does not require host filesystem interaction.: null
+                location:
+                  - kind: node
+                    workflowId: "1"
+                    workflowName: My Workflow
+                    nodeId: 51eb5852-ce0b-4806-b4ff-e41322a4041a
+                    nodeName: Ready Binary file
+                    nodeType: n8n-nodes-base.readBinaryFile
+          type: object
+        Nodes Risk Report:
+          example:
+            risk: nodes
+            sections:
+              - title: Community nodes
+                description: This node is sourced from the community. Community nodes
+                  are not vetted by the n8n team and have full access to the host system.
+                recommendation: Consider reviewing the source code in any community
+                  nodes installed in this n8n instance
+                and uninstalling any community nodes no longer used.: null
+                location:
+                  - kind: community
+                    nodeType: n8n-nodes-test.test
+                    packageUrl: https://www.npmjs.com/package/n8n-nodes-test
+          type: object
+        Instance Risk Report:
+          example:
+            risk: execution
+            sections:
+              - title: Unprotected webhooks in instance
+                description: These webhook nodes have the "Authentication" field set
+                  to "None" and are not directly connected to a node to validate the
+                  payload. Every unprotected webhook allows your workflow to be called
+                  by any third party who knows the webhook URL.
+                recommendation: Consider setting the "Authentication" field to an option
+                  other than "None"
+                or validating the payload with one of the following nodes.: null
+                location:
+                  - kind: community
+                    nodeType: n8n-nodes-test.test
+                    packageUrl: https://www.npmjs.com/package/n8n-nodes-test
+          type: object
+      type: object
+    Pull:
+      example:
+        variables:
+          foo: bar
+        force: true
+      properties:
+        force:
+          example: true
+          type: boolean
+        variables:
+          example:
+            foo: bar
+          type: object
+      type: object
+    ImportResult:
+      additionalProperties: true
+      properties:
+        variables:
+          $ref: "#/components/schemas/importResult_variables"
+        credentials:
+          items:
+            $ref: "#/components/schemas/importResult_credentials_inner"
+          type: array
+        workflows:
+          items:
+            $ref: "#/components/schemas/importResult_workflows_inner"
+          type: array
+        tags:
+          $ref: "#/components/schemas/importResult_tags"
+      type: object
+    UserList:
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/user"
+          type: array
+        nextCursor:
+          description: Paginate through users by setting the cursor parameter to a
+            nextCursor attribute returned by a previous request. Default value fetches
+            the first "page" of the collection.
+          example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
+          nullable: true
+          type: string
+      type: object
+    User:
+      properties:
+        id:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          readOnly: true
+          type: string
+        email:
+          example: john.doe@company.com
+          format: email
+          type: string
+        firstName:
+          description: User's first name
+          example: john
+          maxLength: 32
+          readOnly: true
+          type: string
+        lastName:
+          description: User's last name
+          example: Doe
+          maxLength: 32
+          readOnly: true
+          type: string
+        isPending:
+          description: Whether the user finished setting up their account in response
+            to the invitation (true) or not (false).
+          readOnly: true
+          type: boolean
+        createdAt:
+          description: Time the user was created.
+          format: date-time
+          readOnly: true
+          type: string
+        updatedAt:
+          description: Last time the user was updated.
+          format: date-time
+          readOnly: true
+          type: string
+        role:
+          example: global:owner
+          readOnly: true
+          type: string
+      required:
+        - email
+      type: object
+    _audit_post_request_additionalOptions:
+      properties:
+        daysAbandonedWorkflow:
+          description: Days for a workflow to be considered abandoned if not executed
+          type: integer
+        categories:
+          items:
+            enum:
+              - credentials
+              - database
+              - nodes
+              - filesystem
+              - instance
+            type: string
+          type: array
+      type: object
+    _audit_post_request:
+      properties:
+        additionalOptions:
+          $ref: "#/components/schemas/_audit_post_request_additionalOptions"
+      type: object
+    _credentials__id__transfer_put_request:
+      properties:
+        destinationProjectId:
+          description: The ID of the project to transfer the credential to.
+          type: string
+      required:
+        - destinationProjectId
+      type: object
+    _executions__id__retry_post_request:
+      properties:
+        loadWorkflow:
+          description: "Whether to load the currently saved workflow to execute instead\
+            \ of the one saved at the time of the execution. If set to true, it will\
+            \ retry with the latest version of the workflow."
+          type: boolean
+      type: object
+    _workflows__id__transfer_put_request:
+      properties:
+        destinationProjectId:
+          description: The ID of the project to transfer the workflow to.
+          type: string
+      required:
+        - destinationProjectId
+      type: object
+    _users_post_request_inner:
+      properties:
+        email:
+          format: email
+          type: string
+        role:
+          example: global:member
+          type: string
+      required:
+        - email
+      type: object
+    _users_post_200_response_user:
+      example:
+        inviteAcceptUrl: inviteAcceptUrl
+        emailSent: true
+        id: id
+        email: email
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        inviteAcceptUrl:
+          type: string
+        emailSent:
+          type: boolean
+      type: object
+    _users_post_200_response:
+      example:
+        error: error
+        user:
+          inviteAcceptUrl: inviteAcceptUrl
+          emailSent: true
+          id: id
+          email: email
+      properties:
+        user:
+          $ref: "#/components/schemas/_users_post_200_response_user"
+        error:
+          type: string
+      type: object
+    _users__id__role_patch_request:
+      properties:
+        newRoleName:
+          example: global:member
+          type: string
+      required:
+        - newRoleName
+      type: object
+    _projects__projectId__users_post_request_relations_inner:
+      properties:
+        userId:
+          description: The unique identifier of the user.
+          example: 91765f0d-3b29-45df-adb9-35b23937eb92
+          type: string
+        role:
+          description: The role assigned to the user in the project.
+          example: project:viewer
+          type: string
+      required:
+        - role
+        - userId
+      type: object
+    _projects__projectId__users_post_request:
+      properties:
+        relations:
+          description: A list of userIds and roles to add to the project.
+          items:
+            $ref: "#/components/schemas/_projects__projectId__users_post_request_relations_inner"
+          type: array
+      required:
+        - relations
+      type: object
+    _projects__projectId__users__userId__patch_request:
+      properties:
+        role:
+          description: The role assigned to the user in the project.
+          example: project:viewer
+          type: string
+      required:
+        - role
+      type: object
+    sharedWorkflow_project:
+      example:
+        name: name
+        id: id
+        type: type
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          readOnly: true
+          type: string
+      type: object
+    workflow_staticData:
+      anyOf:
+        - format: jsonString
+          nullable: true
+          type: string
+        - nullable: true
+          type: object
+      example:
+        lastId: 1
+    tagIds_inner:
+      additionalProperties: false
+      properties:
+        id:
+          example: 2tUt1wbLX592XDdX
+          type: string
+      required:
+        - id
+      type: object
+    importResult_variables:
+      example:
+        added:
+          - added
+          - added
+        changed:
+          - changed
+          - changed
+      properties:
+        added:
+          items:
+            type: string
+          type: array
+        changed:
+          items:
+            type: string
+          type: array
+      type: object
+    importResult_credentials_inner:
+      example:
+        name: name
+        id: id
+        type: type
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+      type: object
+    importResult_workflows_inner:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      type: object
+    importResult_tags_mappings_inner:
+      example:
+        tagId: tagId
+        workflowId: workflowId
+      properties:
+        workflowId:
+          type: string
+        tagId:
+          type: string
+      type: object
+    importResult_tags:
+      example:
+        mappings:
+          - tagId: tagId
+            workflowId: workflowId
+          - tagId: tagId
+            workflowId: workflowId
+        tags:
+          - name: name
+            id: id
+          - name: name
+            id: id
+      properties:
+        tags:
+          items:
+            $ref: "#/components/schemas/importResult_workflows_inner"
+          type: array
+        mappings:
+          items:
+            $ref: "#/components/schemas/importResult_tags_mappings_inner"
+          type: array
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      in: header
+      name: X-N8N-API-KEY
+      type: apiKey
