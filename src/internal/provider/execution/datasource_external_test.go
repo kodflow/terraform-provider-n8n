@@ -2,9 +2,13 @@ package execution_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/execution"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
@@ -279,28 +283,247 @@ func TestExecutionDataSource_Configure(t *testing.T) {
 }
 
 func TestExecutionDataSource_Read(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
-		name    string
-		wantErr bool
+		name     string
+		testFunc func(*testing.T)
 	}{
-		{name: "verify read method exists", wantErr: false},
-		{name: "error case - verify read behavior", wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "verify read method exists":
-				ds := execution.NewExecutionDataSource()
-				assert.NotNil(t, ds)
-				assert.NotNil(t, ds.Read)
+		{
+			name: "read with successful API call",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{
+						"id": 123,
+						"workflowId": 456,
+						"finished": true,
+						"mode": "manual",
+						"startedAt": "2024-01-01T00:00:00Z",
+						"stoppedAt": "2024-01-01T00:01:00Z",
+						"status": "success"
+					}`))
+				})
 
-			case "error case - verify read behavior":
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
 				ds := execution.NewExecutionDataSource()
-				assert.NotNil(t, ds)
-			}
-		})
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Build config
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":           tftypes.NewValue(tftypes.String, "123"),
+					"workflow_id":  tftypes.NewValue(tftypes.String, nil),
+					"finished":     tftypes.NewValue(tftypes.Bool, nil),
+					"mode":         tftypes.NewValue(tftypes.String, nil),
+					"started_at":   tftypes.NewValue(tftypes.String, nil),
+					"stopped_at":   tftypes.NewValue(tftypes.String, nil),
+					"status":       tftypes.NewValue(tftypes.String, nil),
+					"include_data": tftypes.NewValue(tftypes.Bool, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				// Call Read
+				ds.Read(ctx, req, resp)
+
+				// Verify success
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - read with invalid config",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				ds := execution.NewExecutionDataSource()
+				ctx := context.Background()
+
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Create invalid config
+				configRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - read with invalid execution ID",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				n8nClient, server := setupTestClientForDataSource(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				}))
+				defer server.Close()
+
+				ds := execution.NewExecutionDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Build config with invalid ID
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":           tftypes.NewValue(tftypes.String, "invalid-id"),
+					"workflow_id":  tftypes.NewValue(tftypes.String, nil),
+					"finished":     tftypes.NewValue(tftypes.Bool, nil),
+					"mode":         tftypes.NewValue(tftypes.String, nil),
+					"started_at":   tftypes.NewValue(tftypes.String, nil),
+					"stopped_at":   tftypes.NewValue(tftypes.String, nil),
+					"status":       tftypes.NewValue(tftypes.String, nil),
+					"include_data": tftypes.NewValue(tftypes.Bool, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - read with API error",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"message": "Execution not found"}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := execution.NewExecutionDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":           tftypes.NewValue(tftypes.String, "123"),
+					"workflow_id":  tftypes.NewValue(tftypes.String, nil),
+					"finished":     tftypes.NewValue(tftypes.Bool, nil),
+					"mode":         tftypes.NewValue(tftypes.String, nil),
+					"started_at":   tftypes.NewValue(tftypes.String, nil),
+					"stopped_at":   tftypes.NewValue(tftypes.String, nil),
+					"status":       tftypes.NewValue(tftypes.String, nil),
+					"include_data": tftypes.NewValue(tftypes.Bool, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
 	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.testFunc)
+	}
+}
+
+// setupTestClientForDataSource creates a test N8nClient with httptest server for datasources.
+func setupTestClientForDataSource(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

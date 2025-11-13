@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ✅ Tests
 
+- achieve 100% coverage for transfer and project user resources (`0858404`)
 - improve coverage and fix linting issues (`e331ca1`)
 - improve secondary resources coverage from 0% to 100% (`1c6d6d8`)
 - improve execution retry_resource coverage to 100% (except Delete) (`220d73d`)
@@ -159,10 +160,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 122
+- **Total commits:** 123
 - **Features:** 31
 - **Bug fixes:** 13
-- **Tests:** 45
+- **Tests:** 46
 - **Refactoring:** 17
 - **Test coverage:** N/A
 
@@ -172,4 +173,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-12 23:31:12*
+*Changelog generated automatically on 2025-11-13 07:37:44*

@@ -2,9 +2,14 @@ package tag_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/tag"
 	"github.com/stretchr/testify/assert"
@@ -218,42 +223,179 @@ func TestTagDataSource_Configure(t *testing.T) {
 }
 
 func TestTagDataSource_Read(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
 	}{
 		{
-			name: "normal case",
+			name: "read with successful API call",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				ds := tag.NewTagDataSource()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{"id": "tag-123", "name": "Test Tag", "createdAt": "2024-01-01T00:00:00Z", "updatedAt": "2024-01-02T00:00:00Z"}`))
+				})
 
-				// Verify the method exists and datasource implements the interface
-				assert.NotNil(t, ds)
-				_, ok := interface{}(ds).(datasource.DataSource)
-				assert.True(t, ok)
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := tag.NewTagDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Build config
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "tag-123"),
+					"name":       tftypes.NewValue(tftypes.String, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				// Call Read
+				ds.Read(ctx, req, resp)
+
+				// Verify success
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+				assert.False(t, resp.Diagnostics.HasError())
 			},
 		},
 		{
-			name: "error case - validates behavior",
+			name: "error - read with invalid config",
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := tag.NewTagDataSource()
+				ctx := context.Background()
 
-				// Verify the method exists and datasource implements the interface
-				assert.NotNil(t, ds)
-				_, ok := interface{}(ds).(datasource.DataSource)
-				assert.True(t, ok)
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Create invalid config
+				configRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - read with API error",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"message": "Tag not found"}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := tag.NewTagDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "tag-123"),
+					"name":       tftypes.NewValue(tftypes.String, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			tt.testFunc(t)
-		})
+		t.Run(tt.name, tt.testFunc)
 	}
+}
+
+// setupTestClientForDataSource creates a test N8nClient with httptest server for datasources.
+func setupTestClientForDataSource(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

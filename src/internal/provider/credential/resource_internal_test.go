@@ -2660,6 +2660,21 @@ func TestCredentialResource_executeCreateLogic(t *testing.T) {
 			},
 			expectError: true,
 		},
+		{
+			name:         "error during API call",
+			credName:     "Failed Credential",
+			credType:     "httpBasicAuth",
+			setupInvalid: false,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -2734,6 +2749,106 @@ func TestCredentialResource_executeUpdateLogic(t *testing.T) {
 			setupInvalid: true,
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				// Should not be called due to ElementsAs failure
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:         "error during createNewCredential",
+			oldCredID:    "cred-old",
+			newCredName:  "Updated Credential",
+			newCredType:  "httpHeaderAuth",
+			setupInvalid: false,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to create credential"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:         "error during scanAffectedWorkflows",
+			oldCredID:    "cred-old",
+			newCredName:  "Updated Credential",
+			newCredType:  "httpHeaderAuth",
+			setupInvalid: false,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":        "cred-new-123",
+						"name":      "Updated Credential",
+						"type":      "httpHeaderAuth",
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to list workflows"}`))
+					return
+				}
+				if r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+		},
+		{
+			name:         "error during updateAffectedWorkflows",
+			oldCredID:    "cred-old",
+			newCredName:  "Updated Credential",
+			newCredType:  "httpHeaderAuth",
+			setupInvalid: false,
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":        "cred-new-456",
+						"name":      "Updated Credential",
+						"type":      "httpHeaderAuth",
+						"createdAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-01T00:00:00Z",
+					})
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []any{
+							map[string]any{
+								"id":   "wf-123",
+								"name": "Test Workflow",
+								"nodes": []any{
+									map[string]any{
+										"credentials": map[string]any{
+											"api": map[string]any{"id": "cred-old"},
+										},
+									},
+								},
+							},
+						},
+					})
+					return
+				}
+				if r.Method == http.MethodGet && r.URL.Path == "/workflows/wf-123" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to get workflow"}`))
+					return
+				}
+				if r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
 				w.WriteHeader(http.StatusNotFound)
 			},
 			expectError: true,

@@ -2,9 +2,14 @@ package user_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/user"
 	"github.com/stretchr/testify/assert"
@@ -213,44 +218,179 @@ func TestUsersDataSource_Configure(t *testing.T) {
 
 // TestUsersDataSource_Read tests the Read method.
 func TestUsersDataSource_Read(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
 	}{
 		{
-			name: "normal case",
+			name: "read with successful API call",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				// Note: Cannot test Read() with empty request as it would panic
-				// due to uninitialized Config. In production, terraform-plugin-framework
-				// always provides properly initialized Config structures.
-				// This test just verifies that NewUsersDataSource doesn't panic.
-				assert.NotPanics(t, func() {
-					_ = user.NewUsersDataSource()
-				}, "NewUsersDataSource should not panic")
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{
+						"data": [
+							{
+								"id": "user-123",
+								"email": "test@example.com",
+								"firstName": "Test",
+								"lastName": "User",
+								"isPending": false,
+								"createdAt": "2024-01-01T00:00:00Z",
+								"updatedAt": "2024-01-02T00:00:00Z",
+								"role": "global:member"
+							}
+						]
+					}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSources(t, handler)
+				defer server.Close()
+
+				ds := user.NewUsersDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Build config
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"users": tftypes.NewValue(
+						tftypes.List{ElementType: tftypes.Object{
+							AttributeTypes: map[string]tftypes.Type{
+								"id":         tftypes.String,
+								"email":      tftypes.String,
+								"first_name": tftypes.String,
+								"last_name":  tftypes.String,
+								"is_pending": tftypes.Bool,
+								"created_at": tftypes.String,
+								"updated_at": tftypes.String,
+								"role":       tftypes.String,
+							},
+						}},
+						nil,
+					),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				// Call Read
+				ds.Read(ctx, req, resp)
+
+				// Verify success
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+				assert.False(t, resp.Diagnostics.HasError())
 			},
 		},
 		{
-			name: "error case - validates behavior",
+			name: "error - read with API error",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				// Note: Cannot test Read() with empty request as it would panic
-				// due to uninitialized Config. In production, terraform-plugin-framework
-				// always provides properly initialized Config structures.
-				// This test just verifies that NewUsersDataSource doesn't panic.
-				assert.NotPanics(t, func() {
-					_ = user.NewUsersDataSource()
-				}, "NewUsersDataSource should not panic")
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSources(t, handler)
+				defer server.Close()
+
+				ds := user.NewUsersDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"users": tftypes.NewValue(
+						tftypes.List{ElementType: tftypes.Object{
+							AttributeTypes: map[string]tftypes.Type{
+								"id":         tftypes.String,
+								"email":      tftypes.String,
+								"first_name": tftypes.String,
+								"last_name":  tftypes.String,
+								"is_pending": tftypes.Bool,
+								"created_at": tftypes.String,
+								"updated_at": tftypes.String,
+								"role":       tftypes.String,
+							},
+						}},
+						nil,
+					),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			tt.testFunc(t)
-		})
+		t.Run(tt.name, tt.testFunc)
 	}
+}
+
+// setupTestClientForDataSources creates a test N8nClient with httptest server for datasources (plural).
+func setupTestClientForDataSources(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }

@@ -13,7 +13,7 @@ Rapport de couverture généré automatiquement.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **87.0%** |
+| **Total Coverage** | **97.2%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -25,15 +25,15 @@ Rapport de couverture généré automatiquement.
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 100.0% |
 | 🟡 | `github.com/kodflow/n8n/src/internal/provider/credential` | 87.8% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/execution` | 81.2% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/project` | 88.0% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/execution` | 100.0% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/project` | 97.3% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared/client` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/tag` | 81.1% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/user` | 85.0% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/variable` | 88.7% |
-| 🟡 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 88.2% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/tag` | 98.9% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/user` | 99.6% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/variable` | 97.7% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 99.7% |
 
 ---
 
@@ -127,7 +127,7 @@ Lecture des ressources n8n sans gestion de leur cycle de vie.
 |----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
 | `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Read` | 🟢 100.0% | 🟡 72.0% | 🟡 85.7% | 🟢 91.7% | 🟢 90.9% | 🟢 100.0% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 
 ### datasources (plural)
@@ -136,7 +136,7 @@ Lecture des ressources n8n sans gestion de leur cycle de vie.
 |----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
 | `Configure` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Read` | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% | 🔴 0.0% |
+| `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 95.2% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 
 
@@ -154,5 +154,5 @@ Lecture des ressources n8n sans gestion de leur cycle de vie.
 
 ---
 
-*Rapport généré le: 2025-11-12*
+*Rapport généré le: 2025-11-13*
 *Threshold: 70.0%*

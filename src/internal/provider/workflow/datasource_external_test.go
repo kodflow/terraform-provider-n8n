@@ -2,9 +2,14 @@ package workflow_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/kodflow/n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/n8n/src/internal/provider/workflow"
 	"github.com/stretchr/testify/assert"
@@ -312,35 +317,179 @@ func TestWorkflowDataSource_Configure(t *testing.T) {
 }
 
 // TestWorkflowDataSource_Read tests the Read method.
+
 func TestWorkflowDataSource_Read(t *testing.T) {
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
 	}{
 		{
-			name: "creates non-nil datasource",
+			name: "read with successful API call",
 			testFunc: func(t *testing.T) {
 				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{"id": "workflow-123", "name": "Test Workflow", "active": true, "nodes": [], "connections": {}, "settings": {}}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
 				ds := workflow.NewWorkflowDataSource()
-				assert.NotNil(t, ds)
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Build config
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":     tftypes.NewValue(tftypes.String, "workflow-123"),
+					"name":   tftypes.NewValue(tftypes.String, nil),
+					"active": tftypes.NewValue(tftypes.Bool, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				// Call Read
+				ds.Read(ctx, req, resp)
+
+				// Verify success
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+				assert.False(t, resp.Diagnostics.HasError())
 			},
 		},
 		{
-			name: "error case - datasource can be created multiple times",
+			name: "error - read with invalid config",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				for i := 0; i < 10; i++ {
-					ds := workflow.NewWorkflowDataSource()
-					assert.NotNil(t, ds)
+				ds := workflow.NewWorkflowDataSource()
+				ctx := context.Background()
+
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Create invalid config
+				configRaw := tftypes.NewValue(tftypes.String, "invalid")
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
 				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - read with API error",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"message": "Workflow not found"}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := workflow.NewWorkflowDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":     tftypes.NewValue(tftypes.String, "workflow-123"),
+					"name":   tftypes.NewValue(tftypes.String, nil),
+					"active": tftypes.NewValue(tftypes.Bool, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			tt.testFunc(t)
-		})
+		t.Run(tt.name, tt.testFunc)
 	}
+}
+
+// setupTestClientForDataSource creates a test N8nClient with httptest server for datasources.
+func setupTestClientForDataSource(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
 }
