@@ -28,7 +28,10 @@ go_test(
     srcs = glob(
         ["*_test.go"],
         allow_empty = True,
-        exclude = ["*_external_test.go"],
+        exclude = [
+            "*_external_test.go",
+            "*_acceptance_test.go",
+        ],
     ),
     embed = [":workflow"],
     deps = [
@@ -53,6 +56,7 @@ go_test(
     srcs = glob(
         ["*_external_test.go"],
         allow_empty = True,
+        exclude = ["*_acceptance_test.go"],
     ),
     deps = [
         ":workflow",

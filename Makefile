@@ -48,71 +48,8 @@ help: ## Display available commands
 	@echo ""
 
 # ============================================================================
-# Build & Test
+# Build
 # ============================================================================
-
-.PHONY: test
-test: ## Run test suite
-	@echo ""
-	@echo "$(BOLD)Running test suite...$(RESET)"
-	@printf "  $(CYAN)→$(RESET) Executing Bazel tests\n"
-	@bazel test --test_verbose_timeout_warnings //src/...
-	@echo "$(GREEN)✓$(RESET) Tests completed"
-	@echo ""
-
-.PHONY: test/n8n
-test/n8n: build test/n8n/plan test/n8n/apply test/n8n/destroy ## Test provider with real n8n instance (plan → apply → destroy)
-	@echo ""
-	@echo "$(GREEN)✓$(RESET) Full test cycle completed successfully"
-	@echo ""
-
-.PHONY: test/n8n/plan
-test/n8n/plan: build ## Run terraform plan with n8n provider
-	@echo ""
-	@echo "$(BOLD)Running terraform plan...$(RESET)"
-	@if [ ! -f .env ]; then \
-		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
-		exit 1; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Validating configuration\n"
-	@export $$(cat .env | xargs) && cd examples/basic-sample && \
-	terraform plan \
-		-var="n8n_api_key=$$N8N_API_TOKEN" \
-		-var="n8n_base_url=$$N8N_URL"
-	@echo "$(GREEN)✓$(RESET) Plan completed successfully"
-	@echo ""
-
-.PHONY: test/n8n/apply
-test/n8n/apply: build ## Run terraform apply with n8n provider
-	@echo ""
-	@echo "$(BOLD)Running terraform apply...$(RESET)"
-	@if [ ! -f .env ]; then \
-		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
-		exit 1; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Applying configuration\n"
-	@export $$(cat .env | xargs) && cd examples/basic-sample && \
-	terraform apply -auto-approve \
-		-var="n8n_api_key=$$N8N_API_TOKEN" \
-		-var="n8n_base_url=$$N8N_URL"
-	@echo "$(GREEN)✓$(RESET) Apply completed successfully"
-	@echo ""
-
-.PHONY: test/n8n/destroy
-test/n8n/destroy: ## Run terraform destroy with n8n provider
-	@echo ""
-	@echo "$(BOLD)Running terraform destroy...$(RESET)"
-	@if [ ! -f .env ]; then \
-		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
-		exit 1; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Destroying resources\n"
-	@export $$(cat .env | xargs) && cd examples/basic-sample && \
-	terraform destroy -auto-approve \
-		-var="n8n_api_key=$$N8N_API_TOKEN" \
-		-var="n8n_base_url=$$N8N_URL"
-	@echo "$(GREEN)✓$(RESET) Destroy completed successfully"
-	@echo ""
 
 .PHONY: build
 build: ## Build and install provider
@@ -126,6 +63,43 @@ build: ## Build and install provider
 	@chmod +x $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)
 	@echo "$(GREEN)✓$(RESET) Provider installed successfully"
 	@echo "  $(CYAN)Location:$(RESET) $(PLUGIN_DIR)/terraform-provider-n8n_v$(VERSION)"
+	@echo ""
+
+# ============================================================================
+# Tests
+# ============================================================================
+
+.PHONY: test
+test: test/unit build test/acceptance ## Run all tests (unit + E2E)
+	@echo ""
+	@echo "$(BOLD)$(GREEN)✅ All tests passed$(RESET)"
+	@echo ""
+
+.PHONY: test/unit
+test/unit: ## Run unit tests
+	@echo ""
+	@echo "$(BOLD)Running unit tests...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Executing Bazel tests\n"
+	@bazel test --test_verbose_timeout_warnings //src/...
+	@echo "$(GREEN)✓$(RESET) Unit tests completed"
+	@echo ""
+
+.PHONY: test/acceptance
+test/acceptance: ## Run E2E acceptance tests with real n8n instance
+	@echo ""
+	@echo "$(BOLD)Running E2E acceptance tests...$(RESET)"
+	@if [ ! -f .env ]; then \
+		printf "  $(RED)✗$(RESET) .env file not found. Please create it with N8N_URL and N8N_API_TOKEN\n"; \
+		exit 1; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
+	@export $$(cat .env | xargs) && \
+	TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+		./src/internal/provider/credential/... \
+		./src/internal/provider/tag/... \
+		./src/internal/provider/variable/... \
+		./src/internal/provider/workflow/...
+	@echo "$(GREEN)✓$(RESET) E2E tests completed"
 	@echo ""
 
 # ============================================================================
@@ -178,11 +152,11 @@ update: ## Update ktn-linter to latest version
 	echo ""
 
 # ============================================================================
-# API Tools
+# SDK Generation
 # ============================================================================
 
 .PHONY: openapi
-openapi: ## Download n8n OpenAPI from GitHub, patch, and generate SDK - Complete pipeline
+openapi: ## Generate SDK from n8n OpenAPI specification
 	@echo ""
 	@python3 codegen/build-sdk.py
 	@echo ""
@@ -201,46 +175,4 @@ docs: ## Generate all documentation (changelog + coverage)
 	@printf "  $(CYAN)→$(RESET) Generating COVERAGE.md\n"
 	@./scripts/generate-coverage.sh
 	@echo "$(BOLD)$(GREEN)✅ All documentation generated$(RESET)"
-	@echo ""
-
-# ============================================================================
-# AI Context Generation
-# ============================================================================
-
-.PHONY: repomix
-repomix: ## Generate compressed project context for AI (70% token reduction)
-	@echo ""
-	@echo "$(BOLD)$(CYAN)🤖 Generating AI context with Repomix...$(RESET)"
-	@if ! command -v repomix >/dev/null 2>&1; then \
-		printf "  $(RED)✗$(RESET) Repomix not installed. Run: npm install -g repomix\n"; \
-		exit 1; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Compressing codebase (excludes tests)\n"
-	@repomix
-	@echo "$(GREEN)✓$(RESET) Context generated: repomix-output.md"
-	@echo ""
-	@echo "$(BOLD)Token Statistics:$(RESET)"
-	@grep -A 3 "Token Statistics" repomix-output.md || true
-	@echo ""
-
-.PHONY: repomix/full
-repomix/full: ## Generate full project context including tests
-	@echo ""
-	@echo "$(BOLD)$(CYAN)🤖 Generating full AI context...$(RESET)"
-	@if ! command -v repomix >/dev/null 2>&1; then \
-		printf "  $(RED)✗$(RESET) Repomix not installed. Run: npm install -g repomix\n"; \
-		exit 1; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Compressing full codebase (with tests)\n"
-	@repomix --include "**/*.go" --include "**/*.sh" --compress
-	@echo "$(GREEN)✓$(RESET) Full context generated: repomix-output.md"
-	@echo ""
-
-.PHONY: repomix/install
-repomix/install: ## Install Repomix globally
-	@echo ""
-	@echo "$(BOLD)$(CYAN)📦 Installing Repomix...$(RESET)"
-	@printf "  $(CYAN)→$(RESET) Installing via npm\n"
-	@npm install -g repomix
-	@echo "$(GREEN)✓$(RESET) Repomix installed successfully"
 	@echo ""

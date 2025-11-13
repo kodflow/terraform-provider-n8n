@@ -27,6 +27,7 @@ go_test(
     srcs = glob(
         ["*_test.go"],
         allow_empty = True,
+        exclude = ["*_acceptance_test.go"],
     ),
     embed = [":tag"],
     deps = [
