@@ -33,6 +33,16 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Install Python dependencies
+        run: pip install pyyaml requests
+
+      - name: Install OpenAPI Generator
+        run: |
+          wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar -O /tmp/openapi-generator-cli.jar
+          echo '#!/bin/bash' | sudo tee /usr/local/bin/openapi-generator > /dev/null
+          echo 'java -jar /tmp/openapi-generator-cli.jar "$@"' | sudo tee -a /usr/local/bin/openapi-generator > /dev/null
+          sudo chmod +x /usr/local/bin/openapi-generator
+
       - name: Generate SDK
         run: python3 codegen/build-sdk.py
 
