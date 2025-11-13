@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider"
+	"github.com/kodflow/n8n/src/internal/provider"
 )
 
 func TestAccCredentialResource(t *testing.T) {

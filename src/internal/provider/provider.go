@@ -3,6 +3,7 @@ package provider
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -77,13 +78,13 @@ func (p *N8nProvider) Schema(_ctx context.Context, _req provider.SchemaRequest, 
 		MarkdownDescription: "Terraform provider for n8n automation platform",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "API key for n8n instance authentication",
-				Required:            true,
+				MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_TOKEN environment variable.",
+				Optional:            true,
 				Sensitive:           true,
 			},
 			"base_url": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com)",
-				Required:            true,
+				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_URL environment variable.",
+				Optional:            true,
 			},
 		},
 	}
@@ -106,32 +107,49 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		return
 	}
 
+	// Read from environment variables if not set in configuration
+	apiKey := config.APIKey.ValueString()
+	// Use environment variable N8N_API_TOKEN if api_key is not provided
+	if apiKey == "" {
+		// Read API token from environment
+		if envAPIKey := os.Getenv("N8N_API_TOKEN"); envAPIKey != "" {
+			apiKey = envAPIKey
+		}
+	}
+
+	baseURL := config.BaseURL.ValueString()
+	// Use environment variable N8N_URL if base_url is not provided
+	if baseURL == "" {
+		// Read base URL from environment
+		if envBaseURL := os.Getenv("N8N_URL"); envBaseURL != "" {
+			baseURL = envBaseURL
+		}
+	}
+
 	// Validate required configuration
-	if config.APIKey.IsNull() || config.APIKey.ValueString() == "" {
+	// Check that API key is provided either via config or environment
+	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Missing API Key",
-			"The provider requires an API key. Set the api_key attribute in the provider configuration.",
+			"The provider requires an API key. Set the api_key attribute in the provider configuration or the N8N_API_TOKEN environment variable.",
 		)
 	}
 
-	// Check condition.
-	if config.BaseURL.IsNull() || config.BaseURL.ValueString() == "" {
+	// Check that base URL is provided either via config or environment
+	if baseURL == "" {
 		resp.Diagnostics.AddError(
 			"Missing Base URL",
-			"The provider requires a base URL. Set the base_url attribute in the provider configuration.",
+			"The provider requires a base URL. Set the base_url attribute in the provider configuration or the N8N_URL environment variable.",
 		)
 	}
 
-	// Check condition.
+	// Exit early if validation failed
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Create n8n client using the generated SDK
-	n8nClient := client.NewN8nClient(
-		config.BaseURL.ValueString(),
-		config.APIKey.ValueString(),
-	)
+	n8nClient := client.NewN8nClient(baseURL, apiKey)
 
 	// Make client available to resources and data sources
 	resp.DataSourceData = n8nClient

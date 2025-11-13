@@ -157,13 +157,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🤖 CI/CD
 
+- update CI/CD pipeline with complete test suite and E2E testing (`e33a9fc`)
 - add comprehensive CI workflow and commit validation system (`a3a0c9d`)
 
 ---
 
 ### 📊 Statistics
 
-- **Total commits:** 126
+- **Total commits:** 127
 - **Features:** 31
 - **Bug fixes:** 13
 - **Tests:** 48
@@ -176,4 +177,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-13 09:28:46*
+*Changelog generated automatically on 2025-11-13 09:40:39*

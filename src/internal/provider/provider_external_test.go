@@ -325,9 +325,9 @@ func TestSchema(t *testing.T) {
 			name:                "defines provider schema",
 			version:             "1.0.0",
 			wantAttributes:      []string{"api_key", "base_url"},
-			wantAPIKeyRequired:  true,
+			wantAPIKeyRequired:  false, // Optional - reads from N8N_API_TOKEN env var
 			wantAPIKeySensitive: true,
-			wantBaseURLRequired: true,
+			wantBaseURLRequired: false, // Optional - reads from N8N_URL env var
 			wantHasDescription:  true,
 		},
 	}
