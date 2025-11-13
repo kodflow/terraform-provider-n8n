@@ -318,6 +318,79 @@ func TestProjectDataSource_Read(t *testing.T) {
 			},
 		},
 		{
+			name: "read with successful API call using name",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{
+						"data": [
+							{
+								"id": "project-123",
+								"name": "Test Project",
+								"type": "team",
+								"createdAt": "2024-01-01T00:00:00Z",
+								"updatedAt": "2024-01-02T00:00:00Z",
+								"icon": "icon-test",
+								"description": "Test description"
+							}
+						]
+					}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := project.NewProjectDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Build config with name instead of id
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":          tftypes.NewValue(tftypes.String, nil),
+					"name":        tftypes.NewValue(tftypes.String, "Test Project"),
+					"type":        tftypes.NewValue(tftypes.String, nil),
+					"created_at":  tftypes.NewValue(tftypes.String, nil),
+					"updated_at":  tftypes.NewValue(tftypes.String, nil),
+					"icon":        tftypes.NewValue(tftypes.String, nil),
+					"description": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				// Call Read
+				ds.Read(ctx, req, resp)
+
+				// Verify success
+				if resp.Diagnostics.HasError() {
+					for _, diag := range resp.Diagnostics.Errors() {
+						t.Logf("Error: %s - %s", diag.Summary(), diag.Detail())
+					}
+				}
+				assert.False(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
 			name: "error - read with invalid config",
 			testFunc: func(t *testing.T) {
 				t.Helper()
@@ -403,6 +476,177 @@ func TestProjectDataSource_Read(t *testing.T) {
 
 				// Verify error
 				assert.True(t, resp.Diagnostics.HasError())
+			},
+		},
+		{
+			name: "error - missing required identifiers",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				ds := project.NewProjectDataSource()
+				ctx := context.Background()
+
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Create config with both id and name as null
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":          tftypes.NewValue(tftypes.String, nil),
+					"name":        tftypes.NewValue(tftypes.String, nil),
+					"type":        tftypes.NewValue(tftypes.String, nil),
+					"created_at":  tftypes.NewValue(tftypes.String, nil),
+					"updated_at":  tftypes.NewValue(tftypes.String, nil),
+					"icon":        tftypes.NewValue(tftypes.String, nil),
+					"description": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+			},
+		},
+		{
+			name: "error - project not found in list",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{
+						"data": [
+							{
+								"id": "other-project-456",
+								"name": "Other Project",
+								"type": "team"
+							}
+						]
+					}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := project.NewProjectDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":          tftypes.NewValue(tftypes.String, "project-123"),
+					"name":        tftypes.NewValue(tftypes.String, nil),
+					"type":        tftypes.NewValue(tftypes.String, nil),
+					"created_at":  tftypes.NewValue(tftypes.String, nil),
+					"updated_at":  tftypes.NewValue(tftypes.String, nil),
+					"icon":        tftypes.NewValue(tftypes.String, nil),
+					"description": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project Not Found")
+			},
+		},
+		{
+			name: "error - project not found by name",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{
+						"data": [
+							{
+								"id": "other-project-456",
+								"name": "Other Project",
+								"type": "team"
+							}
+						]
+					}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := project.NewProjectDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":          tftypes.NewValue(tftypes.String, nil),
+					"name":        tftypes.NewValue(tftypes.String, "NonExistent Project"),
+					"type":        tftypes.NewValue(tftypes.String, nil),
+					"created_at":  tftypes.NewValue(tftypes.String, nil),
+					"updated_at":  tftypes.NewValue(tftypes.String, nil),
+					"icon":        tftypes.NewValue(tftypes.String, nil),
+					"description": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Project Not Found")
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "NonExistent Project")
 			},
 		},
 	}

@@ -374,6 +374,51 @@ func TestUserDataSource_Read(t *testing.T) {
 				assert.True(t, resp.Diagnostics.HasError())
 			},
 		},
+		{
+			name: "error - missing required identifiers",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				ds := user.NewUserDataSource()
+				ctx := context.Background()
+
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Create config with both id and email as null
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"email":      tftypes.NewValue(tftypes.String, nil),
+					"first_name": tftypes.NewValue(tftypes.String, nil),
+					"last_name":  tftypes.NewValue(tftypes.String, nil),
+					"is_pending": tftypes.NewValue(tftypes.Bool, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"role":       tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -369,6 +369,101 @@ func TestVariableDataSource_Read(t *testing.T) {
 				assert.True(t, resp.Diagnostics.HasError())
 			},
 		},
+		{
+			name: "error - missing required identifiers",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				ds := variable.NewVariableDataSource()
+				ctx := context.Background()
+
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				// Create config with both id and key as null
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"key":        tftypes.NewValue(tftypes.String, nil),
+					"value":      tftypes.NewValue(tftypes.String, nil),
+					"type":       tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Missing Required Attribute")
+			},
+		},
+		{
+			name: "error - variable not found in list",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{"data": [{"id": "var-456", "key": "OTHER_VAR", "value": "other-value", "type": "string"}]}`))
+				})
+
+				n8nClient, server := setupTestClientForDataSource(t, handler)
+				defer server.Close()
+
+				ds := variable.NewVariableDataSource()
+				ds.Configure(context.Background(), datasource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &datasource.ConfigureResponse{})
+
+				ctx := context.Background()
+				schemaResp := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "var-123"),
+					"key":        tftypes.NewValue(tftypes.String, nil),
+					"value":      tftypes.NewValue(tftypes.String, nil),
+					"type":       tftypes.NewValue(tftypes.String, nil),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+				})
+
+				config := tfsdk.Config{
+					Schema: schemaResp.Schema,
+					Raw:    configRaw,
+				}
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+				}
+
+				req := datasource.ReadRequest{
+					Config: config,
+				}
+				resp := &datasource.ReadResponse{
+					State: state,
+				}
+
+				ds.Read(ctx, req, resp)
+
+				// Verify error
+				assert.True(t, resp.Diagnostics.HasError())
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Variable Not Found")
+			},
+		},
 	}
 
 	for _, tt := range tests {
