@@ -38,5 +38,5 @@ properties:
     readOnly: true
   role:
     type: string
-    example: global:owner
+    example: owner
     readOnly: true

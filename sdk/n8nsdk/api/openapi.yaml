@@ -10,10 +10,10 @@ info:
     url: https://github.com/n8n-io/n8n/blob/master/LICENSE.md
   version: 1.1.1
   x-n8n-version-info:
-    frozenVersion: 1.119.0
-    frozenCommit: 0ccf47044a2ba5b94140bfdd2ba36b868091288d
+    frozenVersion: 1.119.1
+    frozenCommit: 53fd5c94c8798292cc981508a937b09532bbcf64
     latestVersion: 1.119.1
-    inSync: false
+    inSync: true
     note: This OpenAPI spec is generated from a frozen commit for API stability. Check
       latestVersion to see if updates are available.
 servers:
@@ -1836,7 +1836,7 @@ components:
           readOnly: true
         role:
           type: string
-          example: global:owner
+          example: owner
           readOnly: true
     userList:
       type: object
@@ -2685,7 +2685,7 @@ components:
           readOnly: true
         role:
           type: string
-          example: global:owner
+          example: owner
           readOnly: true
   responses:
     unauthorized:

@@ -9,21 +9,17 @@ import { validate as uuidValidate } from 'uuid';
 export async function getUser(data: {
 	withIdentifier: string;
 	includeRole?: boolean;
-}): Promise<(User & { role?: string }) | null> {
+}): Promise<User | null> {
 	return await Container.get(UserRepository)
 		.findOne({
 			where: {
 				...(uuidValidate(data.withIdentifier) && { id: data.withIdentifier }),
 				...(!uuidValidate(data.withIdentifier) && { email: data.withIdentifier }),
 			},
-			relations: ['role'],
 		})
 		.then((user) => {
-			if (!user) return null;
-
-			if (!data?.includeRole) delete (user as Partial<User>).role;
-
-			return { ...user, role: user.role?.slug } as User & { role: string | null };
+			if (user && !data?.includeRole) delete (user as Partial<User>).role;
+			return user;
 		});
 }
 
@@ -32,14 +28,13 @@ export async function getAllUsersAndCount(data: {
 	limit?: number;
 	offset?: number;
 	in?: string[];
-}): Promise<[Array<User & { role?: string }>, number]> {
+}): Promise<[User[], number]> {
 	const { in: _in } = data;
 
 	const users = await Container.get(UserRepository).find({
 		where: { ...(_in && { id: In(_in) }) },
 		skip: data.offset,
 		take: data.limit,
-		relations: ['role'],
 	});
 	if (!data?.includeRole) {
 		users.forEach((user) => {
@@ -47,10 +42,7 @@ export async function getAllUsersAndCount(data: {
 		});
 	}
 	const count = await Container.get(UserRepository).count();
-	return [
-		users.map((user) => ({ ...user, role: user.role?.slug }) as User & { role?: string }),
-		count,
-	];
+	return [users, count];
 }
 
 const userProperties = [
