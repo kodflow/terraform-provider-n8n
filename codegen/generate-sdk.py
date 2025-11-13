@@ -39,6 +39,10 @@ def main():
     shutil.copy(OPENAPI_SOURCE, OPENAPI_SPEC)
     print(f"   ✓ Copied {OPENAPI_SOURCE} → {OPENAPI_SPEC}\n")
 
+    # Backup openapi.yaml to restore it after generation
+    openapi_backup = Path(OPENAPI_SOURCE + ".backup")
+    shutil.copy(OPENAPI_SOURCE, openapi_backup)
+
     # 1. Generate SDK
     print("🔨 Generating SDK...\n")
 
@@ -93,7 +97,13 @@ def main():
     subprocess.run("go mod tidy", shell=True, cwd="sdk/n8nsdk", capture_output=True)
     print("   ✓ Done\n")
 
-    # 4. Generate Bazel files
+    # 4. Restore original openapi.yaml (generator may have reformatted it)
+    print("   → Restoring original openapi.yaml...")
+    shutil.copy(openapi_backup, OPENAPI_SOURCE)
+    openapi_backup.unlink()
+    print("   ✓ Restored\n")
+
+    # 5. Generate Bazel files
     print("🏗️  Generating BUILD files...")
     run("bazel run //:gazelle")
     print("   ✓ Done\n")

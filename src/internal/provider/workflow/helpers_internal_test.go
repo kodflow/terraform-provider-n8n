@@ -330,7 +330,7 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 				active := true
 				versionID := "v1"
 				isArchived := false
-				triggerCount := int32(5)
+				triggerCount := float32(5)
 				workflow := &n8nsdk.Workflow{
 					Active:       &active,
 					VersionId:    &versionID,
@@ -389,7 +389,7 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "maps trigger count with zero value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				triggerCount := int32(0)
+				triggerCount := float32(0)
 				workflow := &n8nsdk.Workflow{
 					TriggerCount: &triggerCount,
 				}
@@ -415,13 +415,13 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "error case - handles large trigger count",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				triggerCount := int32(2147483647) // max int32
+				triggerCount := float32(2147483647) // max int32
 				workflow := &n8nsdk.Workflow{
 					TriggerCount: &triggerCount,
 				}
 				plan := &models.Resource{}
 				mapWorkflowBasicFields(workflow, plan)
-				assert.Equal(t, types.Int64Value(2147483647), plan.TriggerCount)
+				assert.Equal(t, types.Int64Value(int64(triggerCount)), plan.TriggerCount)
 			},
 		},
 		{

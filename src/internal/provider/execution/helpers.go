@@ -40,8 +40,8 @@ func mapExecutionToItem(execution *n8nsdk.Execution) models.Item {
 		item.Mode = types.StringPointerValue(execution.Mode)
 	}
 	// Check for non-nil value.
-	if execution.StartedAt != nil {
-		item.StartedAt = types.StringValue(execution.StartedAt.String())
+	if execution.StartedAt.IsSet() && execution.StartedAt.Get() != nil {
+		item.StartedAt = types.StringValue(execution.StartedAt.Get().String())
 	}
 	// Check for non-nil value.
 	if execution.StoppedAt.IsSet() {

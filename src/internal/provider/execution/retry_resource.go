@@ -300,8 +300,8 @@ func populateRetryExecutionData(execution *n8nsdk.Execution, model *models.Retry
 		model.Mode = types.StringPointerValue(execution.Mode)
 	}
 	// Check if started timestamp is available.
-	if execution.StartedAt != nil {
-		model.StartedAt = types.StringValue(execution.StartedAt.String())
+	if execution.StartedAt.IsSet() && execution.StartedAt.Get() != nil {
+		model.StartedAt = types.StringValue(execution.StartedAt.Get().String())
 	}
 	// Check if stopped timestamp is available.
 	if execution.StoppedAt.IsSet() {

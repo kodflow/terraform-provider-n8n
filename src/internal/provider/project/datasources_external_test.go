@@ -258,7 +258,7 @@ func TestProjectsDataSource_Read(t *testing.T) {
 								"type": "team",
 								"createdAt": "2024-01-01T00:00:00Z",
 								"updatedAt": "2024-01-02T00:00:00Z",
-								"icon": "icon-test",
+								"icon": {"value": "icon-test"},
 								"description": "Test description"
 							}
 						]

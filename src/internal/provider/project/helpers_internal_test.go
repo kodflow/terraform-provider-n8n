@@ -159,8 +159,8 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 					Type:        &projectType,
 					CreatedAt:   &createdAt,
 					UpdatedAt:   &updatedAt,
-					Icon:        &icon,
-					Description: &description,
+					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+					Description: *n8nsdk.NewNullableString(&description),
 				}
 				data := &models.DataSource{}
 				mapProjectToDataSourceModel(project, data)
@@ -249,8 +249,8 @@ func Test_mapProjectToItem(t *testing.T) {
 					Type:        &projectType,
 					CreatedAt:   &createdAt,
 					UpdatedAt:   &updatedAt,
-					Icon:        &icon,
-					Description: &description,
+					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+					Description: *n8nsdk.NewNullableString(&description),
 				}
 				item := mapProjectToItem(project)
 				assert.Equal(t, "proj-456", item.ID.ValueString())
@@ -281,8 +281,8 @@ func Test_mapProjectToItem(t *testing.T) {
 					Id:          &id,
 					Name:        "",
 					Type:        &projectType,
-					Icon:        &icon,
-					Description: &description,
+					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+					Description: *n8nsdk.NewNullableString(&description),
 				}
 				item := mapProjectToItem(project)
 				assert.Equal(t, "", item.ID.ValueString())
@@ -300,8 +300,8 @@ func Test_mapProjectToItem(t *testing.T) {
 					Id:          &id,
 					Name:        "Name with 特殊字符",
 					Type:        &projectType,
-					Icon:        &icon,
-					Description: &description,
+					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+					Description: *n8nsdk.NewNullableString(&description),
 				}
 				item := mapProjectToItem(project)
 				assert.Equal(t, id, item.ID.ValueString())
@@ -371,7 +371,7 @@ func TestHelpersConcurrency(t *testing.T) {
 					Id:   &id,
 					Name: "Concurrent Project",
 					Type: &projectType,
-					Icon: &icon,
+					Icon: *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
 				}
 				done := make(chan bool, 100)
 				for i := 0; i < 100; i++ {
@@ -450,8 +450,8 @@ func BenchmarkMapProjectToItem(b *testing.B) {
 		Type:        &projectType,
 		CreatedAt:   &createdAt,
 		UpdatedAt:   &updatedAt,
-		Icon:        &icon,
-		Description: &description,
+		Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+		Description: *n8nsdk.NewNullableString(&description),
 	}
 
 	b.ResetTimer()

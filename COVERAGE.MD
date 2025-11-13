@@ -43,7 +43,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 93.3% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/credential` | 94.8% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/execution` | 100.0% |
-| 🟢 | `github.com/kodflow/n8n/src/internal/provider/project` | 99.4% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/project` | 99.1% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/shared/client` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/sourcecontrol` | 97.0% |

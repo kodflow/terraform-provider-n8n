@@ -351,7 +351,7 @@ func Test_populateExecutionData(t *testing.T) {
 
 				execution := &n8nsdk.Execution{
 					Id:        &id,
-					StartedAt: &startedAt,
+					StartedAt: *n8nsdk.NewNullableTime(&startedAt),
 				}
 				execution.StoppedAt.Set(&stoppedAt)
 

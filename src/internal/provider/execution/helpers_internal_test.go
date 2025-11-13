@@ -51,7 +51,7 @@ func Test_mapExecutionToItem(t *testing.T) {
 					WorkflowId: &workflowID,
 					Finished:   &finished,
 					Mode:       &mode,
-					StartedAt:  &startedAt,
+					StartedAt:  *n8nsdk.NewNullableTime(&startedAt),
 					StoppedAt:  *stoppedAtNullable,
 					Status:     &status,
 				}
@@ -232,7 +232,7 @@ func Test_mapExecutionToItem(t *testing.T) {
 				stoppedAtNullable := n8nsdk.NewNullableTime(&stoppedAt)
 
 				execution := &n8nsdk.Execution{
-					StartedAt: &startedAt,
+					StartedAt: *n8nsdk.NewNullableTime(&startedAt),
 					StoppedAt: *stoppedAtNullable,
 				}
 
@@ -349,7 +349,7 @@ func BenchmarkMapExecutionToItem(b *testing.B) {
 		WorkflowId: &workflowID,
 		Finished:   &finished,
 		Mode:       &mode,
-		StartedAt:  &startedAt,
+		StartedAt:  *n8nsdk.NewNullableTime(&startedAt),
 		StoppedAt:  *stoppedAtNullable,
 		Status:     &status,
 	}

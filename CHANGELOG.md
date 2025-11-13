@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+
 ### ✅ Tests
 
 - achieve 100% coverage for all datasource Read methods (`1c85a71`)
@@ -16,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - improve coverage and fix linting issues (`e331ca1`)
 - improve secondary resources coverage from 0% to 100% (`1c6d6d8`)
 - improve execution retry_resource coverage to 100% (except Delete) (`220d73d`)
-- improve CRUD coverage to 83.6% with execute\*Logic pattern (`298bfce`)
+- improve CRUD coverage to 83.6% with execute*Logic pattern (`298bfce`)
 - improve Create and Update test coverage with helper extraction (`200234b`)
 - improve credential resource coverage with extractable helpers (`2605765`)
 - improve project Update method coverage to 100% (`40a5e3e`)
@@ -180,4 +181,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-_Changelog generated automatically on 2025-11-13 16:27:44_
+*Changelog generated automatically on 2025-11-13 22:49:02*

@@ -227,8 +227,8 @@ func populateExecutionData(execution *n8nsdk.Execution, data *models.DataSource)
 		data.Mode = types.StringPointerValue(execution.Mode)
 	}
 	// Check if started timestamp is available.
-	if execution.StartedAt != nil {
-		data.StartedAt = types.StringValue(execution.StartedAt.String())
+	if execution.StartedAt.IsSet() && execution.StartedAt.Get() != nil {
+		data.StartedAt = types.StringValue(execution.StartedAt.Get().String())
 	}
 	// Check if stopped timestamp is available.
 	if execution.StoppedAt.IsSet() {

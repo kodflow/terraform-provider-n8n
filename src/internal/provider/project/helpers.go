@@ -61,15 +61,22 @@ func mapProjectToDataSourceModel(project *n8nsdk.Project, data *models.DataSourc
 		data.UpdatedAt = types.StringValue(project.UpdatedAt.String())
 	}
 	// Check for non-nil value.
-	if project.Icon != nil {
-		data.Icon = types.StringPointerValue(project.Icon)
+	if project.Icon.IsSet() && project.Icon.Get() != nil {
+		projectIcon := project.Icon.Get()
+		// Check if icon value is set.
+		if projectIcon.Value != nil {
+			data.Icon = types.StringValue(*projectIcon.Value)
+		} else {
+			// Icon value is nil, set to null.
+			data.Icon = types.StringNull()
+		}
 	} else {
 		// Icon is nil, explicitly set to null for Terraform state.
 		data.Icon = types.StringNull()
 	}
 	// Check for non-nil value.
-	if project.Description != nil {
-		data.Description = types.StringPointerValue(project.Description)
+	if project.Description.IsSet() && project.Description.Get() != nil {
+		data.Description = types.StringPointerValue(project.Description.Get())
 	} else {
 		// Description is nil, explicitly set to null for Terraform state.
 		data.Description = types.StringNull()
@@ -105,12 +112,16 @@ func mapProjectToItem(project *n8nsdk.Project) models.Item {
 		item.UpdatedAt = types.StringValue(project.UpdatedAt.String())
 	}
 	// Check for non-nil value.
-	if project.Icon != nil {
-		item.Icon = types.StringPointerValue(project.Icon)
+	if project.Icon.IsSet() && project.Icon.Get() != nil {
+		projectIcon := project.Icon.Get()
+		// Check if icon value is set.
+		if projectIcon.Value != nil {
+			item.Icon = types.StringValue(*projectIcon.Value)
+		}
 	}
 	// Check for non-nil value.
-	if project.Description != nil {
-		item.Description = types.StringPointerValue(project.Description)
+	if project.Description.IsSet() && project.Description.Get() != nil {
+		item.Description = types.StringPointerValue(project.Description.Get())
 	}
 
 	// Return result.
