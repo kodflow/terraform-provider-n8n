@@ -104,6 +104,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- modularize Makefile and update SDK pipeline (`1ce4d63`)
 - move openapi.yaml reset from pre-commit to make clean (`2f08633`)
 - separate unit and E2E tests in Makefile (`a3844d6`)
 - separate script and patch responsibilities (`eccec80`)
@@ -124,11 +125,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 87
+- **Total commits:** 88
 - **Features:** 8
 - **Bug fixes:** 36
 - **Tests:** 6
-- **Refactoring:** 7
+- **Refactoring:** 8
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -137,4 +138,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 20:45:12*
+*Changelog generated automatically on 2025-11-14 21:07:06*
