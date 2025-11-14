@@ -72,7 +72,7 @@ plugins:
     - assets:
         - "CHANGELOG.md"
         - "Makefile"
-      message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
 
   # Créer la release GitHub avec les notes
   - - "@semantic-release/github"
