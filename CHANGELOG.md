@@ -9,176 +9,99 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
+### 📝 Other
+
+- update patch (`4c1baa0`)
+- prepare patch (`1740fd3`)
+- clear (`c67814a`)
+- save (`fd769a4`)
+- ok (`d88edcd`)
+- bump 1.119.1 (`d3c16b8`)
+- save (`c444667`)
+- save (`15c0d6f`)
+- rework (`450d9b4`)
+- openapi (`2d59b48`)
+
 ### ✅ Tests
 
-- achieve 100% coverage for all datasource Read methods (`1c85a71`)
-- improve datasource Read coverage from 0% to ~95% (`28de8a4`)
-- achieve 100% coverage for transfer and project user resources (`0858404`)
-- improve coverage and fix linting issues (`e331ca1`)
-- improve secondary resources coverage from 0% to 100% (`1c6d6d8`)
-- improve execution retry_resource coverage to 100% (except Delete) (`220d73d`)
-- improve CRUD coverage to 83.6% with execute*Logic pattern (`298bfce`)
-- improve Create and Update test coverage with helper extraction (`200234b`)
-- improve credential resource coverage with extractable helpers (`2605765`)
-- improve project Update method coverage to 100% (`40a5e3e`)
-- improve Update method test coverage to 100% for variable (`0c9a124`)
-- add Update method coverage tests (`d9c6c52`)
-- improve CRUD method coverage (`429898d`)
-- achieve 100% coverage for Delete method (`249516e`)
-- achieve 100% coverage for pull_resource CRUD methods (`d23a600`)
-- complete coverage to 85.3% and improve reporting (`145785b`)
-- complete workflow CRUD functions to 100% coverage (`fc5aa03`)
-- rename coverage test files to match linter requirements (`c2e5d3c`)
-- add comprehensive coverage tests for credential and user modules (`49a168a`)
-- refactor tests to table-driven format with comprehensive coverage (`7ca6910`)
-- refactor all tests to table-driven format with error cases (`1ff7283`)
-- add tests for private helper functions in project package (`d589824`)
-- convert project user_resource_test to table-driven format (`4ae9963`)
-- convert project datasource_test to table-driven format (`64b4723`)
-- convert variable helpers_test to table-driven format (`5ccc2be`)
-- convert credential workflow_backup_test to table-driven format (`c8c2f31`)
-- convert tag helpers_test to table-driven format (`5b966d5`)
-- convert user helpers_test to table-driven format (`17667d0`)
-- convert credential models transfer_resource_test to table-driven (`fdab61f`)
-- convert credential models resource_test to table-driven format (`adaa98b`)
-- convert shared provider_test to table-driven format (`268ab0e`)
-- add wantErr to tag datasource_internal_test stubs (`4dda43d`)
-- add wantErr to project/sourcecontrol internal test stubs (`feb6b2b`)
-- convert project helpers_test to table-driven format (`2a3d2bd`)
-- add wantErr to execution/project internal test stubs (`4cd2e88`)
-- convert workflow resource_internal_test to table-driven format (`b026f0b`)
-- add wantErr fields to user internal test stubs (`82b60c6`)
-- add wantErr fields to execution internal test stubs (`2c4ab0b`)
-- convert credential resource_test validation+usecases (`405ccca`)
-- add wantErr to internal test stubs (4 files) (`3b2086c`)
-- convert constants_test to table-driven (`43cde9e`)
-- add wantErr field to shared pointers_test (`70c0426`)
-- convert execution helpers_test to table-driven (`23730a2`)
-- improve resource test coverage to 98.4% (`fa10123`)
-- improve datasource and datasources test coverage to 100% (`462e068`)
-- improve coverage with enhanced tests and shared utilities (`d19fa35`)
-- achieve 94.3% coverage for credential package (`03d8697`)
-- comprehensive test coverage improvements (`3344c2f`)
+- remove useless empty test cases (`e7b7ec7`)
+- remove copyright verification test files (`5e7b367`)
+- verify copyright hook with non-test file (`2449ceb`)
+- verify pre-commit hook adds copyright headers (`4e0b277`)
+- add real API verification for E2E tests (`44c8c55`)
 
 ### 🚀 Features
 
-- add environment variable support for provider configuration (`840d689`)
-- reorganize report by semantic categories (`c8a22d0`)
-- improve coverage report with public function details (`2881515`)
-- convert workflow external tests to table-driven format (`81c9f30`)
-- convert sourcecontrol/models/resource_test.go to table-driven (`747010e`)
-- convert project/models/item_test.go to table-driven format (`24cd91b`)
-- convert project model tests to table-driven (datasource/datasources) (`cb458fe`)
-- convert datasource model tests to table-driven (tag/variable/user) (`52f6e50`)
-- convert project resource model tests to table-driven format (`4881441`)
-- convert project user resource model tests to table-driven (`b2d30a2`)
-- convert execution item model tests to table-driven format (`af3febf`)
-- convert execution datasources model tests to table-driven (`d5c16d1`)
-- convert execution retry resource model tests to table-driven (`ac4ef21`)
-- convert execution datasource tests to table-driven format (`a3deeaf`)
-- convert execution datasources tests to table-driven format (`81b13ce`)
-- convert variable datasources tests to table-driven format (`317e43c`)
-- convert tag datasources tests to table-driven format with error cases (`1109915`)
-- convert tag datasource tests to table-driven format with error cases (`4cd7c8a`)
-- convert tag resource tests to table-driven format with error cases (`42530a7`)
-- convert execution models datasource tests to table-driven (`9294118`)
-- convert credential tests to table-driven format (`d58c8d0`)
-- add comprehensive unit tests - 78.1% to 97.7% coverage (`17b8e12`)
-- add comprehensive unit tests - 71.3% to 98.8% coverage (`ae4f64e`)
-- improve test coverage from 60% to 90.8% (`da7d597`)
-- add automatic documentation generation system (`034cf4f`)
-- integrate ktn-linter with golangci-lint and VSCode (`b828914`)
-- implement complete SDK coverage with all datasources and resources (`bbec535`)
-- achieve 100% test coverage and add OpenAPI download command (`cabbb71`)
-- integrate ktn-linter and enhance code quality standards (`ad76c4a`)
-- add comprehensive code formatting support (`bd70c79`)
-- add automatic semantic versioning and translate to English (`33dc716`)
-- migration vers Bazel 9 et structure Terraform provider (`807372a`)
+- add copyright headers to remaining source files (`78d95da`)
+- add Sustainable Use License and copyright headers (`c80c828`)
+- add acceptance tests to coverage report (`c1b942b`)
+- complete CI/CD pipeline with comprehensive testing and coverage (`b0089c3`)
 
 ### 🔨 Chore
 
-- remove TODO comment from credential test (`b595868`)
-- ignore repomix configuration and output files (`99cb808`)
-- apply formatting and gazelle updates (`a140452`)
-- remove temporary build and analysis scripts (`9eab33c`)
-- upgrade Go version from 1.24 to 1.25.3 (`6cd7cec`)
-- add CodeRabbit configuration for automated PR reviews (`4331f4f`)
+- bump n8n OpenAPI spec to 1.119.1 (`dc344a6`)
+- bump n8n OpenAPI spec to 1.119.1 (`667e26a`)
+- bump n8n OpenAPI spec to 1.119.1 (`4bf8906`)
+- bump n8n OpenAPI spec to 1.119.1 (`015f4b7`)
+- bump n8n OpenAPI spec to 1.119.1 (`c40e349`)
+- standardize environment variables across workflows and docs (`2dad579`)
 
 ### 🐛 Bug Fixes
 
-- complete pipeline fixes for SDK generation and tests (`113a182`)
-- add sudo for Bazelisk installation (`369cfbe`)
-- make acceptance tests non-blocking in pipeline (`e193d10`)
-- improve secondary resource titles formatting (`81d3f78`)
-- detect empty functions in coverage report (🔴 → 🔵) (`29aa9cf`)
-- correct test function names for private functions (`e98f32e`)
-- correct workflow test mocks to match SDK requirements (`33a6035`)
-- remove duplicate test definition in src/BUILD.bazel (`314f1b3`)
-- enhance commit-msg hook to block AI attribution (`b99ff30`)
-- allow tests to fail in coverage generation (`e6cbf19`)
-- correct coverage calculation in generate-coverage.sh (`0d74bd2`)
-- remove executable permission from README.md (`4607bcb`)
-- add hook permissions fix script for GUI clients (`46ccbe2`)
-- resolve critical linter issues across provider codebase (`ec19363`)
-- update golangci-lint config to v2 format and integrate ktn-linter (`9f4f36d`)
-- correct Docker tag format in devcontainer workflow (`36e97fd`)
+- regenerate model_workflow.go with all required fields (`26e3e39`)
+- add missing make sdk step to generate Go files (`bac4bf3`)
+- move dependency download after SDK generation (`2bc27a8`)
+- skip automatic commit in CI environment (`4ef0aa6`)
+- remove unnecessary stderr redirection in test/acceptance (`06206e1`)
+- add additionalProperties to credential schema for API compatibility (`8742d1f`)
+- resolve unmarshaling errors for nested workflow structures (`82c7a28`)
+- add missing workflow fields and handle nullable types (`c6057cd`)
+- align OpenAPI spec with actual n8n API implementation (`4930de7`)
+- make shell scripts executable (`23c6808`)
+- make copyright header script executable (`192d5f6`)
+- force prettier to respect .prettierignore for SDK files (`160f155`)
+- exclude SDK from prettier to preserve ggignore comments (`72d43c3`)
+- mark example secrets with ggignore and fix GitGuardian config (`71eb244`)
+- correct GitGuardian configuration syntax (`6241962`)
+- exclude auto-generated docs from uncommitted changes check (`01e142d`)
+- remove t.Parallel() from TestOsExitVariable to avoid race condition (`cdfc5b2`)
 
 ### 📚 Documentation
 
-- update coverage report with workflow package at 96.8% (`318ad40`)
-- add strict testing and quality standards (`eac2a36`)
-- improve AI assistant configuration with stricter directives (`dd4f419`)
-- add AI assistant configuration document (`9d0c27d`)
-- add coverage report (`f200924`)
-- enhance code documentation and test coverage (`f41642a`)
+- cleanup markdown files and update README (`8d05b47`)
+- translate all French content to English (`b1200ff`)
 
 ### ♻️ Refactoring
 
-- extract ElementsAs to improve testability (`9972ff2`)
-- extract transfer Create logic for testability (`a7a7f7b`)
-- move CRUD tests to external test file (`d6eec56`)
-- rename n8n_lib to src_lib for gazelle compatibility (`84cc3dc`)
-- merge test files and clean up per linter requirements (`1467db5`)
-- optimize code for Go 1.25.4 and improve pre-push hook (`160308b`)
-- improve Makefile formatting and documentation targets (`353658c`)
-- reorganize models into domain subdirectories (`8ae34eb`)
-- reorganize models into dedicated subdirectories with simplified naming (`de9445d`)
-- fix all ktn-linter violations and improve code organization (`edb1c95`)
-- improve struct naming consistency across domains (`6b5b584`)
-- migrate to DDD architecture and improve code quality (`1a6d759`)
-- fix all ktn-linter errors and improve code quality (`0cc97c8`)
-- improve code quality and documentation across provider (`1099c8c`)
-- consolidate SDK build pipeline and enhance Makefile formatting (`0a0288d`)
-- simplify OpenAPI patch workflow (`44353ca`)
-- improve Makefile output formatting and organization (`5b8346d`)
-- remove redundant commit convention section from PR template (`aedabcd`)
-
-### 🔧 Build
-
-- filter KTN-STRUCT-005 false positives in Makefile (`a50c21f`)
-- add ktn-linter filter script to exclude false positives (`9a2f112`)
-- integrate ktn-linter with golangci-lint for strict code quality enforcement (`a7febe1`)
+- separate unit and E2E tests in Makefile (`a3844d6`)
+- separate script and patch responsibilities (`eccec80`)
+- remove legacy environment variable support (`6ec444a`)
+- use official actions with SHA pinning and centralize in Makefile (`d9a1ecd`)
+- remove redundant model unit tests (`0dcc564`)
+- add blank line to separate stdlib and external imports (`b57452b`)
 
 ### 🤖 CI/CD
 
-- update CI/CD pipeline with complete test suite and E2E testing (`e33a9fc`)
-- add comprehensive CI workflow and commit validation system (`a3a0c9d`)
+- remove SDK generation from workflow to avoid commit conflicts (`38dfe43`)
+- run devcontainer build only on main branch push (`02b0d93`)
+- add GitGuardian configuration to ignore false positives (`b8505a3`)
+- add git diff output to uncommitted changes check for debugging (`d85a2e9`)
 
 ---
 
 ### 📊 Statistics
 
-- **Total commits:** 131
-- **Features:** 32
-- **Bug fixes:** 16
-- **Tests:** 48
-- **Refactoring:** 18
+- **Total commits:** 54
+- **Features:** 4
+- **Bug fixes:** 17
+- **Tests:** 6
+- **Refactoring:** 6
 - **Test coverage:** N/A
 
 ### 👥 Contributors
 
-- Florent <contact@making.codes>
+- Kodflow <133899878+kodflow@users.noreply.github.com>
 
 ---
 
-*Changelog generated automatically on 2025-11-14 12:57:15*
+*Changelog generated automatically on 2025-11-14 13:06:03*

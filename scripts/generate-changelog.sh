@@ -6,7 +6,7 @@ set -e
 
 CHANGELOG_FILE="CHANGELOG.md"
 TEMP_FILE=$(mktemp)
-BRANCH=${1:-feat/codegen-pipeline}
+BRANCH=${1:-$(git branch --show-current)}
 BASE_BRANCH=${2:-main}
 
 # Colors for output
