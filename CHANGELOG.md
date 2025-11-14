@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- improve acceptance tests debug and error handling (`d3ab20d`)
 - add test/acceptance/ci target for GitHub Actions (`d5b9686`)
 - auto-detect current branch in changelog generation (`398ea12`)
 - regenerate model_workflow.go with all required fields (`26e3e39`)
@@ -97,9 +98,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 60
+- **Total commits:** 61
 - **Features:** 4
-- **Bug fixes:** 19
+- **Bug fixes:** 20
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -110,4 +111,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 14:10:52*
+*Changelog generated automatically on 2025-11-14 14:15:08*
