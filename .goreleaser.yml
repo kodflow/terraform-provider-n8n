@@ -67,7 +67,7 @@ release:
   header: |
     ## Terraform Registry Installation
 
-    This release is compatible with Terraform Registry. The provider binaries are signed with GPG.
+    This release is compatible with Terraform Registry.
 
     ### Installation
 
@@ -86,11 +86,8 @@ release:
 
     ### Verification
 
-    All binaries are signed with GPG key: `{{ .Env.GPG_FINGERPRINT }}`
-
     Verify checksums:
     ```bash
-    gpg --verify {{ .ProjectName }}_{{ .Version }}_SHA256SUMS.sig {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
     sha256sum -c {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
     ```
 
