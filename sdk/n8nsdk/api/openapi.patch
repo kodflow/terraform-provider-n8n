@@ -1,6 +1,6 @@
---- sdk/n8nsdk/api/openapi-clean-1.119.1.yaml	2025-11-13 21:36:37.466446013 +0000
-+++ sdk/n8nsdk/api/openapi.yaml	2025-11-13 21:39:55.801380007 +0000
-@@ -215,7 +215,7 @@
+--- sdk/n8nsdk/api/openapi.yaml
++++ sdk/n8nsdk/api/openapi.yaml
+@@ -211,7 +211,7 @@ paths:
                - destinationProjectId
          required: true
        responses:
@@ -9,7 +9,7 @@
            description: Operation successful.
          '400':
            $ref: '#/components/responses/badRequest'
-@@ -695,7 +695,7 @@
+@@ -689,7 +689,7 @@ paths:
                - destinationProjectId
          required: true
        responses:
@@ -18,7 +18,7 @@
            description: Operation successful.
          '400':
            $ref: '#/components/responses/badRequest'
-@@ -811,7 +811,7 @@
+@@ -804,7 +804,7 @@ paths:
                  required:
                  - email
        responses:
@@ -27,7 +27,7 @@
            description: Operation successful.
            content:
              application/json:
-@@ -898,7 +898,7 @@
+@@ -890,7 +890,7 @@ paths:
                required:
                - newRoleName
        responses:
@@ -36,7 +36,15 @@
            description: Operation successful.
          '401':
            $ref: '#/components/responses/unauthorized'
-@@ -1364,6 +1364,11 @@
+@@ -1324,6 +1324,7 @@ components:
+       - type
+       - data
+       type: object
++      additionalProperties: true
+       properties:
+         id:
+           type: string
+@@ -1340,6 +1341,11 @@ components:
            writeOnly: true
            example:
              token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
@@ -48,7 +56,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -1413,6 +1418,7 @@
+@@ -1389,6 +1395,7 @@ components:
            type: object
          finished:
            type: boolean
@@ -56,7 +64,7 @@
            example: true
          mode:
            type: string
-@@ -1427,13 +1433,20 @@
+@@ -1403,13 +1410,20 @@ components:
            - webhook
          retryOf:
            type: number
@@ -77,7 +85,7 @@
            format: date-time
          stoppedAt:
            type: string
-@@ -1488,6 +1501,8 @@
+@@ -1461,6 +1475,8 @@ components:
          name:
            type: string
            example: Production
@@ -86,36 +94,82 @@
          createdAt:
            type: string
            format: date-time
-@@ -1765,6 +1780,28 @@
+@@ -1632,6 +1648,23 @@ components:
+     sharedWorkflow:
+       type: object
+       additionalProperties: true
++      properties:
++        id:
++          type: string
++          description: Shared workflow ID
++        projectId:
++          type: string
++          description: Project ID
++        userId:
++          type: string
++          description: User ID
++        role:
++          type: string
++          description: User role
++          enum:
++            - workflow:owner
++            - workflow:editor
++            - workflow:viewer
+       properties:
+         role:
+           type: string
+@@ -1720,6 +1753,50 @@ components:
            type: array
            items:
              $ref: '#/components/schemas/sharedWorkflow'
 +        versionId:
 +          type: string
-+          readOnly: true
 +          description: Version identifier (36 characters)
 +          maxLength: 36
++          example: "550e8400-e29b-41d4-a716-446655440000"
 +        isArchived:
 +          type: boolean
-+          readOnly: true
 +          description: Whether the workflow is archived (soft-deleted)
++          example: false
 +        triggerCount:
 +          type: number
-+          readOnly: true
-+          default: 0
 +          description: Number of triggers in the workflow
++          example: 1
 +        meta:
 +          type: object
++          additionalProperties: true
 +          description: Frontend metadata
++          example:
++            instanceId: "abc123"
 +        pinData:
 +          type: object
++          additionalProperties: true
 +          description: Pinned data for workflow nodes
++          example: {}
 +    sharedWorkflow:
++      type: object
 +      additionalProperties: true
++      properties:
++        id:
++          type: string
++          description: Shared workflow ID
++        projectId:
++          type: string
++          description: Project ID
++        userId:
++          type: string
++          description: User ID
++        role:
++          type: string
++          description: User role
++          enum:
++            - workflow:owner
++            - workflow:editor
++            - workflow:viewer
      workflowList:
        type: object
        properties:
-@@ -1932,6 +1969,46 @@
+@@ -1882,6 +1959,60 @@ components:
          type:
            type: string
            readOnly: true
@@ -158,11 +212,25 @@
 +            type: object
 +            additionalProperties: true
 +    sharedWorkflow_project:
++      type: object
 +      additionalProperties: true
++      properties:
++        id:
++          type: string
++          description: Project ID
++        name:
++          type: string
++          description: Project name
++        type:
++          type: string
++          description: Project type
++          enum:
++            - personal
++            - team
      variable:
        type: object
        additionalProperties: false
-@@ -2105,6 +2176,7 @@
+@@ -2051,6 +2182,7 @@ components:
            type: object
          finished:
            type: boolean
@@ -170,7 +238,7 @@
            example: true
          mode:
            type: string
-@@ -2119,13 +2191,20 @@
+@@ -2065,13 +2197,20 @@ components:
            - webhook
          retryOf:
            type: number
@@ -191,7 +259,7 @@
            format: date-time
          stoppedAt:
            type: string
-@@ -2237,6 +2316,8 @@
+@@ -2182,6 +2321,8 @@ components:
          name:
            type: string
            example: Production
@@ -200,7 +268,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -2447,6 +2528,11 @@
+@@ -2372,6 +2513,11 @@ components:
            writeOnly: true
            example:
              token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
