@@ -27,6 +27,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
+      # CRITICAL: Validate secrets are available before wasting time
+      - name: Validate required secrets
+        run: |
+          echo "🔐 Validating required secrets..."
+          MISSING_SECRETS=0
+
+          if [ -z "$N8N_API_URL" ]; then
+            echo "❌ CRITICAL: N8N_API_URL secret is NOT set!"
+            MISSING_SECRETS=1
+          else
+            echo "✓ N8N_API_URL is configured"
+          fi
+
+          if [ -z "$N8N_API_KEY" ]; then
+            echo "❌ CRITICAL: N8N_API_KEY secret is NOT set!"
+            MISSING_SECRETS=1
+          else
+            echo "✓ N8N_API_KEY is configured"
+          fi
+
+          if [ $MISSING_SECRETS -eq 1 ]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ PIPELINE FAILED: Missing required secrets!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "Please configure the following secrets in:"
+            echo "Repository Settings → Secrets and variables → Actions"
+            echo ""
+            echo "Required secrets:"
+            echo "  - N8N_API_URL: Your n8n instance URL"
+            echo "  - N8N_API_KEY: Your n8n API key"
+            echo ""
+            exit 1
+          fi
+
+          echo "✅ All required secrets are configured"
+
       # Setup Go
       - name: Set up Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -94,25 +132,9 @@ jobs:
       - name: Build provider
         run: make build
 
-      # Debug: Check if secrets are available
-      - name: Check secrets availability
-        run: |
-          echo "Checking secrets..."
-          if [ -n "$N8N_API_URL" ]; then
-            echo "✓ N8N_API_URL is set"
-          else
-            echo "✗ N8N_API_URL is NOT set"
-          fi
-          if [ -n "$N8N_API_KEY" ]; then
-            echo "✓ N8N_API_KEY is set"
-          else
-            echo "✗ N8N_API_KEY is NOT set"
-          fi
-
-      # Run acceptance tests (only if credentials are available)
+      # Run acceptance tests (secrets already validated at start)
       - name: Run acceptance tests
         run: make test/acceptance/ci
-        if: ${{ env.N8N_API_URL != '' && env.N8N_API_KEY != '' }}
 
       # Generate documentation
       - name: Generate documentation

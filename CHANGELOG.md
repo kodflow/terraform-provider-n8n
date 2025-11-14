@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- replace associative array with temp file for bash compatibility (`f82e3c9`)
 - remove duplicate workflow runs on feature branches (`85a088e`)
 - improve acceptance tests debug and error handling (`d3ab20d`)
 - add test/acceptance/ci target for GitHub Actions (`d5b9686`)
@@ -100,9 +101,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 63
+- **Total commits:** 64
 - **Features:** 5
-- **Bug fixes:** 21
+- **Bug fixes:** 22
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -113,4 +114,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 15:09:57*
+*Changelog generated automatically on 2025-11-14 15:10:48*
