@@ -236,7 +236,122 @@ def main():
         f.write(content)
     print(f"   ✓ Fixed {len(aliases)} aliases\n")
 
-    # 4. Apply patch
+    # 4. Add version info to OpenAPI spec
+    print("📝 Adding version information...")
+    with open(spec_file, 'r') as f:
+        openapi_content = f.read()
+
+    # Add x-n8n-version-info extension to info section
+    import yaml
+    spec = yaml.safe_load(openapi_content)
+
+    if 'info' not in spec:
+        spec['info'] = {}
+
+    spec['info']['x-n8n-version-info'] = {
+        'frozenVersion': frozen_version,
+        'frozenCommit': N8N_COMMIT,
+        'latestVersion': latest_version,
+        'inSync': frozen_version == latest_version,
+        'note': 'This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.'
+    }
+
+    # Write back with proper indentation (2 spaces for nested content, 2 spaces offset for sequences)
+    with open(spec_file, 'w') as f:
+        yaml.dump(spec, f, default_flow_style=False, sort_keys=False, allow_unicode=True, indent=2, width=float("inf"))
+
+    print(f"   ✓ Added version info\n")
+
+    # 4.5. Add workflow fields and fix sharedWorkflow (text manipulation)
+    print("🔧 Adding workflow fields and fixing sharedWorkflow...")
+    with open(spec_file, 'r') as f:
+        content = f.read()
+
+    # Fix sharedWorkflow: additionalProperties: false -> true
+    content = content.replace(
+        '    sharedWorkflow:\n      type: object\n      additionalProperties: false',
+        '    sharedWorkflow:\n      type: object\n      additionalProperties: true'
+    )
+
+    # Find the workflow shared field and add new fields after it
+    workflow_fields = """        versionId:
+          type: string
+          readOnly: true
+          description: Version identifier (36 characters)
+          maxLength: 36
+        isArchived:
+          type: boolean
+          readOnly: true
+          description: Whether the workflow is archived (soft-deleted)
+        triggerCount:
+          type: number
+          readOnly: true
+          default: 0
+          description: Number of triggers in the workflow
+        meta:
+          type: object
+          description: Frontend metadata
+        pinData:
+          type: object
+          description: Pinned data for workflow nodes"""
+
+    # Insert after "shared:" in workflow schema
+    import re
+    pattern = r"(        shared:\n          type: array\n          items:\n            \$ref: '#/components/schemas/sharedWorkflow')"
+    replacement = r"\1\n" + workflow_fields
+    content = re.sub(pattern, replacement, content, count=1)
+
+    # Write back
+    with open(spec_file, 'w') as f:
+        f.write(content)
+
+    print(f"   ✓ Added workflow fields\n")
+
+    # 5. Git commit the clean OpenAPI spec (before patch) - using temporary index
+    print("💾 Committing clean OpenAPI spec...")
+    commit_message = f"chore(sdk): bump n8n OpenAPI spec to {frozen_version}"
+
+    # Save current index state, commit only openapi.yaml, restore index
+    # This ensures we only commit openapi.yaml regardless of what's staged
+    commit_script = f'''
+    # Save what's currently staged
+    git diff --cached > /tmp/staged_changes.patch 2>/dev/null || true
+    # Reset index
+    git reset --quiet HEAD 2>/dev/null || true
+    # Add only openapi.yaml
+    git add sdk/n8nsdk/api/openapi.yaml
+    # Commit it (bypass hooks with --no-verify to avoid changelog/coverage regeneration)
+    git commit --no-verify -m "{commit_message}" 2>&1
+    commit_status=$?
+    # Restore previously staged files (if any)
+    if [ -s /tmp/staged_changes.patch ]; then
+        git apply --cached /tmp/staged_changes.patch 2>/dev/null || true
+    fi
+    rm -f /tmp/staged_changes.patch
+    exit $commit_status
+    '''
+
+    result = subprocess.run(
+        commit_script,
+        shell=True,
+        capture_output=True,
+        text=True,
+        executable='/bin/bash'
+    )
+    if result.returncode == 0:
+        print(f"   ✓ Committed: {commit_message}\n")
+    else:
+        # Check if there's nothing to commit
+        if "nothing to commit" in result.stdout or "nothing to commit" in result.stderr:
+            print("   ℹ No changes to commit (already up to date)\n")
+        else:
+            print("   ⚠️  Commit failed!")
+            if result.stderr:
+                print(f"      {result.stderr}")
+            if result.stdout:
+                print(f"      {result.stdout}\n")
+
+    # 6. Apply patch
     print("🩹 Applying openapi.patch...")
     patch_file = API_DIR / "openapi.patch"
     if patch_file.exists():
@@ -259,7 +374,7 @@ def main():
     else:
         print("   ⚠️  No patch file found\n")
 
-    # 4.5. Add additionalProperties: true to credential schema
+    # 7. Add additionalProperties: true to credential schema
     print("🔧 Adding additionalProperties to credential schema...")
     with open(spec_file, 'r') as f:
         lines = f.readlines()
@@ -293,32 +408,6 @@ def main():
         print("   ✓ Added additionalProperties\n")
     else:
         print("   ⚠️  Credential schema not found\n")
-
-    # 5. Add version info to OpenAPI spec
-    print("📝 Adding version information...")
-    with open(spec_file, 'r') as f:
-        openapi_content = f.read()
-
-    # Add x-n8n-version-info extension to info section
-    import yaml
-    spec = yaml.safe_load(openapi_content)
-
-    if 'info' not in spec:
-        spec['info'] = {}
-
-    spec['info']['x-n8n-version-info'] = {
-        'frozenVersion': frozen_version,
-        'frozenCommit': N8N_COMMIT,
-        'latestVersion': latest_version,
-        'inSync': frozen_version == latest_version,
-        'note': 'This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.'
-    }
-
-    # Write back
-    with open(spec_file, 'w') as f:
-        yaml.dump(spec, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-
-    print(f"   ✓ Added version info\n")
 
     print("✅ OpenAPI spec ready!\n")
     print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + patched + versioned)")

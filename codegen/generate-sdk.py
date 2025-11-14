@@ -81,7 +81,49 @@ def main():
         sys.exit(1)
     print("   ✓ Generated\n")
 
-    # 2. Fix module paths
+    # 2. Fix model_workflow.go (add missing fields that OpenAPI Generator ignores)
+    print("   → Fixing model_workflow.go...")
+    workflow_model = sdk_dir / "model_workflow.go"
+    if workflow_model.exists():
+        content = workflow_model.read_text()
+
+        # Check if fields are already there
+        if 'VersionId' not in content:
+            # Add fields to struct
+            content = content.replace(
+                '\tShared []SharedWorkflow `json:"shared,omitempty"`\n}',
+                '\tShared []SharedWorkflow `json:"shared,omitempty"`\n' +
+                '\tVersionId *string `json:"versionId,omitempty"`\n' +
+                '\tIsArchived *bool `json:"isArchived,omitempty"`\n' +
+                '\tTriggerCount *float32 `json:"triggerCount,omitempty"`\n' +
+                '\tMeta map[string]interface{} `json:"meta,omitempty"`\n' +
+                '\tPinData map[string]interface{} `json:"pinData,omitempty"`\n' +
+                '}'
+            )
+
+            # Add ToMap serialization
+            content = content.replace(
+                '\tif !IsNil(o.Shared) {\n\t\ttoSerialize["shared"] = o.Shared\n\t}\n\treturn toSerialize, nil\n}',
+                '\tif !IsNil(o.Shared) {\n\t\ttoSerialize["shared"] = o.Shared\n\t}\n' +
+                '\tif !IsNil(o.VersionId) {\n\t\ttoSerialize["versionId"] = o.VersionId\n\t}\n' +
+                '\tif !IsNil(o.IsArchived) {\n\t\ttoSerialize["isArchived"] = o.IsArchived\n\t}\n' +
+                '\tif !IsNil(o.TriggerCount) {\n\t\ttoSerialize["triggerCount"] = o.TriggerCount\n\t}\n' +
+                '\tif !IsNil(o.Meta) {\n\t\ttoSerialize["meta"] = o.Meta\n\t}\n' +
+                '\tif !IsNil(o.PinData) {\n\t\ttoSerialize["pinData"] = o.PinData\n\t}\n' +
+                '\treturn toSerialize, nil\n}'
+            )
+
+            # Add getter/setter methods (simplified - just the struct is enough for now)
+            # Full methods can be added later if needed
+
+            workflow_model.write_text(content)
+            print("   ✓ Added missing workflow fields\n")
+        else:
+            print("   ✓ Fields already present\n")
+    else:
+        print("   ⚠️  model_workflow.go not found\n")
+
+    # 3. Fix module paths
     print("   → Fixing module paths...")
     for go_file in sdk_dir.rglob("*.go"):
         content = go_file.read_text()
