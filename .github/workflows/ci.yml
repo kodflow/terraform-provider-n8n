@@ -19,20 +19,10 @@ jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    env:
-      N8N_API_URL: ${{ secrets.N8N_API_URL }}
-      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
     steps:
       # Checkout repository
       - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
-
-      - name: "[CHECK] After Checkout"
-        run: |
-          echo "🔍 Checking env vars after: Checkout"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # CRITICAL: Validate secrets are available before wasting time
       - name: Validate required secrets
@@ -40,14 +30,14 @@ jobs:
           echo "🔐 Validating required secrets..."
           MISSING_SECRETS=0
 
-          if [ -z "$N8N_API_URL" ]; then
+          if [ -z "${{ secrets.N8N_API_URL }}" ]; then
             echo "❌ CRITICAL: N8N_API_URL secret is NOT set!"
             MISSING_SECRETS=1
           else
             echo "✓ N8N_API_URL is configured"
           fi
 
-          if [ -z "$N8N_API_KEY" ]; then
+          if [ -z "${{ secrets.N8N_API_KEY }}" ]; then
             echo "❌ CRITICAL: N8N_API_KEY secret is NOT set!"
             MISSING_SECRETS=1
           else
@@ -72,13 +62,6 @@ jobs:
 
           echo "✅ All required secrets are configured"
 
-      - name: "[CHECK] After Validate secrets"
-        run: |
-          echo "🔍 Checking env vars after: Validate secrets"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Setup Go
       - name: Set up Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -86,23 +69,9 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
-      - name: "[CHECK] After Set up Go"
-        run: |
-          echo "🔍 Checking env vars after: Set up Go"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Setup Bazel
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
-
-      - name: "[CHECK] After Set up Bazel"
-        run: |
-          echo "🔍 Checking env vars after: Set up Bazel"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Setup Python for SDK generation
       - name: Set up Python
@@ -110,78 +79,29 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: "[CHECK] After Set up Python"
-        run: |
-          echo "🔍 Checking env vars after: Set up Python"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Install SDK generation tools
       - name: Install SDK tools
         run: make tools/sdk
-
-      - name: "[CHECK] After Install SDK tools"
-        run: |
-          echo "🔍 Checking env vars after: Install SDK tools"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Generate SDK from OpenAPI (no commit in CI)
       - name: Generate OpenAPI spec
         run: make openapi
 
-      - name: "[CHECK] After Generate OpenAPI spec"
-        run: |
-          echo "🔍 Checking env vars after: Generate OpenAPI spec"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Generate Go SDK from OpenAPI
       - name: Generate Go SDK
         run: make sdk
-
-      - name: "[CHECK] After Generate Go SDK"
-        run: |
-          echo "🔍 Checking env vars after: Generate Go SDK"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Download Go dependencies (after SDK generation)
       - name: Download dependencies
         run: make deps
 
-      - name: "[CHECK] After Download dependencies"
-        run: |
-          echo "🔍 Checking env vars after: Download dependencies"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Clean Bazel cache after SDK generation
       - name: Clean Bazel cache
         run: make clean
 
-      - name: "[CHECK] After Clean Bazel cache"
-        run: |
-          echo "🔍 Checking env vars after: Clean Bazel cache"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Install development tools
       - name: Install development tools
         run: make tools
-
-      - name: "[CHECK] After Install development tools"
-        run: |
-          echo "🔍 Checking env vars after: Install development tools"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Setup Terraform
       - name: Set up Terraform
@@ -189,67 +109,25 @@ jobs:
         with:
           terraform_version: latest
 
-      - name: "[CHECK] After Set up Terraform"
-        run: |
-          echo "🔍 Checking env vars after: Set up Terraform"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Install linting tools
       - name: Install linting tools
         run: make tools/lint
-
-      - name: "[CHECK] After Install linting tools"
-        run: |
-          echo "🔍 Checking env vars after: Install linting tools"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Check code formatting
       - name: Check formatting
         run: make fmt
 
-      - name: "[CHECK] After Check formatting"
-        run: |
-          echo "🔍 Checking env vars after: Check formatting"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Run linters
       - name: Run linters
         run: make lint
-
-      - name: "[CHECK] After Run linters"
-        run: |
-          echo "🔍 Checking env vars after: Run linters"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Run unit tests
       - name: Run unit tests
         run: make test/unit/ci
 
-      - name: "[CHECK] After Run unit tests"
-        run: |
-          echo "🔍 Checking env vars after: Run unit tests"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
-
       # Build provider
       - name: Build provider
         run: make build
-
-      - name: "[CHECK] After Build provider"
-        run: |
-          echo "🔍 Checking env vars after: Build provider"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Create .env file for acceptance tests
       - name: Create .env file
@@ -261,13 +139,6 @@ jobs:
       # Run acceptance tests (uses .env file)
       - name: Run acceptance tests
         run: make test/acceptance/ci
-
-      - name: "[CHECK] After Run acceptance tests"
-        run: |
-          echo "🔍 Checking env vars after: Run acceptance tests"
-          if [ -z "$N8N_API_URL" ]; then echo "❌ N8N_API_URL LOST!"; exit 1; fi
-          if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
-          echo "✅ Both vars present"
 
       # Generate documentation
       - name: Generate documentation

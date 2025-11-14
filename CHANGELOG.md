@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- use export with xargs for proper env var propagation to go test subprocess (`8e3417c`)
 - use .env file for acceptance tests instead of env var passthrough (`9073af4`)
 - add isManaged field to create-credential-response schema (`b683d4f`)
 - add missing isManaged field to CreateCredentialResponse (`6d3266c`)
@@ -107,9 +108,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 70
+- **Total commits:** 71
 - **Features:** 6
-- **Bug fixes:** 26
+- **Bug fixes:** 27
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -120,4 +121,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 17:31:44*
+*Changelog generated automatically on 2025-11-14 17:39:37*
