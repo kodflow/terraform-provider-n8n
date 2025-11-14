@@ -203,15 +203,89 @@ Hooks are automatically installed in DevContainer.
 
 ## Release Process
 
-Releases are automated via GitHub Actions:
+Releases are fully automated via GitHub Actions with GPG signing:
 
-1. Create and push a git tag (e.g., `v0.1.0`)
-2. GitHub Actions automatically:
-   - Compiles multi-platform binaries
-   - Generates checksums and signatures
-   - Creates GitHub Release with artifacts
+### Semantic Versioning (Automatic)
 
-View all releases and binaries at [GitHub Releases](../../releases).
+Push commits to `main` branch with conventional commit messages:
+
+- `feat:` → Minor version bump (v0.1.0 → v0.2.0)
+- `fix:` → Patch version bump (v0.1.0 → v0.1.1)
+- `BREAKING CHANGE:` → Major version bump (v0.1.0 → v1.0.0)
+
+The semantic-release workflow automatically:
+
+1. Analyzes commit messages
+2. Determines next version
+3. Updates CHANGELOG.md
+4. **Creates GPG-signed commit and tag**
+5. Pushes to repository
+
+### Manual Release (Tag-based)
+
+Create and push a git tag:
+
+```bash
+git tag -s v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+GitHub Actions automatically:
+
+1. Compiles multi-platform binaries (Linux, macOS, Windows, FreeBSD)
+2. **Signs binaries with GPG** (required for Terraform Registry)
+3. Generates SHA256 checksums
+4. **Signs checksums with GPG** (SHA256SUMS.sig)
+5. Creates GitHub Release with all artifacts
+6. Includes Terraform Registry manifest
+
+### Terraform Registry Publication
+
+All releases are compatible with Terraform Registry:
+
+- ✅ Binaries named: `terraform-provider-n8n_v{VERSION}`
+- ✅ GPG-signed checksums: `SHA256SUMS.sig`
+- ✅ Terraform manifest: `terraform-registry-manifest.json`
+- ✅ Multi-platform support
+
+**Verify release signature:**
+
+```bash
+# Import GPG public key
+gpg --keyserver keys.openpgp.org --recv-keys YOUR_GPG_KEY_ID
+
+# Verify checksums signature
+gpg --verify terraform-provider-n8n_0.1.0_SHA256SUMS.sig \
+             terraform-provider-n8n_0.1.0_SHA256SUMS
+
+# Verify binary integrity
+sha256sum -c terraform-provider-n8n_0.1.0_SHA256SUMS
+```
+
+### Required Secrets
+
+Configure these secrets in GitHub repository settings:
+
+| Secret                     | Description                             | Required For            |
+| -------------------------- | --------------------------------------- | ----------------------- |
+| `SEMANTIC_RELEASE_TOKEN`   | Fine-grained PAT with bypass protection | Semantic Release        |
+| `GPG_PRIVATE_KEY`          | GPG private key (ASCII armored)         | Signing commits & binaries |
+| `GPG_PASSPHRASE`           | GPG key passphrase                      | Signing commits & binaries |
+
+**Generate GPG key:**
+
+```bash
+# Generate new key
+gpg --full-generate-key
+
+# Export private key (for GitHub secret)
+gpg --armor --export-secret-key YOUR_KEY_ID
+
+# Export public key (for Terraform Registry)
+gpg --armor --export YOUR_KEY_ID
+```
+
+View all releases at [GitHub Releases](../../releases).
 
 ## Contributing
 

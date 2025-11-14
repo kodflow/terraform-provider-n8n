@@ -46,6 +46,7 @@ checksum:
 
 signs:
   - artifacts: checksum
+    cmd: gpg
     args:
       - "--batch"
       - "--local-user"
@@ -54,12 +55,43 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+    signature: "${artifact}.sig"
 
 release:
   draft: false
   prerelease: auto
+  mode: append
   extra_files:
     - glob: terraform-registry-manifest.json
+  header: |
+    ## Terraform Registry Installation
+
+    This release is compatible with Terraform Registry. The provider binaries are signed with GPG.
+
+    ### Installation
+
+    Add to your Terraform configuration:
+
+    ```hcl
+    terraform {
+      required_providers {
+        n8n = {
+          source  = "kodflow/n8n"
+          version = "~> {{ .Version }}"
+        }
+      }
+    }
+    ```
+
+    ### Verification
+
+    All binaries are signed with GPG key: `{{ .Env.GPG_FINGERPRINT }}`
+
+    Verify checksums:
+    ```bash
+    gpg --verify {{ .ProjectName }}_{{ .Version }}_SHA256SUMS.sig {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
+    sha256sum -c {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
+    ```
 
 changelog:
   sort: asc

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- enforce GPG signature on all commits (`163846a`)
 - add GPG verification and status display (`2f7474a`)
 - add GPG key mounting and auto-configuration (`49819b4`)
 - add GPG key management commands for Terraform Registry (`ed3964b`)
@@ -34,8 +35,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 9
-- **Features:** 4
+- **Total commits:** 10
+- **Features:** 5
 - **Bug fixes:** 3
 - **Tests:** 0
 - **Refactoring:** 0
@@ -47,4 +48,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 22:13:55*
+*Changelog generated automatically on 2025-11-14 22:21:16*
