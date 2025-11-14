@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.1.2](https://github.com/kodflow/n8n/compare/v1.1.1...v1.1.2) (2025-11-14)
+
+### 🐛 Bug Fixes
+
+* **ci:** add continue-on-error to GPG import in release workflow ([8749856](https://github.com/kodflow/n8n/commit/874985640239c3f2818b2a56493ca30e7644f682))
+
 ## [1.1.1](https://github.com/kodflow/n8n/compare/v1.1.0...v1.1.1) (2025-11-14)
 
 ### 🐛 Bug Fixes
