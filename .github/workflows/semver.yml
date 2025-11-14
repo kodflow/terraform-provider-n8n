@@ -49,6 +49,7 @@ jobs:
           git config --global user.email "semantic-release-bot@github.com"
 
           # Check if GPG import was successful
+          echo "GPG import outcome: ${{ steps.import_gpg.outcome }}"
           if [ "${{ steps.import_gpg.outcome }}" = "success" ]; then
             echo "✅ GPG key imported successfully - enabling GPG signing"
             git config --global commit.gpgsign true
@@ -56,7 +57,7 @@ jobs:
             git config --global user.signingkey "${{ steps.import_gpg.outputs.keyid }}"
             echo "Git configured for signed commits and tags with key ${{ steps.import_gpg.outputs.keyid }}"
           else
-            echo "⚠️ GPG import failed - disabling GPG signing"
+            echo "⚠️ GPG import failed or timed out - disabling GPG signing"
             git config --global commit.gpgsign false
             git config --global tag.gpgsign false
             echo "Git configured for unsigned commits and tags"
