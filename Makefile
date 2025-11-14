@@ -179,6 +179,30 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 	fi
 	@echo ""
 
+.PHONY: test/acceptance/ci
+test/acceptance/ci: ## Run E2E acceptance tests in CI (uses env vars)
+	@echo ""
+	@echo "$(BOLD)Running E2E acceptance tests...$(RESET)"
+	@if [ -z "$$N8N_API_URL" ] || [ -z "$$N8N_API_KEY" ]; then \
+		printf "  $(YELLOW)⚠$(RESET)  N8N_API_URL or N8N_API_KEY not set - skipping acceptance tests\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Set environment variables to run E2E tests\n"; \
+		echo ""; \
+		exit 0; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Using credentials from environment variables\n"
+	@if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+		./src/internal/provider/credential/... \
+		./src/internal/provider/tag/... \
+		./src/internal/provider/variable/... \
+		./src/internal/provider/workflow/...; then \
+		echo "$(GREEN)✓$(RESET) E2E tests completed"; \
+	else \
+		printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n"; \
+		exit 1; \
+	fi
+	@echo ""
+
 .PHONY: test/tf/community
 test/tf/community: build ## Test community resources with Terraform (uses .env)
 	@echo ""

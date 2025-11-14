@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🔨 Chore
 
+- update generated documentation and OpenAPI patch (`ac6b874`)
 - move git hooks to .github/hooks (`837f3a6`)
 - bump n8n OpenAPI spec to 1.119.1 (`dc344a6`)
 - bump n8n OpenAPI spec to 1.119.1 (`667e26a`)
@@ -95,7 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 58
+- **Total commits:** 59
 - **Features:** 4
 - **Bug fixes:** 18
 - **Tests:** 6
@@ -108,4 +109,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 14:01:39*
+*Changelog generated automatically on 2025-11-14 14:03:17*
