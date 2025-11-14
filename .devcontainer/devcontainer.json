@@ -3,6 +3,10 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
+  // Mount GPG configuration from host
+  "mounts": [
+    "source=${localEnv:HOME}/.config/devcontainer-gpg,target=/host-gpg,type=bind,readonly"
+  ],
   // Initialize command runs on host BEFORE container build
   "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/init.sh",
   // Features
@@ -69,7 +73,7 @@
     }
   },
   // Post-create command (runs once after container creation)
-  "postCreateCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /workspace/.devcontainer/post-create.sh",
+  "postCreateCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /host-gpg/setup-gpg.sh && /workspace/.devcontainer/post-create.sh",
   // Post-start command (runs every time the container starts)
   "postStartCommand": "/workspace/.devcontainer/post-start.sh",
   // Forward ports

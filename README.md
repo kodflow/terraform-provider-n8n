@@ -203,15 +203,104 @@ Hooks are automatically installed in DevContainer.
 
 ## Release Process
 
-Releases are automated via GitHub Actions:
+Releases are fully automated via GitHub Actions with GPG signing:
 
-1. Create and push a git tag (e.g., `v0.1.0`)
-2. GitHub Actions automatically:
-   - Compiles multi-platform binaries
-   - Generates checksums and signatures
-   - Creates GitHub Release with artifacts
+### Semantic Versioning (Automatic)
 
-View all releases and binaries at [GitHub Releases](../../releases).
+Push commits to `main` branch with conventional commit messages:
+
+- `feat:` → Minor version bump (v0.1.0 → v0.2.0)
+- `fix:` → Patch version bump (v0.1.0 → v0.1.1)
+- `BREAKING CHANGE:` → Major version bump (v0.1.0 → v1.0.0)
+
+The semantic-release workflow automatically:
+
+1. Analyzes commit messages
+2. Determines next version
+3. Updates CHANGELOG.md
+4. **Creates GPG-signed commit and tag**
+5. Pushes to repository
+
+### Manual Release (Tag-based)
+
+Create and push a git tag:
+
+```bash
+git tag -s v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+GitHub Actions automatically:
+
+1. Compiles multi-platform binaries (Linux, macOS, Windows, FreeBSD)
+2. **Signs binaries with GPG** (required for Terraform Registry)
+3. Generates SHA256 checksums
+4. **Signs checksums with GPG** (SHA256SUMS.sig)
+5. Creates GitHub Release with all artifacts
+6. Includes Terraform Registry manifest
+
+### Terraform Registry Publication
+
+All releases are compatible with Terraform Registry:
+
+- ✅ Binaries named: `terraform-provider-n8n_v{VERSION}`
+- ✅ GPG-signed checksums: `SHA256SUMS.sig`
+- ✅ Terraform manifest: `terraform-registry-manifest.json`
+- ✅ Multi-platform support
+
+**Verify release signature:**
+
+```bash
+# Import GPG public key
+gpg --keyserver keys.openpgp.org --recv-keys YOUR_GPG_KEY_ID
+
+# Verify checksums signature
+gpg --verify terraform-provider-n8n_0.1.0_SHA256SUMS.sig \
+             terraform-provider-n8n_0.1.0_SHA256SUMS
+
+# Verify binary integrity
+sha256sum -c terraform-provider-n8n_0.1.0_SHA256SUMS
+```
+
+### Required Secrets
+
+Configure these secrets in GitHub repository settings:
+
+| Secret                     | Description                             | Required |
+| -------------------------- | --------------------------------------- | -------- |
+| `SEMANTIC_RELEASE_TOKEN`   | Fine-grained PAT with bypass protection | ✅ Yes   |
+| `GPG_PRIVATE_KEY`          | GPG private key (ASCII armored)         | ✅ Yes   |
+| `GPG_PASSPHRASE`           | GPG key passphrase                      | ⚠️ Only if key has passphrase |
+
+**Export your existing GPG key:**
+
+```bash
+# 1. List your keys to find the key ID
+gpg --list-secret-keys --keyid-format=long
+
+# 2. Export private key (copy ENTIRE output including BEGIN/END lines)
+gpg --armor --export-secret-key C8ED18EE4E425956
+
+# 3. Export public key (for Terraform Registry)
+gpg --armor --export C8ED18EE4E425956
+```
+
+**If you need to create a new GPG key for CI/CD:**
+
+```bash
+# Generate key without passphrase (easier for automation)
+gpg --batch --generate-key <<EOF
+Key-Type: RSA
+Key-Length: 4096
+Name-Real: Your Name
+Name-Email: your-email@example.com
+Expire-Date: 2y
+%no-protection
+%commit
+EOF
+```
+
+View all releases at [GitHub Releases](../../releases).
 
 ## Contributing
 
@@ -275,7 +364,9 @@ Use VS Code Command Palette:
 
 ## License
 
-MPL-2.0
+Sustainable Use License 1.0
+
+See [LICENSE.md](LICENSE.md) for details.
 
 ---
 

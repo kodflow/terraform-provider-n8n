@@ -27,7 +27,32 @@ Provides a conventional commit message template in your editor.
 
 ### commit-msg
 
-**Strictly validates** commit messages using commitlint.
+**Strictly validates** commit messages and **enforces GPG signatures**.
+
+#### GPG Signature Enforcement
+
+**ALL commits MUST be signed with a GPG key.** The hook verifies:
+
+1. GPG signing is enabled (`commit.gpgsign=true`)
+2. A signing key is configured (`user.signingkey`)
+3. The GPG key exists in your keyring
+
+If any check fails, the commit will be **REJECTED** with instructions to fix the issue.
+
+**Setup GPG signing:**
+
+```bash
+# 1. List your GPG keys
+gpg --list-secret-keys --keyid-format=long
+
+# 2. Enable GPG signing
+git config --global commit.gpgsign true
+
+# 3. Set your signing key
+git config --global user.signingkey YOUR_GPG_KEY_ID
+```
+
+#### Commit Message Validation
 
 Required format: `<type>: <description>`
 
@@ -48,6 +73,21 @@ Also blocks:
 
 - AI attribution (Co-Authored-By: Claude, GPT, etc.)
 - Generated with messages
+
+### post-commit
+
+**Verifies** that the commit was actually signed with GPG after creation.
+
+This hook checks the GPG signature status:
+
+- ✅ **G** (Good): Valid signature from trusted key
+- ❌ **B** (Bad): Invalid signature
+- ⚠️ **U** (Untrusted): Valid signature but key not trusted
+- ❌ **X** (Expired): Signature with expired key
+- ❌ **R** (Revoked): Signature with revoked key
+- ❌ **N** (No signature): Commit not signed (should not happen if `commit-msg` hook works)
+
+The hook displays the signer name and key ID after successful signing.
 
 ### pre-push
 
