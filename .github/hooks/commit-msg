@@ -3,6 +3,66 @@
 
 COMMIT_MSG_FILE=$1
 
+# ============================================================================
+# GPG Signature Verification
+# ============================================================================
+echo "🔐 Checking GPG signature requirement..."
+
+# Check if GPG signing is enabled
+GPG_SIGN=$(git config --get commit.gpgsign)
+SIGNING_KEY=$(git config --get user.signingkey)
+
+if [ "$GPG_SIGN" != "true" ]; then
+    echo ""
+    echo "❌ GPG signing is not enabled!"
+    echo ""
+    echo "All commits MUST be signed with a GPG key."
+    echo ""
+    echo "To enable GPG signing:"
+    echo "  1. Configure GPG signing:"
+    echo "     git config --global commit.gpgsign true"
+    echo ""
+    echo "  2. Set your GPG signing key:"
+    echo "     git config --global user.signingkey YOUR_GPG_KEY_ID"
+    echo ""
+    echo "  3. List your GPG keys to find the key ID:"
+    echo "     gpg --list-secret-keys --keyid-format=long"
+    echo ""
+    exit 1
+fi
+
+if [ -z "$SIGNING_KEY" ]; then
+    echo ""
+    echo "❌ No GPG signing key configured!"
+    echo ""
+    echo "Please configure your GPG signing key:"
+    echo "  1. List your GPG keys:"
+    echo "     gpg --list-secret-keys --keyid-format=long"
+    echo ""
+    echo "  2. Set your signing key:"
+    echo "     git config --global user.signingkey YOUR_GPG_KEY_ID"
+    echo ""
+    exit 1
+fi
+
+# Verify the GPG key exists
+if ! gpg --list-secret-keys "$SIGNING_KEY" &> /dev/null; then
+    echo ""
+    echo "❌ GPG key $SIGNING_KEY not found in keyring!"
+    echo ""
+    echo "Please ensure your GPG key is available:"
+    echo "  gpg --list-secret-keys --keyid-format=long"
+    echo ""
+    exit 1
+fi
+
+echo "✅ GPG signature enabled with key: $SIGNING_KEY"
+echo ""
+
+# ============================================================================
+# Commit Message Validation
+# ============================================================================
+
 # Check if commitlint is installed
 if ! command -v commitlint &> /dev/null; then
     echo "⚠️  commitlint not found, skipping validation"
