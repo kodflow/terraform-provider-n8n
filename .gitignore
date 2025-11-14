@@ -151,18 +151,7 @@ release.properties
 # Ruby
 # Rust
 sdist/
-sdk/n8nsdk/*
-!sdk/n8nsdk/api/
-sdk/n8nsdk/api/*
-!sdk/n8nsdk/api/openapi-generated.yaml
-!sdk/n8nsdk/api/openapi.patch
-!sdk/n8nsdk/api/openapi-source/
-!sdk/n8nsdk/api/openapi-source/**/*.json
-!sdk/n8nsdk/api/openapi-source/**/*.md
-!sdk/n8nsdk/api/openapi-source/**/*.yaml
-!sdk/n8nsdk/api/openapi-source/**/*.yml
-!sdk/n8nsdk/api/openapi.yaml
-!sdk/n8nsdk/api/README.md
+# SDK is now versioned in git (not generated in CI)
 secrets/
 # Secrets & credentials
 .serverless/

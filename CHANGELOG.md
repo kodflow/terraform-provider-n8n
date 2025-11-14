@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- stop regenerating SDK in CI pipeline (`f1c9bf5`)
 - pass env vars directly via GitHub Actions instead of .env file (`ff187cf`)
 - use subshell for env loading in acceptance tests (`c2fed9c`)
 - simplify env loading with export xargs same as test/tf targets (`a27954e`)
@@ -114,9 +115,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 77
+- **Total commits:** 78
 - **Features:** 6
-- **Bug fixes:** 32
+- **Bug fixes:** 33
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -127,4 +128,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 18:27:50*
+*Changelog generated automatically on 2025-11-14 18:29:52*
