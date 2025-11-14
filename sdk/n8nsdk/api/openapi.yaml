@@ -1720,26 +1720,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/sharedWorkflow'
-        versionId:
-          type: string
-          readOnly: true
-          description: Version identifier (36 characters)
-          maxLength: 36
-        isArchived:
-          type: boolean
-          readOnly: true
-          description: Whether the workflow is archived (soft-deleted)
-        triggerCount:
-          type: number
-          readOnly: true
-          default: 0
-          description: Number of triggers in the workflow
-        meta:
-          type: object
-          description: Frontend metadata
-        pinData:
-          type: object
-          description: Pinned data for workflow nodes
     workflowList:
       type: object
       properties:
