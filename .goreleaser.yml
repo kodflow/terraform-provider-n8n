@@ -10,7 +10,8 @@ before:
     - go mod download
 
 builds:
-  - env:
+  - main: ./src
+    env:
       - CGO_ENABLED=0
     mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
@@ -44,19 +45,18 @@ checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
   algorithm: sha256
 
-# GPG signing temporarily disabled - re-enable when GPG_PRIVATE_KEY is configured
-# signs:
-#   - artifacts: checksum
-#     cmd: gpg
-#     args:
-#       - "--batch"
-#       - "--local-user"
-#       - "{{ .Env.GPG_FINGERPRINT }}"
-#       - "--output"
-#       - "${signature}"
-#       - "--detach-sign"
-#       - "${artifact}"
-#     signature: "${artifact}.sig"
+signs:
+  - artifacts: checksum
+    cmd: gpg
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+    signature: "${artifact}.sig"
 
 release:
   draft: false
@@ -67,7 +67,7 @@ release:
   header: |
     ## Terraform Registry Installation
 
-    This release is compatible with Terraform Registry.
+    This release is compatible with Terraform Registry. The provider binaries are signed with GPG.
 
     ### Installation
 
@@ -86,8 +86,11 @@ release:
 
     ### Verification
 
+    All binaries are signed with GPG key: `{{ .Env.GPG_FINGERPRINT }}`
+
     Verify checksums:
     ```bash
+    gpg --verify {{ .ProjectName }}_{{ .Version }}_SHA256SUMS.sig {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
     sha256sum -c {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
     ```
 
