@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🔨 Chore
 
+- bump n8n OpenAPI spec to 1.119.1 (`6db7d71`)
 - update generated documentation and OpenAPI patch (`ac6b874`)
 - move git hooks to .github/hooks (`837f3a6`)
 - bump n8n OpenAPI spec to 1.119.1 (`dc344a6`)
@@ -52,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- pass env vars directly via GitHub Actions instead of .env file (`ff187cf`)
 - use subshell for env loading in acceptance tests (`c2fed9c`)
 - simplify env loading with export xargs same as test/tf targets (`a27954e`)
 - use bash -c with source to properly export env vars to go test (`8d27226`)
@@ -112,9 +114,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 75
+- **Total commits:** 77
 - **Features:** 6
-- **Bug fixes:** 31
+- **Bug fixes:** 32
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -125,4 +127,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 18:09:38*
+*Changelog generated automatically on 2025-11-14 18:27:50*
