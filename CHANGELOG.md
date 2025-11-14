@@ -18,11 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - remove [skip ci] from semantic-release to allow release workflow (`551df3f`)
 
+### 📚 Documentation
+
+- add comprehensive Terraform Registry publication guide (`cecd7f9`)
+
 ---
 
 ### 📊 Statistics
 
-- **Total commits:** 3
+- **Total commits:** 4
 - **Features:** 2
 - **Bug fixes:** 1
 - **Tests:** 0
@@ -35,4 +39,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 21:41:58*
+*Changelog generated automatically on 2025-11-14 21:46:38*

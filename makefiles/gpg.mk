@@ -9,29 +9,7 @@ GPG_KEY_ID ?= $(shell gpg --list-secret-keys --with-colons "$(GPG_EMAIL)" 2>/dev
 
 .PHONY: gpg/generate
 gpg/generate: ## Generate GPG key for signing releases
-	@echo "$(CYAN)🔐 Generating GPG key...$(RESET)"
-	@echo ""
-	@echo "$(BOLD)Name:$(RESET)  $(GPG_NAME)"
-	@echo "$(BOLD)Email:$(RESET) $(GPG_EMAIL)"
-	@echo ""
-	@if [ -n "$(GPG_KEY_ID)" ]; then \
-		echo "$(YELLOW)⚠️  GPG key already exists: $(GPG_KEY_ID)$(RESET)"; \
-		echo "$(YELLOW)   Use 'make gpg/delete' to remove it first$(RESET)"; \
-		exit 1; \
-	fi
-	@cat > /tmp/gpg-batch <<-EOF
-	%no-protection
-	Key-Type: eddsa
-	Key-Curve: Ed25519
-	Name-Real: $(GPG_NAME)
-	Name-Email: $(GPG_EMAIL)
-	Expire-Date: 0
-	EOF
-	@gpg --batch --generate-key /tmp/gpg-batch
-	@rm -f /tmp/gpg-batch
-	@echo ""
-	@echo "$(GREEN)✅ GPG key generated successfully$(RESET)"
-	@$(MAKE) --no-print-directory gpg/info
+	@bash scripts/gpg-generate.sh "$(GPG_NAME)" "$(GPG_EMAIL)"
 
 .PHONY: gpg/configure
 gpg/configure: ## Configure git to use GPG signing

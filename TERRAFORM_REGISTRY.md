@@ -12,33 +12,24 @@ Before publishing, ensure you have:
 
 ## Step 1: Generate and Configure GPG Key
 
-The Terraform Registry requires all releases to be GPG signed. Use the built-in Make commands:
+The Terraform Registry requires all releases to be GPG signed.
 
-### Option A: Complete Automated Setup
+**See [GPG_SETUP.md](GPG_SETUP.md) for detailed instructions.**
 
-```bash
-make gpg/setup
-```
-
-This will:
-1. Generate an Ed25519 GPG key
-2. Configure git to sign commits and tags
-3. Export keys to `.gpg-export/` directory
-4. Display instructions for GitHub Secrets
-
-### Option B: Step-by-Step
+Quick summary:
 
 ```bash
-# 1. Generate GPG key
-make gpg/generate
+# 1. Generate key manually (automated generation may fail in some environments)
+gpg --full-gen-key
+# Select: ECC (sign only), Curve 25519, no expiration, no passphrase
 
 # 2. Configure git signing
 make gpg/configure
 
-# 3. Export keys
+# 3. Export keys for GitHub and Terraform Registry
 make gpg/export
 
-# 4. Test signing
+# 4. Test
 make gpg/test
 ```
 
