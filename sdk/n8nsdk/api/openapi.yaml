@@ -12,8 +12,8 @@ info:
   x-n8n-version-info:
     frozenVersion: 1.119.1
     frozenCommit: 53fd5c94c8798292cc981508a937b09532bbcf64
-    latestVersion: 1.119.1
-    inSync: true
+    latestVersion: 1.119.2
+    inSync: false
     note: This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.
 servers:
 - url: /api/v1
@@ -1379,11 +1379,6 @@ components:
           format: date-time
           readOnly: true
           example: '2022-04-29T11:02:29.842Z'
-        isManaged:
-          type: boolean
-          default: false
-          readOnly: true
-          description: Whether the credential is managed by n8n
     execution:
       type: object
       properties:
