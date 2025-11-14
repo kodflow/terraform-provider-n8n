@@ -262,8 +262,8 @@ def main():
 
     print(f"   ✓ Added version info\n")
 
-    # 4.5. Add workflow fields and fix sharedWorkflow (text manipulation)
-    print("🔧 Adding workflow fields and fixing sharedWorkflow...")
+    # 4.5. Fix sharedWorkflow additionalProperties (before patch)
+    print("🔧 Fixing sharedWorkflow schema...")
     with open(spec_file, 'r') as f:
         content = f.read()
 
@@ -273,39 +273,10 @@ def main():
         '    sharedWorkflow:\n      type: object\n      additionalProperties: true'
     )
 
-    # Find the workflow shared field and add new fields after it
-    workflow_fields = """        versionId:
-          type: string
-          readOnly: true
-          description: Version identifier (36 characters)
-          maxLength: 36
-        isArchived:
-          type: boolean
-          readOnly: true
-          description: Whether the workflow is archived (soft-deleted)
-        triggerCount:
-          type: number
-          readOnly: true
-          default: 0
-          description: Number of triggers in the workflow
-        meta:
-          type: object
-          description: Frontend metadata
-        pinData:
-          type: object
-          description: Pinned data for workflow nodes"""
-
-    # Insert after "shared:" in workflow schema
-    import re
-    pattern = r"(        shared:\n          type: array\n          items:\n            \$ref: '#/components/schemas/sharedWorkflow')"
-    replacement = r"\1\n" + workflow_fields
-    content = re.sub(pattern, replacement, content, count=1)
-
-    # Write back
     with open(spec_file, 'w') as f:
         f.write(content)
 
-    print(f"   ✓ Added workflow fields\n")
+    print(f"   ✓ Fixed sharedWorkflow\n")
 
     # 5. Git commit the clean OpenAPI spec (before patch) - using temporary index
     print("💾 Committing clean OpenAPI spec...")
