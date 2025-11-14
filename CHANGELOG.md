@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- add GPG key mounting and auto-configuration (`49819b4`)
 - add GPG key management commands for Terraform Registry (`ed3964b`)
 - add Terraform Registry publication support (`459b9b1`)
 
@@ -32,8 +33,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 7
-- **Features:** 2
+- **Total commits:** 8
+- **Features:** 3
 - **Bug fixes:** 3
 - **Tests:** 0
 - **Refactoring:** 0
@@ -45,4 +46,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 22:01:58*
+*Changelog generated automatically on 2025-11-14 22:03:38*
