@@ -75,11 +75,18 @@ plugins:
       message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
 
   # Créer la release GitHub avec les notes
-  - - "@semantic-release/github"
-    - successComment: false
-      failComment: false
-      releasedLabels: false
-      assets: []
+  # NOTE: Disabled - GoReleaser creates the release with compiled binaries
+  # - - "@semantic-release/github"
+  #   - successComment: false
+  #     failComment: false
+  #     releasedLabels: false
+  #     assets: []
+
+  # Trigger GoReleaser workflow by pushing the tag
+  - - "@semantic-release/exec"
+    - publishCmd: |
+        echo "Tag ${nextRelease.version} will trigger GoReleaser workflow"
+        echo "Release will be created by .github/workflows/release.yml"
 
 # Options globales
 tagFormat: "v${version}"
