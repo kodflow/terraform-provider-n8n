@@ -24,6 +24,7 @@ jobs:
           token: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Import GPG key
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         with:
@@ -33,15 +34,25 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
           git_config_global: true
+        continue-on-error: true
 
       - name: Configure Git for semantic-release
         run: |
-          git config --global user.name "${{ steps.import_gpg.outputs.name }}"
-          git config --global user.email "${{ steps.import_gpg.outputs.email }}"
-          git config --global commit.gpgsign true
-          git config --global tag.gpgsign true
-          git config --global user.signingkey "${{ steps.import_gpg.outputs.keyid }}"
-          echo "GPG configured with key: ${{ steps.import_gpg.outputs.keyid }}"
+          if [ -n "${{ steps.import_gpg.outputs.keyid }}" ]; then
+            echo "✅ GPG key imported successfully"
+            git config --global user.name "${{ steps.import_gpg.outputs.name }}"
+            git config --global user.email "${{ steps.import_gpg.outputs.email }}"
+            git config --global commit.gpgsign true
+            git config --global tag.gpgsign true
+            git config --global user.signingkey "${{ steps.import_gpg.outputs.keyid }}"
+            echo "GPG configured with key: ${{ steps.import_gpg.outputs.keyid }}"
+          else
+            echo "⚠️ GPG key not available, using default Git config"
+            git config --global user.name "semantic-release-bot"
+            git config --global user.email "semantic-release-bot@github.com"
+            git config --global commit.gpgsign false
+            git config --global tag.gpgsign false
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
