@@ -112,8 +112,10 @@ jobs:
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-          TF_ACC: 1
-        run: make test/acceptance/ci
+          TF_ACC: "1"
+        run: |
+          echo "Running E2E acceptance tests..."
+          go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/...
 
       # Generate documentation
       - name: Generate documentation
