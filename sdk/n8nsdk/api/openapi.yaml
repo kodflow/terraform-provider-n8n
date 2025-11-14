@@ -12,8 +12,8 @@ info:
   x-n8n-version-info:
     frozenVersion: 1.119.1
     frozenCommit: 53fd5c94c8798292cc981508a937b09532bbcf64
-    latestVersion: 1.119.1
-    inSync: true
+    latestVersion: unknown
+    inSync: false
     note: This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.
 servers:
 - url: /api/v1
