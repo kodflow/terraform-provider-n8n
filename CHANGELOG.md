@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- simplify env loading with export xargs same as test/tf targets (`a27954e`)
 - use bash -c with source to properly export env vars to go test (`8d27226`)
 - simplify env var loading with set -a and remove debug checks (`0928372`)
 - use export with xargs for proper env var propagation to go test subprocess (`8e3417c`)
@@ -110,9 +111,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 73
+- **Total commits:** 74
 - **Features:** 6
-- **Bug fixes:** 29
+- **Bug fixes:** 30
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -123,4 +124,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 17:53:54*
+*Changelog generated automatically on 2025-11-14 18:01:56*
