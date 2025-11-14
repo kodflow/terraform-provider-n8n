@@ -1348,6 +1348,7 @@ components:
       - type
       - data
       type: object
+      additionalProperties: true
       properties:
         id:
           type: string

@@ -23,7 +23,7 @@ func Test_getEnvAPIKey(t *testing.T) {
 			expectedResult: "test-api-key",
 		},
 		{
-			name:           "returns empty string when N8N_API_KEY not set",
+			name:           "error case - returns empty string when N8N_API_KEY not set",
 			envAPIKey:      "",
 			expectedResult: "",
 		},
@@ -57,7 +57,7 @@ func Test_getEnvBaseURL(t *testing.T) {
 			expectedResult: "https://test.example.com",
 		},
 		{
-			name:           "returns empty string when N8N_API_URL not set",
+			name:           "error case - returns empty string when N8N_API_URL not set",
 			envAPIURL:      "",
 			expectedResult: "",
 		},

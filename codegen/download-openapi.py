@@ -259,6 +259,41 @@ def main():
     else:
         print("   ⚠️  No patch file found\n")
 
+    # 4.5. Add additionalProperties: true to credential schema
+    print("🔧 Adding additionalProperties to credential schema...")
+    with open(spec_file, 'r') as f:
+        lines = f.readlines()
+
+    modified = False
+    output = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        output.append(line)
+
+        # Look for credential schema definition
+        if line.strip() == 'credential:':
+            # Skip to 'type: object' line
+            j = i + 1
+            while j < len(lines):
+                output.append(lines[j])
+                if lines[j].strip() == 'type: object':
+                    # Add additionalProperties after type: object
+                    indent = len(lines[j]) - len(lines[j].lstrip())
+                    output.append(' ' * indent + 'additionalProperties: true\n')
+                    modified = True
+                    i = j
+                    break
+                j += 1
+        i += 1
+
+    if modified:
+        with open(spec_file, 'w') as f:
+            f.writelines(output)
+        print("   ✓ Added additionalProperties\n")
+    else:
+        print("   ⚠️  Credential schema not found\n")
+
     # 5. Add version info to OpenAPI spec
     print("📝 Adding version information...")
     with open(spec_file, 'r') as f:
