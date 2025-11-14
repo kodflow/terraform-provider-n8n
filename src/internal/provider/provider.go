@@ -82,12 +82,12 @@ func (p *N8nProvider) Schema(_ctx context.Context, _req provider.SchemaRequest, 
 		MarkdownDescription: "Terraform provider for n8n automation platform",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_KEY or N8N_API_TOKEN environment variable.",
+				MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_KEY environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"base_url": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_API_URL or N8N_URL environment variable.",
+				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_API_URL environment variable.",
 				Optional:            true,
 			},
 		},
@@ -113,13 +113,13 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 	// Read configuration from provider block or environment variables
 	apiKey := config.APIKey.ValueString()
-	// Try N8N_API_KEY (preferred) or N8N_API_TOKEN (legacy)
+	// Use N8N_API_KEY environment variable if not set in config
 	if apiKey == "" {
 		apiKey = getEnvAPIKey()
 	}
 
 	baseURL := config.BaseURL.ValueString()
-	// Try N8N_API_URL (preferred) or N8N_URL (legacy)
+	// Use N8N_API_URL environment variable if not set in config
 	if baseURL == "" {
 		baseURL = getEnvBaseURL()
 	}
@@ -129,7 +129,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Missing API Key",
-			"The provider requires an API key. Set the api_key attribute in the provider configuration or the N8N_API_KEY (or N8N_API_TOKEN) environment variable.",
+			"The provider requires an API key. Set the api_key attribute in the provider configuration or the N8N_API_KEY environment variable.",
 		)
 	}
 
@@ -137,7 +137,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if baseURL == "" {
 		resp.Diagnostics.AddError(
 			"Missing Base URL",
-			"The provider requires a base URL. Set the base_url attribute in the provider configuration or the N8N_API_URL (or N8N_URL) environment variable.",
+			"The provider requires a base URL. Set the base_url attribute in the provider configuration or the N8N_API_URL environment variable.",
 		)
 	}
 
@@ -234,36 +234,22 @@ func NewN8nProvider(version string) *N8nProvider {
 	}
 }
 
-// getEnvAPIKey retrieves API key from environment variables.
-// Tries N8N_API_KEY first (preferred), then N8N_API_TOKEN (legacy).
+// getEnvAPIKey retrieves API key from N8N_API_KEY environment variable.
 //
 // Returns:
 //   - string: API key from environment, or empty string if not found
 func getEnvAPIKey() string {
-	// Try preferred variable name first
-	if envAPIKey := os.Getenv("N8N_API_KEY"); envAPIKey != "" {
-		// Return preferred variable value
-		return envAPIKey
-	}
-	// Fall back to legacy variable name
-	// Return legacy variable value or empty string
-	return os.Getenv("N8N_API_TOKEN")
+	// Return API key from environment variable
+	return os.Getenv("N8N_API_KEY")
 }
 
-// getEnvBaseURL retrieves base URL from environment variables.
-// Tries N8N_API_URL first (preferred), then N8N_URL (legacy).
+// getEnvBaseURL retrieves base URL from N8N_API_URL environment variable.
 //
 // Returns:
 //   - string: Base URL from environment, or empty string if not found
 func getEnvBaseURL() string {
-	// Try preferred variable name first
-	if envBaseURL := os.Getenv("N8N_API_URL"); envBaseURL != "" {
-		// Return preferred variable value
-		return envBaseURL
-	}
-	// Fall back to legacy variable name
-	// Return legacy variable value or empty string
-	return os.Getenv("N8N_URL")
+	// Return base URL from environment variable
+	return os.Getenv("N8N_API_URL")
 }
 
 // New returns a provider factory function.

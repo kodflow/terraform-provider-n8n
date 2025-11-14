@@ -16,8 +16,8 @@ jobs:
     name: CI Pipeline
     runs-on: ubuntu-latest
     env:
-      N8N_API_URL: ${{ secrets.N8N_URL || secrets.N8N_API_URL }}
-      N8N_API_KEY: ${{ secrets.N8N_API_TOKEN || secrets.N8N_API_KEY }}
+      N8N_API_URL: ${{ secrets.N8N_API_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
     steps:
       # Checkout repository
       - name: Checkout

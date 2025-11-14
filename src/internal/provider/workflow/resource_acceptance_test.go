@@ -104,7 +104,7 @@ func testAccPreCheck(t *testing.T) {
 	provider.TestAccPreCheckEnv(t)
 
 	// Log test environment info
-	t.Logf("🔍 Running acceptance tests against n8n instance: %s", os.Getenv("N8N_URL"))
+	t.Logf("🔍 Running acceptance tests against n8n instance: %s", os.Getenv("N8N_API_URL"))
 }
 
 var testAccProtoV6ProviderFactories = provider.TestAccProtoV6ProviderFactories
@@ -122,7 +122,7 @@ func testAccCheckWorkflowExists(resourceName string) resource.TestCheckFunc {
 		}
 
 		// Create n8n client
-		n8nClient := client.NewN8nClient(os.Getenv("N8N_URL"), os.Getenv("N8N_API_TOKEN"))
+		n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
 
 		// Call n8n API to verify workflow exists
 		workflow, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
@@ -151,7 +151,7 @@ func testAccCheckWorkflowHasNodes(resourceName string, expectedNodeCount int) re
 		}
 
 		// Create n8n client
-		n8nClient := client.NewN8nClient(os.Getenv("N8N_URL"), os.Getenv("N8N_API_TOKEN"))
+		n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
 
 		// Get workflow from API
 		workflow, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
@@ -174,7 +174,7 @@ func testAccCheckWorkflowHasNodes(resourceName string, expectedNodeCount int) re
 // testAccCheckWorkflowDestroy verifies the workflow has been destroyed via API call.
 func testAccCheckWorkflowDestroy(s *terraform.State) error {
 	// Create n8n client
-	n8nClient := client.NewN8nClient(os.Getenv("N8N_URL"), os.Getenv("N8N_API_TOKEN"))
+	n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "n8n_workflow" {

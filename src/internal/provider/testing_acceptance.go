@@ -27,11 +27,11 @@ var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 func TestAccPreCheckEnv(t *testing.T) {
 	t.Helper()
 
-	if v := os.Getenv("N8N_URL"); v == "" {
-		t.Fatal("N8N_URL must be set for acceptance tests")
+	if v := os.Getenv("N8N_API_URL"); v == "" {
+		t.Fatal("N8N_API_URL must be set for acceptance tests")
 	}
-	if v := os.Getenv("N8N_API_TOKEN"); v == "" {
-		t.Fatal("N8N_API_TOKEN must be set for acceptance tests")
+	if v := os.Getenv("N8N_API_KEY"); v == "" {
+		t.Fatal("N8N_API_KEY must be set for acceptance tests")
 	}
 }
 
@@ -39,7 +39,7 @@ func TestAccPreCheckEnv(t *testing.T) {
 func providerConfig() string {
 	return `
 provider "n8n" {
-  # Uses N8N_URL and N8N_API_TOKEN from environment
+  # Uses N8N_API_URL and N8N_API_KEY from environment
 }
 `
 }

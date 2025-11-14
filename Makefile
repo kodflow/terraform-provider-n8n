@@ -154,7 +154,7 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 	@echo "$(BOLD)Running E2E acceptance tests...$(RESET)"
 	@if [ ! -f .env ]; then \
 		printf "  $(YELLOW)⚠$(RESET)  .env file not found - skipping acceptance tests\n"; \
-		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_URL and N8N_API_TOKEN to run E2E tests\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_API_URL and N8N_API_KEY to run E2E tests\n"; \
 		echo ""; \
 		exit 0; \
 	fi

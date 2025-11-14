@@ -74,7 +74,7 @@ func testAccPreCheck(t *testing.T) {
 	provider.TestAccPreCheckEnv(t)
 
 	// Log test environment info
-	t.Logf("🔍 Running acceptance tests against n8n instance: %s", os.Getenv("N8N_URL"))
+	t.Logf("🔍 Running acceptance tests against n8n instance: %s", os.Getenv("N8N_API_URL"))
 }
 
 var testAccProtoV6ProviderFactories = provider.TestAccProtoV6ProviderFactories
