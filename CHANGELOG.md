@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🔨 Chore
 
+- bump n8n OpenAPI spec to 1.119.1 (`9a28419`)
 - bump n8n OpenAPI spec to 1.119.1 (`d30c438`)
 - bump n8n OpenAPI spec to 1.119.1 (`6db7d71`)
 - update generated documentation and OpenAPI patch (`ac6b874`)
@@ -56,7 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
-- add isManaged field to CreateCredentialResponse (`07485d6`)
+- add isManaged field to CreateCredentialResponse (`e0a9ce3`)
 - add isManaged field to CreateCredentialResponse (`cbd3686`)
 - call go test directly instead of via Make (`65e114a`)
 - stop regenerating SDK in CI pipeline (`f1c9bf5`)
@@ -121,7 +122,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 84
+- **Total commits:** 85
 - **Features:** 7
 - **Bug fixes:** 36
 - **Tests:** 6
@@ -134,4 +135,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 19:32:01*
+*Changelog generated automatically on 2025-11-14 19:53:41*

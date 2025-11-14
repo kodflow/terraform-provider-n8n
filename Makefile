@@ -300,9 +300,21 @@ update: ## Update ktn-linter to latest version
 # ============================================================================
 
 .PHONY: openapi
-openapi: ## Download and prepare OpenAPI spec from n8n
+openapi: ## Download and prepare OpenAPI spec from n8n (DEPRECATED: use openapi/download + openapi/patch)
 	@echo ""
 	@python3 codegen/download-openapi.py
+	@echo ""
+
+.PHONY: openapi/download
+openapi/download: ## Download OpenAPI spec from n8n (no commit, no patch)
+	@echo ""
+	@python3 codegen/download-only.py
+	@echo ""
+
+.PHONY: openapi/patch
+openapi/patch: ## Apply patches to OpenAPI spec
+	@echo ""
+	@python3 codegen/patch-only.py
 	@echo ""
 
 .PHONY: openapi/version
