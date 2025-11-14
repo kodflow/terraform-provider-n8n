@@ -165,8 +165,8 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 		exit 0; \
 	fi
 	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
-	@export $$(cat .env | xargs) && \
-	if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+	@set -a && . ./.env && set +a && \
+	if N8N_API_URL="$$N8N_API_URL" N8N_API_KEY="$$N8N_API_KEY" TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
 		./src/internal/provider/credential/... \
 		./src/internal/provider/tag/... \
 		./src/internal/provider/variable/... \
@@ -198,7 +198,7 @@ test/acceptance/ci: ## Run E2E acceptance tests in CI (uses env vars)
 		printf "  $(GREEN)✓$(RESET) N8N_API_URL is set\n"; \
 		printf "  $(GREEN)✓$(RESET) N8N_API_KEY is set\n"; \
 		printf "  $(CYAN)→$(RESET) Running acceptance tests...\n"; \
-		if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+		if N8N_API_URL="$$N8N_API_URL" N8N_API_KEY="$$N8N_API_KEY" TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
 			./src/internal/provider/credential/... \
 			./src/internal/provider/tag/... \
 			./src/internal/provider/variable/... \
