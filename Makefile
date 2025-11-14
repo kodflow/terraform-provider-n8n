@@ -170,7 +170,7 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 		./src/internal/provider/credential/... \
 		./src/internal/provider/tag/... \
 		./src/internal/provider/variable/... \
-		./src/internal/provider/workflow/... 2>&1; then \
+		./src/internal/provider/workflow/...; then \
 		echo "$(GREEN)✓$(RESET) E2E tests completed"; \
 	else \
 		printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n"; \
