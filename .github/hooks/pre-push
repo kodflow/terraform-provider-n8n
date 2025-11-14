@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Pre-push hook to check for AI mentions and Co-Authored-By in ALL commits
 
 set -e
@@ -29,8 +29,9 @@ AI_KEYWORDS=(
 # Get all commits that will be pushed
 zero_commit="0000000000000000000000000000000000000000"
 
-# Track all problem commits across all refs
-declare -A all_problem_commits
+# Track all problem commits - use temp file instead of associative array
+problem_commits_file=$(mktemp)
+trap "rm -f $problem_commits_file" EXIT
 found_issues=false
 
 while read local_ref local_sha remote_ref remote_sha; do
@@ -61,7 +62,7 @@ while read local_ref local_sha remote_ref remote_sha; do
     # Check each commit in the range
     for commit in $(git rev-list "$range"); do
         # Skip if already processed
-        if [ -n "${all_problem_commits[$commit]}" ]; then
+        if grep -q "^$commit|" "$problem_commits_file" 2>/dev/null; then
             continue
         fi
 
@@ -79,7 +80,7 @@ while read local_ref local_sha remote_ref remote_sha; do
         done
 
         if [ -n "$found_keyword" ]; then
-            all_problem_commits[$commit]="$found_keyword"
+            echo "$commit|$found_keyword" >> "$problem_commits_file"
             found_issues=true
         fi
     done
@@ -92,10 +93,10 @@ if [ "$found_issues" = true ]; then
 
     # Sort commits by date (oldest first) for easier fixing
     for commit in $(git rev-list --reverse origin/main..HEAD 2>/dev/null || git rev-list --reverse HEAD); do
-        if [ -n "${all_problem_commits[$commit]}" ]; then
+        if grep -q "^$commit|" "$problem_commits_file" 2>/dev/null; then
             commit_short=$(git log -1 --format=%h "$commit")
             commit_subject=$(git log -1 --format=%s "$commit")
-            keyword="${all_problem_commits[$commit]}"
+            keyword=$(grep "^$commit|" "$problem_commits_file" | cut -d'|' -f2)
             echo "  📍 $commit_short - \"$commit_subject\""
             echo "     Found: '$keyword'"
             echo ""
@@ -106,7 +107,7 @@ if [ "$found_issues" = true ]; then
     echo "❌ Push rejected!"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Total problematic commits: ${#all_problem_commits[@]}"
+    echo "Total problematic commits: $(wc -l < "$problem_commits_file")"
     echo ""
     echo "To fix ALL commits at once, use interactive rebase:"
     echo ""

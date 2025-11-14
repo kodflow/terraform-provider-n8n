@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- auto-cancel outdated workflow runs (`8a78855`)
 - add copyright headers to remaining source files (`78d95da`)
 - add Sustainable Use License and copyright headers (`c80c828`)
 - add acceptance tests to coverage report (`c1b942b`)
@@ -99,8 +100,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 62
-- **Features:** 4
+- **Total commits:** 63
+- **Features:** 5
 - **Bug fixes:** 21
 - **Tests:** 6
 - **Refactoring:** 7
@@ -112,4 +113,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 14:16:58*
+*Changelog generated automatically on 2025-11-14 15:09:57*
