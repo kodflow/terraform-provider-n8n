@@ -3159,7 +3159,6 @@ func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
 		expectSuccess bool
 		expectError   bool
 	}{
-		{},
 		{
 			name:        "error - createNewCredential fails",
 			oldCredID:   "cred-old-123",

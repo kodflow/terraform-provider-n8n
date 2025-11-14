@@ -2912,8 +2912,6 @@ func TestWorkflowResource_handlePostCreationActivation(t *testing.T) {
 			},
 			expectError: false,
 		},
-		{
-		},
 	}
 
 	for _, tt := range tests {
