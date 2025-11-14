@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- auto-detect current branch in changelog generation (`398ea12`)
 - regenerate model_workflow.go with all required fields (`26e3e39`)
 - add missing make sdk step to generate Go files (`bac4bf3`)
 - move dependency download after SDK generation (`2bc27a8`)
@@ -91,9 +92,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 54
+- **Total commits:** 55
 - **Features:** 4
-- **Bug fixes:** 17
+- **Bug fixes:** 18
 - **Tests:** 6
 - **Refactoring:** 6
 - **Test coverage:** N/A
@@ -104,4 +105,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 13:06:03*
+*Changelog generated automatically on 2025-11-14 13:14:28*
