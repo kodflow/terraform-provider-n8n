@@ -45,8 +45,12 @@ jobs:
         run: make tools/sdk
 
       # Generate SDK from OpenAPI (no commit in CI)
-      - name: Generate SDK
+      - name: Generate OpenAPI spec
         run: make openapi
+
+      # Generate Go SDK from OpenAPI
+      - name: Generate Go SDK
+        run: make sdk
 
       # Download Go dependencies (after SDK generation)
       - name: Download dependencies
