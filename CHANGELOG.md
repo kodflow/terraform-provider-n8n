@@ -96,6 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🤖 CI/CD
 
+- add env var checks after every step to detect where vars are lost (`26addc7`)
 - remove SDK generation from workflow to avoid commit conflicts (`38dfe43`)
 - run devcontainer build only on main branch push (`02b0d93`)
 - add GitGuardian configuration to ignore false positives (`b8505a3`)
@@ -105,7 +106,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 68
+- **Total commits:** 69
 - **Features:** 6
 - **Bug fixes:** 25
 - **Tests:** 6
@@ -118,4 +119,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 17:07:24*
+*Changelog generated automatically on 2025-11-14 17:25:07*

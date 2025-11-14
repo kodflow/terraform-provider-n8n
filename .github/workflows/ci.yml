@@ -251,7 +251,14 @@ jobs:
           if [ -z "$N8N_API_KEY" ]; then echo "❌ N8N_API_KEY LOST!"; exit 1; fi
           echo "✅ Both vars present"
 
-      # Run acceptance tests (secrets already validated at start)
+      # Create .env file for acceptance tests
+      - name: Create .env file
+        run: |
+          echo "N8N_API_URL=${{ secrets.N8N_API_URL }}" > .env
+          echo "N8N_API_KEY=${{ secrets.N8N_API_KEY }}" >> .env
+          echo "TF_ACC=1" >> .env
+
+      # Run acceptance tests (uses .env file)
       - name: Run acceptance tests
         run: make test/acceptance/ci
 
