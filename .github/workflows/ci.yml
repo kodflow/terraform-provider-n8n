@@ -91,6 +91,21 @@ jobs:
       - name: Build provider
         run: make build
 
+      # Debug: Check if secrets are available
+      - name: Check secrets availability
+        run: |
+          echo "Checking secrets..."
+          if [ -n "$N8N_API_URL" ]; then
+            echo "✓ N8N_API_URL is set"
+          else
+            echo "✗ N8N_API_URL is NOT set"
+          fi
+          if [ -n "$N8N_API_KEY" ]; then
+            echo "✓ N8N_API_KEY is set"
+          else
+            echo "✗ N8N_API_KEY is NOT set"
+          fi
+
       # Run acceptance tests (only if credentials are available)
       - name: Run acceptance tests
         run: make test/acceptance/ci

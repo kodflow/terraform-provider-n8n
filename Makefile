@@ -183,23 +183,33 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 test/acceptance/ci: ## Run E2E acceptance tests in CI (uses env vars)
 	@echo ""
 	@echo "$(BOLD)Running E2E acceptance tests...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Checking environment variables...\n"
 	@if [ -z "$$N8N_API_URL" ] || [ -z "$$N8N_API_KEY" ]; then \
-		printf "  $(YELLOW)⚠$(RESET)  N8N_API_URL or N8N_API_KEY not set - skipping acceptance tests\n"; \
-		printf "  $(CYAN)ℹ$(RESET)  Set environment variables to run E2E tests\n"; \
+		if [ -z "$$N8N_API_URL" ]; then \
+			printf "  $(RED)✗$(RESET) N8N_API_URL is not set\n"; \
+		fi; \
+		if [ -z "$$N8N_API_KEY" ]; then \
+			printf "  $(RED)✗$(RESET) N8N_API_KEY is not set\n"; \
+		fi; \
+		printf "  $(CYAN)ℹ$(RESET)  Set environment variables or configure GitHub secrets\n"; \
 		echo ""; \
 		exit 0; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Using credentials from environment variables\n"
-	@if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
-		./src/internal/provider/credential/... \
-		./src/internal/provider/tag/... \
-		./src/internal/provider/variable/... \
-		./src/internal/provider/workflow/...; then \
-		echo "$(GREEN)✓$(RESET) E2E tests completed"; \
 	else \
-		printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n"; \
-		printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n"; \
-		exit 1; \
+		printf "  $(GREEN)✓$(RESET) N8N_API_URL is set\n"; \
+		printf "  $(GREEN)✓$(RESET) N8N_API_KEY is set\n"; \
+		printf "  $(CYAN)→$(RESET) Running acceptance tests...\n"; \
+		if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+			./src/internal/provider/credential/... \
+			./src/internal/provider/tag/... \
+			./src/internal/provider/variable/... \
+			./src/internal/provider/workflow/...; then \
+			echo "$(GREEN)✓$(RESET) E2E tests completed"; \
+		else \
+			printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n"; \
+			printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n"; \
+			printf "  $(CYAN)ℹ$(RESET)  Check test output above for details\n"; \
+			exit 1; \
+		fi; \
 	fi
 	@echo ""
 
