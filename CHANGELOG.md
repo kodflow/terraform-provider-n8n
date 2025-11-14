@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
+### 📝 Other
+
+- Revert "feat(build): add GPG key management commands for Terraform Registry" (`b3e6efa`)
+
 ### 🚀 Features
 
 - add GPG key management commands for Terraform Registry (`ed3964b`)
@@ -28,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 6
+- **Total commits:** 7
 - **Features:** 2
 - **Bug fixes:** 3
 - **Tests:** 0
@@ -41,4 +45,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 21:55:13*
+*Changelog generated automatically on 2025-11-14 22:01:58*

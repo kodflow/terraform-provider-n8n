@@ -8,6 +8,19 @@ echo "👤 Configuring git identity..."
 git config --global user.name "Kodflow"
 git config --global user.email "133899878+kodflow@users.noreply.github.com"
 
+# Configure GPG signing if GPG key is available
+if [ -f "/host-gpg/gpg-config.env" ]; then
+  echo "🔐 Configuring GPG signing..."
+  source /host-gpg/gpg-config.env
+  git config --global user.signingkey "$KEYID"
+  git config --global gpg.program gpg
+  git config --global commit.gpgsign true
+  git config --global tag.gpgsign true
+  echo "✅ GPG signing configured with key $KEYID"
+else
+  echo "ℹ️  No GPG key found, skipping GPG configuration"
+fi
+
 # Configure npm for local global packages (no sudo needed)
 # Using environment variable instead of npm config to avoid conflicts with nvm
 echo "⚙️  Configuring npm..."
