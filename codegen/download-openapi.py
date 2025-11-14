@@ -9,6 +9,7 @@ import sys
 import shutil
 import json
 import argparse
+import os
 from pathlib import Path
 
 def run(cmd, cwd=None, check=True):
@@ -278,49 +279,54 @@ def main():
 
     print(f"   ✓ Fixed sharedWorkflow\n")
 
-    # 5. Git commit the clean OpenAPI spec (before patch) - using temporary index
-    print("💾 Committing clean OpenAPI spec...")
-    commit_message = f"chore(sdk): bump n8n OpenAPI spec to {frozen_version}"
+    # 5. Git commit the clean OpenAPI spec (before patch) - skip in CI
+    is_ci = os.getenv('CI', '').lower() == 'true'
 
-    # Save current index state, commit only openapi.yaml, restore index
-    # This ensures we only commit openapi.yaml regardless of what's staged
-    commit_script = f'''
-    # Save what's currently staged
-    git diff --cached > /tmp/staged_changes.patch 2>/dev/null || true
-    # Reset index
-    git reset --quiet HEAD 2>/dev/null || true
-    # Add only openapi.yaml
-    git add sdk/n8nsdk/api/openapi.yaml
-    # Commit it (bypass hooks with --no-verify to avoid changelog/coverage regeneration)
-    git commit --no-verify -m "{commit_message}" 2>&1
-    commit_status=$?
-    # Restore previously staged files (if any)
-    if [ -s /tmp/staged_changes.patch ]; then
-        git apply --cached /tmp/staged_changes.patch 2>/dev/null || true
-    fi
-    rm -f /tmp/staged_changes.patch
-    exit $commit_status
-    '''
-
-    result = subprocess.run(
-        commit_script,
-        shell=True,
-        capture_output=True,
-        text=True,
-        executable='/bin/bash'
-    )
-    if result.returncode == 0:
-        print(f"   ✓ Committed: {commit_message}\n")
+    if is_ci:
+        print("💾 Skipping commit (CI environment detected)\n")
     else:
-        # Check if there's nothing to commit
-        if "nothing to commit" in result.stdout or "nothing to commit" in result.stderr:
-            print("   ℹ No changes to commit (already up to date)\n")
+        print("💾 Committing clean OpenAPI spec...")
+        commit_message = f"chore(sdk): bump n8n OpenAPI spec to {frozen_version}"
+
+        # Save current index state, commit only openapi.yaml, restore index
+        # This ensures we only commit openapi.yaml regardless of what's staged
+        commit_script = f'''
+        # Save what's currently staged
+        git diff --cached > /tmp/staged_changes.patch 2>/dev/null || true
+        # Reset index
+        git reset --quiet HEAD 2>/dev/null || true
+        # Add only openapi.yaml
+        git add sdk/n8nsdk/api/openapi.yaml
+        # Commit it (bypass hooks with --no-verify to avoid changelog/coverage regeneration)
+        git commit --no-verify -m "{commit_message}" 2>&1
+        commit_status=$?
+        # Restore previously staged files (if any)
+        if [ -s /tmp/staged_changes.patch ]; then
+            git apply --cached /tmp/staged_changes.patch 2>/dev/null || true
+        fi
+        rm -f /tmp/staged_changes.patch
+        exit $commit_status
+        '''
+
+        result = subprocess.run(
+            commit_script,
+            shell=True,
+            capture_output=True,
+            text=True,
+            executable='/bin/bash'
+        )
+        if result.returncode == 0:
+            print(f"   ✓ Committed: {commit_message}\n")
         else:
-            print("   ⚠️  Commit failed!")
-            if result.stderr:
-                print(f"      {result.stderr}")
-            if result.stdout:
-                print(f"      {result.stdout}\n")
+            # Check if there's nothing to commit
+            if "nothing to commit" in result.stdout or "nothing to commit" in result.stderr:
+                print("   ℹ No changes to commit (already up to date)\n")
+            else:
+                print("   ⚠️  Commit failed!")
+                if result.stderr:
+                    print(f"      {result.stderr}")
+                if result.stdout:
+                    print(f"      {result.stdout}\n")
 
     # 6. Apply patch
     print("🩹 Applying openapi.patch...")
