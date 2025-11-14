@@ -60,38 +60,38 @@ resource "n8n_workflow" "api_test" {
       parameters  = {}
     },
     {
-      id       = "http-request"
-      name     = "HTTP Request"
-      type     = "n8n-nodes-base.httpRequest"
-      position = [460, 300]
+      id          = "http-request"
+      name        = "HTTP Request"
+      type        = "n8n-nodes-base.httpRequest"
+      position    = [460, 300]
       typeVersion = 4.2
       parameters = {
-        url    = "https://api.github.com/repos/n8n-io/n8n"
-        method = "GET"
+        url     = "https://api.github.com/repos/n8n-io/n8n"
+        method  = "GET"
         options = {}
       }
     },
     {
-      id       = "process-data"
-      name     = "Process Data"
-      type     = "n8n-nodes-base.set"
-      position = [680, 300]
+      id          = "process-data"
+      name        = "Process Data"
+      type        = "n8n-nodes-base.set"
+      position    = [680, 300]
       typeVersion = 3.4
       parameters = {
-        mode = "manual"
+        mode          = "manual"
         duplicateItem = false
         assignments = {
           assignments = [
             {
-              id = "field1"
-              name = "repo_name"
-              type = "string"
+              id    = "field1"
+              name  = "repo_name"
+              type  = "string"
               value = "={{ $json.name }}"
             },
             {
-              id = "field2"
-              name = "stars"
-              type = "number"
+              id    = "field2"
+              name  = "stars"
+              type  = "number"
               value = "={{ $json.stargazers_count }}"
             }
           ]
@@ -118,10 +118,10 @@ resource "n8n_workflow" "api_test" {
   })
 
   settings_json = jsonencode({
-    executionOrder = "v1"
-    saveDataErrorExecution = "all"
+    executionOrder           = "v1"
+    saveDataErrorExecution   = "all"
     saveDataSuccessExecution = "all"
-    saveManualExecutions = true
+    saveManualExecutions     = true
   })
 }
 
@@ -144,23 +144,23 @@ resource "n8n_workflow" "data_processor" {
       parameters  = {}
     },
     {
-      id       = "create-data"
-      name     = "Create Sample Data"
-      type     = "n8n-nodes-base.set"
-      position = [460, 300]
+      id          = "create-data"
+      name        = "Create Sample Data"
+      type        = "n8n-nodes-base.set"
+      position    = [460, 300]
       typeVersion = 3.4
       parameters = {
-        mode = "manual"
+        mode          = "manual"
         duplicateItem = false
         assignments = {
           assignments = [
             {
-              id = "field1"
+              id   = "field1"
               name = "users"
               type = "array"
               value = jsonencode([
-                {name = "Alice", age = 30},
-                {name = "Bob", age = 25}
+                { name = "Alice", age = 30 },
+                { name = "Bob", age = 25 }
               ])
             }
           ]

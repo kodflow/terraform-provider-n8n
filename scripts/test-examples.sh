@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE.md in the project root for license information.
 # Test all Terraform examples against n8n server
 # Usage: ./scripts/test-examples.sh [community|enterprise|all]
 

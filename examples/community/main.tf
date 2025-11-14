@@ -46,12 +46,12 @@ resource "n8n_workflow" "with_nodes" {
 
   nodes_json = jsonencode([
     {
-      id         = "manual-trigger"
-      name       = "Manual Trigger"
-      type       = "n8n-nodes-base.manualTrigger"
-      position   = [250, 300]
+      id          = "manual-trigger"
+      name        = "Manual Trigger"
+      type        = "n8n-nodes-base.manualTrigger"
+      position    = [250, 300]
       typeVersion = 1
-      parameters = {}
+      parameters  = {}
     },
     {
       id          = "set-node"

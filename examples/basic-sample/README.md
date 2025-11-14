@@ -46,8 +46,8 @@ This example reflects the current state of the provider:
 Create or use existing `.env` file:
 
 ```bash
-export N8N_URL="https://your-n8n-instance.com"
-export N8N_API_TOKEN="your-api-token-here"
+export N8N_API_URL="https://your-n8n-instance.com"
+export N8N_API_KEY="your-api-token-here"
 ```
 
 Load it:
@@ -70,13 +70,13 @@ terraform init  # May show warnings with dev override - that's normal
 ```bash
 # Plan
 terraform plan \
-  -var="n8n_api_key=$N8N_API_TOKEN" \
-  -var="n8n_base_url=$N8N_URL"
+  -var="n8n_api_key=$N8N_API_KEY" \
+  -var="n8n_base_url=$N8N_API_URL"
 
 # Apply
 terraform apply \
-  -var="n8n_api_key=$N8N_API_TOKEN" \
-  -var="n8n_base_url=$N8N_URL"
+  -var="n8n_api_key=$N8N_API_KEY" \
+  -var="n8n_base_url=$N8N_API_URL"
 ```
 
 ### View Created Resources
@@ -114,8 +114,8 @@ After Terraform creates the workflow:
 
 ```bash
 terraform destroy \
-  -var="n8n_api_key=$N8N_API_TOKEN" \
-  -var="n8n_base_url=$N8N_URL"
+  -var="n8n_api_key=$N8N_API_KEY" \
+  -var="n8n_base_url=$N8N_API_URL"
 ```
 
 ## What You'll Learn
