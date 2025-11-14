@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
+### 🚀 Features
+
+- add Terraform Registry publication support (`459b9b1`)
+
 ### 🐛 Bug Fixes
 
 - remove [skip ci] from semantic-release to allow release workflow (`551df3f`)
@@ -17,8 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 1
-- **Features:** 0
+- **Total commits:** 2
+- **Features:** 1
 - **Bug fixes:** 1
 - **Tests:** 0
 - **Refactoring:** 0
@@ -30,4 +34,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 21:34:55*
+*Changelog generated automatically on 2025-11-14 21:40:54*

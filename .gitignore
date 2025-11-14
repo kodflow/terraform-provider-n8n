@@ -154,6 +154,7 @@ sdist/
 # SDK is now versioned in git (not generated in CI)
 secrets/
 # Secrets & credentials
+.gpg-export/
 .serverless/
 .settings/
 *.so

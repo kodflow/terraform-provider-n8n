@@ -37,6 +37,7 @@ include makefiles/test.mk
 include makefiles/quality.mk
 include makefiles/build.mk
 include makefiles/tools.mk
+include makefiles/gpg.mk
 
 # ============================================================================
 # Help Target
@@ -63,6 +64,9 @@ help: ## Display available commands
 	@echo ""
 	@echo "$(BOLD)Tools & Dependencies:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/tools.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(BOLD)GPG Key Management:$(RESET)"
+	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/gpg.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
 	@echo ""
