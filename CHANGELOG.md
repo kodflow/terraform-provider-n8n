@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.1.7](https://github.com/kodflow/n8n/compare/v1.1.6...v1.1.7) (2025-11-14)
+
+### 🐛 Bug Fixes
+
+* **ci:** enable GPG signing for tags when key import succeeds ([c4fb62f](https://github.com/kodflow/n8n/commit/c4fb62fa014734ae0df25885dd2311e9468d9f76))
+
 ## [1.1.6](https://github.com/kodflow/n8n/compare/v1.1.5...v1.1.6) (2025-11-14)
 
 ### 🐛 Bug Fixes
