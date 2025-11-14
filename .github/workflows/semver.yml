@@ -38,7 +38,9 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
           git_config_global: true
+        # Timeout prevents indefinite hanging if GPG_PRIVATE_KEY is missing/invalid
         timeout-minutes: 2
+        # Continue even if GPG import fails - will use unsigned commits/tags as fallback
         continue-on-error: true
 
       - name: Configure Git for semantic-release
