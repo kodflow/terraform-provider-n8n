@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.1.6](https://github.com/kodflow/n8n/compare/v1.1.5...v1.1.6) (2025-11-14)
+
+### 🐛 Bug Fixes
+
+* **release:** remove deprecated archives.format configuration ([388b010](https://github.com/kodflow/n8n/commit/388b010ca708394b77c6d7ef26f8d1ae57d6c297))
+
 ## [1.1.5](https://github.com/kodflow/n8n/compare/v1.1.4...v1.1.5) (2025-11-14)
 
 ### 🐛 Bug Fixes
