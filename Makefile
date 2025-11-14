@@ -165,12 +165,7 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 		exit 0; \
 	fi
 	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
-	@set -a; . ./.env; set +a; \
-	go test -v -tags=acceptance -timeout 30m \
-		./src/internal/provider/credential/... \
-		./src/internal/provider/tag/... \
-		./src/internal/provider/variable/... \
-		./src/internal/provider/workflow/... && \
+	@bash -c 'set -a && source .env && set +a && go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/...' && \
 	echo "$(GREEN)✓$(RESET) E2E tests completed" || \
 	(printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n"; \
 	printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n"; \
@@ -188,12 +183,7 @@ test/acceptance/ci: ## Run E2E acceptance tests in CI (uses .env file)
 		exit 0; \
 	fi
 	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
-	@set -a; . ./.env; set +a; \
-	go test -v -tags=acceptance -timeout 30m \
-		./src/internal/provider/credential/... \
-		./src/internal/provider/tag/... \
-		./src/internal/provider/variable/... \
-		./src/internal/provider/workflow/... && \
+	@bash -c 'set -a && source .env && set +a && go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/...' && \
 	echo "$(GREEN)✓$(RESET) E2E tests completed" || \
 	(printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n"; \
 	printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n"; \
