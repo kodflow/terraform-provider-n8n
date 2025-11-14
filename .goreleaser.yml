@@ -44,18 +44,19 @@ checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
   algorithm: sha256
 
-signs:
-  - artifacts: checksum
-    cmd: gpg
-    args:
-      - "--batch"
-      - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
-    signature: "${artifact}.sig"
+# GPG signing temporarily disabled - re-enable when GPG_PRIVATE_KEY is configured
+# signs:
+#   - artifacts: checksum
+#     cmd: gpg
+#     args:
+#       - "--batch"
+#       - "--local-user"
+#       - "{{ .Env.GPG_FINGERPRINT }}"
+#       - "--output"
+#       - "${signature}"
+#       - "--detach-sign"
+#       - "${artifact}"
+#     signature: "${artifact}.sig"
 
 release:
   draft: false
