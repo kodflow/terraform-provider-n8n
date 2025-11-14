@@ -36,30 +36,6 @@ chmod +x "$HOME/.local/bin/ktn-linter"
 echo "🧹 Installing golangci-lint v2..."
 curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$HOME/.local/bin" v2.6.1
 
-# Configure GPG for unattended key generation
-echo "🔐 Configuring GPG..."
-mkdir -p "$HOME/.gnupg"
-chmod 700 "$HOME/.gnupg"
-
-cat > "$HOME/.gnupg/gpg.conf" <<GPGCONF
-# Allow generation of keys without passphrase
-allow-freeform-uid
-GPGCONF
-
-cat > "$HOME/.gnupg/gpg-agent.conf" <<AGENTCONF
-# Allow unattended passphrase entry
-allow-preset-passphrase
-allow-loopback-pinentry
-max-cache-ttl 34560000
-default-cache-ttl 34560000
-pinentry-mode loopback
-AGENTCONF
-
-chmod 600 "$HOME/.gnupg/gpg.conf" "$HOME/.gnupg/gpg-agent.conf"
-
-# Kill any existing gpg-agent
-gpgconf --kill gpg-agent 2>/dev/null || true
-
 # Install git hooks
 echo "🪝 Installing git hooks..."
 if [ -f "./scripts/install-hooks.sh" ]; then
