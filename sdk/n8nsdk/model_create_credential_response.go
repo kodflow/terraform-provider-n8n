@@ -26,6 +26,7 @@ type CreateCredentialResponse struct {
 	Id string `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
+	// Whether the credential is managed by n8n
 	IsManaged *bool `json:"isManaged,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -129,7 +130,7 @@ func (o *CreateCredentialResponse) SetType(v string) {
 
 // GetIsManaged returns the IsManaged field value if set, zero value otherwise.
 func (o *CreateCredentialResponse) GetIsManaged() bool {
-	if o == nil || o.IsManaged == nil {
+	if o == nil || IsNil(o.IsManaged) {
 		var ret bool
 		return ret
 	}
@@ -139,7 +140,7 @@ func (o *CreateCredentialResponse) GetIsManaged() bool {
 // GetIsManagedOk returns a tuple with the IsManaged field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *CreateCredentialResponse) GetIsManagedOk() (*bool, bool) {
-	if o == nil || o.IsManaged == nil {
+	if o == nil || IsNil(o.IsManaged) {
 		return nil, false
 	}
 	return o.IsManaged, true
@@ -147,7 +148,7 @@ func (o *CreateCredentialResponse) GetIsManagedOk() (*bool, bool) {
 
 // HasIsManaged returns a boolean if a field has been set.
 func (o *CreateCredentialResponse) HasIsManaged() bool {
-	if o != nil && o.IsManaged != nil {
+	if o != nil && !IsNil(o.IsManaged) {
 		return true
 	}
 
@@ -220,7 +221,7 @@ func (o CreateCredentialResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize["id"] = o.Id
 	toSerialize["name"] = o.Name
 	toSerialize["type"] = o.Type
-	if o.IsManaged != nil {
+	if !IsNil(o.IsManaged) {
 		toSerialize["isManaged"] = o.IsManaged
 	}
 	toSerialize["createdAt"] = o.CreatedAt

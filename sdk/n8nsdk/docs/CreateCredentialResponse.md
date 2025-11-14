@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Id** | **string** |  | [readonly] 
 **Name** | **string** |  | 
 **Type** | **string** |  | 
+**IsManaged** | Pointer to **bool** | Whether the credential is managed by n8n | [optional] [readonly] [default to false]
 **CreatedAt** | **time.Time** |  | [readonly] 
 **UpdatedAt** | **time.Time** |  | [readonly] 
 
@@ -88,6 +89,31 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
+
+### GetIsManaged
+
+`func (o *CreateCredentialResponse) GetIsManaged() bool`
+
+GetIsManaged returns the IsManaged field if non-nil, zero value otherwise.
+
+### GetIsManagedOk
+
+`func (o *CreateCredentialResponse) GetIsManagedOk() (*bool, bool)`
+
+GetIsManagedOk returns a tuple with the IsManaged field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIsManaged
+
+`func (o *CreateCredentialResponse) SetIsManaged(v bool)`
+
+SetIsManaged sets IsManaged field to given value.
+
+### HasIsManaged
+
+`func (o *CreateCredentialResponse) HasIsManaged() bool`
+
+HasIsManaged returns a boolean if a field has been set.
 
 ### GetCreatedAt
 
