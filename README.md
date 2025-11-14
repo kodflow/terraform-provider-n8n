@@ -61,14 +61,14 @@ bazel version # Bazel 9.0+
 
 ## Installation
 
-### Via Terraform Registry (Coming Soon)
+### Via Terraform Registry
 
 ```hcl
 terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 0.1.0"
+      version = "~> 1.0"
     }
   }
 }
@@ -78,6 +78,8 @@ provider "n8n" {
   api_key = var.n8n_api_key
 }
 ```
+
+See [TERRAFORM_REGISTRY.md](TERRAFORM_REGISTRY.md) for publication guide.
 
 ### Local Development
 

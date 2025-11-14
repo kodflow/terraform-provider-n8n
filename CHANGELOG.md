@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- add GPG key management commands for Terraform Registry (`ed3964b`)
 - add Terraform Registry publication support (`459b9b1`)
 
 ### 🐛 Bug Fixes
@@ -21,8 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 2
-- **Features:** 1
+- **Total commits:** 3
+- **Features:** 2
 - **Bug fixes:** 1
 - **Tests:** 0
 - **Refactoring:** 0
@@ -34,4 +35,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 21:40:54*
+*Changelog generated automatically on 2025-11-14 21:41:58*
