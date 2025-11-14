@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- use bash -c with source to properly export env vars to go test (`8d27226`)
 - simplify env var loading with set -a and remove debug checks (`0928372`)
 - use export with xargs for proper env var propagation to go test subprocess (`8e3417c`)
 - use .env file for acceptance tests instead of env var passthrough (`9073af4`)
@@ -109,9 +110,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 72
+- **Total commits:** 73
 - **Features:** 6
-- **Bug fixes:** 28
+- **Bug fixes:** 29
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -122,4 +123,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 17:46:48*
+*Changelog generated automatically on 2025-11-14 17:53:54*
