@@ -30,10 +30,6 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
-      # Download Go dependencies
-      - name: Download dependencies
-        run: make deps
-
       # Setup Bazel
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
@@ -51,6 +47,10 @@ jobs:
       # Generate SDK from OpenAPI (no commit in CI)
       - name: Generate SDK
         run: make openapi
+
+      # Download Go dependencies (after SDK generation)
+      - name: Download dependencies
+        run: make deps
 
       # Clean Bazel cache after SDK generation
       - name: Clean Bazel cache
