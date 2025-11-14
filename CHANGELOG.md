@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- use subshell for env loading in acceptance tests (`c2fed9c`)
 - simplify env loading with export xargs same as test/tf targets (`a27954e`)
 - use bash -c with source to properly export env vars to go test (`8d27226`)
 - simplify env var loading with set -a and remove debug checks (`0928372`)
@@ -111,9 +112,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 74
+- **Total commits:** 75
 - **Features:** 6
-- **Bug fixes:** 30
+- **Bug fixes:** 31
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -124,4 +125,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 18:01:56*
+*Changelog generated automatically on 2025-11-14 18:09:38*

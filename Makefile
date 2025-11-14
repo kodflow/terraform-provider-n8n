@@ -169,17 +169,11 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 	@echo ""
 
 .PHONY: test/acceptance/ci
-test/acceptance/ci: ## Run E2E acceptance tests in CI (uses .env file)
+test/acceptance/ci: ## Run E2E acceptance tests in CI (expects env vars to be set)
 	@echo ""
 	@echo "$(BOLD)Running E2E acceptance tests...$(RESET)"
-	@if [ ! -f .env ]; then \
-		printf "  $(YELLOW)⚠$(RESET)  .env file not found - skipping acceptance tests\n"; \
-		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_API_URL and N8N_API_KEY to run E2E tests\n"; \
-		echo ""; \
-		exit 0; \
-	fi
-	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
-	@( set -a; . ./.env; set +a; go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/... ) && echo "$(GREEN)✓$(RESET) E2E tests completed" || (printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n" && printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n" && exit 1)
+	@printf "  $(CYAN)→$(RESET) Using credentials from environment variables\n"
+	@go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/... && echo "$(GREEN)✓$(RESET) E2E tests completed" || (printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n" && printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n" && exit 1)
 	@echo ""
 
 .PHONY: test/tf/community

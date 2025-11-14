@@ -129,15 +129,12 @@ jobs:
       - name: Build provider
         run: make build
 
-      # Create .env file for acceptance tests
-      - name: Create .env file
-        run: |
-          echo "N8N_API_URL=${{ secrets.N8N_API_URL }}" > .env
-          echo "N8N_API_KEY=${{ secrets.N8N_API_KEY }}" >> .env
-          echo "TF_ACC=1" >> .env
-
-      # Run acceptance tests (uses .env file)
+      # Run acceptance tests (pass env vars directly)
       - name: Run acceptance tests
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          TF_ACC: 1
         run: make test/acceptance/ci
 
       # Generate documentation
