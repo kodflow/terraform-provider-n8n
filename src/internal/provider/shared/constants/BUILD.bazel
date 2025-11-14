@@ -1,0 +1,17 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "constants",
+    srcs = ["constants.go"],
+    importpath = "github.com/kodflow/n8n/src/internal/provider/shared/constants",
+    visibility = ["//src/internal/provider:__subpackages__"],
+)
+
+go_test(
+    name = "constants_test",
+    srcs = ["constants_internal_test.go"],
+    embed = [":constants"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+    ],
+)

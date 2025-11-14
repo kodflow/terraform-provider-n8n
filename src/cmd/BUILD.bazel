@@ -1,0 +1,31 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "cmd",
+    srcs = ["root.go"],
+    importpath = "github.com/kodflow/n8n/src/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/internal/provider",
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
+        "@com_github_spf13_cobra//:cobra",
+    ],
+)
+
+go_test(
+    name = "cmd_test",
+    srcs = [
+        "root_external_test.go",
+        "root_internal_test.go",
+    ],
+    embed = [":cmd"],
+    deps = [
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
+        "@com_github_spf13_cobra//:cobra",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//mock",
+        "@com_github_stretchr_testify//require",
+    ],
+)

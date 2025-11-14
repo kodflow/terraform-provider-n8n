@@ -1,0 +1,48 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "provider",
+    srcs = glob(
+        ["*.go"],
+        exclude = ["*_test.go"],
+    ),
+    importpath = "github.com/kodflow/n8n/src/internal/provider",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/internal/provider/credential",
+        "//src/internal/provider/execution",
+        "//src/internal/provider/project",
+        "//src/internal/provider/shared/client",
+        "//src/internal/provider/shared/models",
+        "//src/internal/provider/sourcecontrol",
+        "//src/internal/provider/tag",
+        "//src/internal/provider/user",
+        "//src/internal/provider/variable",
+        "//src/internal/provider/workflow",
+        "@com_github_hashicorp_terraform_plugin_framework//datasource",
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//provider/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+    ],
+)
+
+go_test(
+    name = "provider_test",
+    srcs = [
+        "provider_external_test.go",
+        "provider_internal_test.go",
+    ],
+    embed = [":provider"],
+    deps = [
+        "//src/internal/provider/shared/models",
+        "@com_github_hashicorp_terraform_plugin_framework//datasource",
+        "@com_github_hashicorp_terraform_plugin_framework//provider",
+        "@com_github_hashicorp_terraform_plugin_framework//provider/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_hashicorp_terraform_plugin_go//tftypes",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
+)

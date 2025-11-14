@@ -1,0 +1,85 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE.md in the project root for license information.
+
+branches:
+  - main
+
+plugins:
+  # Analyser les commits conventionnels et déterminer la version
+  - - "@semantic-release/commit-analyzer"
+    - preset: "conventionalcommits"
+      releaseRules:
+        - type: "feat"
+          release: "minor"
+        - type: "fix"
+          release: "patch"
+        - type: "perf"
+          release: "patch"
+        - type: "refactor"
+          release: "patch"
+        - type: "docs"
+          release: false
+        - type: "test"
+          release: false
+        - type: "chore"
+          release: false
+        - type: "ci"
+          release: false
+        - type: "build"
+          release: "patch"
+        - scope: "breaking"
+          release: "major"
+
+  # Générer les release notes
+  - - "@semantic-release/release-notes-generator"
+    - preset: "conventionalcommits"
+      presetConfig:
+        types:
+          - type: "feat"
+            section: "🚀 Features"
+          - type: "fix"
+            section: "🐛 Bug Fixes"
+          - type: "perf"
+            section: "⚡ Performance"
+          - type: "refactor"
+            section: "♻️ Refactoring"
+          - type: "build"
+            section: "🔧 Build"
+          - type: "docs"
+            section: "📚 Documentation"
+          - type: "test"
+            section: "✅ Tests"
+          - type: "chore"
+            section: "🧹 Chores"
+          - type: "ci"
+            section: "👷 CI/CD"
+
+  # Générer/mettre à jour CHANGELOG.md
+  - - "@semantic-release/changelog"
+    - changelogFile: "CHANGELOG.md"
+      changelogTitle: "# Changelog\n\nToutes les modifications notables de ce projet seront documentées dans ce fichier.\n\nLe format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),\net ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/)."
+
+  # Mettre à jour les fichiers avec la nouvelle version
+  - - "@semantic-release/exec"
+    - prepareCmd: |
+        # Mettre à jour la version dans go.mod si nécessaire
+        # Mettre à jour la version dans Makefile
+        sed -i "s/VERSION := .*/VERSION := ${nextRelease.version}/" Makefile
+
+  # Commiter les changements (CHANGELOG.md, etc.)
+  - - "@semantic-release/git"
+    - assets:
+        - "CHANGELOG.md"
+        - "Makefile"
+      message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+
+  # Créer la release GitHub avec les notes
+  - - "@semantic-release/github"
+    - successComment: false
+      failComment: false
+      releasedLabels: false
+      assets: []
+
+# Options globales
+tagFormat: "v${version}"

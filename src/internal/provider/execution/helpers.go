@@ -1,0 +1,61 @@
+// Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+// Licensed under the Sustainable Use License 1.0
+// See LICENSE.md in the project root for license information.
+
+// Package execution contains helper functions for execution data processing.
+package execution
+
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/n8n/src/internal/provider/execution/models"
+)
+
+// mapExecutionToItem maps an SDK execution to the execution item model.
+//
+// Params:
+//   - execution: SDK execution to map
+//
+// Returns:
+//   - models.Item: Mapped execution item model
+func mapExecutionToItem(execution *n8nsdk.Execution) models.Item {
+	item := &models.Item{}
+
+	// Check for non-nil value.
+	if execution.Id != nil {
+		item.ID = types.StringValue(fmt.Sprintf("%v", *execution.Id))
+	}
+	// Check for non-nil value.
+	if execution.WorkflowId != nil {
+		item.WorkflowID = types.StringValue(fmt.Sprintf("%v", *execution.WorkflowId))
+	}
+	// Check for non-nil value.
+	if execution.Finished != nil {
+		item.Finished = types.BoolPointerValue(execution.Finished)
+	}
+	// Check for non-nil value.
+	if execution.Mode != nil {
+		item.Mode = types.StringPointerValue(execution.Mode)
+	}
+	// Check for non-nil value.
+	if execution.StartedAt.IsSet() && execution.StartedAt.Get() != nil {
+		item.StartedAt = types.StringValue(execution.StartedAt.Get().String())
+	}
+	// Check for non-nil value.
+	if execution.StoppedAt.IsSet() {
+		stoppedAt := execution.StoppedAt.Get()
+		// Check for non-nil value.
+		if stoppedAt != nil {
+			item.StoppedAt = types.StringValue(stoppedAt.String())
+		}
+	}
+	// Check for non-nil value.
+	if execution.Status != nil {
+		item.Status = types.StringPointerValue(execution.Status)
+	}
+
+	// Return result.
+	return *item
+}

@@ -1,0 +1,115 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE.md in the project root for license information.
+
+# golangci-lint configuration for Terraform Provider n8n
+# Documentation: https://golangci-lint.run/docs/configuration/
+version: "2"
+
+run:
+  go: "1.25"
+  modules-download-mode: readonly
+
+linters:
+  # Note: revive is intentionally not enabled due to conflicts with ktn-linter requirements
+  enable:
+    - bodyclose
+    - errname
+    - errorlint
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - misspell
+    - noctx
+    - predeclared
+    - thelper
+    - unconvert
+    - unparam
+    - wastedassign
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    gocognit:
+      min-complexity: 20
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocritic:
+      disabled-checks:
+        - whyNoLint
+        - unnamedResult
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+    gocyclo:
+      min-complexity: 15
+    gosec:
+      excludes:
+        - G104
+        - G306
+    staticcheck:
+      checks:
+        - all
+        - "-ST1003" # Disabled due to conflict with ktn-linter constant naming requirements
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - gocognit
+          - goconst
+          - gocyclo
+          - gosec
+          - unparam
+        path: _test\.go
+      - linters:
+          - govet
+        path: helpers_internal_test\.go
+      - linters:
+          - govet
+        path: resource_internal_test\.go
+      - linters:
+          - gocritic
+        path: internal/provider/
+      - linters:
+          - all
+        path: .*\.pb\.go$
+      - linters:
+          - all
+        path: mock_.*\.go$
+      - linters:
+          - goconst
+        path: (.+)_test\.go
+    paths:
+      - .*\.pb\.go$
+      - .*\.gen\.go$
+      - vendor
+      - testdata
+      - bazel-*
+      - third_party$
+      - builtin$
+      - examples$
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

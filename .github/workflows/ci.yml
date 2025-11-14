@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI Pipeline
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      # CRITICAL: Validate secrets are available before wasting time
+      - name: Validate required secrets
+        run: |
+          echo "🔐 Validating required secrets..."
+          MISSING_SECRETS=0
+
+          if [ -z "${{ secrets.N8N_API_URL }}" ]; then
+            echo "❌ CRITICAL: N8N_API_URL secret is NOT set!"
+            MISSING_SECRETS=1
+          else
+            echo "✓ N8N_API_URL is configured"
+          fi
+
+          if [ -z "${{ secrets.N8N_API_KEY }}" ]; then
+            echo "❌ CRITICAL: N8N_API_KEY secret is NOT set!"
+            MISSING_SECRETS=1
+          else
+            echo "✓ N8N_API_KEY is configured"
+          fi
+
+          if [ $MISSING_SECRETS -eq 1 ]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ PIPELINE FAILED: Missing required secrets!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "Please configure the following secrets in:"
+            echo "Repository Settings → Secrets and variables → Actions"
+            echo ""
+            echo "Required secrets:"
+            echo "  - N8N_API_URL: Your n8n instance URL"
+            echo "  - N8N_API_KEY: Your n8n API key"
+            echo ""
+            exit 1
+          fi
+
+          echo "✅ All required secrets are configured"
+
+      # Setup Go
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      # Setup Bazel
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
+
+      # Install all development tools (includes dependencies, dev tools, and linting tools)
+      - name: Install tools
+        run: make tools
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: latest
+
+      # Check code formatting
+      - name: Check formatting
+        run: make fmt
+
+      # Run linters
+      - name: Run linters
+        run: make lint
+
+      # Run unit tests
+      - name: Run unit tests
+        run: make test/unit/ci
+
+      # Build provider
+      - name: Build provider
+        run: make build
+
+      # Run acceptance tests (pass env vars directly)
+      - name: Run acceptance tests
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          TF_ACC: "1"
+        run: |
+          echo "Running E2E acceptance tests..."
+          go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/...
+
+      # Generate documentation
+      - name: Generate documentation
+        run: make docs
