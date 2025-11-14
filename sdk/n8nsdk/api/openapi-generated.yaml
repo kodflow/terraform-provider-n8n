@@ -1656,24 +1656,19 @@ components:
         projectId:
           type: string
           description: Project ID
+          example: 2tUt1wbLX592XDdX
         userId:
           type: string
           description: User ID
         role:
           type: string
           description: User role
+          example: workflow:owner
           enum:
             - workflow:owner
             - workflow:editor
             - workflow:viewer
-      properties:
-        role:
-          type: string
-          example: workflow:owner
         workflowId:
-          type: string
-          example: 2tUt1wbLX592XDdX
-        projectId:
           type: string
           example: 2tUt1wbLX592XDdX
         project:
@@ -1778,26 +1773,6 @@ components:
           additionalProperties: true
           description: Pinned data for workflow nodes
           example: {}
-    sharedWorkflow:
-      type: object
-      additionalProperties: true
-      properties:
-        id:
-          type: string
-          description: Shared workflow ID
-        projectId:
-          type: string
-          description: Project ID
-        userId:
-          type: string
-          description: User ID
-        role:
-          type: string
-          description: User role
-          enum:
-            - workflow:owner
-            - workflow:editor
-            - workflow:viewer
     workflowList:
       type: object
       properties:

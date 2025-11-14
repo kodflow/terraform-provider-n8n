@@ -32,6 +32,7 @@ Provides a conventional commit message template in your editor.
 Required format: `<type>: <description>`
 
 Valid types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -44,6 +45,7 @@ Valid types:
 - `revert`: Revert previous commit
 
 Also blocks:
+
 - AI attribution (Co-Authored-By: Claude, GPT, etc.)
 - Generated with messages
 

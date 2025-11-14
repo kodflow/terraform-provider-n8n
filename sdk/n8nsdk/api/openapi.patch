@@ -94,31 +94,38 @@
          createdAt:
            type: string
            format: date-time
-@@ -1632,6 +1648,23 @@ components:
-     sharedWorkflow:
+@@ -1633,15 +1649,27 @@ components:
        type: object
        additionalProperties: true
-+      properties:
+       properties:
 +        id:
 +          type: string
 +          description: Shared workflow ID
 +        projectId:
 +          type: string
 +          description: Project ID
++          example: 2tUt1wbLX592XDdX
 +        userId:
 +          type: string
 +          description: User ID
-+        role:
-+          type: string
+         role:
+           type: string
 +          description: User role
+           example: workflow:owner
 +          enum:
 +            - workflow:owner
 +            - workflow:editor
 +            - workflow:viewer
-       properties:
-         role:
+         workflowId:
            type: string
-@@ -1720,6 +1753,50 @@ components:
+           example: 2tUt1wbLX592XDdX
+-        projectId:
+-          type: string
+-          example: 2tUt1wbLX592XDdX
+         project:
+           type: object
+           properties:
+@@ -1720,6 +1748,30 @@ components:
            type: array
            items:
              $ref: '#/components/schemas/sharedWorkflow'
@@ -146,30 +153,10 @@
 +          additionalProperties: true
 +          description: Pinned data for workflow nodes
 +          example: {}
-+    sharedWorkflow:
-+      type: object
-+      additionalProperties: true
-+      properties:
-+        id:
-+          type: string
-+          description: Shared workflow ID
-+        projectId:
-+          type: string
-+          description: Project ID
-+        userId:
-+          type: string
-+          description: User ID
-+        role:
-+          type: string
-+          description: User role
-+          enum:
-+            - workflow:owner
-+            - workflow:editor
-+            - workflow:viewer
      workflowList:
        type: object
        properties:
-@@ -1882,6 +1959,60 @@ components:
+@@ -1882,6 +1934,60 @@ components:
          type:
            type: string
            readOnly: true
@@ -230,7 +217,7 @@
      variable:
        type: object
        additionalProperties: false
-@@ -2051,6 +2182,7 @@ components:
+@@ -2051,6 +2157,7 @@ components:
            type: object
          finished:
            type: boolean
@@ -238,7 +225,7 @@
            example: true
          mode:
            type: string
-@@ -2065,13 +2197,20 @@ components:
+@@ -2065,13 +2172,20 @@ components:
            - webhook
          retryOf:
            type: number
@@ -259,7 +246,7 @@
            format: date-time
          stoppedAt:
            type: string
-@@ -2182,6 +2321,8 @@ components:
+@@ -2182,6 +2296,8 @@ components:
          name:
            type: string
            example: Production
@@ -268,7 +255,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -2372,6 +2513,11 @@ components:
+@@ -2372,6 +2488,11 @@ components:
            writeOnly: true
            example:
              token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
