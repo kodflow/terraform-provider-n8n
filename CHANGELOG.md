@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- add missing isManaged field to CreateCredentialResponse (`6d3266c`)
 - explicitly pass env vars to go test subprocess (`82c387a`)
 - replace associative array with temp file for bash compatibility (`f82e3c9`)
 - remove duplicate workflow runs on feature branches (`85a088e`)
@@ -103,9 +104,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 66
+- **Total commits:** 67
 - **Features:** 6
-- **Bug fixes:** 23
+- **Bug fixes:** 24
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -116,4 +117,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 15:44:28*
+*Changelog generated automatically on 2025-11-14 16:52:56*

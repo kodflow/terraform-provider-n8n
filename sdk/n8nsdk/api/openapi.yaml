@@ -1379,6 +1379,11 @@ components:
           format: date-time
           readOnly: true
           example: '2022-04-29T11:02:29.842Z'
+        isManaged:
+          type: boolean
+          default: false
+          readOnly: true
+          description: Whether the credential is managed by n8n
     execution:
       type: object
       properties:
