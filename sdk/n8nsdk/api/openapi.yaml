@@ -1631,7 +1631,7 @@ components:
           example: false
     sharedWorkflow:
       type: object
-      additionalProperties: true
+      additionalProperties: false
       properties:
         role:
           type: string
