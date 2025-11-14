@@ -45,7 +45,7 @@ def main():
     print("🚀 N8N OpenAPI Download (No Commit)\n")
 
     # Config
-    N8N_COMMIT = "53fd5c94c8798292cc981508a937b09532bbcf64"  # Frozen commit for API stability (n8n@1.119.1)
+    N8N_COMMIT = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
     TEMP_DIR = "/tmp/n8n-openapi-download"
     API_DIR = Path("sdk/n8nsdk/api")
 

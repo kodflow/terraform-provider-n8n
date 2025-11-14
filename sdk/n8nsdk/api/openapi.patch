@@ -36,14 +36,6 @@
            description: Operation successful.
          '401':
            $ref: '#/components/responses/unauthorized'
-@@ -1324,6 +1324,7 @@ components:
-       - type
-       - data
-       type: object
-+      additionalProperties: true
-       properties:
-         id:
-           type: string
 @@ -1340,6 +1341,11 @@ components:
            writeOnly: true
            example:

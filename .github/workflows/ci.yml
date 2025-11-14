@@ -73,12 +73,8 @@ jobs:
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
 
-      # Download Go dependencies (SDK is versioned in git, not generated)
-      - name: Download dependencies
-        run: make deps
-
-      # Install development tools
-      - name: Install development tools
+      # Install all development tools (includes dependencies, dev tools, and linting tools)
+      - name: Install tools
         run: make tools
 
       # Setup Terraform
@@ -86,10 +82,6 @@ jobs:
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: latest
-
-      # Install linting tools
-      - name: Install linting tools
-        run: make tools/lint
 
       # Check code formatting
       - name: Check formatting

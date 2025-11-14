@@ -10,10 +10,10 @@ info:
     url: https://github.com/n8n-io/n8n/blob/master/LICENSE.md
   version: 1.1.1
   x-n8n-version-info:
-    frozenVersion: 1.119.1
-    frozenCommit: 53fd5c94c8798292cc981508a937b09532bbcf64
+    frozenVersion: 1.119.2
+    frozenCommit: 4bf741ae67124724eb94e582de94daf0d70f9bd0
     latestVersion: 1.119.2
-    inSync: false
+    inSync: true
     note: This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.
 servers:
 - url: /api/v1

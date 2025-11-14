@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📝 Other
 
+- base (`b71d6ae`)
 - Revert "chore(sdk): bump n8n OpenAPI spec to 1.119.1" (`74fc575`)
 - update patch (`4c1baa0`)
 - prepare patch (`1740fd3`)
@@ -33,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🚀 Features
 
+- split OpenAPI generation into separate steps (`db27989`)
 - version SDK in git instead of generating in CI (`4de085b`)
 - fail fast if required secrets are missing (`24f1474`)
 - auto-cancel outdated workflow runs (`8a78855`)
@@ -122,8 +124,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 85
-- **Features:** 7
+- **Total commits:** 87
+- **Features:** 8
 - **Bug fixes:** 36
 - **Tests:** 6
 - **Refactoring:** 7
@@ -135,4 +137,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 19:53:41*
+*Changelog generated automatically on 2025-11-14 20:45:12*
