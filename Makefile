@@ -168,6 +168,76 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 	@echo "$(GREEN)✓$(RESET) E2E tests completed"
 	@echo ""
 
+.PHONY: test/tf/community
+test/tf/community: build ## Test community resources with Terraform (uses .env)
+	@echo ""
+	@echo "$(BOLD)Running Community Edition integration test...$(RESET)"
+	@if [ ! -f .env ]; then \
+		printf "  $(RED)✗$(RESET) .env file not found\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_API_URL and N8N_API_KEY\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Example:\n"; \
+		printf "      N8N_API_URL=http://localhost:5678\n"; \
+		printf "      N8N_API_KEY=your-api-key-here\n"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
+	@export $$(cat .env | xargs) && \
+	cd examples/community && \
+	rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup 2>/dev/null || true && \
+	printf "  $(CYAN)→$(RESET) Initializing Terraform\n" && \
+	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform init -no-color -upgrade -plugin-dir=$(HOME)/.terraform.d/plugins > /dev/null && \
+	printf "  $(CYAN)→$(RESET) Planning deployment\n" && \
+	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform plan -no-color -out=tfplan && \
+	printf "  $(CYAN)→$(RESET) Applying changes\n" && \
+	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform apply -no-color -auto-approve tfplan && \
+	echo "" && \
+	echo "$(BOLD)$(GREEN)✅ Community test completed successfully$(RESET)" && \
+	echo "" && \
+	echo "$(BOLD)Created Resources:$(RESET)" && \
+	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform output -no-color && \
+	echo "" && \
+	printf "  $(CYAN)→$(RESET) Destroying resources\n" && \
+	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform destroy -no-color -auto-approve && \
+	rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup tfplan 2>/dev/null || true && \
+	echo "$(GREEN)✓$(RESET) Resources cleaned up" && \
+	echo ""
+
+.PHONY: test/tf/basic-sample
+test/tf/basic-sample: build ## Test basic-sample example with Terraform (uses .env)
+	@echo ""
+	@echo "$(BOLD)Running Basic Sample integration test...$(RESET)"
+	@if [ ! -f .env ]; then \
+		printf "  $(RED)✗$(RESET) .env file not found\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_API_URL and N8N_API_KEY\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Example:\n"; \
+		printf "      N8N_API_URL=http://localhost:5678\n"; \
+		printf "      N8N_API_KEY=your-api-key-here\n"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
+	@export $$(cat .env | xargs) && \
+	cd examples/basic-sample && \
+	rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup 2>/dev/null || true && \
+	printf "  $(CYAN)→$(RESET) Initializing Terraform\n" && \
+	TF_VAR_n8n_base_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform init -no-color -upgrade -plugin-dir=$(HOME)/.terraform.d/plugins > /dev/null && \
+	printf "  $(CYAN)→$(RESET) Planning deployment\n" && \
+	TF_VAR_n8n_base_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform plan -no-color -out=tfplan && \
+	printf "  $(CYAN)→$(RESET) Applying changes\n" && \
+	TF_VAR_n8n_base_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform apply -no-color -auto-approve tfplan && \
+	echo "" && \
+	echo "$(BOLD)$(GREEN)✅ Basic Sample test completed successfully$(RESET)" && \
+	echo "" && \
+	echo "$(BOLD)Created Resources:$(RESET)" && \
+	TF_VAR_n8n_base_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform output -no-color && \
+	echo "" && \
+	printf "  $(CYAN)→$(RESET) Destroying resources\n" && \
+	TF_VAR_n8n_base_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform destroy -no-color -auto-approve && \
+	rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup tfplan 2>/dev/null || true && \
+	echo "$(GREEN)✓$(RESET) Resources cleaned up" && \
+	echo ""
+
 # ============================================================================
 # Code Quality
 # ============================================================================

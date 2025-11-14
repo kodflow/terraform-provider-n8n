@@ -140,8 +140,8 @@ func (r *WorkflowResource) addCoreAttributes(attrs map[string]schema.Attribute) 
 		Optional:            true,
 		Computed:            true,
 	}
-	attrs["tags"] = schema.ListAttribute{
-		MarkdownDescription: "List of tag IDs associated with this workflow",
+	attrs["tags"] = schema.SetAttribute{
+		MarkdownDescription: "Set of tag IDs associated with this workflow",
 		ElementType:         types.StringType,
 		Optional:            true,
 	}
@@ -284,7 +284,7 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 		return false
 	}
 
-	// Create workflow
+	// Create workflow (Note: active field is read-only during creation)
 	workflowRequest := n8nsdk.Workflow{
 		Name:        plan.Name.ValueString(),
 		Nodes:       nodes,
@@ -321,8 +321,38 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 		}
 	}
 
-	// Set ID and map response to state.
+	// Set ID.
 	plan.ID = types.StringPointerValue(workflow.Id)
+
+	// Store current state before activation
+	currentState := &models.Resource{}
+	currentState.ID = plan.ID
+	currentState.Active = types.BoolPointerValue(workflow.Active)
+
+	// Handle workflow activation if needed (workflows are created inactive by default)
+	// Only activate if user wants it active AND workflow has nodes (can't activate empty workflows)
+	hasNodes := workflow.Nodes != nil && len(workflow.Nodes) > 0
+	wantsActive := !plan.Active.IsNull() && !plan.Active.IsUnknown() && plan.Active.ValueBool()
+
+	if wantsActive && !hasNodes {
+		// Error: cannot activate empty workflow
+		resp.Diagnostics.AddError(
+			"Cannot activate empty workflow",
+			fmt.Sprintf("Cannot create workflow with active=true because it has no nodes. Either set active=false or add at least one node (trigger, poller, or webhook) to the workflow before activating."),
+		)
+		// Return failure.
+		return false
+	} else if wantsActive && hasNodes {
+		// Only try to activate if workflow has nodes
+		r.handleWorkflowActivation(ctx, plan, currentState, &resp.Diagnostics)
+		// Check for activation errors.
+		if resp.Diagnostics.HasError() {
+			// Return failure.
+			return false
+		}
+	}
+
+	// Map workflow state to model (no need to re-read as activation is a separate operation)
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
 	// Return success.

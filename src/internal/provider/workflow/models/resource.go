@@ -15,7 +15,7 @@ type Resource struct {
 	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 	Active          types.Bool   `tfsdk:"active"`
-	Tags            types.List   `tfsdk:"tags"`
+	Tags            types.Set    `tfsdk:"tags"`
 	NodesJSON       types.String `tfsdk:"nodes_json"`
 	ConnectionsJSON types.String `tfsdk:"connections_json"`
 	SettingsJSON    types.String `tfsdk:"settings_json"`

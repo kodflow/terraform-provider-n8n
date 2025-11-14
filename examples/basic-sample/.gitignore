@@ -26,3 +26,4 @@ terraform.rc
 # Environment files
 .env
 .env.local
+# Terraform variable files\n*.tfvars

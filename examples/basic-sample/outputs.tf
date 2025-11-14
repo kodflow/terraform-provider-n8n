@@ -9,15 +9,20 @@ output "tag_env_id" {
   value       = n8n_tag.environment_dev.id
 }
 
-output "tag_test_id" {
-  description = "ID of the test tag"
-  value       = n8n_tag.test.id
+output "tag_automated_id" {
+  description = "ID of the automated tag"
+  value       = n8n_tag.automated.id
 }
 
 # Workflows
+output "workflow_simple_id" {
+  description = "ID of the simple workflow"
+  value       = n8n_workflow.simple.id
+}
+
 output "workflow_api_test_id" {
   description = "ID of the API test workflow"
-  value       = n8n_workflow.basic_example.id
+  value       = n8n_workflow.api_test.id
 }
 
 output "workflow_data_processor_id" {
@@ -26,9 +31,14 @@ output "workflow_data_processor_id" {
 }
 
 # URLs
+output "workflow_simple_url" {
+  description = "Direct URL to the simple workflow"
+  value       = "${var.n8n_base_url}/workflow/${n8n_workflow.simple.id}"
+}
+
 output "workflow_api_test_url" {
   description = "Direct URL to the API test workflow"
-  value       = "${var.n8n_base_url}/workflow/${n8n_workflow.basic_example.id}"
+  value       = "${var.n8n_base_url}/workflow/${n8n_workflow.api_test.id}"
 }
 
 output "workflow_data_processor_url" {
@@ -49,17 +59,23 @@ output "summary" {
         id   = n8n_tag.environment_dev.id
         name = n8n_tag.environment_dev.name
       }
-      test = {
-        id   = n8n_tag.test.id
-        name = n8n_tag.test.name
+      automated = {
+        id   = n8n_tag.automated.id
+        name = n8n_tag.automated.name
       }
     }
     workflows = {
+      simple = {
+        id     = n8n_workflow.simple.id
+        name   = n8n_workflow.simple.name
+        active = n8n_workflow.simple.active
+        url    = "${var.n8n_base_url}/workflow/${n8n_workflow.simple.id}"
+      }
       api_test = {
-        id     = n8n_workflow.basic_example.id
-        name   = n8n_workflow.basic_example.name
-        active = n8n_workflow.basic_example.active
-        url    = "${var.n8n_base_url}/workflow/${n8n_workflow.basic_example.id}"
+        id     = n8n_workflow.api_test.id
+        name   = n8n_workflow.api_test.name
+        active = n8n_workflow.api_test.active
+        url    = "${var.n8n_base_url}/workflow/${n8n_workflow.api_test.id}"
       }
       data_processor = {
         id     = n8n_workflow.data_processor.id
@@ -68,6 +84,7 @@ output "summary" {
         url    = "${var.n8n_base_url}/workflow/${n8n_workflow.data_processor.id}"
       }
     }
-    total_resources = 5
+    total_tags      = length(data.n8n_tags.all.tags)
+    total_workflows = length(data.n8n_workflows.all.workflows)
   }
 }

@@ -82,10 +82,11 @@ func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk
 //   - diags: Diagnostics for error reporting
 //
 // Returns:
-//   - types.List: Terraform list of tag IDs
-func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) types.List {
+//   - types.Set: Terraform set of tag IDs
+func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) types.Set {
 	// Check length.
 	if len(workflow.Tags) > 0 {
+		// Collect tag IDs
 		tagIDs := make([]types.String, 0, len(workflow.Tags))
 		// Iterate over items.
 		for _, tag := range workflow.Tags {
@@ -94,14 +95,15 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 				tagIDs = append(tagIDs, types.StringValue(*tag.Id))
 			}
 		}
-		tagList, tagDiags := types.ListValueFrom(ctx, types.StringType, tagIDs)
+
+		tagSet, tagDiags := types.SetValueFrom(ctx, types.StringType, tagIDs)
 		diags.Append(tagDiags...)
 		// Return result.
-		return tagList
+		return tagSet
 	}
 
-	// Return null list if no tags to avoid inconsistent result errors.
-	return types.ListNull(types.StringType)
+	// Return null set if no tags to avoid inconsistent result errors.
+	return types.SetNull(types.StringType)
 }
 
 // mapWorkflowBasicFields maps basic workflow fields to the model.

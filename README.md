@@ -10,6 +10,7 @@ Terraform provider to manage n8n resources (workflows, credentials, etc.).
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Examples](#examples)
 - [Development](#development)
 - [Build and Tests](#build-and-tests)
 - [Project Structure](#project-structure)
@@ -89,6 +90,75 @@ make build
 # The provider will be installed in:
 # ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/0.0.1/<OS>_<ARCH>/
 ```
+
+## Examples
+
+The provider includes comprehensive examples for both **Community Edition** (free/self-hosted) and **Enterprise Edition** (requires license).
+
+### Community Edition Examples
+
+All examples in [`examples/community/`](examples/community/) work with n8n Community Edition:
+
+#### Workflows
+
+- **[Basic Webhook](examples/community/workflows/basic-workflow/)**: Simple webhook workflow with POST endpoint
+- **[Scheduled Workflow](examples/community/workflows/scheduled-workflow/)**: Hourly automated workflow with schedule trigger
+
+#### Credentials
+
+- **[HTTP Basic Auth](examples/community/credentials/basic-auth/)**: Create and manage API credentials
+
+#### Tags
+
+- **[Workflow Tags](examples/community/tags/workflow-tags/)**: Organize workflows with tags and query by tags
+
+#### Variables
+
+- **[Environment Variables](examples/community/variables/environment-vars/)**: Manage environment variables for workflows
+
+#### Executions
+
+- **[Query Executions](examples/community/executions/query-executions/)**: Query and filter workflow executions (read-only)
+
+### Enterprise Edition Examples
+
+Examples in [`examples/enterprise/`](examples/enterprise/) are currently in development and will be available once enterprise license access is obtained for
+testing.
+
+Planned enterprise examples:
+
+- **Projects**: Create projects, assign workflows, manage team permissions
+- **Users**: Create and manage user accounts with roles
+- **Source Control**: Git integration for workflow versioning
+
+### Quick Start with Examples
+
+```bash
+# Set your n8n credentials
+export N8N_API_URL="http://localhost:5678"
+export N8N_API_KEY="your-api-key-here"
+
+# Try a community example
+cd examples/community/workflows/basic-workflow
+terraform init
+terraform plan
+terraform apply
+
+# Test the webhook
+curl -X POST http://localhost:5678/webhook/example-webhook \
+  -H "Content-Type: application/json" \
+  -d '{"test": "data"}'
+
+# Cleanup
+terraform destroy
+```
+
+### Getting Your API Key
+
+1. Open your n8n instance
+2. Go to **Settings** > **API**
+3. Click **Create API Key**
+4. Copy the key and set it as `N8N_API_KEY` environment variable
 
 ## Development
 
