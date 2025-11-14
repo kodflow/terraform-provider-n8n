@@ -36,9 +36,23 @@ Expire-Date: 0
 %echo done
 EOF
 
-# Ensure GPG home exists
+# Ensure GPG home and config exist
 mkdir -p ~/.gnupg
 chmod 700 ~/.gnupg
+
+# Ensure gpg-agent.conf allows loopback
+if ! grep -q "allow-loopback-pinentry" ~/.gnupg/gpg-agent.conf 2>/dev/null; then
+    cat >> ~/.gnupg/gpg-agent.conf <<AGENTCONF
+allow-preset-passphrase
+allow-loopback-pinentry
+max-cache-ttl 34560000
+default-cache-ttl 34560000
+AGENTCONF
+    chmod 600 ~/.gnupg/gpg-agent.conf
+    # Restart agent to apply changes
+    gpgconf --kill gpg-agent 2>/dev/null || true
+    sleep 1
+fi
 
 # Generate the key
 echo "Generating key (this may take a moment)..."

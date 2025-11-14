@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- add manual GPG setup guide and improve scripts (`c0e29a5`)
 - remove [skip ci] from semantic-release to allow release workflow (`551df3f`)
 
 ### 📚 Documentation
@@ -26,9 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 4
+- **Total commits:** 5
 - **Features:** 2
-- **Bug fixes:** 1
+- **Bug fixes:** 2
 - **Tests:** 0
 - **Refactoring:** 0
 - **Test coverage:** N/A
@@ -39,4 +40,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 21:46:38*
+*Changelog generated automatically on 2025-11-14 21:49:49*
