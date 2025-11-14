@@ -40,7 +40,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 
 | Icon | Package | Coverage |
 |:----:|---------|----------|
-| 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 93.3% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/credential` | 94.8% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/execution` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/project` | 99.1% |
@@ -50,7 +50,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/tag` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/user` | 100.0% |
 | 🟢 | `github.com/kodflow/n8n/src/internal/provider/variable` | 98.1% |
-| 🟢 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 99.7% |
+| 🟢 | `github.com/kodflow/n8n/src/internal/provider/workflow` | 99.4% |
 
 ---
 
@@ -171,5 +171,5 @@ Reading n8n resources without managing their lifecycle.
 
 ---
 
-*Report generated on: 2025-11-13*
+*Report generated on: 2025-11-14*
 *Threshold: 70.0%*

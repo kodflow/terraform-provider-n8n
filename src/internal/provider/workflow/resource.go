@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -324,39 +325,60 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 	// Set ID.
 	plan.ID = types.StringPointerValue(workflow.Id)
 
-	// Store current state before activation
-	currentState := &models.Resource{}
-	currentState.ID = plan.ID
-	currentState.Active = types.BoolPointerValue(workflow.Active)
-
-	// Handle workflow activation if needed (workflows are created inactive by default)
-	// Only activate if user wants it active AND workflow has nodes (can't activate empty workflows)
-	hasNodes := workflow.Nodes != nil && len(workflow.Nodes) > 0
-	wantsActive := !plan.Active.IsNull() && !plan.Active.IsUnknown() && plan.Active.ValueBool()
-
-	if wantsActive && !hasNodes {
-		// Error: cannot activate empty workflow
-		resp.Diagnostics.AddError(
-			"Cannot activate empty workflow",
-			fmt.Sprintf("Cannot create workflow with active=true because it has no nodes. Either set active=false or add at least one node (trigger, poller, or webhook) to the workflow before activating."),
-		)
-		// Return failure.
+	// Handle workflow activation after creation if requested
+	if !r.handlePostCreationActivation(ctx, plan, workflow, &resp.Diagnostics) {
 		return false
-	} else if wantsActive && hasNodes {
-		// Only try to activate if workflow has nodes
-		r.handleWorkflowActivation(ctx, plan, currentState, &resp.Diagnostics)
-		// Check for activation errors.
-		if resp.Diagnostics.HasError() {
-			// Return failure.
-			return false
-		}
 	}
 
-	// Map workflow state to model (no need to re-read as activation is a separate operation)
+	// Map workflow state to model
+	// No need to re-read as activation is separate operation
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
 	// Return success.
 	return true
+}
+
+// handlePostCreationActivation handles workflow activation after creation.
+//
+// Params:
+//   - ctx: context for the operation
+//   - plan: planned resource state
+//   - workflow: created workflow from API
+//   - diags: diagnostics for error reporting
+//
+// Returns:
+//   - bool: true if successful or activation not needed, false on error
+func (r *WorkflowResource) handlePostCreationActivation(ctx context.Context, plan *models.Resource, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) bool {
+	// Check if user wants workflow activated
+	wantsActive := !plan.Active.IsNull() && !plan.Active.IsUnknown() && plan.Active.ValueBool()
+	// Activation not requested
+	if !wantsActive {
+		// Return success
+		return true
+	}
+
+	// Check workflow has nodes before activation
+	hasNodes := len(workflow.Nodes) > 0
+	// Cannot activate workflow without nodes
+	if !hasNodes {
+		diags.AddError(
+			"Cannot activate empty workflow",
+			"Cannot create workflow with active=true because it has no nodes. Either set active=false or add at least one node (trigger, poller, or webhook) to the workflow before activating.",
+		)
+		// Return failure
+		return false
+	}
+
+	// Prepare state for activation
+	currentState := &models.Resource{
+		ID:     plan.ID,
+		Active: types.BoolPointerValue(workflow.Active),
+	}
+
+	// Activate the workflow
+	r.handleWorkflowActivation(ctx, plan, currentState, diags)
+	// Return success if no errors occurred
+	return !diags.HasError()
 }
 
 // Read refreshes the Terraform state with the latest data.

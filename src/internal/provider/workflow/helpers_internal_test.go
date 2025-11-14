@@ -1181,7 +1181,7 @@ func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
 				t.Helper()
 				r := &WorkflowResource{}
 				plan := &models.Resource{
-					Tags: types.ListNull(types.StringType),
+					Tags: types.SetNull(types.StringType),
 				}
 				workflow := &n8nsdk.Workflow{}
 				diags := &diag.Diagnostics{}
@@ -1197,7 +1197,7 @@ func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
 				t.Helper()
 				r := &WorkflowResource{}
 				plan := &models.Resource{
-					Tags: types.ListUnknown(types.StringType),
+					Tags: types.SetUnknown(types.StringType),
 				}
 				workflow := &n8nsdk.Workflow{}
 				diags := &diag.Diagnostics{}
@@ -1336,13 +1336,13 @@ func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		tags         types.List
+		tags         types.Set
 		setupHandler func(w http.ResponseWriter, r *http.Request)
 		expectError  bool
 	}{
 		{
 			name: "update tags successfully",
-			tags: types.ListValueMust(types.StringType, []attr.Value{
+			tags: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("tag-1"),
 				types.StringValue("tag-2"),
 			}),
@@ -1362,7 +1362,7 @@ func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
 		},
 		{
 			name: "update tags with API error",
-			tags: types.ListValueMust(types.StringType, []attr.Value{
+			tags: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("tag-1"),
 			}),
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
@@ -1373,8 +1373,8 @@ func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
 		},
 		{
 			name: "update tags with ElementsAs error",
-			// Use a list with wrong element type to trigger ElementsAs error
-			tags: types.ListValueMust(types.NumberType, []attr.Value{
+			// Use a set with wrong element type to trigger ElementsAs error
+			tags: types.SetValueMust(types.NumberType, []attr.Value{
 				types.NumberValue(big.NewFloat(123)),
 			}),
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {

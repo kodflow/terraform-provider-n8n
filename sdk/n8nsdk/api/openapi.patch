@@ -86,7 +86,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -1765,6 +1780,26 @@
+@@ -1765,6 +1780,28 @@
            type: array
            items:
              $ref: '#/components/schemas/sharedWorkflow'
@@ -110,10 +110,12 @@
 +        pinData:
 +          type: object
 +          description: Pinned data for workflow nodes
++    sharedWorkflow:
++      additionalProperties: true
      workflowList:
        type: object
        properties:
-@@ -1932,6 +1967,42 @@
+@@ -1932,6 +1969,46 @@
          type:
            type: string
            readOnly: true
@@ -134,6 +136,7 @@
 +          type: object
 +          nullable: true
 +          description: Project icon (emoji or icon with value)
++          additionalProperties: true
 +          properties:
 +            type:
 +              type: string
@@ -153,6 +156,9 @@
 +          description: Project relations
 +          items:
 +            type: object
++            additionalProperties: true
++    sharedWorkflow_project:
++      additionalProperties: true
      variable:
        type: object
        additionalProperties: false

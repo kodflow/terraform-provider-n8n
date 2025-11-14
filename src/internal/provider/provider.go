@@ -82,12 +82,12 @@ func (p *N8nProvider) Schema(_ctx context.Context, _req provider.SchemaRequest, 
 		MarkdownDescription: "Terraform provider for n8n automation platform",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_TOKEN environment variable.",
+				MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_KEY or N8N_API_TOKEN environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"base_url": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_URL environment variable.",
+				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_API_URL or N8N_URL environment variable.",
 				Optional:            true,
 			},
 		},
@@ -111,23 +111,17 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		return
 	}
 
-	// Read from environment variables if not set in configuration
+	// Read configuration from provider block or environment variables
 	apiKey := config.APIKey.ValueString()
-	// Use environment variable N8N_API_TOKEN if api_key is not provided
+	// Try N8N_API_KEY (preferred) or N8N_API_TOKEN (legacy)
 	if apiKey == "" {
-		// Read API token from environment
-		if envAPIKey := os.Getenv("N8N_API_TOKEN"); envAPIKey != "" {
-			apiKey = envAPIKey
-		}
+		apiKey = getEnvAPIKey()
 	}
 
 	baseURL := config.BaseURL.ValueString()
-	// Use environment variable N8N_URL if base_url is not provided
+	// Try N8N_API_URL (preferred) or N8N_URL (legacy)
 	if baseURL == "" {
-		// Read base URL from environment
-		if envBaseURL := os.Getenv("N8N_URL"); envBaseURL != "" {
-			baseURL = envBaseURL
-		}
+		baseURL = getEnvBaseURL()
 	}
 
 	// Validate required configuration
@@ -135,7 +129,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Missing API Key",
-			"The provider requires an API key. Set the api_key attribute in the provider configuration or the N8N_API_TOKEN environment variable.",
+			"The provider requires an API key. Set the api_key attribute in the provider configuration or the N8N_API_KEY (or N8N_API_TOKEN) environment variable.",
 		)
 	}
 
@@ -143,7 +137,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if baseURL == "" {
 		resp.Diagnostics.AddError(
 			"Missing Base URL",
-			"The provider requires a base URL. Set the base_url attribute in the provider configuration or the N8N_URL environment variable.",
+			"The provider requires a base URL. Set the base_url attribute in the provider configuration or the N8N_API_URL (or N8N_URL) environment variable.",
 		)
 	}
 
@@ -240,14 +234,46 @@ func NewN8nProvider(version string) *N8nProvider {
 	}
 }
 
-// New returns a provider factory function that creates N8nProvider instances.
-// This function is required by the Terraform plugin framework for provider initialization.
-//
-// Params:
-//   - version: version string to assign to created provider instances
+// getEnvAPIKey retrieves API key from environment variables.
+// Tries N8N_API_KEY first (preferred), then N8N_API_TOKEN (legacy).
 //
 // Returns:
-//   - func() provider.Provider: factory function that creates provider instances
+//   - string: API key from environment, or empty string if not found
+func getEnvAPIKey() string {
+	// Try preferred variable name first
+	if envAPIKey := os.Getenv("N8N_API_KEY"); envAPIKey != "" {
+		// Return preferred variable value
+		return envAPIKey
+	}
+	// Fall back to legacy variable name
+	// Return legacy variable value or empty string
+	return os.Getenv("N8N_API_TOKEN")
+}
+
+// getEnvBaseURL retrieves base URL from environment variables.
+// Tries N8N_API_URL first (preferred), then N8N_URL (legacy).
+//
+// Returns:
+//   - string: Base URL from environment, or empty string if not found
+func getEnvBaseURL() string {
+	// Try preferred variable name first
+	if envBaseURL := os.Getenv("N8N_API_URL"); envBaseURL != "" {
+		// Return preferred variable value
+		return envBaseURL
+	}
+	// Fall back to legacy variable name
+	// Return legacy variable value or empty string
+	return os.Getenv("N8N_URL")
+}
+
+// New returns a provider factory function.
+// Creates N8nProvider instances with the specified version.
+//
+// Params:
+//   - version: version string for provider instances
+//
+// Returns:
+//   - func() provider.Provider: factory function
 func New(version string) func() provider.Provider {
 	// Lazy initialization pattern required by Terraform plugin framework
 	return func() provider.Provider {

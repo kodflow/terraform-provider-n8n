@@ -28,9 +28,12 @@ go_library(
 
 go_test(
     name = "provider_test",
-    srcs = ["provider_external_test.go"],
+    srcs = [
+        "provider_external_test.go",
+        "provider_internal_test.go",
+    ],
+    embed = [":provider"],
     deps = [
-        ":provider",
         "//src/internal/provider/shared/models",
         "@com_github_hashicorp_terraform_plugin_framework//datasource",
         "@com_github_hashicorp_terraform_plugin_framework//provider",

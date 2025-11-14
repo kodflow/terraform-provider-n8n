@@ -19,6 +19,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// strPtr returns a pointer to the given string value.
+// Helper function for tests.
+func strPtr(s string) *string {
+	return &s
+}
+
 // TestNewWorkflowResource is now in external test file - refactored to test behavior only.
 
 // TestNewWorkflowResourceWrapper is now in external test file - refactored to test behavior only.
@@ -296,7 +302,7 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, nil),
 					"name":             tftypes.NewValue(tftypes.String, "Test Workflow"),
 					"active":           tftypes.NewValue(tftypes.Bool, nil),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, nil),
 					"connections_json": tftypes.NewValue(tftypes.String, nil),
 					"settings_json":    tftypes.NewValue(tftypes.String, nil),
@@ -313,7 +319,7 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -541,7 +547,7 @@ func TestWorkflowResource_Delete_Internal(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "test-workflow-id"),
 					"name":             tftypes.NewValue(tftypes.String, "test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, nil),
@@ -599,7 +605,7 @@ func TestWorkflowResource_Delete_Internal(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "test-workflow-id"),
 					"name":             tftypes.NewValue(tftypes.String, "test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, nil),
@@ -1016,7 +1022,7 @@ func TestWorkflowResource_addCoreAttributes(t *testing.T) {
 				attrs := make(map[string]schema.Attribute)
 				r.addCoreAttributes(attrs)
 				assert.Contains(t, attrs, "tags")
-				tagsAttr := attrs["tags"].(schema.ListAttribute)
+				tagsAttr := attrs["tags"].(schema.SetAttribute)
 				assert.NotEmpty(t, tagsAttr.MarkdownDescription)
 				assert.True(t, tagsAttr.Optional, "tags should be optional")
 				assert.False(t, tagsAttr.Required, "tags should not be required")
@@ -1063,7 +1069,7 @@ func TestWorkflowResource_addCoreAttributes(t *testing.T) {
 						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
 					case schema.BoolAttribute:
 						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
-					case schema.ListAttribute:
+					case schema.SetAttribute:
 						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
 					}
 				}
@@ -1450,7 +1456,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, nil),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, nil),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "invalid json"),
 					"connections_json": tftypes.NewValue(tftypes.String, nil),
 					"settings_json":    tftypes.NewValue(tftypes.String, nil),
@@ -1467,7 +1473,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1517,7 +1523,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, nil),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, nil),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -1534,7 +1540,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1601,7 +1607,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, nil),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, nil),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -1618,7 +1624,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1681,7 +1687,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, nil),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, nil),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -1698,7 +1704,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1764,7 +1770,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -1781,7 +1787,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1844,7 +1850,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -1861,7 +1867,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1926,7 +1932,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -1943,7 +1949,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -1996,7 +2002,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "invalid json"),
 					"connections_json": tftypes.NewValue(tftypes.String, nil),
 					"settings_json":    tftypes.NewValue(tftypes.String, nil),
@@ -2013,7 +2019,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -2070,7 +2076,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, true),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -2086,7 +2092,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -2103,7 +2109,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -2156,7 +2162,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -2173,7 +2179,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -2244,7 +2250,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Test"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, []tftypes.Value{tftypes.NewValue(tftypes.String, "tag1")}),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -2261,7 +2267,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -2328,7 +2334,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					"id":               tftypes.NewValue(tftypes.String, "wf-123"),
 					"name":             tftypes.NewValue(tftypes.String, "Updated"),
 					"active":           tftypes.NewValue(tftypes.Bool, false),
-					"tags":             tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, nil),
+					"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
 					"nodes_json":       tftypes.NewValue(tftypes.String, "[]"),
 					"connections_json": tftypes.NewValue(tftypes.String, "{}"),
 					"settings_json":    tftypes.NewValue(tftypes.String, "{}"),
@@ -2345,7 +2351,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 						"id":               tftypes.String,
 						"name":             tftypes.String,
 						"active":           tftypes.Bool,
-						"tags":             tftypes.List{ElementType: tftypes.String},
+						"tags":             tftypes.Set{ElementType: tftypes.String},
 						"nodes_json":       tftypes.String,
 						"connections_json": tftypes.String,
 						"settings_json":    tftypes.String,
@@ -2501,8 +2507,8 @@ func TestWorkflowResource_executeCreateLogic(t *testing.T) {
 
 			// Add tags for the tag test case
 			if tt.name == "successful creation with tags" {
-				tagList, _ := types.ListValueFrom(ctx, types.StringType, []string{"tag-1"})
-				plan.Tags = tagList
+				tagSet, _ := types.SetValueFrom(ctx, types.StringType, []string{"tag-1"})
+				plan.Tags = tagSet
 			}
 
 			resp := &resource.CreateResponse{
@@ -2836,6 +2842,108 @@ func TestWorkflowResource_executeDeleteLogic(t *testing.T) {
 			} else {
 				assert.True(t, result, "Should return true on success")
 				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_handlePostCreationActivation tests the
+// handlePostCreationActivation function covering all branches.
+func TestWorkflowResource_handlePostCreationActivation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		planActive    types.Bool
+		workflowNodes []n8nsdk.Node
+		setupHandler  func(w http.ResponseWriter, r *http.Request)
+		expectError   bool
+	}{
+		{
+			name:          "activation not requested",
+			planActive:    types.BoolValue(false),
+			workflowNodes: []n8nsdk.Node{},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectError: false,
+		},
+		{
+			name:       "null activation value",
+			planActive: types.BoolNull(),
+			workflowNodes: []n8nsdk.Node{
+				{Name: strPtr("Test Node")},
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectError: false,
+		},
+		{
+			name:          "activation requested but no nodes",
+			planActive:    types.BoolValue(true),
+			workflowNodes: []n8nsdk.Node{},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectError: true,
+		},
+		{
+			name:       "activation requested with nodes success",
+			planActive: types.BoolValue(true),
+			workflowNodes: []n8nsdk.Node{
+				{Name: strPtr("Test Node")},
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"active":      true,
+						"nodes":       []any{map[string]any{"name": "Test Node"}},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			plan := &models.Resource{
+				ID:     types.StringValue("wf-123"),
+				Active: tt.planActive,
+			}
+			workflow := &n8nsdk.Workflow{
+				Id:    strPtr("wf-123"),
+				Nodes: tt.workflowNodes,
+			}
+			diags := &diag.Diagnostics{}
+
+			result := r.handlePostCreationActivation(context.Background(), plan, workflow, diags)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, diags.HasError(), "Should have error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, diags.HasError(), "Should not have error")
 			}
 		})
 	}
