@@ -1,5 +1,18 @@
 # Changelog
 
+Toutes les modifications notables de ce projet seront documentées dans ce fichier.
+
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+
+## 1.0.0 (2025-11-14)
+
+### 🚀 Features
+
+* Complete CI/CD pipeline with comprehensive testing and coverage ([#4](https://github.com/kodflow/n8n/issues/4)) ([532f02f](https://github.com/kodflow/n8n/commit/532f02f25555a832c118cbae15c57b7ed575282c))
+
+# Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
