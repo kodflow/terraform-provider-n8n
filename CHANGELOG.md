@@ -9,20 +9,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
+### 🐛 Bug Fixes
+
+- remove [skip ci] from semantic-release to allow release workflow (`551df3f`)
+
 ---
 
 ### 📊 Statistics
 
-- **Total commits:** 0
+- **Total commits:** 1
 - **Features:** 0
-- **Bug fixes:** 0
+- **Bug fixes:** 1
 - **Tests:** 0
 - **Refactoring:** 0
 - **Test coverage:** N/A
 
 ### 👥 Contributors
 
+- Kodflow <133899878+kodflow@users.noreply.github.com>
 
 ---
 
-*Changelog generated automatically on 2025-11-14 21:31:51*
+*Changelog generated automatically on 2025-11-14 21:34:55*

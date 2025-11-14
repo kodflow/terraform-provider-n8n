@@ -275,7 +275,9 @@ Use VS Code Command Palette:
 
 ## License
 
-MPL-2.0
+Sustainable Use License 1.0
+
+See [LICENSE.md](LICENSE.md) for details.
 
 ---
 

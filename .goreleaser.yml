@@ -58,6 +58,8 @@ signs:
 release:
   draft: false
   prerelease: auto
+  extra_files:
+    - glob: terraform-registry-manifest.json
 
 changelog:
   sort: asc
