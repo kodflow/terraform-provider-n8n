@@ -165,8 +165,8 @@ test/acceptance: ## Run E2E acceptance tests with real n8n instance
 		exit 0; \
 	fi
 	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
-	@set -a && . ./.env && set +a && \
-	if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+	@export $$(cat .env | xargs) && \
+	if go test -v -tags=acceptance -timeout 30m \
 		./src/internal/provider/credential/... \
 		./src/internal/provider/tag/... \
 		./src/internal/provider/variable/... \
@@ -190,8 +190,8 @@ test/acceptance/ci: ## Run E2E acceptance tests in CI (uses .env file)
 		exit 0; \
 	fi
 	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
-	@set -a && . ./.env && set +a && \
-	if TF_ACC=1 go test -v -tags=acceptance -timeout 30m \
+	@export $$(cat .env | xargs) && \
+	if go test -v -tags=acceptance -timeout 30m \
 		./src/internal/provider/credential/... \
 		./src/internal/provider/tag/... \
 		./src/internal/provider/variable/... \
