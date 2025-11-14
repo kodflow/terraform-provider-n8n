@@ -4,9 +4,7 @@
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
   // Mount GPG configuration from host
-  "mounts": [
-    "source=${localEnv:HOME}/.config/devcontainer-gpg,target=/host-gpg,type=bind,readonly"
-  ],
+  "mounts": ["source=${localEnv:HOME}/.config/devcontainer-gpg,target=/host-gpg,type=bind,readonly"],
   // Initialize command runs on host BEFORE container build
   "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/init.sh",
   // Features

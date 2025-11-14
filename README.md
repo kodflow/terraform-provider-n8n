@@ -266,11 +266,11 @@ sha256sum -c terraform-provider-n8n_0.1.0_SHA256SUMS
 
 Configure these secrets in GitHub repository settings:
 
-| Secret                     | Description                             | Required |
-| -------------------------- | --------------------------------------- | -------- |
-| `SEMANTIC_RELEASE_TOKEN`   | Fine-grained PAT with bypass protection | ✅ Yes   |
-| `GPG_PRIVATE_KEY`          | GPG private key (ASCII armored)         | ✅ Yes   |
-| `GPG_PASSPHRASE`           | GPG key passphrase                      | ⚠️ Only if key has passphrase |
+| Secret                   | Description                             | Required                      |
+| ------------------------ | --------------------------------------- | ----------------------------- |
+| `SEMANTIC_RELEASE_TOKEN` | Fine-grained PAT with bypass protection | ✅ Yes                        |
+| `GPG_PRIVATE_KEY`        | GPG private key (ASCII armored)         | ✅ Yes                        |
+| `GPG_PASSPHRASE`         | GPG key passphrase                      | ⚠️ Only if key has passphrase |
 
 **Export your existing GPG key:**
 
