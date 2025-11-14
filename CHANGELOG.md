@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Bug Fixes
 
+- explicitly pass env vars to go test subprocess (`82c387a`)
 - replace associative array with temp file for bash compatibility (`f82e3c9`)
 - remove duplicate workflow runs on feature branches (`85a088e`)
 - improve acceptance tests debug and error handling (`d3ab20d`)
@@ -102,9 +103,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 65
+- **Total commits:** 66
 - **Features:** 6
-- **Bug fixes:** 22
+- **Bug fixes:** 23
 - **Tests:** 6
 - **Refactoring:** 7
 - **Test coverage:** N/A
@@ -115,4 +116,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 15:28:40*
+*Changelog generated automatically on 2025-11-14 15:44:28*
