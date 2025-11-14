@@ -97,33 +97,32 @@ The provider includes comprehensive examples for both **Community Edition** (fre
 
 ### Community Edition Examples
 
-All examples in [`examples/community/`](examples/community/) work with n8n Community Edition:
+All examples in `examples/community/` work with n8n Community Edition:
 
 #### Workflows
 
-- **[Basic Webhook](examples/community/workflows/basic-workflow/)**: Simple webhook workflow with POST endpoint
-- **[Scheduled Workflow](examples/community/workflows/scheduled-workflow/)**: Hourly automated workflow with schedule trigger
+- **Basic Webhook**: Simple webhook workflow with POST endpoint
+- **Scheduled Workflow**: Hourly automated workflow with schedule trigger
 
 #### Credentials
 
-- **[HTTP Basic Auth](examples/community/credentials/basic-auth/)**: Create and manage API credentials
+- **HTTP Basic Auth**: Create and manage API credentials
 
 #### Tags
 
-- **[Workflow Tags](examples/community/tags/workflow-tags/)**: Organize workflows with tags and query by tags
+- **Workflow Tags**: Organize workflows with tags and query by tags
 
 #### Variables
 
-- **[Environment Variables](examples/community/variables/environment-vars/)**: Manage environment variables for workflows
+- **Environment Variables**: Manage environment variables for workflows
 
 #### Executions
 
-- **[Query Executions](examples/community/executions/query-executions/)**: Query and filter workflow executions (read-only)
+- **Query Executions**: Query and filter workflow executions (read-only)
 
 ### Enterprise Edition Examples
 
-Examples in [`examples/enterprise/`](examples/enterprise/) are currently in development and will be available once enterprise license access is obtained for
-testing.
+Examples in `examples/enterprise/` are currently in development and will be available once enterprise license access is obtained for testing.
 
 Planned enterprise examples:
 
@@ -193,8 +192,11 @@ make lint          # Run code linters
 make docs          # Generate all documentation (CHANGELOG + coverage)
 make changelog     # Generate CHANGELOG.md from git history
 
-# API & SDK
-make openapi       # Download n8n OpenAPI spec and generate SDK
+# SDK Generation
+make openapi       # Download and prepare n8n OpenAPI spec (YAML)
+make sdk           # Generate Go SDK from OpenAPI spec
+make tools/sdk     # Install SDK generation tools (OpenAPI Generator)
+make update        # Update ktn-linter to latest version
 ```
 
 ### Automatic Documentation Generation
@@ -202,7 +204,14 @@ make openapi       # Download n8n OpenAPI spec and generate SDK
 The project uses **git hooks** to automatically generate documentation:
 
 - **CHANGELOG.md**: Auto-generated from git commits using [Conventional Commits](https://www.conventionalcommits.org/)
-- **COVERAGE.MD**: Manual coverage report (run `make docs` to update)
+- **COVERAGE.MD**: Coverage report auto-generated during pre-commit
+
+**Git Hooks:**
+
+- **Pre-commit**: Adds copyright headers, generates documentation (CHANGELOG.md, COVERAGE.MD), and automatically unstages `sdk/n8nsdk/api/openapi.yaml` if
+  accidentally staged
+- **Commit-msg**: Validates commit messages follow Conventional Commits format
+- **Pre-push**: Runs tests before pushing to remote
 
 **Commit Message Format:**
 
@@ -227,6 +236,31 @@ chore:    Maintenance tasks
 git commit -m "feat: add workflow datasource"
 # → Automatically generates CHANGELOG.md entry under "🚀 Features"
 ```
+
+### SDK Generation from OpenAPI
+
+The project automatically generates a Go SDK from the n8n OpenAPI specification:
+
+**Workflow:**
+
+1. **Download OpenAPI spec**: `make openapi` downloads the latest n8n OpenAPI spec from GitHub
+2. **Bundle YAML files**: Combines multiple YAML files into a single `openapi.yaml`
+3. **Apply patches**: Fixes schema issues for proper Go code generation
+4. **Generate SDK**: `make sdk` uses OpenAPI Generator to create Go client code
+5. **Auto-format**: Runs `make fmt` to format generated code
+
+**Key Files:**
+
+- `sdk/n8nsdk/api/openapi-generated.yaml` - Original downloaded spec
+- `sdk/n8nsdk/api/openapi.yaml` - Patched spec (auto-generated, not committed)
+- `sdk/n8nsdk/*.go` - Generated Go SDK files
+- `codegen/download-openapi.py` - Download and prepare OpenAPI script
+- `codegen/generate-sdk.py` - SDK generation script
+- `codegen/patches/*.patch` - Schema fixes for code generation
+
+**Pre-commit Hook:**
+
+The pre-commit hook automatically unstages `sdk/n8nsdk/api/openapi.yaml` to prevent accidental commits of this auto-generated file.
 
 ### Bazel Configuration
 
@@ -262,11 +296,39 @@ The project uses **Bazel 9** with **bzlmod** (the new dependency management syst
 │   ├── BUILD.bazel       # Source build configuration
 │   └── internal/
 │       └── provider/     # Provider implementation
+│           ├── credential/   # Credential resource
+│           ├── execution/    # Execution data source
+│           ├── project/      # Project resource
+│           ├── sourcecontrol/ # Source control resource
+│           ├── tag/          # Tag resource
+│           ├── user/         # User resource
+│           ├── variable/     # Variable resource
+│           ├── workflow/     # Workflow resource
+│           ├── shared/       # Shared utilities
 │           ├── provider.go
 │           ├── provider_test.go
 │           └── BUILD.bazel
+├── sdk/                  # Generated n8n SDK
+│   └── n8nsdk/           # Go client for n8n API
+│       ├── api/          # OpenAPI specifications
+│       │   ├── openapi-generated.yaml  # Original spec
+│       │   └── openapi.yaml            # Patched spec (auto-generated)
+│       ├── *.go          # Generated SDK files
+│       └── BUILD.bazel   # SDK build configuration
+├── codegen/              # SDK generation tools
+│   ├── download-openapi.py  # Download OpenAPI spec
+│   ├── generate-sdk.py      # Generate Go SDK
+│   └── patches/             # OpenAPI schema patches
+├── scripts/              # Build and automation scripts
+│   ├── generate-changelog.sh  # CHANGELOG.md generator
+│   ├── generate-coverage.sh   # COVERAGE.MD generator
+│   └── add-copyright-headers.sh  # Copyright headers
+├── examples/             # Terraform usage examples
+│   ├── community/        # Community edition examples
+│   └── enterprise/       # Enterprise edition examples
 └── .github/
     └── workflows/        # CI/CD GitHub Actions
+        ├── ci.yml        # Continuous integration
         ├── semver.yml    # Automatic semantic versioning
         └── release.yml   # Automatic release workflow
 ```
@@ -519,11 +581,21 @@ See [PR template](.github/pull_request_template.md) for more details.
 
 - `github.com/hashicorp/terraform-plugin-framework` v1.16.1 - Terraform provider framework
 - `github.com/hashicorp/terraform-plugin-docs` v0.24.0 - Documentation generation
+- `github.com/kodflow/n8n/sdk/n8nsdk` (local module) - Auto-generated n8n API client
 
-### Build
+### Build Tools
 
-- Bazel 9.0.0rc1 - Build system
-- Go 1.24.0 - Programming language
+- **Bazel 9.0.0rc1** - Build system
+- **Go 1.24.0** - Programming language
+- **Python 3.x** - For SDK generation scripts
+- **OpenAPI Generator 7.11.0** - Go SDK code generation
+
+### Development Tools
+
+- **golangci-lint** - Go linter aggregator
+- **ktn-linter** - Custom Terraform provider linter
+- **goimports** - Go import formatter
+- **buildifier** - Bazel BUILD file formatter
 
 See `go.mod` for complete dependencies list.
 
@@ -534,13 +606,17 @@ See `go.mod` for complete dependencies list.
 The project uses GitHub Actions for complete automation:
 
 - **`.github/workflows/ci.yml`**: Continuous Integration for PR validation
-  - Validates conventional commits with commitlint
-  - Runs tests with 70% coverage threshold
-  - Linting (golangci-lint + ktn-linter) and format checks
-  - Multi-platform builds (Ubuntu, macOS)
-  - Documentation verification (CHANGELOG.md, COVERAGE.MD)
-  - Security scanning (Trivy + gosec)
-  - See [Branch Protection Guide](.github/BRANCH_PROTECTION.md) for GitHub configuration
+  - Sets up Go, Bazel, Python, and Terraform
+  - Installs SDK generation tools (OpenAPI Generator)
+  - Generates OpenAPI spec and Go SDK (`make openapi && make sdk`)
+  - Downloads dependencies after SDK generation
+  - Installs development and linting tools
+  - Validates code formatting (`make fmt`)
+  - Runs linters (golangci-lint + ktn-linter)
+  - Executes unit tests (`make test/unit/ci`)
+  - Builds provider binary (`make build`)
+  - Runs acceptance tests if credentials are available
+  - Generates documentation (`make docs`)
 
 - **`.github/workflows/semver.yml`**: Automatic semantic versioning
   - Triggers on push to `main` (after PR merge)
