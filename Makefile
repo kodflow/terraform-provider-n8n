@@ -331,11 +331,13 @@ sdk: ## Generate Go SDK from OpenAPI spec
 	@echo ""
 
 .PHONY: clean
-clean: ## Clean Bazel build artifacts
+clean: ## Clean Bazel build artifacts and reset openapi.yaml
 	@echo ""
 	@echo "$(BOLD)Cleaning build artifacts...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Removing Bazel cache\n"
 	@bazel clean
+	@printf "  $(CYAN)→$(RESET) Resetting openapi.yaml to committed version\n"
+	@git checkout -- sdk/n8nsdk/api/openapi.yaml 2>/dev/null || true
 	@echo "$(GREEN)✓$(RESET) Clean completed"
 	@echo ""
 

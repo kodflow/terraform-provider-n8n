@@ -21,14 +21,6 @@ echo -e "${BOLD}  Pre-commit checks${RESET}"
 echo -e "${BOLD}${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo ""
 
-# Prevent accidental commit of openapi.yaml (it's auto-generated)
-if git diff --cached --name-only | grep -q "^sdk/n8nsdk/api/openapi.yaml$"; then
-  echo -e "${YELLOW}⚠${RESET}  Unstaging sdk/n8nsdk/api/openapi.yaml (auto-generated file)"
-  git restore --staged sdk/n8nsdk/api/openapi.yaml
-  echo -e "${GREEN}✓${RESET} openapi.yaml removed from commit"
-  echo ""
-fi
-
 # Add copyright headers to modified files
 echo -e "${BOLD}1. Adding copyright headers...${RESET}"
 if ! ./scripts/add-copyright-headers.sh; then

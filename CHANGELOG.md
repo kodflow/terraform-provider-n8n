@@ -70,6 +70,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
+- optimize README with concise feature overview (`44133b1`)
 - cleanup markdown files and update README (`8d05b47`)
 - translate all French content to English (`b1200ff`)
 
@@ -93,7 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 56
+- **Total commits:** 57
 - **Features:** 4
 - **Bug fixes:** 18
 - **Tests:** 6
@@ -106,4 +107,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 13:40:36*
+*Changelog generated automatically on 2025-11-14 13:47:45*
