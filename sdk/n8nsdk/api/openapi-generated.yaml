@@ -1325,7 +1325,6 @@ components:
       - data
       type: object
       additionalProperties: true
-      additionalProperties: true
       properties:
         id:
           type: string

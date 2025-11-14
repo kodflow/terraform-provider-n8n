@@ -12,23 +12,23 @@ Terraform provider to manage n8n resources (workflows, credentials, projects, us
 
 The provider fully supports **n8n Community Edition** (free/self-hosted):
 
-| Resource/Data Source | Status | Description |
-|---------------------|---------|-------------|
-| `n8n_workflow` | ✅ Available | Create and manage workflows |
-| `n8n_credential` | ✅ Available | Store API credentials securely |
-| `n8n_tag` | ✅ Available | Organize resources with tags |
-| `n8n_variable` | ✅ Available | Manage environment variables |
-| `n8n_execution` | ✅ Available | Query workflow executions (read-only) |
+| Resource/Data Source | Status       | Description                           |
+| -------------------- | ------------ | ------------------------------------- |
+| `n8n_workflow`       | ✅ Available | Create and manage workflows           |
+| `n8n_credential`     | ✅ Available | Store API credentials securely        |
+| `n8n_tag`            | ✅ Available | Organize resources with tags          |
+| `n8n_variable`       | ✅ Available | Manage environment variables          |
+| `n8n_execution`      | ✅ Available | Query workflow executions (read-only) |
 
 ### Enterprise Edition Support
 
 **Enterprise features** require an n8n Enterprise license:
 
-| Resource/Data Source | Status | License Required |
-|---------------------|---------|-----------------|
-| `n8n_project` | 🚧 In Development | Enterprise |
-| `n8n_user` | 🚧 In Development | Enterprise |
-| `n8n_source_control` | 🚧 In Development | Enterprise |
+| Resource/Data Source | Status            | License Required |
+| -------------------- | ----------------- | ---------------- |
+| `n8n_project`        | 🚧 In Development | Enterprise       |
+| `n8n_user`           | 🚧 In Development | Enterprise       |
+| `n8n_source_control` | 🚧 In Development | Enterprise       |
 
 > **Note:** Enterprise features are in development and will be available once enterprise license access is obtained for testing.
 
@@ -43,6 +43,7 @@ The provider fully supports **n8n Community Edition** (free/self-hosted):
 The project includes a preconfigured DevContainer with all tools (Go 1.25.3, Bazel 9.0, Terraform, OpenTofu).
 
 **Quick start:**
+
 1. Open in VS Code
 2. Accept "Reopen in Container" prompt
 3. Start developing
@@ -142,6 +143,7 @@ make openapi       # Regenerate SDK from n8n OpenAPI spec
 ### Quality Standards
 
 **Critical requirements:**
+
 - ✅ All tests must pass: `make test`
 - ✅ Code must be formatted: `make fmt`
 - ✅ Zero linting errors: `make lint`
@@ -157,6 +159,7 @@ make sdk           # Generate Go SDK from OpenAPI spec
 ```
 
 **Auto-generated files:**
+
 - `sdk/n8nsdk/*.go` - Go client for n8n API
 - `sdk/n8nsdk/api/openapi.yaml` - Patched OpenAPI spec (not committed)
 
@@ -266,6 +269,7 @@ bazel test --test_verbose_timeout_warnings //src/... # Verbose logs
 ### DevContainer Issues
 
 Use VS Code Command Palette:
+
 - "Dev Containers: Rebuild Container"
 - "Dev Containers: Show Log"
 

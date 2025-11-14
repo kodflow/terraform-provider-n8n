@@ -76,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### ♻️ Refactoring
 
+- move openapi.yaml reset from pre-commit to make clean (`2f08633`)
 - separate unit and E2E tests in Makefile (`a3844d6`)
 - separate script and patch responsibilities (`eccec80`)
 - remove legacy environment variable support (`6ec444a`)
@@ -94,11 +95,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 57
+- **Total commits:** 58
 - **Features:** 4
 - **Bug fixes:** 18
 - **Tests:** 6
-- **Refactoring:** 6
+- **Refactoring:** 7
 - **Test coverage:** N/A
 
 ### 👥 Contributors
@@ -107,4 +108,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-14 13:47:45*
+*Changelog generated automatically on 2025-11-14 14:01:39*
