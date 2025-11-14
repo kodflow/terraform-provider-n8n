@@ -266,23 +266,38 @@ sha256sum -c terraform-provider-n8n_0.1.0_SHA256SUMS
 
 Configure these secrets in GitHub repository settings:
 
-| Secret                     | Description                             | Required For            |
-| -------------------------- | --------------------------------------- | ----------------------- |
-| `SEMANTIC_RELEASE_TOKEN`   | Fine-grained PAT with bypass protection | Semantic Release        |
-| `GPG_PRIVATE_KEY`          | GPG private key (ASCII armored)         | Signing commits & binaries |
-| `GPG_PASSPHRASE`           | GPG key passphrase                      | Signing commits & binaries |
+| Secret                     | Description                             | Required |
+| -------------------------- | --------------------------------------- | -------- |
+| `SEMANTIC_RELEASE_TOKEN`   | Fine-grained PAT with bypass protection | ✅ Yes   |
+| `GPG_PRIVATE_KEY`          | GPG private key (ASCII armored)         | ✅ Yes   |
+| `GPG_PASSPHRASE`           | GPG key passphrase                      | ⚠️ Only if key has passphrase |
 
-**Generate GPG key:**
+**Export your existing GPG key:**
 
 ```bash
-# Generate new key
-gpg --full-generate-key
+# 1. List your keys to find the key ID
+gpg --list-secret-keys --keyid-format=long
 
-# Export private key (for GitHub secret)
-gpg --armor --export-secret-key YOUR_KEY_ID
+# 2. Export private key (copy ENTIRE output including BEGIN/END lines)
+gpg --armor --export-secret-key C8ED18EE4E425956
 
-# Export public key (for Terraform Registry)
-gpg --armor --export YOUR_KEY_ID
+# 3. Export public key (for Terraform Registry)
+gpg --armor --export C8ED18EE4E425956
+```
+
+**If you need to create a new GPG key for CI/CD:**
+
+```bash
+# Generate key without passphrase (easier for automation)
+gpg --batch --generate-key <<EOF
+Key-Type: RSA
+Key-Length: 4096
+Name-Real: Your Name
+Name-Email: your-email@example.com
+Expire-Date: 2y
+%no-protection
+%commit
+EOF
 ```
 
 View all releases at [GitHub Releases](../../releases).
