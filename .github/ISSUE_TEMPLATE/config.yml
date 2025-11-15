@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/kodflow/terraform-provider-n8n#readme
+    about: Check the documentation for usage examples and guides
+  - name: 💬 Discussions
+    url: https://github.com/kodflow/terraform-provider-n8n/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🔗 n8n API Documentation
+    url: https://docs.n8n.io/api/
+    about: Official n8n API documentation
