@@ -13,6 +13,30 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 * **ci:** add release summary step to show created tag ([a32e809](https://github.com/kodflow/n8n/commit/a32e809d7dbdceb36a676ad237900d78af9f5efe))
 * **ci:** add timeout and concurrency controls to prevent stuck workflows ([98e551e](https://github.com/kodflow/n8n/commit/98e551e620dbaef16f4c9a46578a83df0e2a33b3))
 * **ci:** disable cancel-in-progress to allow release completion ([7abff0a](https://github.com/kodflow/n8n/commit/7abff0a26dacaa270202aa594f136814c501f6fa))
+* **ci:** enable debug mode for semantic-release ([238380d](https://github.com/kodflow/n8n/commit/238380dcc999a4029b579c98cfeec9965acf0cf4))
+* **ci:** enable GPG signing for tags when key import succeeds ([c4fb62f](https://github.com/kodflow/n8n/commit/c4fb62fa014734ae0df25885dd2311e9468d9f76))
+
+### 📚 Documentation
+
+* **ci:** add clarifying comments to GPG import step ([5c43f59](https://github.com/kodflow/n8n/commit/5c43f5980fb9ebc85ea6f195f893dcacaabc02fe))
+
+### 🧹 Chores
+
+* **release:** 1.1.7 ([58acea8](https://github.com/kodflow/n8n/commit/58acea8ddc070f79d910f10d937d94005f338cd2))
+* **release:** 1.1.7 ([1cafd2b](https://github.com/kodflow/n8n/commit/1cafd2b348a95d04d093d8020d8caac50af5292e))
+* **release:** 1.1.7 ([8e1f7eb](https://github.com/kodflow/n8n/commit/8e1f7ebe069242e06f31dc7149f6cc2bcc451cd0))
+* **release:** 1.1.7 ([7fd93c0](https://github.com/kodflow/n8n/commit/7fd93c0eac739e1bcf8097171fecdd2e04fa445f))
+* **release:** 1.1.7 ([d1b86ba](https://github.com/kodflow/n8n/commit/d1b86ba53e707356c61f3c81e993feebaac14af1))
+* **release:** 1.1.7 ([0dd7164](https://github.com/kodflow/n8n/commit/0dd71642a03df62c5245245f24eee592f7c61a9e))
+
+## [1.1.7](https://github.com/kodflow/n8n/compare/v1.1.6...v1.1.7) (2025-11-15)
+
+### 🐛 Bug Fixes
+
+* **ci:** add debug output for GPG import status ([dc3bd37](https://github.com/kodflow/n8n/commit/dc3bd3768bb43b6aeb320363db32d3d99f59bccb))
+* **ci:** add release summary step to show created tag ([a32e809](https://github.com/kodflow/n8n/commit/a32e809d7dbdceb36a676ad237900d78af9f5efe))
+* **ci:** add timeout and concurrency controls to prevent stuck workflows ([98e551e](https://github.com/kodflow/n8n/commit/98e551e620dbaef16f4c9a46578a83df0e2a33b3))
+* **ci:** disable cancel-in-progress to allow release completion ([7abff0a](https://github.com/kodflow/n8n/commit/7abff0a26dacaa270202aa594f136814c501f6fa))
 * **ci:** enable GPG signing for tags when key import succeeds ([c4fb62f](https://github.com/kodflow/n8n/commit/c4fb62fa014734ae0df25885dd2311e9468d9f76))
 
 ### 📚 Documentation
