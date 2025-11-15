@@ -62,7 +62,6 @@
         "vscode-icons-team.vscode-icons", // Icônes pour les fichiers et dossiers
         "redhat.vscode-yaml", // Support YAML
         "tamasfe.even-better-toml", // Support TOML
-        "visualstudioexptteam.vscodeintellicode", // IntelliCode gratuit de Microsoft
         "golang.go", // Support Go officiel
         "hashicorp.terraform", // Support Terraform
         "bazelbuild.vscode-bazel", // Support Bazel
