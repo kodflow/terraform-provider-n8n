@@ -1,0 +1,141 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for the n8n Terraform provider
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature!
+
+        Before submitting, please:
+        - Search existing issues to avoid duplicates
+        - Check if this feature already exists in the latest version
+        - Review the n8n API documentation to ensure the feature is feasible
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A clear and concise summary of the feature you'd like to see
+      placeholder: I would like to be able to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this feature important? What problem does it solve?
+      placeholder: |
+        This feature would help me...
+        Currently, I have to...
+        This would improve...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        I would like to have a new resource/data source that...
+        The configuration could look like...
+    validations:
+      required: true
+
+  - type: textarea
+    id: example-config
+    attributes:
+      label: Example Configuration
+      description: Provide an example of how you'd like to use this feature
+      render: hcl
+      placeholder: |
+        resource "n8n_new_feature" "example" {
+          name = "example"
+          # additional configuration...
+        }
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions or workarounds have you considered?
+      placeholder: |
+        I considered...
+        Another approach could be...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New Resource
+        - New Data Source
+        - Enhancement to Existing Resource
+        - Enhancement to Existing Data Source
+        - Provider Configuration
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Nice to have
+        - Would be helpful
+        - Important for my use case
+        - Critical for my use case
+    validations:
+      required: true
+
+  - type: textarea
+    id: n8n-api
+    attributes:
+      label: n8n API Reference
+      description: |
+        If applicable, provide links to the n8n API documentation that supports this feature
+      placeholder: |
+        https://docs.n8n.io/api/...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or examples about the feature
+      placeholder: Add any other context here...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to contribute this feature?
+      options:
+        - label: I would be willing to submit a PR to implement this feature
+          required: false
+        - label: I would be willing to help test this feature
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: This feature is feasible with the current n8n API
+          required: true
