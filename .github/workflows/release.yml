@@ -51,14 +51,14 @@ jobs:
           mkdir -p /tmp/attestation
           TAG="${{ github.event.release.tag_name }}"
           echo "Downloading assets for tag: $TAG"
-          gh release download "$TAG" --pattern 'terraform-provider-n8n_*.tar.gz' --dir /tmp/attestation
-          gh release download "$TAG" --pattern 'terraform-provider-n8n_*.zip' --dir /tmp/attestation
+          gh release download "$TAG" --pattern 'n8n_*.tar.gz' --dir /tmp/attestation
+          gh release download "$TAG" --pattern 'n8n_*.zip' --dir /tmp/attestation
           ls -lh /tmp/attestation/
 
       - name: Generate build provenance attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: '/tmp/attestation/terraform-provider-n8n_*'
+          subject-path: '/tmp/attestation/n8n_*'
 
       - name: Build summary
         if: success()
