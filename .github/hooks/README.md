@@ -18,7 +18,6 @@ git config core.hooksPath .github/hooks
 
 - **🔒 Prevents commits directly to `main` branch** (use feature branches + PR)
 - Adds copyright headers to source files
-- Generates `CHANGELOG.md` from git history
 - Generates `COVERAGE.MD` from test coverage
 - Automatically unstages `sdk/n8nsdk/api/openapi.yaml` (auto-generated file)
 
