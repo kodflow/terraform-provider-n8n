@@ -55,24 +55,9 @@ plugins:
           - type: "ci"
             section: "👷 CI/CD"
 
-  # Générer/mettre à jour CHANGELOG.md
-  - - "@semantic-release/changelog"
-    - changelogFile: "CHANGELOG.md"
-      changelogTitle: "# Changelog\n\nToutes les modifications notables de ce projet seront documentées dans ce fichier.\n\nLe format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),\net ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/)."
-
-  # Mettre à jour les fichiers avec la nouvelle version
-  - - "@semantic-release/exec"
-    - prepareCmd: |
-        # Mettre à jour la version dans go.mod si nécessaire
-        # Mettre à jour la version dans Makefile
-        sed -i "s/VERSION := .*/VERSION := ${nextRelease.version}/" Makefile
-
-  # Commiter les changements (CHANGELOG.md, etc.)
-  - - "@semantic-release/git"
-    - assets:
-        - "CHANGELOG.md"
-        - "Makefile"
-      message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+  # NOTE: Changelog generation disabled - will be done in PRs
+  # No commits on main after PR merge - keeps history clean
+  # Tags are created by semantic-release and trigger GoReleaser
 
   # Créer la release GitHub avec les notes
   # NOTE: Disabled - GoReleaser creates the release with compiled binaries
