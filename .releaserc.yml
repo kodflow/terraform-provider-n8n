@@ -58,12 +58,10 @@ plugins:
   # NOTE: Changelog generation disabled - will be done in PRs
   # No commits on main after PR merge - keeps history clean
 
-  # Create ONLY the tag (no release draft - GoReleaser will create the release)
-  - - "@semantic-release/github"
-    - successComment: false
-      failComment: false
-      releasedLabels: false
-      addReleases: false  # Don't create GitHub release - GoReleaser does it
+  # Create ONLY the Git tag (no commits, no files updated)
+  - - "@semantic-release/git"
+    - assets: []  # Empty array = create tag but don't commit any files
+      message: ""  # No commit message needed since no files are committed
 
 # Options globales
 tagFormat: "v${version}"
