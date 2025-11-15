@@ -57,21 +57,13 @@ plugins:
 
   # NOTE: Changelog generation disabled - will be done in PRs
   # No commits on main after PR merge - keeps history clean
-  # Tags are created by semantic-release and trigger GoReleaser
 
-  # Créer la release GitHub avec les notes
-  # NOTE: Disabled - GoReleaser creates the release with compiled binaries
-  # - - "@semantic-release/github"
-  #   - successComment: false
-  #     failComment: false
-  #     releasedLabels: false
-  #     assets: []
-
-  # Trigger GoReleaser workflow by pushing the tag
-  - - "@semantic-release/exec"
-    - publishCmd: |
-        echo "Tag ${nextRelease.version} will trigger GoReleaser workflow"
-        echo "Release will be created by .github/workflows/release.yml"
+  # Create ONLY the tag (no release draft - GoReleaser will create the release)
+  - - "@semantic-release/github"
+    - successComment: false
+      failComment: false
+      releasedLabels: false
+      addReleases: false  # Don't create GitHub release - GoReleaser does it
 
 # Options globales
 tagFormat: "v${version}"
