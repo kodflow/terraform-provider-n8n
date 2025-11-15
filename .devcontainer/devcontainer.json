@@ -3,8 +3,34 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
+  // Mount GPG configuration from host
+  "mounts": ["source=${localEnv:HOME}/.config/devcontainer-gpg,target=/host-gpg,type=bind,readonly"],
   // Initialize command runs on host BEFORE container build
   "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/init.sh",
+  // Features
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/aws-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-community/features/bazel:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-community/npm-features/prettier:1": {
+      "version": "latest"
+    }
+  },
   // Configure tool-specific properties
   "customizations": {
     "vscode": {
@@ -18,20 +44,35 @@
         "editor.formatOnSave": true,
         "files.eol": "\n",
         "files.insertFinalNewline": true,
-        "files.trimTrailingWhitespace": true
+        "files.trimTrailingWhitespace": true,
+        "[go]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        },
+        "go.toolsManagement.autoUpdate": true,
+        "go.lintTool": "golangci-lint",
+        "go.lintOnSave": "package",
+        "bazel.buildifierExecutable": "/home/vscode/.local/bin/buildifier",
+        "bazel.enableCodeLens": true
       },
       "extensions": [
         "usernamehw.errorlens", // Affichage inline des erreurs et warnings
         "vscode-icons-team.vscode-icons", // Icônes pour les fichiers et dossiers
         "redhat.vscode-yaml", // Support YAML
         "tamasfe.even-better-toml", // Support TOML
-        "editorconfig.editorconfig", // EditorConfig
-        "visualstudioexptteam.vscodeintellicode" // IntelliCode gratuit de Microsoft
+        "golang.go", // Support Go officiel
+        "hashicorp.terraform", // Support Terraform
+        "bazelbuild.vscode-bazel", // Support Bazel
+        "emeraldwalk.runonsave" // Exécute golangci-lint et ktn-linter à chaque sauvegarde
       ]
     }
   },
-  // Post-start command
-  "postStartCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /workspace/.devcontainer/setup-mcp.sh && echo '🚀 DevContainer ready!'",
+  // Post-create command (runs once after container creation)
+  "postCreateCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /host-gpg/setup-gpg.sh && /workspace/.devcontainer/post-create.sh",
+  // Post-start command (runs every time the container starts)
+  "postStartCommand": "/workspace/.devcontainer/post-start.sh",
   // Forward ports
   "forwardPorts": [],
   // Run as user
