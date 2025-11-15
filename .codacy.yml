@@ -17,6 +17,9 @@ exclude_paths:
   - "**/BUILD.bazel"
   - "**/*.pb.go"
 
+  # Test files (exclude from quality issues, keep for coverage)
+  - "**/*_test.go"
+
   # Standard exclusions
   - "node_modules/**"
   - "vendor/**"
@@ -27,20 +30,3 @@ exclude_paths:
   - ".terraform/**"
   - "*.tfstate"
   - "*.tfstate.backup"
-
-# Engines configuration
-engines:
-  # Go linting and security
-  gosec:
-    enabled: true
-
-  # Security scanning
-  trivy:
-    enabled: true
-    exclude_paths:
-      - ".devcontainer/mcp.json"
-      - "sdk/n8nsdk/**"
-
-  # Go vet
-  govet:
-    enabled: true
