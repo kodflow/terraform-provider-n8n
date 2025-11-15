@@ -203,9 +203,9 @@ Hooks are automatically installed in DevContainer.
 
 ## Release Process
 
-Releases are fully automated via GitHub Actions with GPG signing:
+Releases are fully automated via GitHub Actions:
 
-### Semantic Versioning (Automatic)
+### Semantic Versioning
 
 Push commits to `main` branch with conventional commit messages:
 
@@ -213,92 +213,17 @@ Push commits to `main` branch with conventional commit messages:
 - `fix:` → Patch version bump (v0.1.0 → v0.1.1)
 - `BREAKING CHANGE:` → Major version bump (v0.1.0 → v1.0.0)
 
-The semantic-release workflow automatically:
+The CI/CD pipeline automatically:
 
 1. Analyzes commit messages
 2. Determines next version
 3. Updates CHANGELOG.md
-4. **Creates GPG-signed commit and tag**
-5. Pushes to repository
+4. Creates signed tags
+5. Compiles multi-platform binaries (Linux, macOS, Windows, FreeBSD)
+6. Generates checksums and signatures
+7. Creates GitHub Release with all artifacts
 
-### Manual Release (Tag-based)
-
-Create and push a git tag:
-
-```bash
-git tag -s v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
-```
-
-GitHub Actions automatically:
-
-1. Compiles multi-platform binaries (Linux, macOS, Windows, FreeBSD)
-2. **Signs binaries with GPG** (required for Terraform Registry)
-3. Generates SHA256 checksums
-4. **Signs checksums with GPG** (SHA256SUMS.sig)
-5. Creates GitHub Release with all artifacts
-6. Includes Terraform Registry manifest
-
-### Terraform Registry Publication
-
-All releases are compatible with Terraform Registry:
-
-- ✅ Binaries named: `terraform-provider-n8n_v{VERSION}`
-- ✅ GPG-signed checksums: `SHA256SUMS.sig`
-- ✅ Terraform manifest: `terraform-registry-manifest.json`
-- ✅ Multi-platform support
-
-**Verify release signature:**
-
-```bash
-# Import GPG public key
-gpg --keyserver keys.openpgp.org --recv-keys YOUR_GPG_KEY_ID
-
-# Verify checksums signature
-gpg --verify terraform-provider-n8n_0.1.0_SHA256SUMS.sig \
-             terraform-provider-n8n_0.1.0_SHA256SUMS
-
-# Verify binary integrity
-sha256sum -c terraform-provider-n8n_0.1.0_SHA256SUMS
-```
-
-### Required Secrets
-
-Configure these secrets in GitHub repository settings:
-
-| Secret                   | Description                             | Required                      |
-| ------------------------ | --------------------------------------- | ----------------------------- |
-| `SEMANTIC_RELEASE_TOKEN` | Fine-grained PAT with bypass protection | ✅ Yes                        |
-| `GPG_PRIVATE_KEY`        | GPG private key (ASCII armored)         | ✅ Yes                        |
-| `GPG_PASSPHRASE`         | GPG key passphrase                      | ⚠️ Only if key has passphrase |
-
-**Export your existing GPG key:**
-
-```bash
-# 1. List your keys to find the key ID
-gpg --list-secret-keys --keyid-format=long
-
-# 2. Export private key (copy ENTIRE output including BEGIN/END lines)
-gpg --armor --export-secret-key C8ED18EE4E425956
-
-# 3. Export public key (for Terraform Registry)
-gpg --armor --export C8ED18EE4E425956
-```
-
-**If you need to create a new GPG key for CI/CD:**
-
-```bash
-# Generate key without passphrase (easier for automation)
-gpg --batch --generate-key <<EOF
-Key-Type: RSA
-Key-Length: 4096
-Name-Real: Your Name
-Name-Email: your-email@example.com
-Expire-Date: 2y
-%no-protection
-%commit
-EOF
-```
+All releases are compatible with Terraform Registry.
 
 View all releases at [GitHub Releases](../../releases).
 
@@ -320,47 +245,6 @@ Contributions are welcome! Follow these steps:
 - ✅ Follow [Conventional Commits](https://www.conventionalcommits.org/) format
 
 See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
-
-## Dependencies
-
-### Main Dependencies
-
-- `github.com/hashicorp/terraform-plugin-framework` v1.16.1 - Terraform provider framework
-- `github.com/hashicorp/terraform-plugin-docs` v0.24.0 - Documentation generation
-- Local module: `github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk` - Auto-generated n8n API client
-
-### Build Tools
-
-- **Bazel 9.0.0rc1** - Build system with bzlmod
-- **Go 1.24.0** - Programming language
-- **OpenAPI Generator 7.11.0** - SDK code generation
-- **golangci-lint** + **ktn-linter** - Code quality tools
-
-See `go.mod` and `MODULE.bazel` for complete dependencies.
-
-## Troubleshooting
-
-### Bazel Issues
-
-```bash
-bazel clean --expunge        # Clean cache
-bazel version                # Verify version 9.0+
-cat .bazelversion            # Check configured version
-```
-
-### Test Failures
-
-```bash
-bazel test --test_output=all //src/...              # Detailed output
-bazel test --test_verbose_timeout_warnings //src/... # Verbose logs
-```
-
-### DevContainer Issues
-
-Use VS Code Command Palette:
-
-- "Dev Containers: Rebuild Container"
-- "Dev Containers: Show Log"
 
 ## License
 
