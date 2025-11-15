@@ -82,3 +82,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Release summary
+        if: success()
+        run: |
+          echo "✅ Semantic release completed successfully"
+          git describe --tags --abbrev=0 2>/dev/null || echo "No new tag created"
