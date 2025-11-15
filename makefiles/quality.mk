@@ -38,12 +38,10 @@ lint: ## Run code linters
 	@echo ""
 
 .PHONY: docs
-docs: ## Generate all documentation (changelog + coverage)
+docs: ## Generate documentation (coverage report)
 	@echo ""
 	@echo "$(BOLD)$(CYAN)📝 Generating documentation...$(RESET)"
-	@printf "  $(CYAN)→$(RESET) Generating CHANGELOG.md\n"
-	@./scripts/generate-changelog.sh
 	@printf "  $(CYAN)→$(RESET) Generating COVERAGE.md\n"
 	@./scripts/generate-coverage.sh
-	@echo "$(BOLD)$(GREEN)✅ All documentation generated$(RESET)"
+	@echo "$(BOLD)$(GREEN)✅ Documentation generated$(RESET)"
 	@echo ""
