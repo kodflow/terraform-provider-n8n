@@ -232,6 +232,22 @@ Contributions are welcome! Follow these steps:
 
 See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
 
+## Support this Project
+
+If you find this project useful, consider sponsoring its development:
+
+- ❤️ [GitHub Sponsors](https://github.com/sponsors/kodflow)
+- ☕ [Ko-fi](https://ko-fi.com/kodflow)
+
+Your support helps:
+
+- ⏰ Dedicate more time to development and maintenance
+- 🐛 Fix bugs faster and implement new features
+- 📚 Improve documentation and examples
+- 🆘 Provide better community support
+
+Every contribution makes a difference! Thank you! 🙏
+
 ## License
 
 Sustainable Use License 1.0
