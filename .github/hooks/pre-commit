@@ -15,6 +15,24 @@ RED='\033[31m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
+# Check if committing directly to main branch
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [ "$BRANCH" = "main" ]; then
+  echo ""
+  echo -e "${BOLD}${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  echo -e "${BOLD}${RED}❌ Direct commits to 'main' branch are forbidden!${RESET}"
+  echo -e "${BOLD}${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  echo ""
+  echo -e "Please use a feature branch and create a Pull Request:"
+  echo -e "  ${CYAN}git checkout -b feat/my-feature${RESET}"
+  echo -e "  ${CYAN}git commit${RESET}"
+  echo -e "  ${CYAN}git push origin feat/my-feature${RESET}"
+  echo ""
+  echo -e "Then create a PR on GitHub to merge into main."
+  echo ""
+  exit 1
+fi
+
 echo ""
 echo -e "${BOLD}${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${BOLD}  Pre-commit checks${RESET}"
