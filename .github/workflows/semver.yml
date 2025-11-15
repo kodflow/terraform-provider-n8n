@@ -7,26 +7,18 @@ on:
 
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
-  id-token: write
-  attestations: write
 
 jobs:
   release:
-    name: Semantic Release & Build
+    name: Create Release
     runs-on: ubuntu-latest
     # Skip release commits to avoid loops
     if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
-    outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
-      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
-          persist-credentials: true
           token: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Import GPG key
@@ -42,46 +34,66 @@ jobs:
         timeout-minutes: 2
         continue-on-error: true
 
-      - name: Configure Git for semantic-release
+      - name: Configure Git
         run: |
-          git config --global user.name "semantic-release-bot"
-          git config --global user.email "semantic-release-bot@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          echo "GPG import outcome: ${{ steps.import_gpg.outcome }}"
           if [ "${{ steps.import_gpg.outcome }}" = "success" ]; then
-            echo "✅ GPG key imported successfully - enabling GPG signing"
+            echo "✅ GPG signing enabled"
             git config --global commit.gpgsign true
             git config --global tag.gpgsign true
             git config --global user.signingkey "${{ steps.import_gpg.outputs.keyid }}"
           else
-            echo "⚠️ GPG import failed or timed out - disabling GPG signing"
+            echo "⚠️ GPG signing disabled"
             git config --global commit.gpgsign false
             git config --global tag.gpgsign false
           fi
 
-      - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: "lts/*"
-
-      - name: Install semantic-release
+      - name: Install svu
         run: |
-          npm install -g \
-            semantic-release@24.2.0 \
-            @semantic-release/changelog@6.0.3 \
-            @semantic-release/git@10.0.1 \
-            @semantic-release/github@10.3.5 \
-            @semantic-release/exec@6.0.3 \
-            conventional-changelog-conventionalcommits@8.0.0
+          wget -q https://github.com/caarlos0/svu/releases/download/v2.3.1/svu_2.3.1_linux_amd64.tar.gz
+          tar -xzf svu_2.3.1_linux_amd64.tar.gz
+          sudo mv svu /usr/local/bin/
+          svu --version
 
-      - name: Run semantic-release
-        id: semantic
+      - name: Calculate next version
+        id: version
+        run: |
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          NEXT_VERSION=$(svu next --tag-mode current || echo "")
+
+          if [ -z "$NEXT_VERSION" ] || [ "$NEXT_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "No new version to release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "Current version: $CURRENT_VERSION"
+            echo "Next version: $NEXT_VERSION"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.version.outputs.should_release == 'true'
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.should_release == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --notes "Release $TAG - binaries will be uploaded by GoReleaser" \
+            --draft
 
       - name: Release summary
-        if: success() && steps.semantic.outputs.new_release_published == 'true'
+        if: steps.version.outputs.should_release == 'true'
         run: |
-          echo "✅ Release v${{ steps.semantic.outputs.new_release_version }} created successfully"
-          echo "🏷️  Tag and GitHub release created by semantic-release"
+          echo "✅ Release ${{ steps.version.outputs.version }} created"
+          echo "🏷️  Tag pushed and GitHub release draft created"
+          echo "📦 GoReleaser will build and publish binaries"
