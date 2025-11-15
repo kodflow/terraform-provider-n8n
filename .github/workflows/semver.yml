@@ -88,8 +88,8 @@ jobs:
           TAG="${{ steps.version.outputs.version }}"
           gh release create "$TAG" \
             --title "Release $TAG" \
-            --notes "Release $TAG - binaries will be uploaded by GoReleaser" \
-            --draft
+            --notes "Release $TAG - building binaries..." \
+            --latest
 
       - name: Release summary
         if: steps.version.outputs.should_release == 'true'
