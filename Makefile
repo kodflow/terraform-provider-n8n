@@ -12,7 +12,7 @@ GOARCH := $(shell go env GOARCH)
 LAST_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
 VERSION := $(subst v,,$(LAST_TAG))
 
-PLUGIN_DIR := $(HOME)/.terraform.d/plugins/registry.terraform.io/kodflow/terraform-provider-n8n/$(VERSION)/$(GOOS)_$(GOARCH)
+PLUGIN_DIR := $(HOME)/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/$(VERSION)/$(GOOS)_$(GOARCH)
 
 # Colors for output
 CYAN := \033[36m

@@ -53,7 +53,7 @@ The project includes a fully configured DevContainer with all required tools:
 terraform {
   required_providers {
     n8n = {
-      source  = "kodflow/terraform-provider-n8n"
+      source  = "kodflow/n8n"
       version = "~> 1.0"
     }
   }
@@ -69,7 +69,7 @@ provider "n8n" {
 
 ```bash
 make build
-# Provider installed at: ~/.terraform.d/plugins/registry.terraform.io/kodflow/terraform-provider-n8n/
+# Provider installed at: ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/
 ```
 
 ## Quick Start

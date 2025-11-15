@@ -45,7 +45,7 @@ Before contributing, please:
 
 ```bash
 # Clone the repository
-git clone https://github.com/kodflow/terraform-provider-n8n.git
+git clone https://github.com/kodflow/n8n.git
 cd terraform-provider-n8n
 
 # Install development tools
