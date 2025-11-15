@@ -1,0 +1,107 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE.md in the project root for license information.
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - main: ./src
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w -X main.version={{.Version}}"
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - "386"
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: "386"
+      - goos: windows
+        goarch: "arm"
+      - goos: windows
+        goarch: "arm64"
+    binary: "{{ .ProjectName }}_v{{ .Version }}"
+
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
+  algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    cmd: gpg
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+    signature: "${artifact}.sig"
+
+release:
+  draft: false
+  prerelease: auto
+  mode: append
+  extra_files:
+    - glob: terraform-registry-manifest.json
+  header: |
+    ## Terraform Registry Installation
+
+    This release is compatible with Terraform Registry. The provider binaries are signed with GPG.
+
+    ### Installation
+
+    Add to your Terraform configuration:
+
+    ```hcl
+    terraform {
+      required_providers {
+        n8n = {
+          source  = "kodflow/terraform-provider-n8n"
+          version = "~> {{ .Version }}"
+        }
+      }
+    }
+    ```
+
+    ### Verification
+
+    All binaries are signed with GPG key: `{{ .Env.GPG_FINGERPRINT }}`
+
+    Verify checksums:
+    ```bash
+    gpg --verify {{ .ProjectName }}_{{ .Version }}_SHA256SUMS.sig {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
+    sha256sum -c {{ .ProjectName }}_{{ .Version }}_SHA256SUMS
+    ```
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "typo"

@@ -1,223 +1,243 @@
-# DevContainer Minimal Template
+# Terraform Provider for n8n
 
-Template minimaliste pour démarrer rapidement vos projets avec un environnement DevContainer propre et léger.
+Terraform provider to manage n8n resources (workflows, credentials, projects, users, and more).
 
-## Fonctionnalités
+[![Bazel](https://img.shields.io/badge/Build-Bazel%209.0-43A047?logo=bazel)](https://bazel.build/)
+[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)](https://go.dev/)
+[![Terraform](https://img.shields.io/badge/Terraform-Plugin%20Framework-7B42BC?logo=terraform)](https://developer.hashicorp.com/terraform/plugin/framework)
 
-- **Ubuntu 24.04 LTS** comme base
-- **User vscode** (UID/GID 1000:1000) avec sudo
-- **Zsh + Oh My Zsh + Powerlevel10k** pré-installé et configuré
-- **Outils essentiels** : git, curl, wget, jq, yq, build-essential
-- **MCP (Model Context Protocol)** : Configuration et scripts d'initialisation inclus
-- **Script d'initialisation** : Configuration automatique à la création du container
-- **Persistance** via volumes Docker
-- **Aucune feature externe** : tout est dans le Dockerfile
-- **GitHub Actions** : Workflow de build automatisé pour le devcontainer
+## Features
 
-## Ce qui n'est PAS inclus
+### Community Edition Support
 
-Ce template est **volontairement minimaliste**. Il ne contient pas :
+The provider fully supports **n8n Community Edition** (free/self-hosted):
 
-- ❌ Langages de programmation (Go, Node.js, Python, etc.)
-- ❌ CLIs spécifiques (GitHub CLI, Claude CLI, etc.)
-- ❌ Docker-in-Docker
-- ❌ Bases de données
+| Resource/Data Source | Status       | Description                           |
+| -------------------- | ------------ | ------------------------------------- |
+| `n8n_workflow`       | ✅ Available | Create and manage workflows           |
+| `n8n_credential`     | ✅ Available | Store API credentials securely        |
+| `n8n_tag`            | ✅ Available | Organize resources with tags          |
+| `n8n_variable`       | ✅ Available | Manage environment variables          |
+| `n8n_execution`      | ✅ Available | Query workflow executions (read-only) |
 
-**Pourquoi ?** Pour garder l'image légère et vous laisser installer uniquement ce dont vous avez besoin.
+### Enterprise Edition Support
 
-## Installation rapide
+**Enterprise features** require an n8n Enterprise license:
 
-### Via GitHub
+| Resource/Data Source | Status            | License Required |
+| -------------------- | ----------------- | ---------------- |
+| `n8n_project`        | 🚧 In Development | Enterprise       |
+| `n8n_user`           | 🚧 In Development | Enterprise       |
+| `n8n_source_control` | 🚧 In Development | Enterprise       |
 
-```bash
-# Utiliser ce repository comme template
-gh repo create mon-projet --template .repository --public
-cd mon-projet
-code .
-```
+> **Note:** Enterprise features are in development and will be available once enterprise license access is obtained for testing.
 
-### Localement
+## Prerequisites
 
-```bash
-# Copier le template
-cp -r .repository mon-projet
-cd mon-projet
-rm -rf .git
-git init
-code .
-```
+### DevContainer (Recommended)
 
-Acceptez l'ouverture dans le DevContainer lorsque VS Code vous le propose.
+The project includes a fully configured DevContainer with all required tools:
 
-## Personnalisation
+- **Go 1.25.3**
+- **Bazel 9.0**
+- **Terraform** & **OpenTofu**
+- All development tools pre-installed
 
-### Ajouter des langages/outils
+**Just open the project in VS Code and rebuild the container - everything works out of the box.**
 
-**Option 1 : Dans le Dockerfile** (recommandé pour les outils systèmes)
+## Installation
 
-Éditez `.devcontainer/Dockerfile` :
+### Via Terraform Registry (Coming Soon)
 
-```dockerfile
-# Ajouter des packages apt
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    && apt-get clean
-
-# Installer Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
-    && apt-get install -y nodejs
-```
-
-**Option 2 : Avec les DevContainer Features** (pour les langages standards)
-
-Ajoutez dans `.devcontainer/devcontainer.json` :
-
-```json
-"features": {
-  "ghcr.io/devcontainers/features/go:1": {
-    "version": "latest"
-  },
-  "ghcr.io/devcontainers/features/node:1": {
-    "version": "lts"
+```hcl
+terraform {
+  required_providers {
+    n8n = {
+      source  = "kodflow/terraform-provider-n8n"
+      version = "~> 1.0"
+    }
   }
+}
+
+provider "n8n" {
+  api_url = "https://your-n8n-instance.com"
+  api_key = var.n8n_api_key
 }
 ```
 
-Voir : <https://containers.dev/features>
-
-**Option 3 : Installation manuelle** (pour les outils utilisateur)
-
-Installez après l'ouverture du container :
+### Local Development
 
 ```bash
-# Exemple
-curl -sSL https://example.com/install.sh | sh
+make build
+# Provider installed at: ~/.terraform.d/plugins/registry.terraform.io/kodflow/terraform-provider-n8n/
 ```
 
-### Ajouter des extensions VS Code
+## Quick Start
 
-Éditez `.devcontainer/devcontainer.json` dans `customizations.vscode.extensions`.
+### Get Your API Key
 
-### Variables d'environnement
+1. Open your n8n instance
+2. Go to **Settings** > **API**
+3. Click **Create API Key**
+4. Set as `N8N_API_KEY` environment variable
 
-Créez un fichier `.env` à la racine pour vos variables d'environnement.
-
-### Personnaliser Powerlevel10k
-
-Pour configurer le prompt Powerlevel10k :
+### Run Examples
 
 ```bash
-# Lancer l'assistant de configuration interactif
-p10k configure
+export N8N_API_URL="http://localhost:5678"
+export N8N_API_KEY="your-api-key"
+
+cd examples/community/workflows/basic-workflow
+terraform init
+terraform apply
 ```
 
-Cela créera un fichier `~/.p10k.zsh` avec votre configuration personnalisée. Ce fichier sera automatiquement chargé au démarrage du shell.
+See [examples/](examples/) directory for more examples.
 
-## Structure des volumes
+## Examples
 
-Les volumes Docker persistent entre les rebuilds :
+The provider includes comprehensive examples for different use cases:
 
-### Volumes spécifiques au projet
+### Community Edition Examples
 
-- `{nom-du-projet}-local-bin` : Binaires locaux installés
+Browse complete examples in [`examples/community/`](examples/community/):
 
-### Volumes partagés
+- **[Workflows](examples/community/workflows/)** - Basic webhook and scheduled workflows
+- **[Credentials](examples/community/credentials/)** - HTTP Basic Auth and API credentials
+- **[Tags](examples/community/tags/)** - Workflow organization with tags
+- **[Variables](examples/community/variables/)** - Environment variable management
+- **[Executions](examples/community/executions/)** - Query and filter workflow executions
 
-- `vscode-extensions` : Extensions VS Code
-- `vscode-insiders-extensions` : Extensions VS Code Insiders
-- `zsh-history` : Historique Zsh
+### Enterprise Edition Examples
 
-Vous pouvez ajouter vos propres volumes dans `.devcontainer/devcontainer.json`.
+Enterprise examples are currently in development at [`examples/enterprise/`](examples/enterprise/).
 
-## Commandes utiles
+## Development
 
-### Rebuild du container
+### Essential Commands
 
 ```bash
-# Depuis VS Code
-Cmd+Shift+P > "Dev Containers: Rebuild Container"
-
-# Ou depuis le terminal
-docker compose -f .devcontainer/docker-compose.yml down
-docker compose -f .devcontainer/docker-compose.yml build --no-cache
-docker compose -f .devcontainer/docker-compose.yml up -d
+make help          # Display all available commands
+make build         # Build and install provider locally
+make test          # Run full test suite
+make fmt           # Format all source files
+make lint          # Run code linters (zero tolerance)
+make docs          # Generate CHANGELOG.md and COVERAGE.MD
+make openapi       # Regenerate SDK from n8n OpenAPI spec
 ```
 
-### Nettoyer les volumes
+### Quality Standards
+
+**Critical requirements:**
+
+- ✅ All tests must pass: `make test`
+- ✅ Code must be formatted: `make fmt`
+- ✅ Zero linting errors: `make lint`
+- ✅ Maximum test coverage (no `t.Skip()` allowed)
+
+### SDK Generation
+
+The provider uses auto-generated Go SDK from n8n OpenAPI specification:
 
 ```bash
-# Supprimer tous les volumes (⚠️ perte de données)
-docker compose -f .devcontainer/docker-compose.yml down -v
+make openapi       # Download and prepare n8n OpenAPI spec
+make sdk           # Generate Go SDK from OpenAPI spec
 ```
 
-### Voir les logs
+**Auto-generated files:**
 
-```bash
-docker compose -f .devcontainer/docker-compose.yml logs -f devcontainer
+- `sdk/n8nsdk/*.go` - Go client for n8n API
+- `sdk/n8nsdk/api/openapi.yaml` - Patched OpenAPI spec (not committed)
+
+See [`codegen/`](codegen/) for generation scripts and patches.
+
+### Git Workflow
+
+The project uses git hooks for quality enforcement:
+
+- **Pre-commit**: Formats code, generates documentation, validates changes
+- **Commit-msg**: Validates commit message format
+- **Pre-push**: Runs tests before pushing
+
+Hooks are automatically installed in DevContainer.
+
+## Project Architecture
+
+```
+.
+├── src/                          # Provider source code
+│   ├── main.go                   # Entry point
+│   └── internal/provider/        # Provider implementation
+│       ├── credential/           # Credential resource
+│       ├── execution/            # Execution data source
+│       ├── project/              # Project resource (Enterprise)
+│       ├── sourcecontrol/        # Source control (Enterprise)
+│       ├── tag/                  # Tag resource
+│       ├── user/                 # User resource (Enterprise)
+│       ├── variable/             # Variable resource
+│       ├── workflow/             # Workflow resource
+│       └── shared/               # Shared utilities
+├── sdk/n8nsdk/                   # Auto-generated n8n SDK
+├── codegen/                      # SDK generation scripts
+├── examples/                     # Terraform examples
+│   ├── community/                # Community edition examples
+│   └── enterprise/               # Enterprise edition examples
+├── scripts/                      # Build and automation scripts
+├── Makefile                      # Main development commands
+└── .devcontainer/                # DevContainer configuration
 ```
 
-## Configuration MCP (Model Context Protocol)
+## Release Process
 
-Le template inclut une configuration MCP pour faciliter l'intégration avec des outils d'IA.
+Releases are fully automated via GitHub Actions:
 
-### Script de configuration
+### Semantic Versioning
 
-Le script `.devcontainer/setup-mcp.sh` est exécuté automatiquement au démarrage du container et permet de :
+Push commits to `main` branch with conventional commit messages:
 
-- Configurer les serveurs MCP
-- Initialiser les variables d'environnement nécessaires
-- Préparer l'environnement pour l'utilisation des outils MCP
+- `feat:` → Minor version bump (v0.1.0 → v0.2.0)
+- `fix:` → Patch version bump (v0.1.0 → v0.1.1)
+- `BREAKING CHANGE:` → Major version bump (v0.1.0 → v1.0.0)
 
-### Variables d'environnement
+The CI/CD pipeline automatically:
 
-Copiez `.devcontainer/.env.example` vers `.devcontainer/.env` et configurez vos variables :
+1. Analyzes commit messages
+2. Determines next version
+3. Updates CHANGELOG.md
+4. Creates signed tags
+5. Compiles multi-platform binaries (Linux, macOS, Windows, FreeBSD)
+6. Generates checksums and signatures
+7. Creates GitHub Release with all artifacts
 
-```bash
-cp .devcontainer/.env.example .devcontainer/.env
-```
+All releases are compatible with Terraform Registry.
 
-Éditez `.devcontainer/.env` selon vos besoins pour ajouter vos clés API et configurations.
+View all releases at [GitHub Releases](../../releases).
 
-### Script d'initialisation
+## Contributing
 
-Le script `.devcontainer/init.sh` s'exécute automatiquement à la création du container via le `postCreateCommand` et permet de :
+Contributions are welcome! Follow these steps:
 
-- Effectuer des configurations post-création
-- Installer des dépendances supplémentaires
-- Personnaliser l'environnement de développement
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Develop and test: `make test && make lint && make build`
+4. Commit your changes (follow conventional commits)
+5. Push and create a Pull Request
 
-## Dépannage
+### Contribution Standards
 
-### Problèmes de permissions
+- ✅ All tests must pass
+- ✅ Code must be formatted and linted
+- ✅ Tests required for new features
+- ✅ Follow [Conventional Commits](https://www.conventionalcommits.org/) format
 
-```bash
-# Depuis le container
-sudo chown -R vscode:vscode $HOME
-```
-
-### Rebuild complet
-
-```bash
-# Supprimer le container et les volumes
-docker compose -f .devcontainer/docker-compose.yml down -v
-docker system prune -a
-
-# Rouvrir dans VS Code
-code .
-```
-
-## Philosophie
-
-Ce template suit le principe **"moins c'est plus"** :
-
-- ✅ Démarrage rapide
-- ✅ Faible consommation de ressources
-- ✅ Facile à personnaliser
-- ✅ Pas de dépendances inutiles
-
-Ajoutez seulement ce dont vous avez besoin, quand vous en avez besoin.
+See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
 
 ## License
 
-Libre d'utilisation pour vos projets personnels et professionnels.
+Sustainable Use License 1.0
+
+See [LICENSE.md](LICENSE.md) for details.
+
+---
+
+**Developed with ❤️ by [KodFlow](https://github.com/kodflow)**

@@ -1,0 +1,21 @@
+load("@rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "test_test",
+    srcs = [
+        "api_audit_test.go",
+        "api_credential_test.go",
+        "api_execution_test.go",
+        "api_projects_test.go",
+        "api_source_control_test.go",
+        "api_tags_test.go",
+        "api_user_test.go",
+        "api_variables_test.go",
+        "api_workflow_test.go",
+    ],
+    deps = [
+        "//sdk/n8nsdk",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
+)

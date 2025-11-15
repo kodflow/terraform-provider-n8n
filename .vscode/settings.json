@@ -1,0 +1,74 @@
+{
+  "files.exclude": {
+    "bazel-*": true,
+    "**/*.lock": true,
+    "deps.bzl": true,
+    ".bazel-cache": true,
+    ".bazelrc": true,
+    ".bazelversion": true,
+    ".codacy.yml": true,
+    ".coderabbit.yml": true,
+    ".goreleaser.yml": true,
+    ".prettierignore": true,
+    ".prettierrc.json": true,
+    ".releaserc.yml": true,
+    "MODULE.bazel.lock": true
+  },
+  "yaml.schemas": {
+    "file:///c%3A/Users/fhagard/.vscode/extensions/continue.continue-1.2.8-win32-x64/config-yaml-schema.json": [
+      ".continue/**/*.yaml"
+    ],
+    "https://spec.openapis.org/oas/3.0/schema/2021-09-28": [
+      "file:///workspace/openapi.yml",
+      "file:///workspace/sdk/n8nsdk/api/openapi.yaml"
+    ]
+  },
+  // Go language configuration
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": [
+    "--config=${workspaceFolder}/.golangci.yml",
+    "--out-format=colored-line-number"
+  ],
+  "go.lintOnSave": "package",
+  "go.buildOnSave": "off",
+  "go.vetOnSave": "off",
+  "go.formatTool": "gofmt",
+  "go.useLanguageServer": true,
+  "go.toolsManagement.autoUpdate": true,
+  "gopls": {
+    "ui.diagnostic.analyses": {
+      "shadow": true,
+      "unusedparams": true,
+      "unusedwrite": true,
+      "nilness": true,
+      "unusedvariable": true
+    },
+    "ui.diagnostic.staticcheck": true,
+    "ui.diagnostic.annotations": {
+      "bounds": true,
+      "escape": true,
+      "inline": true,
+      "nil": true
+    }
+  },
+  // Bazel configuration
+  "bazel.buildifierExecutable": "/usr/local/bin/buildifier",
+  "bazel.enableCodeLens": true,
+  // Run linters on save
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.go$",
+        "isAsync": true,
+        "cmd": "golangci-lint run --fix ${file} && ${workspaceFolder}/.vscode/ktn-lint-filtered.sh ${file} || true"
+      }
+    ]
+  },
+  // File watcher for Go files
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/bazel-*/**": true
+  }
+}

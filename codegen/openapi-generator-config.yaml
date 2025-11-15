@@ -1,0 +1,28 @@
+# OpenAPI Generator Configuration for n8n SDK
+# This config generates a Go SDK from the n8n OpenAPI specification
+
+# Package configuration
+packageName: n8nsdk
+packageVersion: 1.1.1
+isGoSubmodule: true
+
+# Go module configuration
+goModulePath: github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk
+
+# Generation options
+enumClassPrefix: true
+structPrefix: true
+
+# HTTP client configuration
+withGoMod: true
+withXml: false
+
+# Documentation
+hideGenerationTimestamp: false
+
+# Naming conventions
+enumNameSuffix: ""
+
+# Additional properties for better Terraform integration
+withAWSV4Signature: false
+generateInterfaces: true

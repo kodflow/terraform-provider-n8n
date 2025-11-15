@@ -1,0 +1,29 @@
+# Bazel 9 configuration - bzlmod is required (WORKSPACE mode removed in Bazel 9)
+startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
+
+# Workaround for Bazel 9.0.0rc1 Linux bug with xcode config - use pure Go builds
+build --@rules_go//go/config:pure
+
+# Common
+build --enable_platform_specific_config
+build --incompatible_strict_action_env
+
+# Go
+build --action_env=GOPROXY=https://proxy.golang.org,direct
+
+# Go compiler optimizations for inlining
+# Default Go compiler behavior enables inlining automatically
+# We use compilation_mode=opt to ensure optimizations are enabled
+build --compilation_mode=opt
+
+# Performance
+build --experimental_reuse_sandbox_directories
+build --nolegacy_external_runfiles
+
+# Output
+build --show_timestamps
+build --color=yes
+
+# Test
+test --test_output=errors
+test --test_summary=detailed

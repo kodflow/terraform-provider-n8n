@@ -1,0 +1,25 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE.md in the project root for license information.
+
+# GitGuardian configuration
+# This file excludes false positives from secret detection
+
+version: 2
+
+secret:
+  # Paths to ignore during secret scanning
+  ignored-paths:
+    # OpenAPI specification examples contain fake tokens for documentation
+    - "sdk/n8nsdk/api/openapi-source/**/*.yml"
+
+    # Terraform examples contain test values with "test-" prefix
+    - "examples/**/*.tf"
+    - "examples/**/*.tfvars"
+
+  # Specific secrets to ignore by their value
+  ignored-matches:
+    - name: OpenAPI example token
+      match: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+    - name: Terraform test API key
+      match: test-api-key-12345
