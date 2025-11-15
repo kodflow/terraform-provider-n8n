@@ -1,4 +1,4 @@
-name: Semantic Release
+name: Release
 
 on:
   push:
@@ -9,13 +9,18 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
-    name: Semantic Release
+    name: Semantic Release & Build
     runs-on: ubuntu-latest
-    # Skip release commits to avoid loops (semantic-release doesn't create commits anymore)
+    # Skip release commits to avoid loops
     if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -34,9 +39,7 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
           git_config_global: true
-        # Timeout prevents indefinite hanging if GPG_PRIVATE_KEY is missing/invalid
         timeout-minutes: 2
-        # Continue even if GPG import fails - will use unsigned commits/tags as fallback
         continue-on-error: true
 
       - name: Configure Git for semantic-release
@@ -44,19 +47,16 @@ jobs:
           git config --global user.name "semantic-release-bot"
           git config --global user.email "semantic-release-bot@github.com"
 
-          # Check if GPG import was successful
           echo "GPG import outcome: ${{ steps.import_gpg.outcome }}"
           if [ "${{ steps.import_gpg.outcome }}" = "success" ]; then
             echo "✅ GPG key imported successfully - enabling GPG signing"
             git config --global commit.gpgsign true
             git config --global tag.gpgsign true
             git config --global user.signingkey "${{ steps.import_gpg.outputs.keyid }}"
-            echo "Git configured for signed commits and tags with key ${{ steps.import_gpg.outputs.keyid }}"
           else
             echo "⚠️ GPG import failed or timed out - disabling GPG signing"
             git config --global commit.gpgsign false
             git config --global tag.gpgsign false
-            echo "Git configured for unsigned commits and tags"
           fi
 
       - name: Setup Node.js
@@ -75,14 +75,38 @@ jobs:
             conventional-changelog-conventionalcommits@8.0.0
 
       - name: Run semantic-release
+        id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
+      - name: Set up Go
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Run GoReleaser
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+
+      - name: Generate build provenance attestation
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/terraform-provider-n8n_*'
+
       - name: Release summary
-        if: success()
+        if: success() && steps.semantic.outputs.new_release_published == 'true'
         run: |
-          echo "✅ Semantic release completed successfully"
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "No tag")
-          echo "Latest tag: $LATEST_TAG"
-          echo "Tag will trigger GoReleaser workflow to build and publish release"
+          echo "✅ Release v${{ steps.semantic.outputs.new_release_version }} completed successfully"
+          echo "📦 Binaries compiled and signed with GPG"
+          echo "🔐 Build provenance attestation generated"
