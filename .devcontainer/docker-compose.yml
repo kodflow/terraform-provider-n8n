@@ -3,10 +3,7 @@ services:
     # Container name will use project name automatically via COMPOSE_PROJECT_NAME
     # which defaults to the parent directory name
 
-    # Use pre-built image from GitHub Container Registry with fallback to local build
-    # Docker Compose will try to pull first, then build if pull fails
-    image: ghcr.io/kodflow/devcontainer:latest
-
+    # Build locally - no remote image needed
     build:
       context: .
       dockerfile: Dockerfile
