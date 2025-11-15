@@ -11,6 +11,13 @@ exclude_paths:
   # DevContainer generated files with secrets
   - ".devcontainer/mcp.json"
 
+  # Generated SDK and Bazel files
+  - "sdk/n8nsdk/**"
+  - "bazel-*/**"
+  - "**/*_test.go"
+  - "**/BUILD.bazel"
+  - "**/*.pb.go"
+
   # Standard exclusions
   - "node_modules/**"
   - "vendor/**"
@@ -18,9 +25,27 @@ exclude_paths:
   - "build/**"
   - "*.min.js"
   - "*.min.css"
+  - ".terraform/**"
+  - "*.tfstate"
+  - "*.tfstate.backup"
 
 # Engines configuration
 engines:
+  # Go linting and security
+  gosec:
+    enabled: true
+
+  # Security scanning
   trivy:
+    enabled: true
     exclude_paths:
       - ".devcontainer/mcp.json"
+      - "sdk/n8nsdk/**"
+
+  # Go linting
+  golint:
+    enabled: true
+
+  # Go vet
+  govet:
+    enabled: true

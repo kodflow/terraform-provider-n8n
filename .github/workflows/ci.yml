@@ -91,9 +91,32 @@ jobs:
       - name: Run linters
         run: make lint
 
-      # Run unit tests
-      - name: Run unit tests
-        run: make test/unit/ci
+      # Run unit tests with coverage
+      - name: Run unit tests with coverage
+        run: |
+          echo "Running tests with coverage collection..."
+          bazel coverage --combined_report=lcov --instrumentation_filter="//src/..." //src/...
+          echo ""
+          echo "Coverage report generated at: bazel-out/_coverage/_coverage_report.dat"
+          echo ""
+          echo "Coverage summary:"
+          # Display coverage summary from LCOV
+          if [ -f bazel-out/_coverage/_coverage_report.dat ]; then
+            TOTAL_LINES=$(grep -c "^DA:" bazel-out/_coverage/_coverage_report.dat || echo 0)
+            HIT_LINES=$(grep "^DA:" bazel-out/_coverage/_coverage_report.dat | grep -v ",0$" | wc -l || echo 0)
+            if [ "$TOTAL_LINES" -gt 0 ]; then
+              COVERAGE=$(awk "BEGIN {printf \"%.1f\", ($HIT_LINES / $TOTAL_LINES) * 100}")
+              echo "  Lines covered: $HIT_LINES / $TOTAL_LINES ($COVERAGE%)"
+            fi
+          fi
+
+      # Upload coverage to Codacy
+      - name: Upload coverage to Codacy
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: bazel-out/_coverage/_coverage_report.dat
+        continue-on-error: true
 
       # Build provider
       - name: Build provider
