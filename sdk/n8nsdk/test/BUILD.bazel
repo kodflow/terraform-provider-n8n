@@ -14,6 +14,7 @@ go_test(
         "api_workflow_test.go",
     ],
     deps = [
+        "//sdk/n8nsdk",
         "@com_github_stretchr_testify//assert",
         "@com_github_stretchr_testify//require",
     ],

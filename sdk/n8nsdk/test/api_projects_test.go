@@ -13,7 +13,7 @@ import (
 	"context"
 	"testing"
 
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
+	openapiclient "github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
