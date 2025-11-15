@@ -16,18 +16,17 @@ import (
 	"fmt"
 )
 
-
 // WorkflowStaticData struct for WorkflowStaticData
 type WorkflowStaticData struct {
 	MapmapOfStringAny *map[string]interface{}
-	String *string
+	String            *string
 }
 
 // Unmarshal JSON data into any of the pointers in the struct
 func (dst *WorkflowStaticData) UnmarshalJSON(data []byte) error {
 	var err error
 	// try to unmarshal JSON data into MapmapOfStringAny
-	err = json.Unmarshal(data, &dst.MapmapOfStringAny);
+	err = json.Unmarshal(data, &dst.MapmapOfStringAny)
 	if err == nil {
 		jsonMapmapOfStringAny, _ := json.Marshal(dst.MapmapOfStringAny)
 		if string(jsonMapmapOfStringAny) == "{}" { // empty struct
@@ -40,7 +39,7 @@ func (dst *WorkflowStaticData) UnmarshalJSON(data []byte) error {
 	}
 
 	// try to unmarshal JSON data into String
-	err = json.Unmarshal(data, &dst.String);
+	err = json.Unmarshal(data, &dst.String)
 	if err == nil {
 		jsonString, _ := json.Marshal(dst.String)
 		if string(jsonString) == "{}" { // empty struct
@@ -67,7 +66,6 @@ func (src WorkflowStaticData) MarshalJSON() ([]byte, error) {
 
 	return nil, nil // no data in anyOf schemas
 }
-
 
 type NullableWorkflowStaticData struct {
 	value *WorkflowStaticData
@@ -104,5 +102,3 @@ func (v *NullableWorkflowStaticData) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

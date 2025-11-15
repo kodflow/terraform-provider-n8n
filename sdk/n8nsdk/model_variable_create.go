@@ -12,8 +12,8 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
@@ -22,10 +22,10 @@ var _ MappedNullable = &VariableCreate{}
 
 // VariableCreate struct for VariableCreate
 type VariableCreate struct {
-	Id *string `json:"id,omitempty"`
-	Key string `json:"key"`
-	Value string `json:"value"`
-	Type *string `json:"type,omitempty"`
+	Id        *string        `json:"id,omitempty"`
+	Key       string         `json:"key"`
+	Value     string         `json:"value"`
+	Type      *string        `json:"type,omitempty"`
 	ProjectId NullableString `json:"projectId,omitempty"`
 }
 
@@ -194,6 +194,7 @@ func (o *VariableCreate) HasProjectId() bool {
 func (o *VariableCreate) SetProjectId(v string) {
 	o.ProjectId.Set(&v)
 }
+
 // SetProjectIdNil sets the value for ProjectId to be an explicit nil
 func (o *VariableCreate) SetProjectIdNil() {
 	o.ProjectId.Set(nil)
@@ -205,7 +206,7 @@ func (o *VariableCreate) UnsetProjectId() {
 }
 
 func (o VariableCreate) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -242,10 +243,10 @@ func (o *VariableCreate) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -301,5 +302,3 @@ func (v *NullableVariableCreate) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -20,10 +20,10 @@ var _ MappedNullable = &UsersPost201ResponseUser{}
 
 // UsersPost201ResponseUser struct for UsersPost201ResponseUser
 type UsersPost201ResponseUser struct {
-	Id *string `json:"id,omitempty"`
-	Email *string `json:"email,omitempty"`
+	Id              *string `json:"id,omitempty"`
+	Email           *string `json:"email,omitempty"`
 	InviteAcceptUrl *string `json:"inviteAcceptUrl,omitempty"`
-	EmailSent *bool `json:"emailSent,omitempty"`
+	EmailSent       *bool   `json:"emailSent,omitempty"`
 }
 
 // NewUsersPost201ResponseUser instantiates a new UsersPost201ResponseUser object
@@ -172,7 +172,7 @@ func (o *UsersPost201ResponseUser) SetEmailSent(v bool) {
 }
 
 func (o UsersPost201ResponseUser) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -231,5 +231,3 @@ func (v *NullableUsersPost201ResponseUser) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

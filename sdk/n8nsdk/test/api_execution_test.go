@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_ExecutionAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_ExecutionAPIService(t *testing.T) {
 
 	t.Run("Test ExecutionAPIService ExecutionsGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ExecutionAPI.ExecutionsGet(context.Background()).Execute()
 
@@ -36,7 +37,7 @@ func Test_n8nsdk_ExecutionAPIService(t *testing.T) {
 
 	t.Run("Test ExecutionAPIService ExecutionsIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id float32
 
@@ -50,7 +51,7 @@ func Test_n8nsdk_ExecutionAPIService(t *testing.T) {
 
 	t.Run("Test ExecutionAPIService ExecutionsIdGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id float32
 
@@ -64,7 +65,7 @@ func Test_n8nsdk_ExecutionAPIService(t *testing.T) {
 
 	t.Run("Test ExecutionAPIService ExecutionsIdRetryPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id float32
 

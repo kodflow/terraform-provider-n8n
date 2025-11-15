@@ -3,7 +3,7 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "shared",
     srcs = ["pointers.go"],
-    importpath = "github.com/kodflow/n8n/src/internal/provider/shared",
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared",
     visibility = ["//src:__subpackages__"],
 )
 

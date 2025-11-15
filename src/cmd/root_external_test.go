@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kodflow/n8n/src/cmd"
+	"github.com/kodflow/terraform-provider-n8n/src/cmd"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -21,23 +21,23 @@ var _ MappedNullable = &Execution{}
 
 // Execution struct for Execution
 type Execution struct {
-	Id *float32 `json:"id,omitempty"`
+	Id   *float32               `json:"id,omitempty"`
 	Data map[string]interface{} `json:"data,omitempty"`
 	// Deprecated - use status instead
-	Finished *bool `json:"finished,omitempty"`
-	Mode *string `json:"mode,omitempty"`
-	RetryOf *float32 `json:"retryOf,omitempty"`
+	Finished *bool    `json:"finished,omitempty"`
+	Mode     *string  `json:"mode,omitempty"`
+	RetryOf  *float32 `json:"retryOf,omitempty"`
 	// The time at which the execution was created
-	CreatedAt NullableTime `json:"createdAt,omitempty"`
+	CreatedAt      NullableTime    `json:"createdAt,omitempty"`
 	RetrySuccessId NullableFloat32 `json:"retrySuccessId,omitempty"`
 	// The time at which the execution started
 	StartedAt NullableTime `json:"startedAt,omitempty"`
 	// The time at which the execution stopped. Will only be null for executions that still have the status 'running'.
-	StoppedAt NullableTime `json:"stoppedAt,omitempty"`
-	WorkflowId *float32 `json:"workflowId,omitempty"`
-	WaitTill NullableTime `json:"waitTill,omitempty"`
+	StoppedAt  NullableTime           `json:"stoppedAt,omitempty"`
+	WorkflowId *float32               `json:"workflowId,omitempty"`
+	WaitTill   NullableTime           `json:"waitTill,omitempty"`
 	CustomData map[string]interface{} `json:"customData,omitempty"`
-	Status *string `json:"status,omitempty"`
+	Status     *string                `json:"status,omitempty"`
 }
 
 // NewExecution instantiates a new Execution object
@@ -249,6 +249,7 @@ func (o *Execution) HasCreatedAt() bool {
 func (o *Execution) SetCreatedAt(v time.Time) {
 	o.CreatedAt.Set(&v)
 }
+
 // SetCreatedAtNil sets the value for CreatedAt to be an explicit nil
 func (o *Execution) SetCreatedAtNil() {
 	o.CreatedAt.Set(nil)
@@ -291,6 +292,7 @@ func (o *Execution) HasRetrySuccessId() bool {
 func (o *Execution) SetRetrySuccessId(v float32) {
 	o.RetrySuccessId.Set(&v)
 }
+
 // SetRetrySuccessIdNil sets the value for RetrySuccessId to be an explicit nil
 func (o *Execution) SetRetrySuccessIdNil() {
 	o.RetrySuccessId.Set(nil)
@@ -333,6 +335,7 @@ func (o *Execution) HasStartedAt() bool {
 func (o *Execution) SetStartedAt(v time.Time) {
 	o.StartedAt.Set(&v)
 }
+
 // SetStartedAtNil sets the value for StartedAt to be an explicit nil
 func (o *Execution) SetStartedAtNil() {
 	o.StartedAt.Set(nil)
@@ -375,6 +378,7 @@ func (o *Execution) HasStoppedAt() bool {
 func (o *Execution) SetStoppedAt(v time.Time) {
 	o.StoppedAt.Set(&v)
 }
+
 // SetStoppedAtNil sets the value for StoppedAt to be an explicit nil
 func (o *Execution) SetStoppedAtNil() {
 	o.StoppedAt.Set(nil)
@@ -449,6 +453,7 @@ func (o *Execution) HasWaitTill() bool {
 func (o *Execution) SetWaitTill(v time.Time) {
 	o.WaitTill.Set(&v)
 }
+
 // SetWaitTillNil sets the value for WaitTill to be an explicit nil
 func (o *Execution) SetWaitTillNil() {
 	o.WaitTill.Set(nil)
@@ -524,7 +529,7 @@ func (o *Execution) SetStatus(v string) {
 }
 
 func (o Execution) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -610,5 +615,3 @@ func (v *NullableExecution) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

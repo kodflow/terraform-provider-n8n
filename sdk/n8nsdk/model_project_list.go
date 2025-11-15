@@ -106,6 +106,7 @@ func (o *ProjectList) HasNextCursor() bool {
 func (o *ProjectList) SetNextCursor(v string) {
 	o.NextCursor.Set(&v)
 }
+
 // SetNextCursorNil sets the value for NextCursor to be an explicit nil
 func (o *ProjectList) SetNextCursorNil() {
 	o.NextCursor.Set(nil)
@@ -117,7 +118,7 @@ func (o *ProjectList) UnsetNextCursor() {
 }
 
 func (o ProjectList) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -170,5 +171,3 @@ func (v *NullableProjectList) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

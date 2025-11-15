@@ -20,16 +20,15 @@ import (
 	"strings"
 )
 
-
 type WorkflowAPI interface {
 
 	/*
-	WorkflowsGet Retrieve all workflows
+		WorkflowsGet Retrieve all workflows
 
-	Retrieve all workflows from your instance.
+		Retrieve all workflows from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return WorkflowAPIWorkflowsGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return WorkflowAPIWorkflowsGetRequest
 	*/
 	WorkflowsGet(ctx context.Context) WorkflowAPIWorkflowsGetRequest
 
@@ -38,13 +37,13 @@ type WorkflowAPI interface {
 	WorkflowsGetExecute(r WorkflowAPIWorkflowsGetRequest) (*WorkflowList, *http.Response, error)
 
 	/*
-	WorkflowsIdActivatePost Activate a workflow
+		WorkflowsIdActivatePost Activate a workflow
 
-	Active a workflow.
+		Active a workflow.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdActivatePostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdActivatePostRequest
 	*/
 	WorkflowsIdActivatePost(ctx context.Context, id string) WorkflowAPIWorkflowsIdActivatePostRequest
 
@@ -53,13 +52,13 @@ type WorkflowAPI interface {
 	WorkflowsIdActivatePostExecute(r WorkflowAPIWorkflowsIdActivatePostRequest) (*Workflow, *http.Response, error)
 
 	/*
-	WorkflowsIdDeactivatePost Deactivate a workflow
+		WorkflowsIdDeactivatePost Deactivate a workflow
 
-	Deactivate a workflow.
+		Deactivate a workflow.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdDeactivatePostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdDeactivatePostRequest
 	*/
 	WorkflowsIdDeactivatePost(ctx context.Context, id string) WorkflowAPIWorkflowsIdDeactivatePostRequest
 
@@ -68,13 +67,13 @@ type WorkflowAPI interface {
 	WorkflowsIdDeactivatePostExecute(r WorkflowAPIWorkflowsIdDeactivatePostRequest) (*Workflow, *http.Response, error)
 
 	/*
-	WorkflowsIdDelete Delete a workflow
+		WorkflowsIdDelete Delete a workflow
 
-	Deletes a workflow.
+		Deletes a workflow.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdDeleteRequest
 	*/
 	WorkflowsIdDelete(ctx context.Context, id string) WorkflowAPIWorkflowsIdDeleteRequest
 
@@ -83,13 +82,13 @@ type WorkflowAPI interface {
 	WorkflowsIdDeleteExecute(r WorkflowAPIWorkflowsIdDeleteRequest) (*Workflow, *http.Response, error)
 
 	/*
-	WorkflowsIdGet Retrieves a workflow
+		WorkflowsIdGet Retrieves a workflow
 
-	Retrieves a workflow.
+		Retrieves a workflow.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdGetRequest
 	*/
 	WorkflowsIdGet(ctx context.Context, id string) WorkflowAPIWorkflowsIdGetRequest
 
@@ -98,13 +97,13 @@ type WorkflowAPI interface {
 	WorkflowsIdGetExecute(r WorkflowAPIWorkflowsIdGetRequest) (*Workflow, *http.Response, error)
 
 	/*
-	WorkflowsIdPut Update a workflow
+		WorkflowsIdPut Update a workflow
 
-	Update a workflow.
+		Update a workflow.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdPutRequest
 	*/
 	WorkflowsIdPut(ctx context.Context, id string) WorkflowAPIWorkflowsIdPutRequest
 
@@ -113,13 +112,13 @@ type WorkflowAPI interface {
 	WorkflowsIdPutExecute(r WorkflowAPIWorkflowsIdPutRequest) (*Workflow, *http.Response, error)
 
 	/*
-	WorkflowsIdTagsGet Get workflow tags
+		WorkflowsIdTagsGet Get workflow tags
 
-	Get workflow tags.
+		Get workflow tags.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdTagsGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdTagsGetRequest
 	*/
 	WorkflowsIdTagsGet(ctx context.Context, id string) WorkflowAPIWorkflowsIdTagsGetRequest
 
@@ -128,13 +127,13 @@ type WorkflowAPI interface {
 	WorkflowsIdTagsGetExecute(r WorkflowAPIWorkflowsIdTagsGetRequest) ([]Tag, *http.Response, error)
 
 	/*
-	WorkflowsIdTagsPut Update tags of a workflow
+		WorkflowsIdTagsPut Update tags of a workflow
 
-	Update tags of a workflow.
+		Update tags of a workflow.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdTagsPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdTagsPutRequest
 	*/
 	WorkflowsIdTagsPut(ctx context.Context, id string) WorkflowAPIWorkflowsIdTagsPutRequest
 
@@ -143,13 +142,13 @@ type WorkflowAPI interface {
 	WorkflowsIdTagsPutExecute(r WorkflowAPIWorkflowsIdTagsPutRequest) ([]Tag, *http.Response, error)
 
 	/*
-	WorkflowsIdTransferPut Transfer a workflow to another project.
+		WorkflowsIdTransferPut Transfer a workflow to another project.
 
-	Transfer a workflow to another project.
+		Transfer a workflow to another project.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the workflow.
-	@return WorkflowAPIWorkflowsIdTransferPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@return WorkflowAPIWorkflowsIdTransferPutRequest
 	*/
 	WorkflowsIdTransferPut(ctx context.Context, id string) WorkflowAPIWorkflowsIdTransferPutRequest
 
@@ -157,12 +156,12 @@ type WorkflowAPI interface {
 	WorkflowsIdTransferPutExecute(r WorkflowAPIWorkflowsIdTransferPutRequest) (*http.Response, error)
 
 	/*
-	WorkflowsPost Create a workflow
+		WorkflowsPost Create a workflow
 
-	Create a workflow in your instance.
+		Create a workflow in your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return WorkflowAPIWorkflowsPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return WorkflowAPIWorkflowsPostRequest
 	*/
 	WorkflowsPost(ctx context.Context) WorkflowAPIWorkflowsPostRequest
 
@@ -175,15 +174,15 @@ type WorkflowAPI interface {
 type WorkflowAPIService service
 
 type WorkflowAPIWorkflowsGetRequest struct {
-	ctx context.Context
-	ApiService WorkflowAPI
-	active *bool
-	tags *string
-	name *string
-	projectId *string
+	ctx               context.Context
+	ApiService        WorkflowAPI
+	active            *bool
+	tags              *string
+	name              *string
+	projectId         *string
 	excludePinnedData *bool
-	limit *float32
-	cursor *string
+	limit             *float32
+	cursor            *string
 }
 
 func (r WorkflowAPIWorkflowsGetRequest) Active(active bool) WorkflowAPIWorkflowsGetRequest {
@@ -233,24 +232,25 @@ WorkflowsGet Retrieve all workflows
 
 Retrieve all workflows from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return WorkflowAPIWorkflowsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return WorkflowAPIWorkflowsGetRequest
 */
 func (a *WorkflowAPIService) WorkflowsGet(ctx context.Context) WorkflowAPIWorkflowsGetRequest {
 	return WorkflowAPIWorkflowsGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return WorkflowList
+//
+//	@return WorkflowList
 func (a *WorkflowAPIService) WorkflowsGetExecute(r WorkflowAPIWorkflowsGetRequest) (*WorkflowList, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *WorkflowList
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *WorkflowList
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsGet")
@@ -357,9 +357,9 @@ func (a *WorkflowAPIService) WorkflowsGetExecute(r WorkflowAPIWorkflowsGetReques
 }
 
 type WorkflowAPIWorkflowsIdActivatePostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService WorkflowAPI
-	id string
+	id         string
 }
 
 func (r WorkflowAPIWorkflowsIdActivatePostRequest) Execute() (*Workflow, *http.Response, error) {
@@ -371,26 +371,27 @@ WorkflowsIdActivatePost Activate a workflow
 
 Active a workflow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdActivatePostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdActivatePostRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdActivatePost(ctx context.Context, id string) WorkflowAPIWorkflowsIdActivatePostRequest {
 	return WorkflowAPIWorkflowsIdActivatePostRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Workflow
+//
+//	@return Workflow
 func (a *WorkflowAPIService) WorkflowsIdActivatePostExecute(r WorkflowAPIWorkflowsIdActivatePostRequest) (*Workflow, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Workflow
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Workflow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdActivatePost")
@@ -474,9 +475,9 @@ func (a *WorkflowAPIService) WorkflowsIdActivatePostExecute(r WorkflowAPIWorkflo
 }
 
 type WorkflowAPIWorkflowsIdDeactivatePostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService WorkflowAPI
-	id string
+	id         string
 }
 
 func (r WorkflowAPIWorkflowsIdDeactivatePostRequest) Execute() (*Workflow, *http.Response, error) {
@@ -488,26 +489,27 @@ WorkflowsIdDeactivatePost Deactivate a workflow
 
 Deactivate a workflow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdDeactivatePostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdDeactivatePostRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdDeactivatePost(ctx context.Context, id string) WorkflowAPIWorkflowsIdDeactivatePostRequest {
 	return WorkflowAPIWorkflowsIdDeactivatePostRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Workflow
+//
+//	@return Workflow
 func (a *WorkflowAPIService) WorkflowsIdDeactivatePostExecute(r WorkflowAPIWorkflowsIdDeactivatePostRequest) (*Workflow, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Workflow
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Workflow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdDeactivatePost")
@@ -591,9 +593,9 @@ func (a *WorkflowAPIService) WorkflowsIdDeactivatePostExecute(r WorkflowAPIWorkf
 }
 
 type WorkflowAPIWorkflowsIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService WorkflowAPI
-	id string
+	id         string
 }
 
 func (r WorkflowAPIWorkflowsIdDeleteRequest) Execute() (*Workflow, *http.Response, error) {
@@ -605,26 +607,27 @@ WorkflowsIdDelete Delete a workflow
 
 Deletes a workflow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdDeleteRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdDelete(ctx context.Context, id string) WorkflowAPIWorkflowsIdDeleteRequest {
 	return WorkflowAPIWorkflowsIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Workflow
+//
+//	@return Workflow
 func (a *WorkflowAPIService) WorkflowsIdDeleteExecute(r WorkflowAPIWorkflowsIdDeleteRequest) (*Workflow, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Workflow
+		localVarHTTPMethod  = http.MethodDelete
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Workflow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdDelete")
@@ -708,9 +711,9 @@ func (a *WorkflowAPIService) WorkflowsIdDeleteExecute(r WorkflowAPIWorkflowsIdDe
 }
 
 type WorkflowAPIWorkflowsIdGetRequest struct {
-	ctx context.Context
-	ApiService WorkflowAPI
-	id string
+	ctx               context.Context
+	ApiService        WorkflowAPI
+	id                string
 	excludePinnedData *bool
 }
 
@@ -729,26 +732,27 @@ WorkflowsIdGet Retrieves a workflow
 
 Retrieves a workflow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdGetRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdGet(ctx context.Context, id string) WorkflowAPIWorkflowsIdGetRequest {
 	return WorkflowAPIWorkflowsIdGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Workflow
+//
+//	@return Workflow
 func (a *WorkflowAPIService) WorkflowsIdGetExecute(r WorkflowAPIWorkflowsIdGetRequest) (*Workflow, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Workflow
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Workflow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdGet")
@@ -835,10 +839,10 @@ func (a *WorkflowAPIService) WorkflowsIdGetExecute(r WorkflowAPIWorkflowsIdGetRe
 }
 
 type WorkflowAPIWorkflowsIdPutRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService WorkflowAPI
-	id string
-	workflow *Workflow
+	id         string
+	workflow   *Workflow
 }
 
 // Updated workflow object.
@@ -856,26 +860,27 @@ WorkflowsIdPut Update a workflow
 
 Update a workflow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdPutRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdPut(ctx context.Context, id string) WorkflowAPIWorkflowsIdPutRequest {
 	return WorkflowAPIWorkflowsIdPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Workflow
+//
+//	@return Workflow
 func (a *WorkflowAPIService) WorkflowsIdPutExecute(r WorkflowAPIWorkflowsIdPutRequest) (*Workflow, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Workflow
+		localVarHTTPMethod  = http.MethodPut
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Workflow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdPut")
@@ -964,9 +969,9 @@ func (a *WorkflowAPIService) WorkflowsIdPutExecute(r WorkflowAPIWorkflowsIdPutRe
 }
 
 type WorkflowAPIWorkflowsIdTagsGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService WorkflowAPI
-	id string
+	id         string
 }
 
 func (r WorkflowAPIWorkflowsIdTagsGetRequest) Execute() ([]Tag, *http.Response, error) {
@@ -978,26 +983,27 @@ WorkflowsIdTagsGet Get workflow tags
 
 Get workflow tags.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdTagsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdTagsGetRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdTagsGet(ctx context.Context, id string) WorkflowAPIWorkflowsIdTagsGetRequest {
 	return WorkflowAPIWorkflowsIdTagsGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return []Tag
+//
+//	@return []Tag
 func (a *WorkflowAPIService) WorkflowsIdTagsGetExecute(r WorkflowAPIWorkflowsIdTagsGetRequest) ([]Tag, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  []Tag
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue []Tag
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdTagsGet")
@@ -1081,9 +1087,9 @@ func (a *WorkflowAPIService) WorkflowsIdTagsGetExecute(r WorkflowAPIWorkflowsIdT
 }
 
 type WorkflowAPIWorkflowsIdTagsPutRequest struct {
-	ctx context.Context
-	ApiService WorkflowAPI
-	id string
+	ctx         context.Context
+	ApiService  WorkflowAPI
+	id          string
 	tagIdsInner *[]TagIdsInner
 }
 
@@ -1102,26 +1108,27 @@ WorkflowsIdTagsPut Update tags of a workflow
 
 Update tags of a workflow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdTagsPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdTagsPutRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdTagsPut(ctx context.Context, id string) WorkflowAPIWorkflowsIdTagsPutRequest {
 	return WorkflowAPIWorkflowsIdTagsPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return []Tag
+//
+//	@return []Tag
 func (a *WorkflowAPIService) WorkflowsIdTagsPutExecute(r WorkflowAPIWorkflowsIdTagsPutRequest) ([]Tag, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  []Tag
+		localVarHTTPMethod  = http.MethodPut
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue []Tag
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdTagsPut")
@@ -1210,9 +1217,9 @@ func (a *WorkflowAPIService) WorkflowsIdTagsPutExecute(r WorkflowAPIWorkflowsIdT
 }
 
 type WorkflowAPIWorkflowsIdTransferPutRequest struct {
-	ctx context.Context
-	ApiService WorkflowAPI
-	id string
+	ctx                           context.Context
+	ApiService                    WorkflowAPI
+	id                            string
 	workflowsIdTransferPutRequest *WorkflowsIdTransferPutRequest
 }
 
@@ -1231,24 +1238,24 @@ WorkflowsIdTransferPut Transfer a workflow to another project.
 
 Transfer a workflow to another project.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the workflow.
- @return WorkflowAPIWorkflowsIdTransferPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@return WorkflowAPIWorkflowsIdTransferPutRequest
 */
 func (a *WorkflowAPIService) WorkflowsIdTransferPut(ctx context.Context, id string) WorkflowAPIWorkflowsIdTransferPutRequest {
 	return WorkflowAPIWorkflowsIdTransferPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *WorkflowAPIService) WorkflowsIdTransferPutExecute(r WorkflowAPIWorkflowsIdTransferPutRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPut
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdTransferPut")
@@ -1328,9 +1335,9 @@ func (a *WorkflowAPIService) WorkflowsIdTransferPutExecute(r WorkflowAPIWorkflow
 }
 
 type WorkflowAPIWorkflowsPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService WorkflowAPI
-	workflow *Workflow
+	workflow   *Workflow
 }
 
 // Created workflow object.
@@ -1348,24 +1355,25 @@ WorkflowsPost Create a workflow
 
 Create a workflow in your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return WorkflowAPIWorkflowsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return WorkflowAPIWorkflowsPostRequest
 */
 func (a *WorkflowAPIService) WorkflowsPost(ctx context.Context) WorkflowAPIWorkflowsPostRequest {
 	return WorkflowAPIWorkflowsPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Workflow
+//
+//	@return Workflow
 func (a *WorkflowAPIService) WorkflowsPostExecute(r WorkflowAPIWorkflowsPostRequest) (*Workflow, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Workflow
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Workflow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsPost")

@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/project/models"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project/models"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
 
 // Ensure ProjectResource implements required interfaces.

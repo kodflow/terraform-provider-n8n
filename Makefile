@@ -18,7 +18,7 @@ PATCH := $(word 3,$(VERSION_PARTS))
 NEXT_PATCH := $(shell echo $$(($(PATCH) + 1)))
 VERSION := 1.1.7
 
-PLUGIN_DIR := $(HOME)/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/$(VERSION)/$(GOOS)_$(GOARCH)
+PLUGIN_DIR := $(HOME)/.terraform.d/plugins/registry.terraform.io/kodflow/terraform-provider-n8n/$(VERSION)/$(GOOS)_$(GOARCH)
 
 # Colors for output
 CYAN := \033[36m

@@ -1,5 +1,15 @@
 #!/bin/bash
+# Exit on error, but continue if non-critical commands fail
 set -e
+
+# Function to safely run commands that shouldn't stop setup
+safe_run() {
+  if ! "$@"; then
+    echo "⚠️  Warning: Command failed but continuing setup: $*"
+    return 0
+  fi
+  return 0
+}
 
 echo "🔧 Installing development tools..."
 
@@ -51,13 +61,27 @@ fi
 # Configure npm for local global packages (no sudo needed)
 # Using environment variable instead of npm config to avoid conflicts with nvm
 echo "⚙️  Configuring npm..."
-mkdir -p "$HOME/.local/share/npm-global"
+
+# Create directories with proper ownership
+mkdir -p "$HOME/.local/share/npm-global" 2>/dev/null || true
+chmod -R 755 "$HOME/.local" 2>/dev/null || true
+
+# Set npm prefix for this session and future sessions
 export NPM_CONFIG_PREFIX="$HOME/.local/share/npm-global"
 
-# Install npm global packages
+# Install npm global packages with explicit prefix
 echo "📦 Installing npm packages..."
-npm install -g @anthropic-ai/claude-code@latest
-npm install -g @commitlint/cli@latest @commitlint/config-conventional@latest
+if npm install -g --prefix "$HOME/.local/share/npm-global" @anthropic-ai/claude-code@latest 2>&1 | tee /tmp/claude-install.log; then
+  echo "✅ claude-code installed successfully"
+else
+  echo "⚠️  Failed to install claude-code, check /tmp/claude-install.log for details"
+fi
+
+if npm install -g --prefix "$HOME/.local/share/npm-global" @commitlint/cli@latest @commitlint/config-conventional@latest 2>&1 | tee /tmp/commitlint-install.log; then
+  echo "✅ commitlint installed successfully"
+else
+  echo "⚠️  Failed to install commitlint, check /tmp/commitlint-install.log for details"
+fi
 
 # Install ktn-linter from GitHub releases (doesn't require Go)
 echo "🧹 Installing ktn-linter..."
@@ -65,16 +89,23 @@ ARCH="$(dpkg --print-architecture)"
 case "$ARCH" in
   amd64) KTN_ARCH="amd64" ;;
   arm64) KTN_ARCH="arm64" ;;
-  *) echo "❌ Unsupported architecture: $ARCH" && exit 1 ;;
+  *) echo "⚠️  Unsupported architecture: $ARCH, skipping ktn-linter" && KTN_ARCH="" ;;
 esac
 
-KTN_VERSION=$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v${KTN_VERSION}/ktn-linter-linux-${KTN_ARCH}" -o "$HOME/.local/bin/ktn-linter"
-chmod +x "$HOME/.local/bin/ktn-linter"
+if [ -n "$KTN_ARCH" ]; then
+  KTN_VERSION=$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+  if [ -n "$KTN_VERSION" ]; then
+    safe_run curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v${KTN_VERSION}/ktn-linter-linux-${KTN_ARCH}" -o "$HOME/.local/bin/ktn-linter" || echo "⚠️  Failed to download ktn-linter"
+    chmod +x "$HOME/.local/bin/ktn-linter" 2>/dev/null || true
+    echo "✅ ktn-linter installed successfully"
+  else
+    echo "⚠️  Failed to get ktn-linter version, skipping"
+  fi
+fi
 
 # Install golangci-lint v2 (supports Go 1.25+)
 echo "🧹 Installing golangci-lint v2..."
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$HOME/.local/bin" v2.6.1
+safe_run bash -c 'curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$HOME/.local/bin" v2.6.1' || echo "⚠️  Failed to install golangci-lint"
 
 # Install git hooks
 echo "🪝 Installing git hooks..."
@@ -106,4 +137,9 @@ else
   echo "Signing:   Disabled"
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "💡 Quick Tips:"
+echo "  • Use 'super-claude' alias to run Claude with MCP servers"
+echo "  • Run 'make help' to see all available commands"
+echo "  • Run 'make test' to execute the test suite"
 echo ""

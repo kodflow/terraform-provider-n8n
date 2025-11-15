@@ -64,6 +64,6 @@ go_library(
         "response.go",
         "utils.go",
     ],
-    importpath = "github.com/kodflow/n8n/sdk/n8nsdk",
+    importpath = "github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk",
     visibility = ["//visibility:public"],
 )

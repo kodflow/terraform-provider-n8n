@@ -12,10 +12,10 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"encoding/json"
-	"time"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // checks if the CreateCredentialResponse type satisfies the MappedNullable interface at compile time
@@ -23,11 +23,11 @@ var _ MappedNullable = &CreateCredentialResponse{}
 
 // CreateCredentialResponse struct for CreateCredentialResponse
 type CreateCredentialResponse struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 	// Whether the credential is managed by n8n
-	IsManaged *bool `json:"isManaged,omitempty"`
+	IsManaged *bool     `json:"isManaged,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -209,7 +209,7 @@ func (o *CreateCredentialResponse) SetUpdatedAt(v time.Time) {
 }
 
 func (o CreateCredentialResponse) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -246,10 +246,10 @@ func (o *CreateCredentialResponse) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -305,5 +305,3 @@ func (v *NullableCreateCredentialResponse) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

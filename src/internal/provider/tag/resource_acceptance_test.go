@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/kodflow/n8n/src/internal/provider"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
 
 func TestAccTagResource(t *testing.T) {

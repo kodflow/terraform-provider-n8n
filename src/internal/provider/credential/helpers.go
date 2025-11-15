@@ -12,8 +12,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/credential/models"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential/models"
 )
 
 // createNewCredential creates a new credential via the API.

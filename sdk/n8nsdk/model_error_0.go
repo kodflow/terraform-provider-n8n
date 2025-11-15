@@ -12,8 +12,8 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
@@ -22,8 +22,8 @@ var _ MappedNullable = &ModelError{}
 
 // ModelError struct for ModelError
 type ModelError struct {
-	Code *string `json:"code,omitempty"`
-	Message string `json:"message"`
+	Code        *string `json:"code,omitempty"`
+	Message     string  `json:"message"`
 	Description *string `json:"description,omitempty"`
 }
 
@@ -136,7 +136,7 @@ func (o *ModelError) SetDescription(v string) {
 }
 
 func (o ModelError) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -168,10 +168,10 @@ func (o *ModelError) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -227,5 +227,3 @@ func (v *NullableModelError) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

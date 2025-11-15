@@ -21,9 +21,9 @@ var _ MappedNullable = &Role{}
 
 // Role struct for Role
 type Role struct {
-	Id *float32 `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
-	Scope *string `json:"scope,omitempty"`
+	Id    *float32 `json:"id,omitempty"`
+	Name  *string  `json:"name,omitempty"`
+	Scope *string  `json:"scope,omitempty"`
 	// Time the role was created.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Last time the role was updated.
@@ -208,7 +208,7 @@ func (o *Role) SetUpdatedAt(v time.Time) {
 }
 
 func (o Role) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -270,5 +270,3 @@ func (v *NullableRole) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

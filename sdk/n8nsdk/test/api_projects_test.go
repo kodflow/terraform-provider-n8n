@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ProjectsAPI.ProjectsGet(context.Background()).Execute()
 
@@ -36,7 +37,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		httpRes, err := apiClient.ProjectsAPI.ProjectsPost(context.Background()).Execute()
 
@@ -47,7 +48,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsProjectIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 
@@ -60,7 +61,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsProjectIdPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 
@@ -73,7 +74,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsProjectIdUsersPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 
@@ -86,7 +87,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsProjectIdUsersUserIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 		var userId string
@@ -100,7 +101,7 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	t.Run("Test ProjectsAPIService ProjectsProjectIdUsersUserIdPatch", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 		var userId string

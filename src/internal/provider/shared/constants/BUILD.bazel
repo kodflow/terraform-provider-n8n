@@ -3,7 +3,7 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "constants",
     srcs = ["constants.go"],
-    importpath = "github.com/kodflow/n8n/src/internal/provider/shared/constants",
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/constants",
     visibility = ["//src/internal/provider:__subpackages__"],
 )
 

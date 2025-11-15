@@ -67,7 +67,7 @@ bazel version # Bazel 9.0+
 terraform {
   required_providers {
     n8n = {
-      source  = "kodflow/n8n"
+      source  = "kodflow/terraform-provider-n8n"
       version = "~> 0.1.0"
     }
   }
@@ -83,7 +83,7 @@ provider "n8n" {
 
 ```bash
 make build
-# Provider installed at: ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/
+# Provider installed at: ~/.terraform.d/plugins/registry.terraform.io/kodflow/terraform-provider-n8n/
 ```
 
 ## Quick Start
@@ -327,7 +327,7 @@ See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
 
 - `github.com/hashicorp/terraform-plugin-framework` v1.16.1 - Terraform provider framework
 - `github.com/hashicorp/terraform-plugin-docs` v0.24.0 - Documentation generation
-- Local module: `github.com/kodflow/n8n/sdk/n8nsdk` - Auto-generated n8n API client
+- Local module: `github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk` - Auto-generated n8n API client
 
 ### Build Tools
 

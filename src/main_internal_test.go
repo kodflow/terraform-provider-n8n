@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/kodflow/n8n/src/cmd"
+	"github.com/kodflow/terraform-provider-n8n/src/cmd"
 )
 
 // TestMainFunction tests the main function's behavior without calling it directly.

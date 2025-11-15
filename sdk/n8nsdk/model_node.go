@@ -21,28 +21,28 @@ var _ MappedNullable = &Node{}
 
 // Node struct for Node
 type Node struct {
-	Id *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
-	WebhookId *string `json:"webhookId,omitempty"`
-	Disabled *bool `json:"disabled,omitempty"`
-	NotesInFlow *bool `json:"notesInFlow,omitempty"`
-	Notes *string `json:"notes,omitempty"`
-	Type *string `json:"type,omitempty"`
-	TypeVersion *float32 `json:"typeVersion,omitempty"`
-	ExecuteOnce *bool `json:"executeOnce,omitempty"`
-	AlwaysOutputData *bool `json:"alwaysOutputData,omitempty"`
-	RetryOnFail *bool `json:"retryOnFail,omitempty"`
-	MaxTries *float32 `json:"maxTries,omitempty"`
+	Id               *string  `json:"id,omitempty"`
+	Name             *string  `json:"name,omitempty"`
+	WebhookId        *string  `json:"webhookId,omitempty"`
+	Disabled         *bool    `json:"disabled,omitempty"`
+	NotesInFlow      *bool    `json:"notesInFlow,omitempty"`
+	Notes            *string  `json:"notes,omitempty"`
+	Type             *string  `json:"type,omitempty"`
+	TypeVersion      *float32 `json:"typeVersion,omitempty"`
+	ExecuteOnce      *bool    `json:"executeOnce,omitempty"`
+	AlwaysOutputData *bool    `json:"alwaysOutputData,omitempty"`
+	RetryOnFail      *bool    `json:"retryOnFail,omitempty"`
+	MaxTries         *float32 `json:"maxTries,omitempty"`
 	WaitBetweenTries *float32 `json:"waitBetweenTries,omitempty"`
 	// use onError instead
 	// Deprecated
-	ContinueOnFail *bool `json:"continueOnFail,omitempty"`
-	OnError *string `json:"onError,omitempty"`
-	Position []float32 `json:"position,omitempty"`
-	Parameters map[string]interface{} `json:"parameters,omitempty"`
-	Credentials map[string]interface{} `json:"credentials,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	ContinueOnFail *bool                  `json:"continueOnFail,omitempty"`
+	OnError        *string                `json:"onError,omitempty"`
+	Position       []float32              `json:"position,omitempty"`
+	Parameters     map[string]interface{} `json:"parameters,omitempty"`
+	Credentials    map[string]interface{} `json:"credentials,omitempty"`
+	CreatedAt      *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt      *time.Time             `json:"updatedAt,omitempty"`
 }
 
 // NewNode instantiates a new Node object
@@ -706,7 +706,7 @@ func (o *Node) SetUpdatedAt(v time.Time) {
 }
 
 func (o Node) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -813,5 +813,3 @@ func (v *NullableNode) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

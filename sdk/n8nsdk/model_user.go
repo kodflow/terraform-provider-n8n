@@ -12,10 +12,10 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"encoding/json"
-	"time"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // checks if the User type satisfies the MappedNullable interface at compile time
@@ -23,8 +23,8 @@ var _ MappedNullable = &User{}
 
 // User struct for User
 type User struct {
-	Id *string `json:"id,omitempty"`
-	Email string `json:"email"`
+	Id    *string `json:"id,omitempty"`
+	Email string  `json:"email"`
 	// User's first name
 	FirstName *string `json:"firstName,omitempty"`
 	// User's last name
@@ -35,7 +35,7 @@ type User struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Last time the user was updated.
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-	Role *string `json:"role,omitempty"`
+	Role      *string    `json:"role,omitempty"`
 }
 
 type _User User
@@ -307,7 +307,7 @@ func (o *User) SetRole(v string) {
 }
 
 func (o User) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -354,10 +354,10 @@ func (o *User) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -413,5 +413,3 @@ func (v *NullableUser) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

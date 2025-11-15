@@ -7,8 +7,8 @@ package tag
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/tag/models"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag/models"
 )
 
 // mapTagToDataSourceModel maps an SDK tag to the datasource model.

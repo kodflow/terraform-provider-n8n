@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
-	"github.com/kodflow/n8n/src/internal/provider/workflow/models"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 )
 
 // Ensure WorkflowDataSource implements required interfaces.

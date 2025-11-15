@@ -20,7 +20,7 @@ var _ MappedNullable = &ImportResultWorkflowsInner{}
 
 // ImportResultWorkflowsInner struct for ImportResultWorkflowsInner
 type ImportResultWorkflowsInner struct {
-	Id *string `json:"id,omitempty"`
+	Id   *string `json:"id,omitempty"`
 	Name *string `json:"name,omitempty"`
 }
 
@@ -106,7 +106,7 @@ func (o *ImportResultWorkflowsInner) SetName(v string) {
 }
 
 func (o ImportResultWorkflowsInner) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -159,5 +159,3 @@ func (v *NullableImportResultWorkflowsInner) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

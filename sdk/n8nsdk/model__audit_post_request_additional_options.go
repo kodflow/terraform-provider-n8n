@@ -21,8 +21,8 @@ var _ MappedNullable = &AuditPostRequestAdditionalOptions{}
 // AuditPostRequestAdditionalOptions struct for AuditPostRequestAdditionalOptions
 type AuditPostRequestAdditionalOptions struct {
 	// Days for a workflow to be considered abandoned if not executed
-	DaysAbandonedWorkflow *int32 `json:"daysAbandonedWorkflow,omitempty"`
-	Categories []string `json:"categories,omitempty"`
+	DaysAbandonedWorkflow *int32   `json:"daysAbandonedWorkflow,omitempty"`
+	Categories            []string `json:"categories,omitempty"`
 }
 
 // NewAuditPostRequestAdditionalOptions instantiates a new AuditPostRequestAdditionalOptions object
@@ -107,7 +107,7 @@ func (o *AuditPostRequestAdditionalOptions) SetCategories(v []string) {
 }
 
 func (o AuditPostRequestAdditionalOptions) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -160,5 +160,3 @@ func (v *NullableAuditPostRequestAdditionalOptions) UnmarshalJSON(src []byte) er
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -20,16 +20,15 @@ import (
 	"strings"
 )
 
-
 type ProjectsAPI interface {
 
 	/*
-	ProjectsGet Retrieve projects
+		ProjectsGet Retrieve projects
 
-	Retrieve projects from your instance.
+		Retrieve projects from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ProjectsAPIProjectsGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return ProjectsAPIProjectsGetRequest
 	*/
 	ProjectsGet(ctx context.Context) ProjectsAPIProjectsGetRequest
 
@@ -38,12 +37,12 @@ type ProjectsAPI interface {
 	ProjectsGetExecute(r ProjectsAPIProjectsGetRequest) (*ProjectList, *http.Response, error)
 
 	/*
-	ProjectsPost Create a project
+		ProjectsPost Create a project
 
-	Create a project on your instance.
+		Create a project on your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ProjectsAPIProjectsPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return ProjectsAPIProjectsPostRequest
 	*/
 	ProjectsPost(ctx context.Context) ProjectsAPIProjectsPostRequest
 
@@ -51,13 +50,13 @@ type ProjectsAPI interface {
 	ProjectsPostExecute(r ProjectsAPIProjectsPostRequest) (*http.Response, error)
 
 	/*
-	ProjectsProjectIdDelete Delete a project
+		ProjectsProjectIdDelete Delete a project
 
-	Delete a project from your instance.
+		Delete a project from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId The ID of the project.
-	@return ProjectsAPIProjectsProjectIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param projectId The ID of the project.
+		@return ProjectsAPIProjectsProjectIdDeleteRequest
 	*/
 	ProjectsProjectIdDelete(ctx context.Context, projectId string) ProjectsAPIProjectsProjectIdDeleteRequest
 
@@ -65,13 +64,13 @@ type ProjectsAPI interface {
 	ProjectsProjectIdDeleteExecute(r ProjectsAPIProjectsProjectIdDeleteRequest) (*http.Response, error)
 
 	/*
-	ProjectsProjectIdPut Update a project
+		ProjectsProjectIdPut Update a project
 
-	Update a project on your instance.
+		Update a project on your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId The ID of the project.
-	@return ProjectsAPIProjectsProjectIdPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param projectId The ID of the project.
+		@return ProjectsAPIProjectsProjectIdPutRequest
 	*/
 	ProjectsProjectIdPut(ctx context.Context, projectId string) ProjectsAPIProjectsProjectIdPutRequest
 
@@ -79,13 +78,13 @@ type ProjectsAPI interface {
 	ProjectsProjectIdPutExecute(r ProjectsAPIProjectsProjectIdPutRequest) (*http.Response, error)
 
 	/*
-	ProjectsProjectIdUsersPost Add one or more users to a project
+		ProjectsProjectIdUsersPost Add one or more users to a project
 
-	Add one or more users to a project on your instance.
+		Add one or more users to a project on your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId The ID of the project.
-	@return ProjectsAPIProjectsProjectIdUsersPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param projectId The ID of the project.
+		@return ProjectsAPIProjectsProjectIdUsersPostRequest
 	*/
 	ProjectsProjectIdUsersPost(ctx context.Context, projectId string) ProjectsAPIProjectsProjectIdUsersPostRequest
 
@@ -93,14 +92,14 @@ type ProjectsAPI interface {
 	ProjectsProjectIdUsersPostExecute(r ProjectsAPIProjectsProjectIdUsersPostRequest) (*http.Response, error)
 
 	/*
-	ProjectsProjectIdUsersUserIdDelete Delete a user from a project
+		ProjectsProjectIdUsersUserIdDelete Delete a user from a project
 
-	Delete a user from a project on your instance.
+		Delete a user from a project on your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId The ID of the project.
-	@param userId The ID of the user.
-	@return ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param projectId The ID of the project.
+		@param userId The ID of the user.
+		@return ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest
 	*/
 	ProjectsProjectIdUsersUserIdDelete(ctx context.Context, projectId string, userId string) ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest
 
@@ -108,14 +107,14 @@ type ProjectsAPI interface {
 	ProjectsProjectIdUsersUserIdDeleteExecute(r ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest) (*http.Response, error)
 
 	/*
-	ProjectsProjectIdUsersUserIdPatch Change a user's role in a project
+		ProjectsProjectIdUsersUserIdPatch Change a user's role in a project
 
-	Change a user's role in a project.
+		Change a user's role in a project.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param projectId The ID of the project.
-	@param userId The ID of the user.
-	@return ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param projectId The ID of the project.
+		@param userId The ID of the user.
+		@return ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest
 	*/
 	ProjectsProjectIdUsersUserIdPatch(ctx context.Context, projectId string, userId string) ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest
 
@@ -127,10 +126,10 @@ type ProjectsAPI interface {
 type ProjectsAPIService service
 
 type ProjectsAPIProjectsGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService ProjectsAPI
-	limit *float32
-	cursor *string
+	limit      *float32
+	cursor     *string
 }
 
 // The maximum number of items to return.
@@ -154,24 +153,25 @@ ProjectsGet Retrieve projects
 
 Retrieve projects from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ProjectsAPIProjectsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ProjectsAPIProjectsGetRequest
 */
 func (a *ProjectsAPIService) ProjectsGet(ctx context.Context) ProjectsAPIProjectsGetRequest {
 	return ProjectsAPIProjectsGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return ProjectList
+//
+//	@return ProjectList
 func (a *ProjectsAPIService) ProjectsGetExecute(r ProjectsAPIProjectsGetRequest) (*ProjectList, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *ProjectList
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ProjectList
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsGet")
@@ -263,9 +263,9 @@ func (a *ProjectsAPIService) ProjectsGetExecute(r ProjectsAPIProjectsGetRequest)
 }
 
 type ProjectsAPIProjectsPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService ProjectsAPI
-	project *Project
+	project    *Project
 }
 
 // Payload for project to create.
@@ -283,22 +283,22 @@ ProjectsPost Create a project
 
 Create a project on your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ProjectsAPIProjectsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ProjectsAPIProjectsPostRequest
 */
 func (a *ProjectsAPIService) ProjectsPost(ctx context.Context) ProjectsAPIProjectsPostRequest {
 	return ProjectsAPIProjectsPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectsAPIService) ProjectsPostExecute(r ProjectsAPIProjectsPostRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPost
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsPost")
@@ -377,9 +377,9 @@ func (a *ProjectsAPIService) ProjectsPostExecute(r ProjectsAPIProjectsPostReques
 }
 
 type ProjectsAPIProjectsProjectIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService ProjectsAPI
-	projectId string
+	projectId  string
 }
 
 func (r ProjectsAPIProjectsProjectIdDeleteRequest) Execute() (*http.Response, error) {
@@ -391,24 +391,24 @@ ProjectsProjectIdDelete Delete a project
 
 Delete a project from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId The ID of the project.
- @return ProjectsAPIProjectsProjectIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId The ID of the project.
+	@return ProjectsAPIProjectsProjectIdDeleteRequest
 */
 func (a *ProjectsAPIService) ProjectsProjectIdDelete(ctx context.Context, projectId string) ProjectsAPIProjectsProjectIdDeleteRequest {
 	return ProjectsAPIProjectsProjectIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
+		ctx:        ctx,
+		projectId:  projectId,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectsAPIService) ProjectsProjectIdDeleteExecute(r ProjectsAPIProjectsProjectIdDeleteRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsProjectIdDelete")
@@ -483,10 +483,10 @@ func (a *ProjectsAPIService) ProjectsProjectIdDeleteExecute(r ProjectsAPIProject
 }
 
 type ProjectsAPIProjectsProjectIdPutRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService ProjectsAPI
-	projectId string
-	project *Project
+	projectId  string
+	project    *Project
 }
 
 // Updated project object.
@@ -504,24 +504,24 @@ ProjectsProjectIdPut Update a project
 
 Update a project on your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId The ID of the project.
- @return ProjectsAPIProjectsProjectIdPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId The ID of the project.
+	@return ProjectsAPIProjectsProjectIdPutRequest
 */
 func (a *ProjectsAPIService) ProjectsProjectIdPut(ctx context.Context, projectId string) ProjectsAPIProjectsProjectIdPutRequest {
 	return ProjectsAPIProjectsProjectIdPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
+		ctx:        ctx,
+		projectId:  projectId,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectsAPIService) ProjectsProjectIdPutExecute(r ProjectsAPIProjectsProjectIdPutRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPut
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsProjectIdPut")
@@ -601,9 +601,9 @@ func (a *ProjectsAPIService) ProjectsProjectIdPutExecute(r ProjectsAPIProjectsPr
 }
 
 type ProjectsAPIProjectsProjectIdUsersPostRequest struct {
-	ctx context.Context
-	ApiService ProjectsAPI
-	projectId string
+	ctx                               context.Context
+	ApiService                        ProjectsAPI
+	projectId                         string
 	projectsProjectIdUsersPostRequest *ProjectsProjectIdUsersPostRequest
 }
 
@@ -622,24 +622,24 @@ ProjectsProjectIdUsersPost Add one or more users to a project
 
 Add one or more users to a project on your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId The ID of the project.
- @return ProjectsAPIProjectsProjectIdUsersPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId The ID of the project.
+	@return ProjectsAPIProjectsProjectIdUsersPostRequest
 */
 func (a *ProjectsAPIService) ProjectsProjectIdUsersPost(ctx context.Context, projectId string) ProjectsAPIProjectsProjectIdUsersPostRequest {
 	return ProjectsAPIProjectsProjectIdUsersPostRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
+		ctx:        ctx,
+		projectId:  projectId,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectsAPIService) ProjectsProjectIdUsersPostExecute(r ProjectsAPIProjectsProjectIdUsersPostRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPost
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsProjectIdUsersPost")
@@ -716,10 +716,10 @@ func (a *ProjectsAPIService) ProjectsProjectIdUsersPostExecute(r ProjectsAPIProj
 }
 
 type ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService ProjectsAPI
-	projectId string
-	userId string
+	projectId  string
+	userId     string
 }
 
 func (r ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest) Execute() (*http.Response, error) {
@@ -731,26 +731,26 @@ ProjectsProjectIdUsersUserIdDelete Delete a user from a project
 
 Delete a user from a project on your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId The ID of the project.
- @param userId The ID of the user.
- @return ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId The ID of the project.
+	@param userId The ID of the user.
+	@return ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest
 */
 func (a *ProjectsAPIService) ProjectsProjectIdUsersUserIdDelete(ctx context.Context, projectId string, userId string) ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest {
 	return ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
-		userId: userId,
+		ctx:        ctx,
+		projectId:  projectId,
+		userId:     userId,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectsAPIService) ProjectsProjectIdUsersUserIdDeleteExecute(r ProjectsAPIProjectsProjectIdUsersUserIdDeleteRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsProjectIdUsersUserIdDelete")
@@ -826,10 +826,10 @@ func (a *ProjectsAPIService) ProjectsProjectIdUsersUserIdDeleteExecute(r Project
 }
 
 type ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest struct {
-	ctx context.Context
-	ApiService ProjectsAPI
-	projectId string
-	userId string
+	ctx                                      context.Context
+	ApiService                               ProjectsAPI
+	projectId                                string
+	userId                                   string
 	projectsProjectIdUsersUserIdPatchRequest *ProjectsProjectIdUsersUserIdPatchRequest
 }
 
@@ -848,26 +848,26 @@ ProjectsProjectIdUsersUserIdPatch Change a user's role in a project
 
 Change a user's role in a project.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId The ID of the project.
- @param userId The ID of the user.
- @return ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId The ID of the project.
+	@param userId The ID of the user.
+	@return ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest
 */
 func (a *ProjectsAPIService) ProjectsProjectIdUsersUserIdPatch(ctx context.Context, projectId string, userId string) ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest {
 	return ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
-		userId: userId,
+		ctx:        ctx,
+		projectId:  projectId,
+		userId:     userId,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectsAPIService) ProjectsProjectIdUsersUserIdPatchExecute(r ProjectsAPIProjectsProjectIdUsersUserIdPatchRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPatch
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPatch
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectsAPIService.ProjectsProjectIdUsersUserIdPatch")

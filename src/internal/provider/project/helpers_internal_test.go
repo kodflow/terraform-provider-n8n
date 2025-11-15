@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/project/models"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project/models"
 	"github.com/stretchr/testify/assert"
 )
 

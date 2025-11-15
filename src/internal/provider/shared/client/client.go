@@ -6,7 +6,7 @@
 package client
 
 import (
-	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
 )
 
 // N8nClient wraps the generated SDK client with provider-specific configuration.

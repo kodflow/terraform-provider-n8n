@@ -73,7 +73,7 @@ func (o *AuditPostRequest) SetAdditionalOptions(v AuditPostRequestAdditionalOpti
 }
 
 func (o AuditPostRequest) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -123,5 +123,3 @@ func (v *NullableAuditPostRequest) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

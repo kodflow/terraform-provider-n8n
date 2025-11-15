@@ -51,6 +51,9 @@
       "nil": true
     }
   },
+  // Bazel configuration
+  "bazel.buildifierExecutable": "/usr/local/bin/buildifier",
+  "bazel.enableCodeLens": true,
   // Run linters on save
   "emeraldwalk.runonsave": {
     "commands": [

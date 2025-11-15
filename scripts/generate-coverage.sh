@@ -102,7 +102,7 @@ EOF
 # Use the actual coverage output from go test, which gives accurate per-package percentages
 echo "$COVERAGE_BY_PKG" | while IFS= read -r line; do
   # Extract package name and coverage percentage
-  # Format: "ok  	github.com/kodflow/n8n/src/internal/provider/variable	0.123s	coverage: 98.4% of statements"
+  # Format: "ok  	github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable	0.123s	coverage: 98.4% of statements"
   pkg=$(echo "$line" | awk '{print $2}')
   coverage=$(echo "$line" | grep -oP 'coverage: \K[0-9.]+%')
 
@@ -147,11 +147,11 @@ TMP_DIR=$(mktemp -d)
 trap "rm -rf $TMP_DIR" EXIT
 
 # Get unique packages
-PACKAGES=$(echo "$COVERAGE_DATA" | grep -E "^github.com/kodflow/n8n/src/internal/provider/" | grep -v "total:" | awk -F: '{print $1}' | sed 's|/[^/]*\.go$||' | sort -u)
+PACKAGES=$(echo "$COVERAGE_DATA" | grep -E "^github.com/kodflow/terraform-provider-n8n/src/internal/provider/" | grep -v "total:" | awk -F: '{print $1}' | sed 's|/[^/]*\.go$||' | sort -u)
 
 # First pass: collect all data organized by filename
 for pkg in $PACKAGES; do
-  PKG_SHORT=$(echo "$pkg" | sed 's|github.com/kodflow/n8n/src/internal/provider||' | sed 's|^/||')
+  PKG_SHORT=$(echo "$pkg" | sed 's|github.com/kodflow/terraform-provider-n8n/src/internal/provider||' | sed 's|^/||')
   if [ -z "$PKG_SHORT" ]; then
     PKG_SHORT="provider"
   fi

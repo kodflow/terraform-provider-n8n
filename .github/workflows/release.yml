@@ -58,7 +58,7 @@ jobs:
       - name: Generate build provenance attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: '/tmp/attestation/n8n_*'
+          subject-path: "/tmp/attestation/n8n_*"
 
       - name: Build summary
         if: success()

@@ -3,7 +3,7 @@ load("@rules_go//go:def.bzl", "go_library")
 go_library(
     name = "models",
     srcs = ["provider.go"],
-    importpath = "github.com/kodflow/n8n/src/internal/provider/shared/models",
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models",
     visibility = ["//src/internal/provider:__subpackages__"],
     deps = [
         "@com_github_hashicorp_terraform_plugin_framework//types",

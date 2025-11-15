@@ -19,16 +19,15 @@ import (
 	"net/url"
 )
 
-
 type SourceControlAPI interface {
 
 	/*
-	SourceControlPullPost Pull changes from the remote repository
+		SourceControlPullPost Pull changes from the remote repository
 
-	Requires the Source Control feature to be licensed and connected to a repository.
+		Requires the Source Control feature to be licensed and connected to a repository.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return SourceControlAPISourceControlPullPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return SourceControlAPISourceControlPullPostRequest
 	*/
 	SourceControlPullPost(ctx context.Context) SourceControlAPISourceControlPullPostRequest
 
@@ -41,9 +40,9 @@ type SourceControlAPI interface {
 type SourceControlAPIService service
 
 type SourceControlAPISourceControlPullPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService SourceControlAPI
-	pull *Pull
+	pull       *Pull
 }
 
 // Pull options
@@ -61,24 +60,25 @@ SourceControlPullPost Pull changes from the remote repository
 
 Requires the Source Control feature to be licensed and connected to a repository.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return SourceControlAPISourceControlPullPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return SourceControlAPISourceControlPullPostRequest
 */
 func (a *SourceControlAPIService) SourceControlPullPost(ctx context.Context) SourceControlAPISourceControlPullPostRequest {
 	return SourceControlAPISourceControlPullPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return ImportResult
+//
+//	@return ImportResult
 func (a *SourceControlAPIService) SourceControlPullPostExecute(r SourceControlAPISourceControlPullPostRequest) (*ImportResult, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *ImportResult
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ImportResult
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "SourceControlAPIService.SourceControlPullPost")

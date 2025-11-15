@@ -20,7 +20,7 @@ var _ MappedNullable = &ImportResultVariables{}
 
 // ImportResultVariables struct for ImportResultVariables
 type ImportResultVariables struct {
-	Added []string `json:"added,omitempty"`
+	Added   []string `json:"added,omitempty"`
 	Changed []string `json:"changed,omitempty"`
 }
 
@@ -106,7 +106,7 @@ func (o *ImportResultVariables) SetChanged(v []string) {
 }
 
 func (o ImportResultVariables) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -159,5 +159,3 @@ func (v *NullableImportResultVariables) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

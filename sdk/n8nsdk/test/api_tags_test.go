@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_TagsAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_TagsAPIService(t *testing.T) {
 
 	t.Run("Test TagsAPIService TagsGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.TagsAPI.TagsGet(context.Background()).Execute()
 
@@ -36,7 +37,7 @@ func Test_n8nsdk_TagsAPIService(t *testing.T) {
 
 	t.Run("Test TagsAPIService TagsIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -50,7 +51,7 @@ func Test_n8nsdk_TagsAPIService(t *testing.T) {
 
 	t.Run("Test TagsAPIService TagsIdGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -64,7 +65,7 @@ func Test_n8nsdk_TagsAPIService(t *testing.T) {
 
 	t.Run("Test TagsAPIService TagsIdPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -78,7 +79,7 @@ func Test_n8nsdk_TagsAPIService(t *testing.T) {
 
 	t.Run("Test TagsAPIService TagsPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.TagsAPI.TagsPost(context.Background()).Execute()
 

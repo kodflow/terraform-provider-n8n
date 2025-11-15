@@ -11,9 +11,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/kodflow/n8n/src/internal/provider/project/models"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
-	"github.com/kodflow/n8n/src/internal/provider/shared/constants"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project/models"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/constants"
 )
 
 // Ensure ProjectsDataSource implements required interfaces.

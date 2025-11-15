@@ -106,6 +106,7 @@ func (o *UserList) HasNextCursor() bool {
 func (o *UserList) SetNextCursor(v string) {
 	o.NextCursor.Set(&v)
 }
+
 // SetNextCursorNil sets the value for NextCursor to be an explicit nil
 func (o *UserList) SetNextCursorNil() {
 	o.NextCursor.Set(nil)
@@ -117,7 +118,7 @@ func (o *UserList) UnsetNextCursor() {
 }
 
 func (o UserList) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -170,5 +171,3 @@ func (v *NullableUserList) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

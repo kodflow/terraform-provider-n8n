@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/credential/models"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential/models"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
 
 // ROTATION_THROTTLE_MILLISECONDS is the delay between workflow updates during credential rotation.

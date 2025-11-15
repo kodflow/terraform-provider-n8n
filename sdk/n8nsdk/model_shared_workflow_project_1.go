@@ -20,7 +20,7 @@ var _ MappedNullable = &SharedWorkflowProject1{}
 
 // SharedWorkflowProject1 struct for SharedWorkflowProject1
 type SharedWorkflowProject1 struct {
-	Id *string `json:"id,omitempty"`
+	Id   *string `json:"id,omitempty"`
 	Name *string `json:"name,omitempty"`
 	Type *string `json:"type,omitempty"`
 }
@@ -139,7 +139,7 @@ func (o *SharedWorkflowProject1) SetType(v string) {
 }
 
 func (o SharedWorkflowProject1) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -195,5 +195,3 @@ func (v *NullableSharedWorkflowProject1) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

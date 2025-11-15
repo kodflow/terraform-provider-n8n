@@ -42,11 +42,13 @@ RUN mkdir -p /home/vscode/.cache \
     /home/vscode/.config/op \
     /home/vscode/.zsh_history_dir \
     /home/vscode/.local/bin \
+    /home/vscode/.local/share/npm-global \
     /home/vscode/.claude \
     /home/vscode/.local/share/@anthropic \
     /home/vscode/.git-hooks \
-    # Set strict permissions for 1Password config directory
-    && chmod 700 /home/vscode/.config/op
+    # Set proper permissions
+    && chmod 700 /home/vscode/.config/op \
+    && chmod -R 755 /home/vscode/.local
 
 # Install Oh My Zsh and themes (rarely changes - good for cache)
 # Using single-branch clone for faster downloads
@@ -78,7 +80,7 @@ RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.z
         echo '# Go environment (features install to /usr/local/go)'; \
         echo 'export GOPATH="/home/vscode/.cache/go"'; \
         echo 'export GOBIN="/home/vscode/.cache/go/bin"'; \
-        echo 'export PATH="$GOBIN:$PATH"'; \
+        echo 'export PATH="/usr/local/go/bin:$GOBIN:$PATH"'; \
         echo ''; \
         echo '# Local binaries'; \
         echo 'export PATH="/home/vscode/.local/bin:$PATH"'; \

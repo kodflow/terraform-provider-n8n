@@ -20,16 +20,15 @@ import (
 	"strings"
 )
 
-
 type VariablesAPI interface {
 
 	/*
-	VariablesGet Retrieve variables
+		VariablesGet Retrieve variables
 
-	Retrieve variables from your instance.
+		Retrieve variables from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return VariablesAPIVariablesGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return VariablesAPIVariablesGetRequest
 	*/
 	VariablesGet(ctx context.Context) VariablesAPIVariablesGetRequest
 
@@ -38,13 +37,13 @@ type VariablesAPI interface {
 	VariablesGetExecute(r VariablesAPIVariablesGetRequest) (*VariableList, *http.Response, error)
 
 	/*
-	VariablesIdDelete Delete a variable
+		VariablesIdDelete Delete a variable
 
-	Delete a variable from your instance.
+		Delete a variable from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the variable.
-	@return VariablesAPIVariablesIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the variable.
+		@return VariablesAPIVariablesIdDeleteRequest
 	*/
 	VariablesIdDelete(ctx context.Context, id string) VariablesAPIVariablesIdDeleteRequest
 
@@ -52,13 +51,13 @@ type VariablesAPI interface {
 	VariablesIdDeleteExecute(r VariablesAPIVariablesIdDeleteRequest) (*http.Response, error)
 
 	/*
-	VariablesIdPut Update a variable
+		VariablesIdPut Update a variable
 
-	Update a variable from your instance.
+		Update a variable from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the variable.
-	@return VariablesAPIVariablesIdPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the variable.
+		@return VariablesAPIVariablesIdPutRequest
 	*/
 	VariablesIdPut(ctx context.Context, id string) VariablesAPIVariablesIdPutRequest
 
@@ -66,12 +65,12 @@ type VariablesAPI interface {
 	VariablesIdPutExecute(r VariablesAPIVariablesIdPutRequest) (*http.Response, error)
 
 	/*
-	VariablesPost Create a variable
+		VariablesPost Create a variable
 
-	Create a variable in your instance.
+		Create a variable in your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return VariablesAPIVariablesPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return VariablesAPIVariablesPostRequest
 	*/
 	VariablesPost(ctx context.Context) VariablesAPIVariablesPostRequest
 
@@ -83,12 +82,12 @@ type VariablesAPI interface {
 type VariablesAPIService service
 
 type VariablesAPIVariablesGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService VariablesAPI
-	limit *float32
-	cursor *string
-	projectId *string
-	state *string
+	limit      *float32
+	cursor     *string
+	projectId  *string
+	state      *string
 }
 
 // The maximum number of items to return.
@@ -122,24 +121,25 @@ VariablesGet Retrieve variables
 
 Retrieve variables from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return VariablesAPIVariablesGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return VariablesAPIVariablesGetRequest
 */
 func (a *VariablesAPIService) VariablesGet(ctx context.Context) VariablesAPIVariablesGetRequest {
 	return VariablesAPIVariablesGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return VariableList
+//
+//	@return VariableList
 func (a *VariablesAPIService) VariablesGetExecute(r VariablesAPIVariablesGetRequest) (*VariableList, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *VariableList
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *VariableList
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "VariablesAPIService.VariablesGet")
@@ -237,9 +237,9 @@ func (a *VariablesAPIService) VariablesGetExecute(r VariablesAPIVariablesGetRequ
 }
 
 type VariablesAPIVariablesIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService VariablesAPI
-	id string
+	id         string
 }
 
 func (r VariablesAPIVariablesIdDeleteRequest) Execute() (*http.Response, error) {
@@ -251,24 +251,24 @@ VariablesIdDelete Delete a variable
 
 Delete a variable from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the variable.
- @return VariablesAPIVariablesIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the variable.
+	@return VariablesAPIVariablesIdDeleteRequest
 */
 func (a *VariablesAPIService) VariablesIdDelete(ctx context.Context, id string) VariablesAPIVariablesIdDeleteRequest {
 	return VariablesAPIVariablesIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *VariablesAPIService) VariablesIdDeleteExecute(r VariablesAPIVariablesIdDeleteRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "VariablesAPIService.VariablesIdDelete")
@@ -343,9 +343,9 @@ func (a *VariablesAPIService) VariablesIdDeleteExecute(r VariablesAPIVariablesId
 }
 
 type VariablesAPIVariablesIdPutRequest struct {
-	ctx context.Context
-	ApiService VariablesAPI
-	id string
+	ctx            context.Context
+	ApiService     VariablesAPI
+	id             string
 	variableCreate *VariableCreate
 }
 
@@ -364,24 +364,24 @@ VariablesIdPut Update a variable
 
 Update a variable from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the variable.
- @return VariablesAPIVariablesIdPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the variable.
+	@return VariablesAPIVariablesIdPutRequest
 */
 func (a *VariablesAPIService) VariablesIdPut(ctx context.Context, id string) VariablesAPIVariablesIdPutRequest {
 	return VariablesAPIVariablesIdPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *VariablesAPIService) VariablesIdPutExecute(r VariablesAPIVariablesIdPutRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPut
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "VariablesAPIService.VariablesIdPut")
@@ -461,8 +461,8 @@ func (a *VariablesAPIService) VariablesIdPutExecute(r VariablesAPIVariablesIdPut
 }
 
 type VariablesAPIVariablesPostRequest struct {
-	ctx context.Context
-	ApiService VariablesAPI
+	ctx            context.Context
+	ApiService     VariablesAPI
 	variableCreate *VariableCreate
 }
 
@@ -481,22 +481,22 @@ VariablesPost Create a variable
 
 Create a variable in your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return VariablesAPIVariablesPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return VariablesAPIVariablesPostRequest
 */
 func (a *VariablesAPIService) VariablesPost(ctx context.Context) VariablesAPIVariablesPostRequest {
 	return VariablesAPIVariablesPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
 func (a *VariablesAPIService) VariablesPostExecute(r VariablesAPIVariablesPostRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPost
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "VariablesAPIService.VariablesPost")

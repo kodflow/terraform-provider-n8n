@@ -6,7 +6,7 @@ go_library(
         ["*.go"],
         exclude = ["*_test.go"],
     ),
-    importpath = "github.com/kodflow/n8n/src/internal/provider/user",
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/user",
     visibility = ["//src/internal/provider:__pkg__"],
     deps = [
         "//sdk/n8nsdk",

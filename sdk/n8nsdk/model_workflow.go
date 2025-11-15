@@ -12,10 +12,10 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"encoding/json"
-	"time"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // checks if the Workflow type satisfies the MappedNullable interface at compile time
@@ -23,22 +23,22 @@ var _ MappedNullable = &Workflow{}
 
 // Workflow struct for Workflow
 type Workflow struct {
-	Id *string `json:"id,omitempty"`
-	Name string `json:"name"`
-	Active *bool `json:"active,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-	Nodes []Node `json:"nodes"`
-	Connections map[string]interface{} `json:"connections"`
-	Settings WorkflowSettings `json:"settings"`
-	StaticData *WorkflowStaticData `json:"staticData,omitempty"`
-	Tags []Tag `json:"tags,omitempty"`
-	Shared []SharedWorkflow `json:"shared,omitempty"`
-	VersionId *string `json:"versionId,omitempty"`
-	IsArchived *bool `json:"isArchived,omitempty"`
-	TriggerCount *float32 `json:"triggerCount,omitempty"`
-	Meta map[string]interface{} `json:"meta,omitempty"`
-	PinData map[string]interface{} `json:"pinData,omitempty"`
+	Id           *string                `json:"id,omitempty"`
+	Name         string                 `json:"name"`
+	Active       *bool                  `json:"active,omitempty"`
+	CreatedAt    *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt    *time.Time             `json:"updatedAt,omitempty"`
+	Nodes        []Node                 `json:"nodes"`
+	Connections  map[string]interface{} `json:"connections"`
+	Settings     WorkflowSettings       `json:"settings"`
+	StaticData   *WorkflowStaticData    `json:"staticData,omitempty"`
+	Tags         []Tag                  `json:"tags,omitempty"`
+	Shared       []SharedWorkflow       `json:"shared,omitempty"`
+	VersionId    *string                `json:"versionId,omitempty"`
+	IsArchived   *bool                  `json:"isArchived,omitempty"`
+	TriggerCount *float32               `json:"triggerCount,omitempty"`
+	Meta         map[string]interface{} `json:"meta,omitempty"`
+	PinData      map[string]interface{} `json:"pinData,omitempty"`
 }
 
 type _Workflow Workflow
@@ -385,7 +385,7 @@ func (o *Workflow) SetShared(v []SharedWorkflow) {
 }
 
 func (o Workflow) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -453,10 +453,10 @@ func (o *Workflow) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -512,5 +512,3 @@ func (v *NullableWorkflow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

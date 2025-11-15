@@ -3,7 +3,7 @@ package shared_test
 import (
 	"testing"
 
-	"github.com/kodflow/n8n/src/internal/provider/shared"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared"
 )
 
 // TestPtr tests the generic Ptr function.

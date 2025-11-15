@@ -20,16 +20,15 @@ import (
 	"strings"
 )
 
-
 type UserAPI interface {
 
 	/*
-	UsersGet Retrieve all users
+		UsersGet Retrieve all users
 
-	Retrieve all users from your instance. Only available for the instance owner.
+		Retrieve all users from your instance. Only available for the instance owner.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return UserAPIUsersGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return UserAPIUsersGetRequest
 	*/
 	UsersGet(ctx context.Context) UserAPIUsersGetRequest
 
@@ -38,13 +37,13 @@ type UserAPI interface {
 	UsersGetExecute(r UserAPIUsersGetRequest) (*UserList, *http.Response, error)
 
 	/*
-	UsersIdDelete Delete a user
+		UsersIdDelete Delete a user
 
-	Delete a user from your instance.
+		Delete a user from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID or email of the user.
-	@return UserAPIUsersIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID or email of the user.
+		@return UserAPIUsersIdDeleteRequest
 	*/
 	UsersIdDelete(ctx context.Context, id string) UserAPIUsersIdDeleteRequest
 
@@ -52,13 +51,13 @@ type UserAPI interface {
 	UsersIdDeleteExecute(r UserAPIUsersIdDeleteRequest) (*http.Response, error)
 
 	/*
-	UsersIdGet Get user by ID/Email
+		UsersIdGet Get user by ID/Email
 
-	Retrieve a user from your instance. Only available for the instance owner.
+		Retrieve a user from your instance. Only available for the instance owner.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID or email of the user.
-	@return UserAPIUsersIdGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID or email of the user.
+		@return UserAPIUsersIdGetRequest
 	*/
 	UsersIdGet(ctx context.Context, id string) UserAPIUsersIdGetRequest
 
@@ -67,13 +66,13 @@ type UserAPI interface {
 	UsersIdGetExecute(r UserAPIUsersIdGetRequest) (*User, *http.Response, error)
 
 	/*
-	UsersIdRolePatch Change a user's global role
+		UsersIdRolePatch Change a user's global role
 
-	Change a user's global role
+		Change a user's global role
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID or email of the user.
-	@return UserAPIUsersIdRolePatchRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID or email of the user.
+		@return UserAPIUsersIdRolePatchRequest
 	*/
 	UsersIdRolePatch(ctx context.Context, id string) UserAPIUsersIdRolePatchRequest
 
@@ -81,12 +80,12 @@ type UserAPI interface {
 	UsersIdRolePatchExecute(r UserAPIUsersIdRolePatchRequest) (*http.Response, error)
 
 	/*
-	UsersPost Create multiple users
+		UsersPost Create multiple users
 
-	Create one or more users.
+		Create one or more users.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return UserAPIUsersPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return UserAPIUsersPostRequest
 	*/
 	UsersPost(ctx context.Context) UserAPIUsersPostRequest
 
@@ -99,12 +98,12 @@ type UserAPI interface {
 type UserAPIService service
 
 type UserAPIUsersGetRequest struct {
-	ctx context.Context
-	ApiService UserAPI
-	limit *float32
-	cursor *string
+	ctx         context.Context
+	ApiService  UserAPI
+	limit       *float32
+	cursor      *string
 	includeRole *bool
-	projectId *string
+	projectId   *string
 }
 
 // The maximum number of items to return.
@@ -139,24 +138,25 @@ UsersGet Retrieve all users
 
 Retrieve all users from your instance. Only available for the instance owner.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return UserAPIUsersGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return UserAPIUsersGetRequest
 */
 func (a *UserAPIService) UsersGet(ctx context.Context) UserAPIUsersGetRequest {
 	return UserAPIUsersGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return UserList
+//
+//	@return UserList
 func (a *UserAPIService) UsersGetExecute(r UserAPIUsersGetRequest) (*UserList, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *UserList
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *UserList
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserAPIService.UsersGet")
@@ -257,9 +257,9 @@ func (a *UserAPIService) UsersGetExecute(r UserAPIUsersGetRequest) (*UserList, *
 }
 
 type UserAPIUsersIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService UserAPI
-	id string
+	id         string
 }
 
 func (r UserAPIUsersIdDeleteRequest) Execute() (*http.Response, error) {
@@ -271,24 +271,24 @@ UsersIdDelete Delete a user
 
 Delete a user from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID or email of the user.
- @return UserAPIUsersIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID or email of the user.
+	@return UserAPIUsersIdDeleteRequest
 */
 func (a *UserAPIService) UsersIdDelete(ctx context.Context, id string) UserAPIUsersIdDeleteRequest {
 	return UserAPIUsersIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *UserAPIService) UsersIdDeleteExecute(r UserAPIUsersIdDeleteRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserAPIService.UsersIdDelete")
@@ -363,9 +363,9 @@ func (a *UserAPIService) UsersIdDeleteExecute(r UserAPIUsersIdDeleteRequest) (*h
 }
 
 type UserAPIUsersIdGetRequest struct {
-	ctx context.Context
-	ApiService UserAPI
-	id string
+	ctx         context.Context
+	ApiService  UserAPI
+	id          string
 	includeRole *bool
 }
 
@@ -384,26 +384,27 @@ UsersIdGet Get user by ID/Email
 
 Retrieve a user from your instance. Only available for the instance owner.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID or email of the user.
- @return UserAPIUsersIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID or email of the user.
+	@return UserAPIUsersIdGetRequest
 */
 func (a *UserAPIService) UsersIdGet(ctx context.Context, id string) UserAPIUsersIdGetRequest {
 	return UserAPIUsersIdGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return User
+//
+//	@return User
 func (a *UserAPIService) UsersIdGetExecute(r UserAPIUsersIdGetRequest) (*User, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *User
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *User
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserAPIService.UsersIdGet")
@@ -493,9 +494,9 @@ func (a *UserAPIService) UsersIdGetExecute(r UserAPIUsersIdGetRequest) (*User, *
 }
 
 type UserAPIUsersIdRolePatchRequest struct {
-	ctx context.Context
-	ApiService UserAPI
-	id string
+	ctx                     context.Context
+	ApiService              UserAPI
+	id                      string
 	usersIdRolePatchRequest *UsersIdRolePatchRequest
 }
 
@@ -514,24 +515,24 @@ UsersIdRolePatch Change a user's global role
 
 Change a user's global role
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID or email of the user.
- @return UserAPIUsersIdRolePatchRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID or email of the user.
+	@return UserAPIUsersIdRolePatchRequest
 */
 func (a *UserAPIService) UsersIdRolePatch(ctx context.Context, id string) UserAPIUsersIdRolePatchRequest {
 	return UserAPIUsersIdRolePatchRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *UserAPIService) UsersIdRolePatchExecute(r UserAPIUsersIdRolePatchRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPatch
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPatch
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserAPIService.UsersIdRolePatch")
@@ -611,8 +612,8 @@ func (a *UserAPIService) UsersIdRolePatchExecute(r UserAPIUsersIdRolePatchReques
 }
 
 type UserAPIUsersPostRequest struct {
-	ctx context.Context
-	ApiService UserAPI
+	ctx                   context.Context
+	ApiService            UserAPI
 	usersPostRequestInner *[]UsersPostRequestInner
 }
 
@@ -631,24 +632,25 @@ UsersPost Create multiple users
 
 Create one or more users.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return UserAPIUsersPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return UserAPIUsersPostRequest
 */
 func (a *UserAPIService) UsersPost(ctx context.Context) UserAPIUsersPostRequest {
 	return UserAPIUsersPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return UsersPost201Response
+//
+//	@return UsersPost201Response
 func (a *UserAPIService) UsersPostExecute(r UserAPIUsersPostRequest) (*UsersPost201Response, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *UsersPost201Response
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *UsersPost201Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserAPIService.UsersPost")

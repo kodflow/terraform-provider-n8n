@@ -20,16 +20,15 @@ import (
 	"strings"
 )
 
-
 type ExecutionAPI interface {
 
 	/*
-	ExecutionsGet Retrieve all executions
+		ExecutionsGet Retrieve all executions
 
-	Retrieve all executions from your instance.
+		Retrieve all executions from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ExecutionAPIExecutionsGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return ExecutionAPIExecutionsGetRequest
 	*/
 	ExecutionsGet(ctx context.Context) ExecutionAPIExecutionsGetRequest
 
@@ -38,13 +37,13 @@ type ExecutionAPI interface {
 	ExecutionsGetExecute(r ExecutionAPIExecutionsGetRequest) (*ExecutionList, *http.Response, error)
 
 	/*
-	ExecutionsIdDelete Delete an execution
+		ExecutionsIdDelete Delete an execution
 
-	Deletes an execution from your instance.
+		Deletes an execution from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the execution.
-	@return ExecutionAPIExecutionsIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the execution.
+		@return ExecutionAPIExecutionsIdDeleteRequest
 	*/
 	ExecutionsIdDelete(ctx context.Context, id float32) ExecutionAPIExecutionsIdDeleteRequest
 
@@ -53,13 +52,13 @@ type ExecutionAPI interface {
 	ExecutionsIdDeleteExecute(r ExecutionAPIExecutionsIdDeleteRequest) (*Execution, *http.Response, error)
 
 	/*
-	ExecutionsIdGet Retrieve an execution
+		ExecutionsIdGet Retrieve an execution
 
-	Retrieve an execution from your instance.
+		Retrieve an execution from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the execution.
-	@return ExecutionAPIExecutionsIdGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the execution.
+		@return ExecutionAPIExecutionsIdGetRequest
 	*/
 	ExecutionsIdGet(ctx context.Context, id float32) ExecutionAPIExecutionsIdGetRequest
 
@@ -68,13 +67,13 @@ type ExecutionAPI interface {
 	ExecutionsIdGetExecute(r ExecutionAPIExecutionsIdGetRequest) (*Execution, *http.Response, error)
 
 	/*
-	ExecutionsIdRetryPost Retry an execution
+		ExecutionsIdRetryPost Retry an execution
 
-	Retry an execution from your instance.
+		Retry an execution from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the execution.
-	@return ExecutionAPIExecutionsIdRetryPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the execution.
+		@return ExecutionAPIExecutionsIdRetryPostRequest
 	*/
 	ExecutionsIdRetryPost(ctx context.Context, id float32) ExecutionAPIExecutionsIdRetryPostRequest
 
@@ -87,14 +86,14 @@ type ExecutionAPI interface {
 type ExecutionAPIService service
 
 type ExecutionAPIExecutionsGetRequest struct {
-	ctx context.Context
-	ApiService ExecutionAPI
+	ctx         context.Context
+	ApiService  ExecutionAPI
 	includeData *bool
-	status *string
-	workflowId *string
-	projectId *string
-	limit *float32
-	cursor *string
+	status      *string
+	workflowId  *string
+	projectId   *string
+	limit       *float32
+	cursor      *string
 }
 
 // Whether or not to include the execution&#39;s detailed data.
@@ -141,24 +140,25 @@ ExecutionsGet Retrieve all executions
 
 Retrieve all executions from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ExecutionAPIExecutionsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ExecutionAPIExecutionsGetRequest
 */
 func (a *ExecutionAPIService) ExecutionsGet(ctx context.Context) ExecutionAPIExecutionsGetRequest {
 	return ExecutionAPIExecutionsGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return ExecutionList
+//
+//	@return ExecutionList
 func (a *ExecutionAPIService) ExecutionsGetExecute(r ExecutionAPIExecutionsGetRequest) (*ExecutionList, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *ExecutionList
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ExecutionList
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ExecutionAPIService.ExecutionsGet")
@@ -262,9 +262,9 @@ func (a *ExecutionAPIService) ExecutionsGetExecute(r ExecutionAPIExecutionsGetRe
 }
 
 type ExecutionAPIExecutionsIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService ExecutionAPI
-	id float32
+	id         float32
 }
 
 func (r ExecutionAPIExecutionsIdDeleteRequest) Execute() (*Execution, *http.Response, error) {
@@ -276,26 +276,27 @@ ExecutionsIdDelete Delete an execution
 
 Deletes an execution from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the execution.
- @return ExecutionAPIExecutionsIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the execution.
+	@return ExecutionAPIExecutionsIdDeleteRequest
 */
 func (a *ExecutionAPIService) ExecutionsIdDelete(ctx context.Context, id float32) ExecutionAPIExecutionsIdDeleteRequest {
 	return ExecutionAPIExecutionsIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Execution
+//
+//	@return Execution
 func (a *ExecutionAPIService) ExecutionsIdDeleteExecute(r ExecutionAPIExecutionsIdDeleteRequest) (*Execution, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Execution
+		localVarHTTPMethod  = http.MethodDelete
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Execution
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ExecutionAPIService.ExecutionsIdDelete")
@@ -379,9 +380,9 @@ func (a *ExecutionAPIService) ExecutionsIdDeleteExecute(r ExecutionAPIExecutions
 }
 
 type ExecutionAPIExecutionsIdGetRequest struct {
-	ctx context.Context
-	ApiService ExecutionAPI
-	id float32
+	ctx         context.Context
+	ApiService  ExecutionAPI
+	id          float32
 	includeData *bool
 }
 
@@ -400,26 +401,27 @@ ExecutionsIdGet Retrieve an execution
 
 Retrieve an execution from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the execution.
- @return ExecutionAPIExecutionsIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the execution.
+	@return ExecutionAPIExecutionsIdGetRequest
 */
 func (a *ExecutionAPIService) ExecutionsIdGet(ctx context.Context, id float32) ExecutionAPIExecutionsIdGetRequest {
 	return ExecutionAPIExecutionsIdGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Execution
+//
+//	@return Execution
 func (a *ExecutionAPIService) ExecutionsIdGetExecute(r ExecutionAPIExecutionsIdGetRequest) (*Execution, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Execution
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Execution
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ExecutionAPIService.ExecutionsIdGet")
@@ -506,9 +508,9 @@ func (a *ExecutionAPIService) ExecutionsIdGetExecute(r ExecutionAPIExecutionsIdG
 }
 
 type ExecutionAPIExecutionsIdRetryPostRequest struct {
-	ctx context.Context
-	ApiService ExecutionAPI
-	id float32
+	ctx                          context.Context
+	ApiService                   ExecutionAPI
+	id                           float32
 	executionsIdRetryPostRequest *ExecutionsIdRetryPostRequest
 }
 
@@ -526,26 +528,27 @@ ExecutionsIdRetryPost Retry an execution
 
 Retry an execution from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the execution.
- @return ExecutionAPIExecutionsIdRetryPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the execution.
+	@return ExecutionAPIExecutionsIdRetryPostRequest
 */
 func (a *ExecutionAPIService) ExecutionsIdRetryPost(ctx context.Context, id float32) ExecutionAPIExecutionsIdRetryPostRequest {
 	return ExecutionAPIExecutionsIdRetryPostRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Execution
+//
+//	@return Execution
 func (a *ExecutionAPIService) ExecutionsIdRetryPostExecute(r ExecutionAPIExecutionsIdRetryPostRequest) (*Execution, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Execution
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Execution
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ExecutionAPIService.ExecutionsIdRetryPost")

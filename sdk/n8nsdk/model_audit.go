@@ -21,10 +21,10 @@ var _ MappedNullable = &Audit{}
 // Audit struct for Audit
 type Audit struct {
 	CredentialsRiskReport map[string]interface{} `json:"Credentials Risk Report,omitempty"`
-	DatabaseRiskReport map[string]interface{} `json:"Database Risk Report,omitempty"`
-	FilesystemRiskReport map[string]interface{} `json:"Filesystem Risk Report,omitempty"`
-	NodesRiskReport map[string]interface{} `json:"Nodes Risk Report,omitempty"`
-	InstanceRiskReport map[string]interface{} `json:"Instance Risk Report,omitempty"`
+	DatabaseRiskReport    map[string]interface{} `json:"Database Risk Report,omitempty"`
+	FilesystemRiskReport  map[string]interface{} `json:"Filesystem Risk Report,omitempty"`
+	NodesRiskReport       map[string]interface{} `json:"Nodes Risk Report,omitempty"`
+	InstanceRiskReport    map[string]interface{} `json:"Instance Risk Report,omitempty"`
 }
 
 // NewAudit instantiates a new Audit object
@@ -205,7 +205,7 @@ func (o *Audit) SetInstanceRiskReport(v map[string]interface{}) {
 }
 
 func (o Audit) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -267,5 +267,3 @@ func (v *NullableAudit) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

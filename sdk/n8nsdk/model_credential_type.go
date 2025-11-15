@@ -21,9 +21,9 @@ var _ MappedNullable = &CredentialType{}
 // CredentialType struct for CredentialType
 type CredentialType struct {
 	DisplayName *string `json:"displayName,omitempty"`
-	Name *string `json:"name,omitempty"`
-	Type *string `json:"type,omitempty"`
-	Default *string `json:"default,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Type        *string `json:"type,omitempty"`
+	Default     *string `json:"default,omitempty"`
 }
 
 // NewCredentialType instantiates a new CredentialType object
@@ -172,7 +172,7 @@ func (o *CredentialType) SetDefault(v string) {
 }
 
 func (o CredentialType) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -231,5 +231,3 @@ func (v *NullableCredentialType) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

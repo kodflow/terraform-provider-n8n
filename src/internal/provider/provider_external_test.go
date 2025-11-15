@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	p "github.com/kodflow/n8n/src/internal/provider"
-	"github.com/kodflow/n8n/src/internal/provider/shared/models"
+	p "github.com/kodflow/terraform-provider-n8n/src/internal/provider"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

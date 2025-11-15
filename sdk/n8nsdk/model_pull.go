@@ -20,7 +20,7 @@ var _ MappedNullable = &Pull{}
 
 // Pull struct for Pull
 type Pull struct {
-	Force *bool `json:"force,omitempty"`
+	Force     *bool                  `json:"force,omitempty"`
 	Variables map[string]interface{} `json:"variables,omitempty"`
 }
 
@@ -106,7 +106,7 @@ func (o *Pull) SetVariables(v map[string]interface{}) {
 }
 
 func (o Pull) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -159,5 +159,3 @@ func (v *NullablePull) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

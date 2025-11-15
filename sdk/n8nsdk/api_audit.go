@@ -19,16 +19,15 @@ import (
 	"net/url"
 )
 
-
 type AuditAPI interface {
 
 	/*
-	AuditPost Generate an audit
+		AuditPost Generate an audit
 
-	Generate a security audit for your n8n instance.
+		Generate a security audit for your n8n instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return AuditAPIAuditPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return AuditAPIAuditPostRequest
 	*/
 	AuditPost(ctx context.Context) AuditAPIAuditPostRequest
 
@@ -41,8 +40,8 @@ type AuditAPI interface {
 type AuditAPIService service
 
 type AuditAPIAuditPostRequest struct {
-	ctx context.Context
-	ApiService AuditAPI
+	ctx              context.Context
+	ApiService       AuditAPI
 	auditPostRequest *AuditPostRequest
 }
 
@@ -60,24 +59,25 @@ AuditPost Generate an audit
 
 Generate a security audit for your n8n instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return AuditAPIAuditPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return AuditAPIAuditPostRequest
 */
 func (a *AuditAPIService) AuditPost(ctx context.Context) AuditAPIAuditPostRequest {
 	return AuditAPIAuditPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Audit
+//
+//	@return Audit
 func (a *AuditAPIService) AuditPostExecute(r AuditAPIAuditPostRequest) (*Audit, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Audit
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Audit
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AuditAPIService.AuditPost")

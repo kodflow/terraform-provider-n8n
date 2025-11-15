@@ -6,7 +6,7 @@
 package models
 
 import (
-	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
 )
 
 // WorkflowBackup stores workflow state for rollback during credential rotation.

@@ -11,7 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	n8nprovider "github.com/kodflow/n8n/src/internal/provider"
+	n8nprovider "github.com/kodflow/terraform-provider-n8n/src/internal/provider"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ func init() {
 //   - error: Error if provider server fails to start
 func run(_cmd *cobra.Command, _args []string) error {
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/kodflow/n8n",
+		Address: "registry.terraform.io/kodflow/terraform-provider-n8n",
 		Debug:   debug,
 	}
 

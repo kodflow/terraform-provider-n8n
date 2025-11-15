@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/kodflow/n8n/src/internal/provider/shared/client"
-	"github.com/kodflow/n8n/src/internal/provider/workflow"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow"
 	"github.com/stretchr/testify/assert"
 )
 

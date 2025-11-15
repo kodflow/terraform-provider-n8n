@@ -3,7 +3,7 @@ load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 go_library(
     name = "src_lib",
     srcs = ["main.go"],
-    importpath = "github.com/kodflow/n8n/src",
+    importpath = "github.com/kodflow/terraform-provider-n8n/src",
     visibility = ["//visibility:private"],
     deps = ["//src/cmd"],
 )

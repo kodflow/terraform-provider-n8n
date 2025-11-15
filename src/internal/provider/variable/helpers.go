@@ -7,9 +7,9 @@ package variable
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/kodflow/n8n/sdk/n8nsdk"
-	"github.com/kodflow/n8n/src/internal/provider/shared"
-	"github.com/kodflow/n8n/src/internal/provider/variable/models"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable/models"
 )
 
 // findVariableByIDOrKey searches for a variable by ID or key in a variable list.

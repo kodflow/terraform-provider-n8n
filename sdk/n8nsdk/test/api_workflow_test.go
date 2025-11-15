@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.WorkflowAPI.WorkflowsGet(context.Background()).Execute()
 
@@ -36,7 +37,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdActivatePost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -50,7 +51,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdDeactivatePost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -64,7 +65,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -78,7 +79,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -92,7 +93,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -106,7 +107,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdTagsGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -120,7 +121,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdTagsPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -134,7 +135,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsIdTransferPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -147,7 +148,7 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	t.Run("Test WorkflowAPIService WorkflowsPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.WorkflowAPI.WorkflowsPost(context.Background()).Execute()
 

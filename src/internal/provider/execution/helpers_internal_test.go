@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kodflow/n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 )
 

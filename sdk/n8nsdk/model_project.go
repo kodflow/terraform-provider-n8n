@@ -12,10 +12,10 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"encoding/json"
-	"time"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // checks if the Project type satisfies the MappedNullable interface at compile time
@@ -23,14 +23,14 @@ var _ MappedNullable = &Project{}
 
 // Project struct for Project
 type Project struct {
-	Id *string `json:"id,omitempty"`
-	Name string `json:"name"`
+	Id   *string `json:"id,omitempty"`
+	Name string  `json:"name"`
 	Type *string `json:"type,omitempty"`
 	// Project creation timestamp
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Project last update timestamp
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-	Icon NullableProjectIcon `json:"icon,omitempty"`
+	UpdatedAt *time.Time          `json:"updatedAt,omitempty"`
+	Icon      NullableProjectIcon `json:"icon,omitempty"`
 	// Project description
 	Description NullableString `json:"description,omitempty"`
 	// Project relations
@@ -241,6 +241,7 @@ func (o *Project) HasIcon() bool {
 func (o *Project) SetIcon(v ProjectIcon) {
 	o.Icon.Set(&v)
 }
+
 // SetIconNil sets the value for Icon to be an explicit nil
 func (o *Project) SetIconNil() {
 	o.Icon.Set(nil)
@@ -283,6 +284,7 @@ func (o *Project) HasDescription() bool {
 func (o *Project) SetDescription(v string) {
 	o.Description.Set(&v)
 }
+
 // SetDescriptionNil sets the value for Description to be an explicit nil
 func (o *Project) SetDescriptionNil() {
 	o.Description.Set(nil)
@@ -326,7 +328,7 @@ func (o *Project) SetProjectRelations(v []map[string]interface{}) {
 }
 
 func (o Project) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -373,10 +375,10 @@ func (o *Project) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -432,5 +434,3 @@ func (v *NullableProject) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_CredentialAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 
 	t.Run("Test CredentialAPIService CredentialsIdTransferPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -37,7 +38,7 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 
 	t.Run("Test CredentialAPIService CredentialsPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.CredentialAPI.CredentialsPost(context.Background()).Execute()
 
@@ -49,7 +50,7 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 
 	t.Run("Test CredentialAPIService CredentialsSchemaCredentialTypeNameGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var credentialTypeName string
 
@@ -63,7 +64,7 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 
 	t.Run("Test CredentialAPIService DeleteCredential", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 

@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_UserAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_UserAPIService(t *testing.T) {
 
 	t.Run("Test UserAPIService UsersGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.UserAPI.UsersGet(context.Background()).Execute()
 
@@ -36,7 +37,7 @@ func Test_n8nsdk_UserAPIService(t *testing.T) {
 
 	t.Run("Test UserAPIService UsersIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -49,7 +50,7 @@ func Test_n8nsdk_UserAPIService(t *testing.T) {
 
 	t.Run("Test UserAPIService UsersIdGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -63,7 +64,7 @@ func Test_n8nsdk_UserAPIService(t *testing.T) {
 
 	t.Run("Test UserAPIService UsersIdRolePatch", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -76,7 +77,7 @@ func Test_n8nsdk_UserAPIService(t *testing.T) {
 
 	t.Run("Test UserAPIService UsersPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.UserAPI.UsersPost(context.Background()).Execute()
 

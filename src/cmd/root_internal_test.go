@@ -152,7 +152,7 @@ func Test_run(t *testing.T) {
 			switch tt.name {
 			case "run succeeds when ProviderServe succeeds":
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-					assert.Equal(t, "registry.terraform.io/kodflow/n8n", opts.Address)
+					assert.Equal(t, "registry.terraform.io/kodflow/terraform-provider-n8n", opts.Address)
 					assert.Equal(t, debug, opts.Debug)
 					p := providerFunc()
 					assert.NotNil(t, p, "Provider should be created")
@@ -177,7 +177,7 @@ func Test_run(t *testing.T) {
 					return nil
 				}
 				_ = run(&cobra.Command{}, []string{})
-				assert.Equal(t, "registry.terraform.io/kodflow/n8n", addressCaptured, "Correct address should be passed")
+				assert.Equal(t, "registry.terraform.io/kodflow/terraform-provider-n8n", addressCaptured, "Correct address should be passed")
 
 			case "run respects debug flag when false":
 				debug = false
@@ -904,9 +904,9 @@ func TestConstants(t *testing.T) {
 				}
 
 				_ = run(&cobra.Command{}, []string{})
-				assert.Equal(t, "registry.terraform.io/kodflow/n8n", capturedAddress)
+				assert.Equal(t, "registry.terraform.io/kodflow/terraform-provider-n8n", capturedAddress)
 				assert.True(t, strings.HasPrefix(capturedAddress, "registry.terraform.io/"))
-				assert.True(t, strings.HasSuffix(capturedAddress, "/n8n"))
+				assert.True(t, strings.HasSuffix(capturedAddress, "/terraform-provider-n8n"))
 
 			case "error case - registry address must not be empty":
 				var capturedAddress string

@@ -1,4 +1,4 @@
-module github.com/kodflow/n8n
+module github.com/kodflow/terraform-provider-n8n
 
 go 1.25.3
 
@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
-	github.com/kodflow/n8n/sdk/n8nsdk v0.0.0-00010101000000-000000000000
+	github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk v0.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 )
@@ -94,4 +94,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/kodflow/n8n/sdk/n8nsdk => ./sdk/n8nsdk
+replace github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk => ./sdk/n8nsdk

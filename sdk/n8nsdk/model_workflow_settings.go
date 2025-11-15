@@ -20,22 +20,22 @@ var _ MappedNullable = &WorkflowSettings{}
 
 // WorkflowSettings struct for WorkflowSettings
 type WorkflowSettings struct {
-	SaveExecutionProgress *bool `json:"saveExecutionProgress,omitempty"`
-	SaveManualExecutions *bool `json:"saveManualExecutions,omitempty"`
-	SaveDataErrorExecution *string `json:"saveDataErrorExecution,omitempty"`
-	SaveDataSuccessExecution *string `json:"saveDataSuccessExecution,omitempty"`
-	ExecutionTimeout *float32 `json:"executionTimeout,omitempty"`
+	SaveExecutionProgress    *bool    `json:"saveExecutionProgress,omitempty"`
+	SaveManualExecutions     *bool    `json:"saveManualExecutions,omitempty"`
+	SaveDataErrorExecution   *string  `json:"saveDataErrorExecution,omitempty"`
+	SaveDataSuccessExecution *string  `json:"saveDataSuccessExecution,omitempty"`
+	ExecutionTimeout         *float32 `json:"executionTimeout,omitempty"`
 	// The ID of the workflow that contains the error trigger node.
-	ErrorWorkflow *string `json:"errorWorkflow,omitempty"`
-	Timezone *string `json:"timezone,omitempty"`
+	ErrorWorkflow  *string `json:"errorWorkflow,omitempty"`
+	Timezone       *string `json:"timezone,omitempty"`
 	ExecutionOrder *string `json:"executionOrder,omitempty"`
-	// Controls which workflows are allowed to call this workflow using the Execute Workflow node.  Available options: - `any`: Any workflow can call this workflow (no restrictions) - `none`: No other workflows can call this workflow (completely blocked) - `workflowsFromSameOwner` (default): Only workflows owned by the same project can call this workflow   * For personal projects: Only workflows created by the same user   * For team projects: Only workflows within the same team project - `workflowsFromAList`: Only specific workflows listed in the `callerIds` field can call this workflow   * Requires the `callerIds` field to specify which workflow IDs are allowed   * See `callerIds` field documentation for usage 
+	// Controls which workflows are allowed to call this workflow using the Execute Workflow node.  Available options: - `any`: Any workflow can call this workflow (no restrictions) - `none`: No other workflows can call this workflow (completely blocked) - `workflowsFromSameOwner` (default): Only workflows owned by the same project can call this workflow   * For personal projects: Only workflows created by the same user   * For team projects: Only workflows within the same team project - `workflowsFromAList`: Only specific workflows listed in the `callerIds` field can call this workflow   * Requires the `callerIds` field to specify which workflow IDs are allowed   * See `callerIds` field documentation for usage
 	CallerPolicy *string `json:"callerPolicy,omitempty"`
 	// Comma-separated list of workflow IDs allowed to call this workflow (only used with workflowsFromAList policy)
 	CallerIds *string `json:"callerIds,omitempty"`
 	// Estimated time saved per execution in minutes
 	TimeSavedPerExecution *float32 `json:"timeSavedPerExecution,omitempty"`
-	// Controls whether this workflow is accessible via the Model Context Protocol (MCP).  When enabled, this workflow can be called by MCP clients (AI assistants and other tools that support MCP). This allows external AI tools to discover and execute this workflow as part of their capabilities.  Requirements for enabling MCP access: - The workflow must be active (not deactivated) - The workflow must contain at least one active Webhook node - Only webhook-triggered workflows can be exposed via MCP  Security note: When a workflow is available in MCP, it can be discovered and executed by any MCP client that has the appropriate API credentials for your n8n instance. 
+	// Controls whether this workflow is accessible via the Model Context Protocol (MCP).  When enabled, this workflow can be called by MCP clients (AI assistants and other tools that support MCP). This allows external AI tools to discover and execute this workflow as part of their capabilities.  Requirements for enabling MCP access: - The workflow must be active (not deactivated) - The workflow must contain at least one active Webhook node - Only webhook-triggered workflows can be exposed via MCP  Security note: When a workflow is available in MCP, it can be discovered and executed by any MCP client that has the appropriate API credentials for your n8n instance.
 	AvailableInMCP *bool `json:"availableInMCP,omitempty"`
 }
 
@@ -449,7 +449,7 @@ func (o *WorkflowSettings) SetAvailableInMCP(v bool) {
 }
 
 func (o WorkflowSettings) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -532,5 +532,3 @@ func (v *NullableWorkflowSettings) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

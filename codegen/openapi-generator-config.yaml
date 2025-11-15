@@ -7,7 +7,7 @@ packageVersion: 1.1.1
 isGoSubmodule: true
 
 # Go module configuration
-goModulePath: github.com/kodflow/n8n/sdk/n8nsdk
+goModulePath: github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk
 
 # Generation options
 enumClassPrefix: true

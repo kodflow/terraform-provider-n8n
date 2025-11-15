@@ -28,11 +28,11 @@ type SharedWorkflow struct {
 	// User ID
 	UserId *string `json:"userId,omitempty"`
 	// User role
-	Role *string `json:"role,omitempty"`
-	WorkflowId *string `json:"workflowId,omitempty"`
-	Project *SharedWorkflowProject1 `json:"project,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	Role                 *string                 `json:"role,omitempty"`
+	WorkflowId           *string                 `json:"workflowId,omitempty"`
+	Project              *SharedWorkflowProject1 `json:"project,omitempty"`
+	CreatedAt            *time.Time              `json:"createdAt,omitempty"`
+	UpdatedAt            *time.Time              `json:"updatedAt,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -312,7 +312,7 @@ func (o *SharedWorkflow) SetUpdatedAt(v time.Time) {
 }
 
 func (o SharedWorkflow) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -416,5 +416,3 @@ func (v *NullableSharedWorkflow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

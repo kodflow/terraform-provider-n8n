@@ -129,7 +129,7 @@ def main():
         content = go_file.read_text()
         content = content.replace(
             "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk",
-            "github.com/kodflow/n8n/sdk/n8nsdk"
+            "github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
         )
         go_file.write_text(content)
     print("   ✓ Fixed\n")

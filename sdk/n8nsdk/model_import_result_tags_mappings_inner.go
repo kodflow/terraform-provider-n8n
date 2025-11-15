@@ -21,7 +21,7 @@ var _ MappedNullable = &ImportResultTagsMappingsInner{}
 // ImportResultTagsMappingsInner struct for ImportResultTagsMappingsInner
 type ImportResultTagsMappingsInner struct {
 	WorkflowId *string `json:"workflowId,omitempty"`
-	TagId *string `json:"tagId,omitempty"`
+	TagId      *string `json:"tagId,omitempty"`
 }
 
 // NewImportResultTagsMappingsInner instantiates a new ImportResultTagsMappingsInner object
@@ -106,7 +106,7 @@ func (o *ImportResultTagsMappingsInner) SetTagId(v string) {
 }
 
 func (o ImportResultTagsMappingsInner) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -159,5 +159,3 @@ func (v *NullableImportResultTagsMappingsInner) UnmarshalJSON(src []byte) error 
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -20,16 +20,15 @@ import (
 	"strings"
 )
 
-
 type TagsAPI interface {
 
 	/*
-	TagsGet Retrieve all tags
+		TagsGet Retrieve all tags
 
-	Retrieve all tags from your instance.
+		Retrieve all tags from your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return TagsAPITagsGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return TagsAPITagsGetRequest
 	*/
 	TagsGet(ctx context.Context) TagsAPITagsGetRequest
 
@@ -38,13 +37,13 @@ type TagsAPI interface {
 	TagsGetExecute(r TagsAPITagsGetRequest) (*TagList, *http.Response, error)
 
 	/*
-	TagsIdDelete Delete a tag
+		TagsIdDelete Delete a tag
 
-	Deletes a tag.
+		Deletes a tag.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the tag.
-	@return TagsAPITagsIdDeleteRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the tag.
+		@return TagsAPITagsIdDeleteRequest
 	*/
 	TagsIdDelete(ctx context.Context, id string) TagsAPITagsIdDeleteRequest
 
@@ -53,13 +52,13 @@ type TagsAPI interface {
 	TagsIdDeleteExecute(r TagsAPITagsIdDeleteRequest) (*Tag, *http.Response, error)
 
 	/*
-	TagsIdGet Retrieves a tag
+		TagsIdGet Retrieves a tag
 
-	Retrieves a tag.
+		Retrieves a tag.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the tag.
-	@return TagsAPITagsIdGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the tag.
+		@return TagsAPITagsIdGetRequest
 	*/
 	TagsIdGet(ctx context.Context, id string) TagsAPITagsIdGetRequest
 
@@ -68,13 +67,13 @@ type TagsAPI interface {
 	TagsIdGetExecute(r TagsAPITagsIdGetRequest) (*Tag, *http.Response, error)
 
 	/*
-	TagsIdPut Update a tag
+		TagsIdPut Update a tag
 
-	Update a tag.
+		Update a tag.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the tag.
-	@return TagsAPITagsIdPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the tag.
+		@return TagsAPITagsIdPutRequest
 	*/
 	TagsIdPut(ctx context.Context, id string) TagsAPITagsIdPutRequest
 
@@ -83,12 +82,12 @@ type TagsAPI interface {
 	TagsIdPutExecute(r TagsAPITagsIdPutRequest) (*Tag, *http.Response, error)
 
 	/*
-	TagsPost Create a tag
+		TagsPost Create a tag
 
-	Create a tag in your instance.
+		Create a tag in your instance.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return TagsAPITagsPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return TagsAPITagsPostRequest
 	*/
 	TagsPost(ctx context.Context) TagsAPITagsPostRequest
 
@@ -101,10 +100,10 @@ type TagsAPI interface {
 type TagsAPIService service
 
 type TagsAPITagsGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService TagsAPI
-	limit *float32
-	cursor *string
+	limit      *float32
+	cursor     *string
 }
 
 // The maximum number of items to return.
@@ -128,24 +127,25 @@ TagsGet Retrieve all tags
 
 Retrieve all tags from your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return TagsAPITagsGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return TagsAPITagsGetRequest
 */
 func (a *TagsAPIService) TagsGet(ctx context.Context) TagsAPITagsGetRequest {
 	return TagsAPITagsGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return TagList
+//
+//	@return TagList
 func (a *TagsAPIService) TagsGetExecute(r TagsAPITagsGetRequest) (*TagList, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *TagList
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *TagList
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "TagsAPIService.TagsGet")
@@ -237,9 +237,9 @@ func (a *TagsAPIService) TagsGetExecute(r TagsAPITagsGetRequest) (*TagList, *htt
 }
 
 type TagsAPITagsIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService TagsAPI
-	id string
+	id         string
 }
 
 func (r TagsAPITagsIdDeleteRequest) Execute() (*Tag, *http.Response, error) {
@@ -251,26 +251,27 @@ TagsIdDelete Delete a tag
 
 Deletes a tag.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the tag.
- @return TagsAPITagsIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the tag.
+	@return TagsAPITagsIdDeleteRequest
 */
 func (a *TagsAPIService) TagsIdDelete(ctx context.Context, id string) TagsAPITagsIdDeleteRequest {
 	return TagsAPITagsIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Tag
+//
+//	@return Tag
 func (a *TagsAPIService) TagsIdDeleteExecute(r TagsAPITagsIdDeleteRequest) (*Tag, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Tag
+		localVarHTTPMethod  = http.MethodDelete
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Tag
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "TagsAPIService.TagsIdDelete")
@@ -354,9 +355,9 @@ func (a *TagsAPIService) TagsIdDeleteExecute(r TagsAPITagsIdDeleteRequest) (*Tag
 }
 
 type TagsAPITagsIdGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService TagsAPI
-	id string
+	id         string
 }
 
 func (r TagsAPITagsIdGetRequest) Execute() (*Tag, *http.Response, error) {
@@ -368,26 +369,27 @@ TagsIdGet Retrieves a tag
 
 Retrieves a tag.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the tag.
- @return TagsAPITagsIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the tag.
+	@return TagsAPITagsIdGetRequest
 */
 func (a *TagsAPIService) TagsIdGet(ctx context.Context, id string) TagsAPITagsIdGetRequest {
 	return TagsAPITagsIdGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Tag
+//
+//	@return Tag
 func (a *TagsAPIService) TagsIdGetExecute(r TagsAPITagsIdGetRequest) (*Tag, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Tag
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Tag
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "TagsAPIService.TagsIdGet")
@@ -471,10 +473,10 @@ func (a *TagsAPIService) TagsIdGetExecute(r TagsAPITagsIdGetRequest) (*Tag, *htt
 }
 
 type TagsAPITagsIdPutRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService TagsAPI
-	id string
-	tag *Tag
+	id         string
+	tag        *Tag
 }
 
 // Updated tag object.
@@ -492,26 +494,27 @@ TagsIdPut Update a tag
 
 Update a tag.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the tag.
- @return TagsAPITagsIdPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the tag.
+	@return TagsAPITagsIdPutRequest
 */
 func (a *TagsAPIService) TagsIdPut(ctx context.Context, id string) TagsAPITagsIdPutRequest {
 	return TagsAPITagsIdPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Tag
+//
+//	@return Tag
 func (a *TagsAPIService) TagsIdPutExecute(r TagsAPITagsIdPutRequest) (*Tag, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Tag
+		localVarHTTPMethod  = http.MethodPut
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Tag
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "TagsAPIService.TagsIdPut")
@@ -600,9 +603,9 @@ func (a *TagsAPIService) TagsIdPutExecute(r TagsAPITagsIdPutRequest) (*Tag, *htt
 }
 
 type TagsAPITagsPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService TagsAPI
-	tag *Tag
+	tag        *Tag
 }
 
 // Created tag object.
@@ -620,24 +623,25 @@ TagsPost Create a tag
 
 Create a tag in your instance.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return TagsAPITagsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return TagsAPITagsPostRequest
 */
 func (a *TagsAPIService) TagsPost(ctx context.Context) TagsAPITagsPostRequest {
 	return TagsAPITagsPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Tag
+//
+//	@return Tag
 func (a *TagsAPIService) TagsPostExecute(r TagsAPITagsPostRequest) (*Tag, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Tag
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Tag
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "TagsAPIService.TagsPost")

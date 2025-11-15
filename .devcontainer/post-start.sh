@@ -3,6 +3,34 @@ set -e
 
 echo "🚀 Starting post-start configuration..."
 
+# Ensure npm global directory has correct permissions
+if [ -d "$HOME/.local/share/npm-global" ]; then
+  echo "🔧 Checking npm global directory permissions..."
+  chmod -R 755 "$HOME/.local/share/npm-global" 2>/dev/null || true
+fi
+
+# Check if Claude CLI is installed, if not install it
+if ! command -v claude &>/dev/null; then
+  echo "📦 Installing Claude CLI..."
+  export NPM_CONFIG_PREFIX="$HOME/.local/share/npm-global"
+  if npm install -g --prefix "$HOME/.local/share/npm-global" @anthropic-ai/claude-code@latest; then
+    echo "✅ Claude CLI installed successfully"
+  else
+    echo "⚠️  Failed to install Claude CLI"
+  fi
+fi
+
+# Check if commitlint is installed, if not install it
+if ! command -v commitlint &>/dev/null; then
+  echo "📦 Installing commitlint..."
+  export NPM_CONFIG_PREFIX="$HOME/.local/share/npm-global"
+  if npm install -g --prefix "$HOME/.local/share/npm-global" @commitlint/cli@latest @commitlint/config-conventional@latest; then
+    echo "✅ commitlint installed successfully"
+  else
+    echo "⚠️  Failed to install commitlint"
+  fi
+fi
+
 # Clean up old or duplicate binaries from previous builds
 echo "🧹 Cleaning up old binaries..."
 rm -f "$HOME/.cache/go/bin/golangci-lint-real" # Old golangci-lint wrapper

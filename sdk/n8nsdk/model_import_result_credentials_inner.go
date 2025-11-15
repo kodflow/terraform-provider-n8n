@@ -20,7 +20,7 @@ var _ MappedNullable = &ImportResultCredentialsInner{}
 
 // ImportResultCredentialsInner struct for ImportResultCredentialsInner
 type ImportResultCredentialsInner struct {
-	Id *string `json:"id,omitempty"`
+	Id   *string `json:"id,omitempty"`
 	Name *string `json:"name,omitempty"`
 	Type *string `json:"type,omitempty"`
 }
@@ -139,7 +139,7 @@ func (o *ImportResultCredentialsInner) SetType(v string) {
 }
 
 func (o ImportResultCredentialsInner) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -195,5 +195,3 @@ func (v *NullableImportResultCredentialsInner) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

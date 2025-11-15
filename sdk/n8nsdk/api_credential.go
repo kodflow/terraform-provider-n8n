@@ -20,17 +20,16 @@ import (
 	"strings"
 )
 
-
 type CredentialAPI interface {
 
 	/*
-	CredentialsIdTransferPut Transfer a credential to another project.
+		CredentialsIdTransferPut Transfer a credential to another project.
 
-	Transfer a credential to another project.
+		Transfer a credential to another project.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The ID of the credential.
-	@return CredentialAPICredentialsIdTransferPutRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the credential.
+		@return CredentialAPICredentialsIdTransferPutRequest
 	*/
 	CredentialsIdTransferPut(ctx context.Context, id string) CredentialAPICredentialsIdTransferPutRequest
 
@@ -38,12 +37,12 @@ type CredentialAPI interface {
 	CredentialsIdTransferPutExecute(r CredentialAPICredentialsIdTransferPutRequest) (*http.Response, error)
 
 	/*
-	CredentialsPost Create a credential
+		CredentialsPost Create a credential
 
-	Creates a credential that can be used by nodes of the specified type.
+		Creates a credential that can be used by nodes of the specified type.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return CredentialAPICredentialsPostRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return CredentialAPICredentialsPostRequest
 	*/
 	CredentialsPost(ctx context.Context) CredentialAPICredentialsPostRequest
 
@@ -52,11 +51,11 @@ type CredentialAPI interface {
 	CredentialsPostExecute(r CredentialAPICredentialsPostRequest) (*CreateCredentialResponse, *http.Response, error)
 
 	/*
-	CredentialsSchemaCredentialTypeNameGet Show credential data schema
+		CredentialsSchemaCredentialTypeNameGet Show credential data schema
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param credentialTypeName The credential type name that you want to get the schema for
-	@return CredentialAPICredentialsSchemaCredentialTypeNameGetRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param credentialTypeName The credential type name that you want to get the schema for
+		@return CredentialAPICredentialsSchemaCredentialTypeNameGetRequest
 	*/
 	CredentialsSchemaCredentialTypeNameGet(ctx context.Context, credentialTypeName string) CredentialAPICredentialsSchemaCredentialTypeNameGetRequest
 
@@ -65,13 +64,13 @@ type CredentialAPI interface {
 	CredentialsSchemaCredentialTypeNameGetExecute(r CredentialAPICredentialsSchemaCredentialTypeNameGetRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
-	DeleteCredential Delete credential by ID
+		DeleteCredential Delete credential by ID
 
-	Deletes a credential from your instance. You must be the owner of the credentials
+		Deletes a credential from your instance. You must be the owner of the credentials
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param id The credential ID that needs to be deleted
-	@return CredentialAPIDeleteCredentialRequest
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The credential ID that needs to be deleted
+		@return CredentialAPIDeleteCredentialRequest
 	*/
 	DeleteCredential(ctx context.Context, id string) CredentialAPIDeleteCredentialRequest
 
@@ -84,9 +83,9 @@ type CredentialAPI interface {
 type CredentialAPIService service
 
 type CredentialAPICredentialsIdTransferPutRequest struct {
-	ctx context.Context
-	ApiService CredentialAPI
-	id string
+	ctx                             context.Context
+	ApiService                      CredentialAPI
+	id                              string
 	credentialsIdTransferPutRequest *CredentialsIdTransferPutRequest
 }
 
@@ -105,24 +104,24 @@ CredentialsIdTransferPut Transfer a credential to another project.
 
 Transfer a credential to another project.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The ID of the credential.
- @return CredentialAPICredentialsIdTransferPutRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the credential.
+	@return CredentialAPICredentialsIdTransferPutRequest
 */
 func (a *CredentialAPIService) CredentialsIdTransferPut(ctx context.Context, id string) CredentialAPICredentialsIdTransferPutRequest {
 	return CredentialAPICredentialsIdTransferPutRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *CredentialAPIService) CredentialsIdTransferPutExecute(r CredentialAPICredentialsIdTransferPutRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodPut
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CredentialAPIService.CredentialsIdTransferPut")
@@ -202,7 +201,7 @@ func (a *CredentialAPIService) CredentialsIdTransferPutExecute(r CredentialAPICr
 }
 
 type CredentialAPICredentialsPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService CredentialAPI
 	credential *Credential
 }
@@ -222,24 +221,25 @@ CredentialsPost Create a credential
 
 Creates a credential that can be used by nodes of the specified type.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return CredentialAPICredentialsPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return CredentialAPICredentialsPostRequest
 */
 func (a *CredentialAPIService) CredentialsPost(ctx context.Context) CredentialAPICredentialsPostRequest {
 	return CredentialAPICredentialsPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return CreateCredentialResponse
+//
+//	@return CreateCredentialResponse
 func (a *CredentialAPIService) CredentialsPostExecute(r CredentialAPICredentialsPostRequest) (*CreateCredentialResponse, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *CreateCredentialResponse
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *CreateCredentialResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CredentialAPIService.CredentialsPost")
@@ -327,8 +327,8 @@ func (a *CredentialAPIService) CredentialsPostExecute(r CredentialAPICredentials
 }
 
 type CredentialAPICredentialsSchemaCredentialTypeNameGetRequest struct {
-	ctx context.Context
-	ApiService CredentialAPI
+	ctx                context.Context
+	ApiService         CredentialAPI
 	credentialTypeName string
 }
 
@@ -339,26 +339,27 @@ func (r CredentialAPICredentialsSchemaCredentialTypeNameGetRequest) Execute() (m
 /*
 CredentialsSchemaCredentialTypeNameGet Show credential data schema
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param credentialTypeName The credential type name that you want to get the schema for
- @return CredentialAPICredentialsSchemaCredentialTypeNameGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param credentialTypeName The credential type name that you want to get the schema for
+	@return CredentialAPICredentialsSchemaCredentialTypeNameGetRequest
 */
 func (a *CredentialAPIService) CredentialsSchemaCredentialTypeNameGet(ctx context.Context, credentialTypeName string) CredentialAPICredentialsSchemaCredentialTypeNameGetRequest {
 	return CredentialAPICredentialsSchemaCredentialTypeNameGetRequest{
-		ApiService: a,
-		ctx: ctx,
+		ApiService:         a,
+		ctx:                ctx,
 		credentialTypeName: credentialTypeName,
 	}
 }
 
 // Execute executes the request
-//  @return map[string]interface{}
+//
+//	@return map[string]interface{}
 func (a *CredentialAPIService) CredentialsSchemaCredentialTypeNameGetExecute(r CredentialAPICredentialsSchemaCredentialTypeNameGetRequest) (map[string]interface{}, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  map[string]interface{}
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue map[string]interface{}
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CredentialAPIService.CredentialsSchemaCredentialTypeNameGet")
@@ -442,9 +443,9 @@ func (a *CredentialAPIService) CredentialsSchemaCredentialTypeNameGetExecute(r C
 }
 
 type CredentialAPIDeleteCredentialRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService CredentialAPI
-	id string
+	id         string
 }
 
 func (r CredentialAPIDeleteCredentialRequest) Execute() (*Credential, *http.Response, error) {
@@ -456,26 +457,27 @@ DeleteCredential Delete credential by ID
 
 Deletes a credential from your instance. You must be the owner of the credentials
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id The credential ID that needs to be deleted
- @return CredentialAPIDeleteCredentialRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The credential ID that needs to be deleted
+	@return CredentialAPIDeleteCredentialRequest
 */
 func (a *CredentialAPIService) DeleteCredential(ctx context.Context, id string) CredentialAPIDeleteCredentialRequest {
 	return CredentialAPIDeleteCredentialRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Credential
+//
+//	@return Credential
 func (a *CredentialAPIService) DeleteCredentialExecute(r CredentialAPIDeleteCredentialRequest) (*Credential, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Credential
+		localVarHTTPMethod  = http.MethodDelete
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Credential
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CredentialAPIService.DeleteCredential")

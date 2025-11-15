@@ -11,10 +11,11 @@ package n8nsdk
 
 import (
 	"context"
+	"testing"
+
+	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	openapiclient "github.com/kodflow/n8n/sdk/n8nsdk"
 )
 
 func Test_n8nsdk_VariablesAPIService(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_n8nsdk_VariablesAPIService(t *testing.T) {
 
 	t.Run("Test VariablesAPIService VariablesGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.VariablesAPI.VariablesGet(context.Background()).Execute()
 
@@ -36,7 +37,7 @@ func Test_n8nsdk_VariablesAPIService(t *testing.T) {
 
 	t.Run("Test VariablesAPIService VariablesIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -49,7 +50,7 @@ func Test_n8nsdk_VariablesAPIService(t *testing.T) {
 
 	t.Run("Test VariablesAPIService VariablesIdPut", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -62,7 +63,7 @@ func Test_n8nsdk_VariablesAPIService(t *testing.T) {
 
 	t.Run("Test VariablesAPIService VariablesPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		httpRes, err := apiClient.VariablesAPI.VariablesPost(context.Background()).Execute()
 
