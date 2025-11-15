@@ -14,8 +14,9 @@ git config core.hooksPath .github/hooks
 
 ### pre-commit
 
-Auto-generates documentation files before each commit:
+**Blocks direct commits to main branch** and auto-generates documentation:
 
+- **🔒 Prevents commits directly to `main` branch** (use feature branches + PR)
 - Adds copyright headers to source files
 - Generates `CHANGELOG.md` from git history
 - Generates `COVERAGE.MD` from test coverage
