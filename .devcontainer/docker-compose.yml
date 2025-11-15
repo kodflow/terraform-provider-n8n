@@ -5,8 +5,7 @@ services:
 
     # Use pre-built image from GitHub Container Registry with fallback to local build
     # Docker Compose will try to pull first, then build if pull fails
-    # Image name uses COMPOSE_PROJECT_NAME (automatically set to parent directory name)
-    image: ghcr.io/kodflow/${COMPOSE_PROJECT_NAME}:devcontainer
+    image: ghcr.io/kodflow/devcontainer:latest
 
     build:
       context: .

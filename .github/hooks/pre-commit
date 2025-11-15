@@ -47,15 +47,11 @@ if ! ./scripts/add-copyright-headers.sh; then
 fi
 echo ""
 
-# Generate documentation (CHANGELOG.md and COVERAGE.MD)
-echo -e "${BOLD}2. Generating documentation...${RESET}"
-./scripts/generate-changelog.sh > /dev/null 2>&1
+# Generate documentation (COVERAGE.MD)
+echo -e "${BOLD}2. Generating coverage documentation...${RESET}"
 ./scripts/generate-coverage.sh > /dev/null 2>&1
 
-# Stage documentation files if they were modified
-if [ -f "CHANGELOG.md" ]; then
-  git add CHANGELOG.md
-fi
+# Stage coverage file if it was modified
 if [ -f "COVERAGE.MD" ]; then
   git add COVERAGE.MD
 fi
