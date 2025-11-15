@@ -61,7 +61,7 @@ jobs:
         id: version
         run: |
           CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          NEXT_VERSION=$(svu next --tag-mode current || echo "")
+          NEXT_VERSION=$(svu next || echo "")
 
           if [ -z "$NEXT_VERSION" ] || [ "$NEXT_VERSION" = "$CURRENT_VERSION" ]; then
             echo "No new version to release"
