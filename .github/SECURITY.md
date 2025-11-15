@@ -26,7 +26,7 @@ We take the security of the n8n Terraform Provider seriously. If you believe you
 Instead, please report them via one of the following methods:
 
 1. **Email** (Preferred): Send details to `133899878+kodflow@users.noreply.github.com`
-2. **GitHub Security Advisories**: Use the [Security tab](https://github.com/kodflow/n8n/security/advisories) to report privately
+2. **GitHub Security Advisories**: Use the [Security tab](https://github.com/kodflow/terraform-provider-n8n/security/advisories) to report privately
 
 ### What to Include
 
@@ -198,7 +198,7 @@ We appreciate security researchers who responsibly disclose vulnerabilities. Con
 
 ## Questions?
 
-If you have questions about this security policy, please open a discussion in the [GitHub Discussions](https://github.com/kodflow/n8n/discussions) or contact us
-at `133899878+kodflow@users.noreply.github.com`.
+If you have questions about this security policy, please open a discussion in the
+[GitHub Discussions](https://github.com/kodflow/terraform-provider-n8n/discussions) or contact us at `133899878+kodflow@users.noreply.github.com`.
 
 Thank you for helping keep the n8n Terraform Provider secure! 🔒
