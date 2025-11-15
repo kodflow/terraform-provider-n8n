@@ -14,7 +14,6 @@ exclude_paths:
   # Generated SDK and Bazel files
   - "sdk/n8nsdk/**"
   - "bazel-*/**"
-  - "**/*_test.go"
   - "**/BUILD.bazel"
   - "**/*.pb.go"
 
@@ -41,10 +40,6 @@ engines:
     exclude_paths:
       - ".devcontainer/mcp.json"
       - "sdk/n8nsdk/**"
-
-  # Go linting
-  golint:
-    enabled: true
 
   # Go vet
   govet:
