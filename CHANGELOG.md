@@ -79,6 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📚 Documentation
 
+- remove manual installation section from README (`e05ce31`)
 - simplify README by removing verbose sections (`268e047`)
 - add clarifying comments to GPG import step (`5c43f59`)
 - add comprehensive Terraform Registry publication guide (`cecd7f9`)
@@ -95,7 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 📊 Statistics
 
-- **Total commits:** 64
+- **Total commits:** 65
 - **Features:** 7
 - **Bug fixes:** 31
 - **Tests:** 1
@@ -109,4 +110,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-*Changelog generated automatically on 2025-11-15 15:27:11*
+*Changelog generated automatically on 2025-11-15 15:34:59*

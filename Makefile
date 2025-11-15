@@ -8,15 +8,9 @@
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 
-# Automatic dev version based on last git tag
-LAST_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-LAST_VERSION := 1.1.7
-VERSION_PARTS := $(subst ., ,$(LAST_VERSION))
-MAJOR := $(word 1,$(VERSION_PARTS))
-MINOR := $(word 2,$(VERSION_PARTS))
-PATCH := $(word 3,$(VERSION_PARTS))
-NEXT_PATCH := $(shell echo $$(($(PATCH) + 1)))
-VERSION := 1.1.7
+# Dynamic version detection from git tags
+LAST_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+VERSION := $(subst v,,$(LAST_TAG))
 
 PLUGIN_DIR := $(HOME)/.terraform.d/plugins/registry.terraform.io/kodflow/terraform-provider-n8n/$(VERSION)/$(GOOS)_$(GOARCH)
 

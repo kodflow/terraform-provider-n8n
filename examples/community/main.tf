@@ -5,7 +5,7 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/terraform-provider-n8n"
-      version = "0.0.1-dev"
+      version = "~> 1.0"
     }
   }
 }
