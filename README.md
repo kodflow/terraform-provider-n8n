@@ -34,30 +34,16 @@ The provider fully supports **n8n Community Edition** (free/self-hosted):
 
 ## Prerequisites
 
-- **Go 1.24.0+**
-- **Bazel 9.0+**
-- **Terraform 1.0+** or **OpenTofu 1.0+**
-
 ### DevContainer (Recommended)
 
-The project includes a preconfigured DevContainer with all tools (Go 1.25.3, Bazel 9.0, Terraform, OpenTofu).
+The project includes a fully configured DevContainer with all required tools:
 
-**Quick start:**
+- **Go 1.25.3**
+- **Bazel 9.0**
+- **Terraform** & **OpenTofu**
+- All development tools pre-installed
 
-1. Open in VS Code
-2. Accept "Reopen in Container" prompt
-3. Start developing
-
-### Manual Installation
-
-```bash
-# Install Bazelisk (Bazel version manager)
-go install github.com/bazelbuild/bazelisk@latest
-
-# Verify versions
-go version    # go1.24 or higher
-bazel version # Bazel 9.0+
-```
+**Just open the project in VS Code and rebuild the container - everything works out of the box.**
 
 ## Installation
 
