@@ -55,9 +55,11 @@ plugins:
           - type: "ci"
             section: "👷 CI/CD"
 
-  # NOTE: Changelog generation disabled - will be done in PRs
-  # No commits on main after PR merge - keeps history clean
-  # Tag creation is handled by semantic-release core automatically
+  # Create GitHub release with tag (GoReleaser will add binaries later)
+  - - "@semantic-release/github"
+    - successComment: false
+      failComment: false
+      releasedLabels: false
 
 # Options globales
 tagFormat: "v${version}"

@@ -80,33 +80,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      - name: Set up Go
-        if: steps.semantic.outputs.new_release_published == 'true'
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-        with:
-          go-version-file: "go.mod"
-          cache: true
-
-      - name: Run GoReleaser
-        if: steps.semantic.outputs.new_release_published == 'true'
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
-        with:
-          distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-
-      - name: Generate build provenance attestation
-        if: steps.semantic.outputs.new_release_published == 'true'
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: 'dist/terraform-provider-n8n_*'
-
       - name: Release summary
         if: success() && steps.semantic.outputs.new_release_published == 'true'
         run: |
-          echo "✅ Release v${{ steps.semantic.outputs.new_release_version }} completed successfully"
-          echo "📦 Binaries compiled and signed with GPG"
-          echo "🔐 Build provenance attestation generated"
+          echo "✅ Release v${{ steps.semantic.outputs.new_release_version }} created successfully"
+          echo "🏷️  Tag and GitHub release created by semantic-release"
