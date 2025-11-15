@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    # Skip release commits to avoid loops
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE || '' }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+          git_config_global: true
+        timeout-minutes: 2
+        continue-on-error: true
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ steps.import_gpg.outcome }}" = "success" ]; then
+            echo "✅ GPG signing enabled"
+            git config --global commit.gpgsign true
+            git config --global tag.gpgsign true
+            git config --global user.signingkey "${{ steps.import_gpg.outputs.keyid }}"
+          else
+            echo "⚠️ GPG signing disabled"
+            git config --global commit.gpgsign false
+            git config --global tag.gpgsign false
+          fi
+
+      - name: Install svu
+        run: |
+          wget -q https://github.com/caarlos0/svu/releases/download/v3.3.0/svu_3.3.0_linux_amd64.tar.gz
+          tar -xzf svu_3.3.0_linux_amd64.tar.gz
+          sudo mv svu /usr/local/bin/
+          svu --version
+
+      - name: Calculate next version
+        id: version
+        run: |
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          NEXT_VERSION=$(svu next || echo "")
+
+          if [ -z "$NEXT_VERSION" ] || [ "$NEXT_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "No new version to release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "Current version: $CURRENT_VERSION"
+            echo "Next version: $NEXT_VERSION"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.version.outputs.should_release == 'true'
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --notes "Release $TAG - building binaries..." \
+            --latest
+
+      - name: Release summary
+        if: steps.version.outputs.should_release == 'true'
+        run: |
+          echo "✅ Release ${{ steps.version.outputs.version }} created"
+          echo "🏷️  Tag pushed and GitHub release draft created"
+          echo "📦 GoReleaser will build and publish binaries"

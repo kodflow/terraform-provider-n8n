@@ -1,60 +1,36 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
-# Install all system tools in a single layer (rarely changes - good for cache)
+# Install HashiCorp tools and 1Password CLI
 # hadolint ignore=DL3008
-RUN apt-get update \
-    # Install base dependencies for adding repositories
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
-        wget \
-        ca-certificates \
         gnupg \
         lsb-release \
         cmake \
         libpam0g-dev \
-    # Add GitHub CLI repository
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list \
-    # Add Node.js repository
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+        jq \
+        yq \
+        zsh \
+        unzip \
+        wget \
+        openjdk-17-jre-headless \
     # Add HashiCorp repository
+    && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list \
     # Add 1Password repository
     && curl -fsSL https://downloads.1password.com/linux/keys/1password.asc | gpg --dearmor -o /etc/apt/keyrings/1password-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | tee /etc/apt/sources.list.d/1password.list \
-    # Update with new repositories and install ALL packages in one command
+    # Install packages
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        g++ \
-        zlib1g-dev \
-        git \
-        jq \
-        yq \
-        zsh \
-        unzip \
-        nodejs \
-        gh \
-        terraform \
         vault \
         consul \
         nomad \
-        1password-cli \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install AWS CLI v2 and golangci-lint in parallel (rarely changes - good for cache)
-RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" & \
-    curl -fsSL "https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh" -o "/tmp/golangci-install.sh" & \
-    wait && \
-    unzip /tmp/awscliv2.zip -d /tmp && \
-    /tmp/aws/install && \
-    sh /tmp/golangci-install.sh -b /usr/local/bin && \
-    rm -rf /tmp/awscliv2.zip /tmp/aws /tmp/golangci-install.sh
+        1password-cli
 
 # Switch to vscode user
 USER vscode
@@ -66,28 +42,26 @@ RUN mkdir -p /home/vscode/.cache \
     /home/vscode/.config/op \
     /home/vscode/.zsh_history_dir \
     /home/vscode/.local/bin \
+    /home/vscode/.local/share/npm-global \
     /home/vscode/.claude \
     /home/vscode/.local/share/@anthropic \
-    # Set strict permissions for 1Password config directory
-    && chmod 700 /home/vscode/.config/op
+    /home/vscode/.git-hooks \
+    # Set proper permissions
+    && chmod 700 /home/vscode/.config/op \
+    && chmod -R 755 /home/vscode/.local
 
-# Install Oh My Zsh and themes in parallel (rarely changes - good for cache)
-RUN rm -rf "$HOME/.oh-my-zsh" && \
+# Install Oh My Zsh and themes (rarely changes - good for cache)
+# Using single-branch clone for faster downloads
+RUN --mount=type=cache,target=/home/vscode/.cache/git,uid=1000,gid=1000 \
+    rm -rf "$HOME/.oh-my-zsh" && \
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+    git clone --depth=1 --single-branch https://github.com/romkatv/powerlevel10k.git \
         "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" & \
-    git clone --depth=1 https://github.com/dracula/zsh.git \
+    git clone --depth=1 --single-branch https://github.com/dracula/zsh.git \
         "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/dracula" & \
     wait
 
-# Copy p10k configuration (changes rarely)
-COPY --chown=vscode:vscode p10k.sh /home/vscode/.p10k.zsh
-
-# Configure npm for local global packages (no sudo needed)
-RUN mkdir -p /home/vscode/.local/share/npm-global && \
-    npm config set prefix '/home/vscode/.local/share/npm-global'
-
-# Configure zshrc (changes rarely)
+# Configure zshrc (changes rarely - done before copying files)
 RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.zshrc" && \
     { \
         echo ''; \
@@ -99,15 +73,26 @@ RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.z
         echo 'export HISTSIZE=10000'; \
         echo 'export SAVEHIST=10000'; \
         echo ''; \
-        echo '# npm global packages path'; \
+        echo '# npm global packages path (using NPM_CONFIG_PREFIX to avoid nvm conflicts)'; \
+        echo 'export NPM_CONFIG_PREFIX="/home/vscode/.local/share/npm-global"'; \
         echo 'export PATH="/home/vscode/.local/share/npm-global/bin:$PATH"'; \
         echo ''; \
+        echo '# Go environment (features install to /usr/local/go)'; \
+        echo 'export GOPATH="/home/vscode/.cache/go"'; \
+        echo 'export GOBIN="/home/vscode/.cache/go/bin"'; \
+        echo 'export PATH="/usr/local/go/bin:$GOBIN:$PATH"'; \
+        echo ''; \
+        echo '# Local binaries'; \
+        echo 'export PATH="/home/vscode/.local/bin:$PATH"'; \
+        echo ''; \
         echo '# Super Claude alias'; \
-        echo 'alias super-claude="claude --dangerously-skip-permissions --mcp-config /home/vscode/.devcontainer/mcp.json"'; \
+        echo 'alias super-claude="claude --dangerously-skip-permissions --mcp-config /workspace/.devcontainer/mcp.json"'; \
     } >> "$HOME/.zshrc"
 
-# Install npm global packages as vscode user (no root needed)
-RUN npm install -g @anthropic-ai/claude-code@latest @bazel/bazelisk
+# Copy configuration files (moved to end to improve cache hit rate)
+# These files change more frequently than system setup
+COPY --chown=vscode:vscode p10k.sh /home/vscode/.p10k.zsh
+COPY --chown=vscode:vscode --chmod=755 hooks/ /home/vscode/.git-hooks/
 
 # Set working directory
 WORKDIR /workspace

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go install:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(golangci-lint:*)",
+      "Bash(make fmt:*)",
+      "Bash(make lint:*)",
+      "Bash(make build:*)",
+      "Bash(make test:*)",
+      "Bash(cat:*)",
+      "Bash(/workspace/.devcontainer/.gitignore)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
