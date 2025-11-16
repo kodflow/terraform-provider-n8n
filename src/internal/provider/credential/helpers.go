@@ -8,6 +8,7 @@ package credential
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -112,6 +113,22 @@ func (r *CredentialResource) scanAffectedWorkflows(ctx context.Context, oldCredI
 	return affectedWorkflows, true
 }
 
+// closeResponseBody closes an HTTP response body and logs any errors.
+// This is a helper to avoid defer in loops and handle close errors properly.
+//
+// Params:
+//   - ctx: Context for logging
+//   - resp: HTTP response to close (can be nil)
+func closeResponseBody(ctx context.Context, resp *http.Response) {
+	// Only attempt to close if response and body are not nil.
+	if resp != nil && resp.Body != nil {
+		// Log warning if response body fails to close.
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			tflog.Warn(ctx, fmt.Sprintf("Failed to close response body: %s", closeErr.Error()))
+		}
+	}
+}
+
 // updateAffectedWorkflows updates all workflows to use the new credential.
 // Returns a list of successfully updated workflow IDs and whether all updates succeeded.
 //
@@ -140,10 +157,7 @@ func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affect
 		workflow, httpRespGet, errGet := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdGet(ctx, backup.ID).
 			Execute()
-		// Close response body immediately (not defer in loop to avoid resource leaks).
-		if httpRespGet != nil && httpRespGet.Body != nil {
-			httpRespGet.Body.Close()
-		}
+		closeResponseBody(ctx, httpRespGet)
 
 		// Check for error reading workflow.
 		if errGet != nil {
@@ -166,10 +180,7 @@ func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affect
 			WorkflowsIdPut(ctx, backup.ID).
 			Workflow(*updatedWorkflow).
 			Execute()
-		// Close response body immediately (not defer in loop to avoid resource leaks).
-		if httpResp != nil && httpResp.Body != nil {
-			httpResp.Body.Close()
-		}
+		closeResponseBody(ctx, httpResp)
 
 		// Check for error updating workflow.
 		if err != nil {
