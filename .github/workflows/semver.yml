@@ -60,10 +60,14 @@ jobs:
       - name: Check for source code changes
         id: check_changes
         run: |
-          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
           # Check if any files in src/ were modified since last tag
-          if git diff --quiet "$CURRENT_VERSION" HEAD -- src/; then
+          if [ -z "$CURRENT_VERSION" ]; then
+            # No previous tag exists, so this is the first release
+            echo "No previous tag found, treating as first release"
+            echo "has_src_changes=true" >> $GITHUB_OUTPUT
+          elif git diff --quiet "$CURRENT_VERSION" HEAD -- src/; then
             echo "No changes in src/ since $CURRENT_VERSION"
             echo "has_src_changes=false" >> $GITHUB_OUTPUT
           else
