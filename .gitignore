@@ -196,3 +196,5 @@ wheels/
 yarn-debug.log*
 yarn-error.log*
 yarn.lock
+ISSUES.md
+codacy_issues_analysis.json
