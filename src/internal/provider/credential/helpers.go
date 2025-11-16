@@ -140,9 +140,9 @@ func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affect
 		workflow, httpRespGet, errGet := r.client.APIClient.WorkflowAPI.
 			WorkflowsIdGet(ctx, backup.ID).
 			Execute()
-		// Close response body if present.
+		// Close response body immediately (not defer in loop to avoid resource leaks).
 		if httpRespGet != nil && httpRespGet.Body != nil {
-			defer httpRespGet.Body.Close()
+			httpRespGet.Body.Close()
 		}
 
 		// Check for error reading workflow.
@@ -166,9 +166,9 @@ func (r *CredentialResource) updateAffectedWorkflows(ctx context.Context, affect
 			WorkflowsIdPut(ctx, backup.ID).
 			Workflow(*updatedWorkflow).
 			Execute()
-		// Close response body if present.
+		// Close response body immediately (not defer in loop to avoid resource leaks).
 		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
+			httpResp.Body.Close()
 		}
 
 		// Check for error updating workflow.
