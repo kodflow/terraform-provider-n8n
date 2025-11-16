@@ -132,15 +132,15 @@ abort_on_close: true
 knowledge_base:
   enabled: true
   learnings:
-    - "This is a Terraform Provider built with Terraform Plugin Framework (not SDK)"
-    - "Uses Bazel 9 with bzlmod for dependency management"
-    - "Go version must be 1.25.4+ for compatibility with terraform-plugin-framework v1.16+"
-    - "Follows Conventional Commits for semantic versioning"
-    - "All documentation must be in English"
-    - "Provider targets n8n API for workflow automation management"
-    - "Tests must be hermetic and reproducible with Bazel"
-    - "Breaking changes require major version bump (use ! or BREAKING CHANGE)"
-    - "Uses ktn-linter (github.com/kodflow/ktn-linter) for strict Go code quality enforcement"
+    framework: "This is a Terraform Provider built with Terraform Plugin Framework (not SDK)"
+    build_system: "Uses Bazel 9 with bzlmod for dependency management"
+    go_version: "Go version must be 1.25.4+ for compatibility with terraform-plugin-framework v1.16+"
+    commits: "Follows Conventional Commits for semantic versioning"
+    language: "All documentation must be in English"
+    target: "Provider targets n8n API for workflow automation management"
+    testing: "Tests must be hermetic and reproducible with Bazel"
+    breaking_changes: "Breaking changes require major version bump (use ! or BREAKING CHANGE)"
+    linter: "Uses ktn-linter (github.com/kodflow/ktn-linter) for strict Go code quality enforcement"
 
 # Review filters
 reviews_filters:
