@@ -159,8 +159,6 @@ jobs:
             example-path: examples/basic-sample
           - example-name: community-credentials
             example-path: examples/community/credentials/basic-auth
-          - example-name: community-projects
-            example-path: examples/community/projects/basic-project
           - example-name: community-tags
             example-path: examples/community/tags/workflow-tags
           - example-name: community-users
@@ -254,8 +252,6 @@ jobs:
             example-path: examples/basic-sample
           - example-name: community-credentials
             example-path: examples/community/credentials/basic-auth
-          - example-name: community-projects
-            example-path: examples/community/projects/basic-project
           - example-name: community-tags
             example-path: examples/community/tags/workflow-tags
           - example-name: community-users
@@ -390,8 +386,6 @@ jobs:
             example-path: examples/basic-sample
           - example-name: community-credentials
             example-path: examples/community/credentials/basic-auth
-          - example-name: community-projects
-            example-path: examples/community/projects/basic-project
           - example-name: community-tags
             example-path: examples/community/tags/workflow-tags
           - example-name: community-users
