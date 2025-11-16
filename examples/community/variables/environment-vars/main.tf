@@ -3,14 +3,14 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 0.1.0"
+      version = "~> 1.0"
     }
   }
 }
 
 provider "n8n" {
-  api_url = var.n8n_api_url
-  api_key = var.n8n_api_key
+  base_url = var.n8n_base_url
+  api_key  = var.n8n_api_key
 }
 
 # Create environment variables

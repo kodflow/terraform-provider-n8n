@@ -20,15 +20,15 @@ provider "n8n" {
 # ============================================================================
 
 resource "n8n_tag" "basic_sample" {
-  name = "tf:basic-sample"
+  name = "ci-${var.run_id}-tf:basic-sample"
 }
 
 resource "n8n_tag" "environment_dev" {
-  name = "env:dev"
+  name = "ci-${var.run_id}-env:dev"
 }
 
 resource "n8n_tag" "automated" {
-  name = "automated"
+  name = "ci-${var.run_id}-automated"
 }
 
 # ============================================================================
@@ -36,7 +36,7 @@ resource "n8n_tag" "automated" {
 # ============================================================================
 
 resource "n8n_workflow" "simple" {
-  name   = "TF Basic Sample - Simple Workflow"
+  name   = "ci-${var.run_id}-TF Basic Sample - Simple Workflow"
   active = false
   tags   = [n8n_tag.basic_sample.id, n8n_tag.environment_dev.id]
 }
@@ -46,7 +46,7 @@ resource "n8n_workflow" "simple" {
 # ============================================================================
 
 resource "n8n_workflow" "api_test" {
-  name   = "TF Basic Sample - API Test"
+  name   = "ci-${var.run_id}-TF Basic Sample - API Test"
   active = false
   tags   = [n8n_tag.basic_sample.id, n8n_tag.automated.id]
 
@@ -130,7 +130,7 @@ resource "n8n_workflow" "api_test" {
 # ============================================================================
 
 resource "n8n_workflow" "data_processor" {
-  name   = "TF Basic Sample - Data Processor"
+  name   = "ci-${var.run_id}-TF Basic Sample - Data Processor"
   active = false
   tags   = [n8n_tag.basic_sample.id, n8n_tag.automated.id]
 
