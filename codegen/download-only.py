@@ -31,7 +31,7 @@ def get_n8n_version(temp_dir, commit):
             with open(package_json, 'r') as f:
                 data = json.load(f)
                 return data.get('version', 'unknown')
-    except:
+    except (json.JSONDecodeError, IOError, KeyError):
         pass
     return 'unknown'
 

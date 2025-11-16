@@ -153,7 +153,7 @@ def apply_git_commit_patch(commit_hash):
         with open(openapi_file, 'r') as f:
             yaml.safe_load(f)
         print("   ✓ YAML is valid")
-    except Exception as e:
+    except (yaml.YAMLError, IOError) as e:
         print(f"❌ YAML validation failed: {e}")
         sys.exit(1)
 
