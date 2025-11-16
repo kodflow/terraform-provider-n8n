@@ -52,7 +52,7 @@ Automatically generated coverage report.
 |--------|-------|
 | **Total Coverage** | **${TOTAL_COVERAGE}** |
 | **Threshold** | **70.0%** |
-| **Status** | $(if [ $(awk "BEGIN {print ($TOTAL_VALUE >= 70.0)}") -eq 1 ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
+| **Status** | $(if [ "$(awk "BEGIN {print ($TOTAL_VALUE >= 70.0)}")" -eq 1 ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
 
 ---
 
@@ -114,9 +114,9 @@ echo "$COVERAGE_BY_PKG" | while IFS= read -r line; do
   PKG_VALUE=$(echo "$coverage" | sed 's/%//')
 
   # Determine icon
-  if [ $(awk "BEGIN {print ($PKG_VALUE >= 90.0)}") -eq 1 ]; then
+  if [ "$(awk "BEGIN {print ($PKG_VALUE >= 90.0)}")" -eq 1 ]; then
     ICON="🟢"
-  elif [ $(awk "BEGIN {print ($PKG_VALUE >= 70.0)}") -eq 1 ]; then
+  elif [ "$(awk "BEGIN {print ($PKG_VALUE >= 70.0)}")" -eq 1 ]; then
     ICON="🟡"
   else
     ICON="🔴"
@@ -241,11 +241,11 @@ generate_coverage_table() {
         fi
       else
         local COV_VALUE=$(echo "$COV" | sed 's/%//')
-        if [ $(awk "BEGIN {print ($COV_VALUE >= 90.0)}") -eq 1 ]; then
+        if [ "$(awk "BEGIN {print ($COV_VALUE >= 90.0)}")" -eq 1 ]; then
           local ICON="🟢"
-        elif [ $(awk "BEGIN {print ($COV_VALUE >= 70.0)}") -eq 1 ]; then
+        elif [ "$(awk "BEGIN {print ($COV_VALUE >= 70.0)}")" -eq 1 ]; then
           local ICON="🟡"
-        elif [ $(awk "BEGIN {print ($COV_VALUE > 0.0)}") -eq 1 ]; then
+        elif [ "$(awk "BEGIN {print ($COV_VALUE > 0.0)}")" -eq 1 ]; then
           local ICON="🟠"
         else
           local PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
@@ -405,6 +405,6 @@ echo -e "  ${CYAN}Total Coverage:${RESET} ${TOTAL_COVERAGE}"
 echo ""
 
 # Check if coverage meets threshold (warning only, no exit)
-if [ $(awk "BEGIN {print ($TOTAL_VALUE < 70.0)}") -eq 1 ]; then
+if [ "$(awk "BEGIN {print ($TOTAL_VALUE < 70.0)}")" -eq 1 ]; then
   echo -e "${YELLOW}⚠️  Info: Coverage is below 70% threshold${RESET}"
 fi
