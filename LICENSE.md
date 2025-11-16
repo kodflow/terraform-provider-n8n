@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD043 -->
+
 # Sustainable Use License
 
 Version 1.0

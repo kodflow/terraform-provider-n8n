@@ -39,6 +39,7 @@ cat >COVERAGE.MD <<EOF
 Automatically generated coverage report.
 
 **Legend:**
+
 - 🟢 ≥90% - Excellent coverage
 - 🟡 70-89% - Good coverage
 - 🔴 <70% - Insufficient coverage
@@ -87,6 +88,7 @@ done
 cat >>COVERAGE.MD <<'EOF'
 
 **Legend:**
+
 - ✅ Acceptance tests present
 - Acceptance tests verify real operations via the n8n API
 
@@ -388,7 +390,6 @@ fi
 
 # Add footer
 cat >>COVERAGE.MD <<EOF
-
 ---
 
 ## Icon Legend

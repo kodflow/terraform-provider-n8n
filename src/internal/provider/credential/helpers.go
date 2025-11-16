@@ -95,11 +95,13 @@ func (r *CredentialResource) scanAffectedWorkflows(ctx context.Context, oldCredI
 	if workflowList.Data != nil {
 		// Iterate through workflows to find those using the credential.
 		for _, workflow := range workflowList.Data {
+			// Create a copy to avoid loop pointer aliasing
+			wf := workflow
 			// Check if workflow uses the old credential.
-			if usesCredential(&workflow, oldCredID) {
+			if usesCredential(&wf, oldCredID) {
 				affectedWorkflows = append(affectedWorkflows, models.WorkflowBackup{
-					ID:       *workflow.Id,
-					Original: &workflow,
+					ID:       *wf.Id,
+					Original: &wf,
 				})
 			}
 		}

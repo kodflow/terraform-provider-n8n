@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD043 -->
+
 # N8N Terraform Provider - Claude Configuration
 
 This document provides development guidelines for the n8n terraform provider project, a Terraform provider for managing n8n workflows and resources.
