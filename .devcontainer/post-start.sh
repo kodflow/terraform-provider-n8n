@@ -73,7 +73,11 @@ if [ -x "$GO_BIN" ]; then
     echo "✅ Go tools already installed"
   fi
 else
-  echo "⚠️  Go not found at $GO_BIN, skipping Go tools installation"
+  if [ -z "$GO_BIN" ]; then
+    echo "⚠️  Go not found in PATH, skipping Go tools installation"
+  else
+    echo "⚠️  Go not found at $GO_BIN, skipping Go tools installation"
+  fi
 fi
 
 # Ensure git hooks are configured (only if not already set)
