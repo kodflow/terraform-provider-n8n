@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
+# Set shell with pipefail for RUN commands with pipes
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install HashiCorp tools and 1Password CLI
 # hadolint ignore=DL3008
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \

@@ -129,6 +129,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Git User:  $(git config --global user.name) <$(git config --global user.email)>"
 
 if [ -f "/host-gpg/gpg-config.env" ]; then
+  # shellcheck disable=SC1091
   source /host-gpg/gpg-config.env
   echo "GPG Key:   $KEYID"
   echo "Signing:   Commits ✅ | Tags ✅"

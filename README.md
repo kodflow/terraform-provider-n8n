@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD043 -->
+
 # Terraform Provider for n8n
 
 [![Bazel](https://img.shields.io/badge/Build-Bazel%209.0-43A047?logo=bazel)](https://bazel.build/)
