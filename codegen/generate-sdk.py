@@ -8,6 +8,8 @@ import subprocess
 import sys
 import shutil
 import shlex
+import tempfile
+import os
 from pathlib import Path
 
 def run(cmd, cwd=None):
@@ -27,7 +29,7 @@ def main():
     # Config
     OPENAPI_SOURCE = "sdk/n8nsdk/api/openapi.yaml"
     OPENAPI_SPEC = "sdk/n8nsdk/api/openapi-generated.yaml"
-    GENERATOR_JAR = "/tmp/openapi-generator-cli.jar"
+    GENERATOR_JAR = os.path.join(tempfile.gettempdir(), "openapi-generator-cli.jar")
     GENERATOR_VERSION = "7.11.0"
     sdk_dir = Path("sdk/n8nsdk")
 
