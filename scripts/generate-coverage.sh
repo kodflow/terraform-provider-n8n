@@ -200,7 +200,8 @@ generate_coverage_table() {
   fi
 
   # Collect all unique function names for this file
-  local ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
+  local ALL_FUNCS
+  ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
 
   if [ -z "$ALL_FUNCS" ]; then
     return
@@ -222,14 +223,18 @@ generate_coverage_table() {
     local ROW="| \`$func\` |"
 
     for pkg in $PACKAGES; do
-      local PKG_SAFE=$(echo "$pkg" | tr '/' '_')
-      local COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
+      local PKG_SAFE
+      PKG_SAFE=$(echo "$pkg" | tr '/' '_')
+      local COV
+      COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
 
       if [ -z "$COV" ]; then
         local PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
         if [ -f "$PKG_PATH" ] && grep -q "func.*[[:space:]]$func(" "$PKG_PATH"; then
-          local FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
-          local EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+          local FUNC_BODY
+          FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
+          local EXECUTABLE_LINES
+          EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
 
           if [ "$EXECUTABLE_LINES" -eq 0 ]; then
             ROW="$ROW 🔵 N/A |"
@@ -240,7 +245,8 @@ generate_coverage_table() {
           ROW="$ROW 🔵 N/A |"
         fi
       else
-        local COV_VALUE=$(echo "$COV" | sed 's/%//')
+        local COV_VALUE
+        COV_VALUE=$(echo "$COV" | sed 's/%//')
         if [ "$(awk "BEGIN {print ($COV_VALUE >= 90.0)}")" -eq 1 ]; then
           local ICON="🟢"
         elif [ "$(awk "BEGIN {print ($COV_VALUE >= 70.0)}")" -eq 1 ]; then
