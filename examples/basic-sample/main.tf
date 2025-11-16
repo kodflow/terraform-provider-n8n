@@ -185,12 +185,16 @@ resource "n8n_workflow" "data_processor" {
 }
 
 # ============================================================================
-# Projects (Organization)
+# Projects (Enterprise Only)
 # ============================================================================
 
-resource "n8n_project" "sample_project" {
-  name = "ci-${var.run_id}-TF Basic Sample Project"
-}
+# Note: Projects require n8n Enterprise license
+# Commented out by default as Community Edition doesn't support projects
+# Error: "Your license does not allow for feat:projectRole:admin"
+
+# resource "n8n_project" "sample_project" {
+#   name = "ci-${var.run_id}-TF Basic Sample Project"
+# }
 
 # ============================================================================
 # Users (Instance Owner Only)
@@ -231,16 +235,13 @@ data "n8n_tags" "all" {
   ]
 }
 
-# Query all projects
-data "n8n_projects" "all" {
-  depends_on = [
-    n8n_project.sample_project
-  ]
-}
+# Query all projects - Requires Enterprise license
+# Commented out due to Community Edition limitations
+# data "n8n_projects" "all" {}
 
-# Query the created project
-data "n8n_project" "sample" {
-  id = n8n_project.sample_project.id
-
-  depends_on = [n8n_project.sample_project]
-}
+# Query the created project - Requires Enterprise license
+# Commented out due to Community Edition limitations
+# data "n8n_project" "sample" {
+#   id = n8n_project.sample_project.id
+#   depends_on = [n8n_project.sample_project]
+# }
