@@ -52,7 +52,7 @@ func init() {
 //   - error: Error if provider server fails to start
 func run(_cmd *cobra.Command, _args []string) error {
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/kodflow/terraform-provider-n8n",
+		Address: "registry.terraform.io/kodflow/n8n",
 		Debug:   debug,
 	}
 
