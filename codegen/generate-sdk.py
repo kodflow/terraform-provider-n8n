@@ -84,7 +84,8 @@ def main():
         ],
         shell=False,
         capture_output=True,
-        text=True
+        text=True,
+        check=False
     )
     if result.returncode != 0:
         print(f"   ❌ Generator failed", file=sys.stderr)
@@ -147,7 +148,7 @@ def main():
 
     # 3. Run go mod tidy
     print("   → Running go mod tidy...")
-    subprocess.run(['go', 'mod', 'tidy'], shell=False, cwd="sdk/n8nsdk", capture_output=True)
+    subprocess.run(['go', 'mod', 'tidy'], shell=False, cwd="sdk/n8nsdk", capture_output=True, check=False)
     print("   ✓ Done\n")
 
     # 4. Restore original openapi.yaml (generator may have reformatted it)
