@@ -19,7 +19,7 @@ def run(cmd, cwd=None, check=True):
     """Run command and optionally exit on error (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True, check=False)  # nosec B603
     if check and result.returncode != 0:
         print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
@@ -55,7 +55,11 @@ def download_from_github(n8n_commit, temp_dir, api_dir):
     if Path(temp_dir).exists():
         shutil.rmtree(temp_dir)
 
-    run(f"git clone --depth 1 --filter=blob:none --sparse https://github.com/n8n-io/n8n.git {temp_dir}")
+    # Long line: git clone command
+    run(
+        f"git clone --depth 1 --filter=blob:none --sparse "
+        f"https://github.com/n8n-io/n8n.git {temp_dir}"
+    )
     run("git sparse-checkout set packages/cli/src/public-api", cwd=temp_dir)
     run(f"git checkout {n8n_commit}", cwd=temp_dir)
 
@@ -90,7 +94,11 @@ def download_from_github(n8n_commit, temp_dir, api_dir):
 def bundle_yaml_spec(source_path, api_dir):
     """Bundle YAML files into single OpenAPI spec"""
     print("📦 Bundling YAML files...")
-    run(f"npx --yes @redocly/cli@latest bundle {source_path}/v1/openapi.yml -o {api_dir}/openapi.yaml")
+    # Long line: npx bundling command
+    run(
+        f"npx --yes @redocly/cli@latest bundle {source_path}/v1/openapi.yml "
+        f"-o {api_dir}/openapi.yaml"
+    )
     print("   ✓ Bundled\n")
 
 def fix_schema_aliases(spec_file):
@@ -160,35 +168,35 @@ def main():
     print("🚀 N8N OpenAPI Download (No Commit)\n")
 
     # Config
-    N8N_COMMIT = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
-    TEMP_DIR = tempfile.mkdtemp(prefix="n8n-openapi-")
-    API_DIR = Path("sdk/n8nsdk/api")
+    n8n_commit = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
+    temp_dir = tempfile.mkdtemp(prefix="n8n-openapi-")
+    api_dir = Path("sdk/n8nsdk/api")
 
     try:
         # 1. Download from GitHub
-        frozen_version, latest_version = download_from_github(N8N_COMMIT, TEMP_DIR, API_DIR)
+        frozen_version, latest_version = download_from_github(n8n_commit, temp_dir, api_dir)
 
         # 2. Bundle YAML
-        bundle_yaml_spec(API_DIR / "openapi-source", API_DIR)
+        bundle_yaml_spec(api_dir / "openapi-source", api_dir)
 
         # 3. Fix schema aliases
-        spec_file = API_DIR / "openapi.yaml"
+        spec_file = api_dir / "openapi.yaml"
         fix_schema_aliases(spec_file)
 
         # 4. Add version info to OpenAPI spec
-        add_version_info(spec_file, frozen_version, N8N_COMMIT, latest_version)
+        add_version_info(spec_file, frozen_version, n8n_commit, latest_version)
 
         # Final output
         print("✅ OpenAPI spec downloaded and prepared!\n")
-        print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + versioned)")
-        print(f"   📌 Based on n8n {frozen_version} (commit {N8N_COMMIT[:8]})")
+        print(f"   📄 {api_dir}/openapi.yaml (bundled + aliases fixed + versioned)")
+        print(f"   📌 Based on n8n {frozen_version} (commit {n8n_commit[:8]})")
         if frozen_version != latest_version and latest_version != 'unknown':
             print(f"   🆕 Latest available: {latest_version}")
         print("\nNext step: Run 'make openapi/patch' to apply custom patches\n")
     finally:
         # Clean up temporary directory
-        if Path(TEMP_DIR).exists():
-            shutil.rmtree(TEMP_DIR)
+        if Path(temp_dir).exists():
+            shutil.rmtree(temp_dir)
 
 if __name__ == '__main__':
     main()

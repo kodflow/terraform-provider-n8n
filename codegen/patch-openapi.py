@@ -15,7 +15,7 @@ def run(cmd):
     """Run command and return output (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=False, capture_output=True, text=True, check=False)  # nosec B603
     return result.returncode, result.stdout, result.stderr
 
 def create_patch():
@@ -128,14 +128,14 @@ def apply_git_commit_patch(commit_hash):
     # Try with fuzzy matching (allows line number differences)
     # Use stdin parameter instead of shell redirection
     with open(patch_file, 'r', encoding='utf-8') as patch_input:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 B607
             ['patch', '-p0', '--fuzz=3'],
             stdin=patch_input,
             capture_output=True,
             text=True,
             check=False
         )
-    if result.returncode != 0:
+    if result.returncode:
         print("❌ Patch failed!")
         print(result.stderr)
         # Restore backup

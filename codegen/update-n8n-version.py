@@ -14,7 +14,7 @@ def run(cmd, check=True):
     """Run command and optionally exit on error (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=False, capture_output=True, text=True, check=False)  # nosec B603
     if check and result.returncode != 0:
         print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)

@@ -16,7 +16,7 @@ def run(cmd, cwd=None):
     """Run command and exit on error (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True, check=False)  # nosec B603
     if result.returncode != 0:
         print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
@@ -27,26 +27,26 @@ def main():
     print("🚀 N8N SDK Generation Pipeline\n")
 
     # Config
-    OPENAPI_SOURCE = "sdk/n8nsdk/api/openapi.yaml"
-    OPENAPI_SPEC = "sdk/n8nsdk/api/openapi-generated.yaml"
-    GENERATOR_JAR = os.path.join(tempfile.gettempdir(), "openapi-generator-cli.jar")
-    GENERATOR_VERSION = "7.11.0"
+    openapi_source = "sdk/n8nsdk/api/openapi.yaml"
+    openapi_spec = "sdk/n8nsdk/api/openapi-generated.yaml"
+    generator_jar = os.path.join(tempfile.gettempdir(), "openapi-generator-cli.jar")
+    generator_version = "7.11.0"
     sdk_dir = Path("sdk/n8nsdk")
 
     # Check if OpenAPI source exists
-    if not Path(OPENAPI_SOURCE).exists():
-        print(f"❌ Error: {OPENAPI_SOURCE} not found", file=sys.stderr)
+    if not Path(openapi_source).exists():
+        print(f"❌ Error: {openapi_source} not found", file=sys.stderr)
         print("Run 'make openapi' first to download and prepare the OpenAPI spec", file=sys.stderr)
         sys.exit(1)
 
     # Copy source to generated version
     print("📋 Copying OpenAPI spec for generation...")
-    shutil.copy(OPENAPI_SOURCE, OPENAPI_SPEC)
-    print(f"   ✓ Copied {OPENAPI_SOURCE} → {OPENAPI_SPEC}\n")
+    shutil.copy(openapi_source, openapi_spec)
+    print(f"   ✓ Copied {openapi_source} → {openapi_spec}\n")
 
     # Backup openapi.yaml to restore it after generation
-    openapi_backup = Path(OPENAPI_SOURCE + ".backup")
-    shutil.copy(OPENAPI_SOURCE, openapi_backup)
+    openapi_backup = Path(openapi_source + ".backup")
+    shutil.copy(openapi_source, openapi_backup)
 
     # 1. Generate SDK
     print("🔨 Generating SDK...\n")
@@ -57,9 +57,9 @@ def main():
         sys.exit(1)
 
     # Download openapi-generator JAR if needed
-    if not Path(GENERATOR_JAR).exists():
+    if not Path(generator_jar).exists():
         print("   → Downloading openapi-generator JAR...")
-        run(f"wget -q https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/{GENERATOR_VERSION}/openapi-generator-cli-{GENERATOR_VERSION}.jar -O {GENERATOR_JAR}")
+        run(f"wget -q https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/{generator_version}/openapi-generator-cli-{generator_version}.jar -O {generator_jar}")
         print("   ✓ Downloaded\n")
 
     # Clean previous generation (keep api directory)
@@ -76,9 +76,9 @@ def main():
     print("   → Running openapi-generator...")
     result = subprocess.run(
         [
-            'java', '-jar', GENERATOR_JAR,
+            'java', '-jar', generator_jar,
             'generate',
-            '-i', OPENAPI_SPEC,
+            '-i', openapi_spec,
             '-g', 'go',
             '-o', 'sdk/n8nsdk',
             '-c', 'codegen/openapi-generator-config.yaml',
@@ -155,7 +155,7 @@ def main():
 
     # 4. Restore original openapi.yaml (generator may have reformatted it)
     print("   → Restoring original openapi.yaml...")
-    shutil.copy(openapi_backup, OPENAPI_SOURCE)
+    shutil.copy(openapi_backup, openapi_source)
     openapi_backup.unlink()
     print("   ✓ Restored\n")
 
