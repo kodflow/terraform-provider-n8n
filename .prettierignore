@@ -13,6 +13,10 @@ vendor/
 *.gen.go
 sdk/n8nsdk/**
 
+# Auto-generated documentation
+docs/
+COVERAGE.MD
+
 # Go module files
 go.sum
 

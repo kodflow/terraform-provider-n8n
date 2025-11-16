@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
+# Set shell with pipefail for RUN commands with pipes
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install HashiCorp tools and 1Password CLI
 # hadolint ignore=DL3008
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -91,8 +94,8 @@ RUN sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.z
 
 # Copy configuration files (moved to end to improve cache hit rate)
 # These files change more frequently than system setup
-COPY --chown=vscode:vscode p10k.sh /home/vscode/.p10k.zsh
-COPY --chown=vscode:vscode --chmod=755 hooks/ /home/vscode/.git-hooks/
+COPY --chown=vscode:vscode .devcontainer/p10k.sh /home/vscode/.p10k.zsh
+COPY --chown=vscode:vscode --chmod=755 .github/hooks/ /home/vscode/.git-hooks/
 
 # Set working directory
 WORKDIR /workspace

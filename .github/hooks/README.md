@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD043 -->
+
 # Git Hooks
 
 This directory contains Git hooks that enforce project standards and automate workflows.

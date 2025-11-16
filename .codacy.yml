@@ -3,34 +3,17 @@
 # See LICENSE.md in the project root for license information.
 
 ---
-# Codacy configuration file
+# Codacy configuration
 # https://docs.codacy.com/repositories-configure/codacy-configuration-file/
 
-# Exclude patterns - files that should not be analyzed
+# Exclude generated and third-party files from analysis
 exclude_paths:
-  # DevContainer generated files with secrets
-  - ".devcontainer/mcp.json"
-
-  # Build and codegen scripts (development tools, not production code)
-  - "codegen/**"
-  - "scripts/**"
-
-  # Generated SDK and Bazel files
-  - "sdk/n8nsdk/**"
+  # Terraform plugin generated documentation
+  - "docs/**"
+  # Bazel build artifacts
   - "bazel-*/**"
-  - "**/BUILD.bazel"
-  - "**/*.pb.go"
-
-  # Test files (exclude from quality issues, keep for coverage)
-  - "**/*_test.go"
-
-  # Standard exclusions
-  - "node_modules/**"
+  # Third-party dependencies
   - "vendor/**"
-  - "dist/**"
-  - "build/**"
-  - "*.min.js"
-  - "*.min.css"
-  - ".terraform/**"
-  - "*.tfstate"
-  - "*.tfstate.backup"
+  - "third_party/**"
+  # Generated SDK
+  - "sdk/**"
