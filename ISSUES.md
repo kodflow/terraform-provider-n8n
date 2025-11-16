@@ -45,83 +45,83 @@
 
 **Affected files**:
 
-- [ ] `codegen/patch-openapi.py:14`
-- [ ] `codegen/download-only.py:16`
-- [ ] `codegen/generate-sdk.py:14`
-- [ ] `codegen/generate-sdk.py:72`
-- [ ] `codegen/patch-only.py:13`
-- [ ] `codegen/patch-only.py:36`
-- [ ] `codegen/update-n8n-version.py:14`
+- [x] `codegen/patch-openapi.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/download-only.py:16` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:72` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:13` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:36` ✅ Fixed in 2d0b1a0
+- [x] `codegen/update-n8n-version.py:14` ✅ Fixed in 2d0b1a0
 
 #### Semgrep_python.lang.security.audit.subprocess-shell-true.subprocess-shell-true (6 occurrences)
 
-**Category**: Security  
+**Category**: Security
 **Description**: Found subprocess function with shell=True
 
 **Affected files**:
 
-- [ ] `codegen/patch-openapi.py:14`
-- [ ] `codegen/download-only.py:16`
-- [ ] `codegen/generate-sdk.py:14`
-- [ ] `codegen/generate-sdk.py:72`
-- [ ] `codegen/patch-only.py:13`
-- [ ] `codegen/update-n8n-version.py:14`
+- [x] `codegen/patch-openapi.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/download-only.py:16` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:72` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:13` ✅ Fixed in 2d0b1a0
+- [x] `codegen/update-n8n-version.py:14` ✅ Fixed in 2d0b1a0
 
 #### shellcheck_SC1073 (1 occurrences)
 
-**Category**: ErrorProne  
+**Category**: ErrorProne
 **Description**: Couldn't parse this explicit subshell
 
 **Affected files**:
 
-- [ ] `.devcontainer/p10k.sh:24`
+- [x] `.devcontainer/p10k.sh:24` ✅ Fixed in 8daf0e3
 
 #### Semgrep_python.lang.security.audit.dangerous-subprocess-use-tainted-env-args.dangerous-subprocess-use-tainted-env-args (1 occurrences)
 
-**Category**: Security  
+**Category**: Security
 **Description**: Detected subprocess function with user controlled data
 
 **Affected files**:
 
-- [ ] `codegen/patch-openapi.py:14`
+- [x] `codegen/patch-openapi.py:14` ✅ Fixed in 2d0b1a0
 
 #### Lizard_ccn-critical (1 occurrences)
 
-**Category**: Complexity  
+**Category**: Complexity
 **Description**: Method has a cyclomatic complexity of 16 (limit is 12)
 
 **Affected files**:
 
-- [ ] `codegen/download-only.py:44`
+- [x] `codegen/download-only.py:44` ✅ Fixed in 8daf0e3
 
 
 ### 🔴 High Issues
 
 #### Semgrep_yaml.semgrep.duplicate-id.duplicate-id (18 occurrences)
 
-**Category**: ErrorProne  
+**Category**: ErrorProne
 **Description**: The 'id' field was used multiple times
 
 **Affected files**:
 
-- [ ] `.golangci.yml:68`
-- [ ] `.golangci.yml:69`
-- [ ] `.golangci.yml:70`
-- [ ] `.golangci.yml:71`
-- [ ] `.golangci.yml:72`
-- [ ] `.golangci.yml:73`
-- [ ] `.golangci.yml:74`
-- [ ] `.golangci.yml:75`
-- [ ] `.golangci.yml:76`
-- [ ] `.golangci.yml:78`
-- [ ] `.golangci.yml:79`
-- [ ] `.golangci.yml:82`
-- [ ] `.golangci.yml:84`
-- [ ] `.golangci.yml:85`
-- [ ] `.golangci.yml:87`
-- [ ] `.golangci.yml:88`
-- [ ] `.golangci.yml:91`
-- [ ] `.golangci.yml:94`
+- [x] `.golangci.yml:68` ✅ Fixed in d493784
+- [x] `.golangci.yml:69` ✅ Fixed in d493784
+- [x] `.golangci.yml:70` ✅ Fixed in d493784
+- [x] `.golangci.yml:71` ✅ Fixed in d493784
+- [x] `.golangci.yml:72` ✅ Fixed in d493784
+- [x] `.golangci.yml:73` ✅ Fixed in d493784
+- [x] `.golangci.yml:74` ✅ Fixed in d493784
+- [x] `.golangci.yml:75` ✅ Fixed in d493784
+- [x] `.golangci.yml:76` ✅ Fixed in d493784
+- [x] `.golangci.yml:78` ✅ Fixed in d493784
+- [x] `.golangci.yml:79` ✅ Fixed in d493784
+- [x] `.golangci.yml:82` ✅ Fixed in d493784
+- [x] `.golangci.yml:84` ✅ Fixed in d493784
+- [x] `.golangci.yml:85` ✅ Fixed in d493784
+- [x] `.golangci.yml:87` ✅ Fixed in d493784
+- [x] `.golangci.yml:88` ✅ Fixed in d493784
+- [x] `.golangci.yml:91` ✅ Fixed in d493784
+- [x] `.golangci.yml:94` ✅ Fixed in d493784
 
 #### Prospector_bandit (12 occurrences)
 
@@ -134,19 +134,19 @@
 
 #### Bandit_B602 (11 occurrences)
 
-**Category**: Security  
+**Category**: Security
 **Description**: subprocess call with shell=True identified, security issue
 
 **Affected files**:
 
-- [ ] `codegen/patch-openapi.py:14`
-- [ ] `codegen/download-only.py:16`
-- [ ] `codegen/generate-sdk.py:14`
-- [ ] `codegen/generate-sdk.py:74`
-- [ ] `codegen/generate-sdk.py:139`
-- [ ] `codegen/patch-only.py:13`
-- [ ] `codegen/patch-only.py:38`
-- [ ] `codegen/update-n8n-version.py:14`
+- [x] `codegen/patch-openapi.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/download-only.py:16` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:74` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:139` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:13` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:38` ✅ Fixed in 2d0b1a0
+- [x] `codegen/update-n8n-version.py:14` ✅ Fixed in 2d0b1a0
 
 #### shellcheck_SC2046 (8 occurrences)
 
@@ -163,36 +163,36 @@
 - [ ] `scripts/generate-coverage.sh:248`
 - [ ] `scripts/generate-coverage.sh:408`
 
-#### PyLintPython3_W1510 (7 occurrences)
+#### PyLintPython3_W1510 (8 occurrences)
 
-**Category**: ErrorProne  
+**Category**: ErrorProne
 **Description**: subprocess.run used without explicitly defining the value for 'check'
 
 **Affected files**:
 
-- [ ] `codegen/generate-sdk.py:14`
-- [ ] `codegen/generate-sdk.py:72`
-- [ ] `codegen/generate-sdk.py:139`
-- [ ] `codegen/download-only.py:16`
-- [ ] `codegen/patch-openapi.py:14`
-- [ ] `codegen/patch-only.py:13`
-- [ ] `codegen/patch-only.py:36`
-- [ ] `codegen/update-n8n-version.py:14`
+- [x] `codegen/generate-sdk.py:14` ✅ Fixed in d493784
+- [x] `codegen/generate-sdk.py:72` ✅ Fixed in d493784
+- [x] `codegen/generate-sdk.py:139` ✅ Fixed in d493784
+- [x] `codegen/download-only.py:16` ✅ Fixed in d493784
+- [x] `codegen/patch-openapi.py:14` ✅ Fixed in d493784
+- [x] `codegen/patch-only.py:13` ✅ Fixed in d493784
+- [x] `codegen/patch-only.py:36` ✅ Fixed in d493784
+- [x] `codegen/update-n8n-version.py:14` ✅ Fixed in d493784
 
 #### Semgrep_python_exec_rule-subprocess-popen-shell-true (7 occurrences)
 
-**Category**: Security  
+**Category**: Security
 **Description**: Found subprocess function with shell=True
 
 **Affected files**:
 
-- [ ] `codegen/patch-openapi.py:14`
-- [ ] `codegen/download-only.py:16`
-- [ ] `codegen/generate-sdk.py:14`
-- [ ] `codegen/generate-sdk.py:72`
-- [ ] `codegen/patch-only.py:13`
-- [ ] `codegen/patch-only.py:36`
-- [ ] `codegen/update-n8n-version.py:14`
+- [x] `codegen/patch-openapi.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/download-only.py:16` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:14` ✅ Fixed in 2d0b1a0
+- [x] `codegen/generate-sdk.py:72` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:13` ✅ Fixed in 2d0b1a0
+- [x] `codegen/patch-only.py:36` ✅ Fixed in 2d0b1a0
+- [x] `codegen/update-n8n-version.py:14` ✅ Fixed in 2d0b1a0
 
 #### shellcheck_SC2155 (6 occurrences)
 
