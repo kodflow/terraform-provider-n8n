@@ -6,6 +6,25 @@
 # Codacy configuration file
 # https://docs.codacy.com/repositories-configure/codacy-configuration-file/
 
+# Tool-specific configurations
+engines:
+  # Exclude build/codegen scripts from subprocess security checks
+  # These are development tools with controlled inputs, not production code
+  Bandit:
+    exclude_paths:
+      - "codegen/**"
+      - "scripts/**"
+
+  Semgrep:
+    exclude_paths:
+      - "codegen/**"
+      - "scripts/**"
+
+  Prospector:
+    exclude_paths:
+      - "codegen/**"
+      - "scripts/**"
+
 # Exclude patterns - files that should not be analyzed
 exclude_paths:
   # DevContainer generated files with secrets
