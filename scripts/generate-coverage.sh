@@ -25,7 +25,7 @@ COVERAGE_DATA=$(go tool cover -func=coverage.out)
 
 # Extract total coverage
 TOTAL_COVERAGE=$(echo "$COVERAGE_DATA" | tail -1 | awk '{print $3}')
-TOTAL_VALUE=$(echo "$TOTAL_COVERAGE" | sed 's/%//')
+TOTAL_VALUE=${TOTAL_COVERAGE//%/}
 
 echo -e "${CYAN}→${RESET} Parsing package coverage..."
 
@@ -68,13 +68,14 @@ ACCEPTANCE_TESTS=$(find src/internal/provider -name "*_acceptance_test.go" -type
 
 for test_file in $ACCEPTANCE_TESTS; do
   # Extract package name (e.g., credential, workflow, tag)
-  pkg_name=$(echo "$test_file" | sed 's|src/internal/provider/||' | sed 's|/.*||')
+  temp=${test_file#src/internal/provider/}
+  pkg_name=${temp%%/*}
 
   # Count TestAcc* functions in the file
   test_count=$(grep -c "^func TestAcc" "$test_file" 2>/dev/null || echo "0")
 
   # Get test function names
-  test_names=$(grep "^func TestAcc" "$test_file" 2>/dev/null | sed 's/func //' | sed 's/(.*$//' || echo "")
+  test_names=$(grep "^func TestAcc" "$test_file" 2>/dev/null | awk '{gsub(/func /, ""); gsub(/\(.*$/, ""); print}' || echo "")
 
   if [ "$test_count" -gt 0 ]; then
     # Format test names as a comma-separated list with backticks
@@ -110,7 +111,7 @@ echo "$COVERAGE_BY_PKG" | while IFS= read -r line; do
     continue
   fi
 
-  PKG_VALUE=$(echo "$coverage" | sed 's/%//')
+  PKG_VALUE=${coverage//%/}
 
   # Determine icon
   if [ "$(awk "BEGIN {print ($PKG_VALUE >= 90.0)}")" -eq 1 ]; then
@@ -150,7 +151,8 @@ PACKAGES=$(echo "$COVERAGE_DATA" | grep -E "^github.com/kodflow/terraform-provid
 
 # First pass: collect all data organized by filename
 for pkg in $PACKAGES; do
-  PKG_SHORT=$(echo "$pkg" | sed 's|github.com/kodflow/terraform-provider-n8n/src/internal/provider||' | sed 's|^/||')
+  temp=${pkg#github.com/kodflow/terraform-provider-n8n/src/internal/provider}
+  PKG_SHORT=${temp#/}
   if [ -z "$PKG_SHORT" ]; then
     PKG_SHORT="provider"
   fi
@@ -245,7 +247,7 @@ generate_coverage_table() {
         fi
       else
         local COV_VALUE
-        COV_VALUE=$(echo "$COV" | sed 's/%//')
+        COV_VALUE=${COV//%/}
         if [ "$(awk "BEGIN {print ($COV_VALUE >= 90.0)}")" -eq 1 ]; then
           local ICON="🟢"
         elif [ "$(awk "BEGIN {print ($COV_VALUE >= 70.0)}")" -eq 1 ]; then
@@ -311,7 +313,7 @@ SECONDARY_FILES=$(ls "$TMP_DIR" 2>/dev/null | grep "_resource.go$" | grep -v "^r
 
 for FILE_SHORT in $SECONDARY_FILES; do
   # Extract resource type (e.g., retry_resource.go -> retry)
-  RES_TYPE=$(echo "$FILE_SHORT" | sed 's/_resource\.go$//')
+  RES_TYPE=${FILE_SHORT%_resource.go}
 
   # Find packages that have this file
   SEC_PACKAGES=""
