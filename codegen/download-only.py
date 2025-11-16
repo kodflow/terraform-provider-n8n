@@ -10,6 +10,7 @@ import sys
 import shutil
 import json
 import shlex
+import tempfile
 from pathlib import Path
 
 def run(cmd, cwd=None, check=True):
@@ -163,29 +164,34 @@ def main():
 
     # Config
     N8N_COMMIT = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
-    TEMP_DIR = "/tmp/n8n-openapi-download"
+    TEMP_DIR = tempfile.mkdtemp(prefix="n8n-openapi-")
     API_DIR = Path("sdk/n8nsdk/api")
 
-    # 1. Download from GitHub
-    frozen_version, latest_version = download_from_github(N8N_COMMIT, TEMP_DIR, API_DIR)
+    try:
+        # 1. Download from GitHub
+        frozen_version, latest_version = download_from_github(N8N_COMMIT, TEMP_DIR, API_DIR)
 
-    # 2. Bundle YAML
-    bundle_yaml_spec(API_DIR / "openapi-source", API_DIR)
+        # 2. Bundle YAML
+        bundle_yaml_spec(API_DIR / "openapi-source", API_DIR)
 
-    # 3. Fix schema aliases
-    spec_file = API_DIR / "openapi.yaml"
-    fix_schema_aliases(spec_file)
+        # 3. Fix schema aliases
+        spec_file = API_DIR / "openapi.yaml"
+        fix_schema_aliases(spec_file)
 
-    # 4. Add version info to OpenAPI spec
-    add_version_info(spec_file, frozen_version, N8N_COMMIT, latest_version)
+        # 4. Add version info to OpenAPI spec
+        add_version_info(spec_file, frozen_version, N8N_COMMIT, latest_version)
 
-    # Final output
-    print("✅ OpenAPI spec downloaded and prepared!\n")
-    print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + versioned)")
-    print(f"   📌 Based on n8n {frozen_version} (commit {N8N_COMMIT[:8]})")
-    if frozen_version != latest_version and latest_version != 'unknown':
-        print(f"   🆕 Latest available: {latest_version}")
-    print("\nNext step: Run 'make openapi/patch' to apply custom patches\n")
+        # Final output
+        print("✅ OpenAPI spec downloaded and prepared!\n")
+        print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + versioned)")
+        print(f"   📌 Based on n8n {frozen_version} (commit {N8N_COMMIT[:8]})")
+        if frozen_version != latest_version and latest_version != 'unknown':
+            print(f"   🆕 Latest available: {latest_version}")
+        print("\nNext step: Run 'make openapi/patch' to apply custom patches\n")
+    finally:
+        # Clean up temporary directory
+        if Path(TEMP_DIR).exists():
+            shutil.rmtree(TEMP_DIR)
 
 if __name__ == '__main__':
     main()
