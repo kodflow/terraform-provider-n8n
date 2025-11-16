@@ -38,6 +38,9 @@ rm -f "$HOME/.cache/go/bin/ktn-linter"         # Duplicate (should be in .local/
 
 # Install Go tools (using absolute path to ensure Go is found)
 GO_BIN="/usr/local/go/bin/go"
+if [ ! -x "$GO_BIN" ]; then
+  GO_BIN="$(command -v go 2>/dev/null || echo "")"
+fi
 if [ -x "$GO_BIN" ]; then
   # Check if tools are already installed to avoid reinstalling every time
   if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null; then
@@ -74,20 +77,20 @@ else
 fi
 
 # Ensure git hooks are configured (only if not already set)
-if [ -d "/workspace/.git" ] && [ -f "/workspace/scripts/install-hooks.sh" ]; then
-  # Check if hooks are already configured
+if [ ! -d "/workspace/.git" ]; then
+  echo "⚠️  Git repository not found, skipping git hooks configuration"
+elif [ ! -f "/workspace/scripts/install-hooks.sh" ]; then
+  echo "⚠️  Install hooks script not found, skipping git hooks configuration"
+else
+  # Check if hooks are already configured (handle both absolute and relative paths)
   CURRENT_HOOKS_PATH=$(git config --get core.hooksPath 2>/dev/null || echo "")
-  if [ "$CURRENT_HOOKS_PATH" != ".github/hooks" ]; then
+  if [[ "$CURRENT_HOOKS_PATH" != *".github/hooks" ]]; then
     echo "🪝 Configuring git hooks..."
     chmod +x /workspace/scripts/install-hooks.sh
     /workspace/scripts/install-hooks.sh
   else
     echo "✅ Git hooks already configured"
   fi
-elif [ ! -d "/workspace/.git" ]; then
-  echo "⚠️  Git repository not found, skipping git hooks configuration"
-elif [ ! -f "/workspace/scripts/install-hooks.sh" ]; then
-  echo "⚠️  Install hooks script not found, skipping git hooks configuration"
 fi
 
 # Setup MCP configuration

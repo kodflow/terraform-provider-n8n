@@ -67,15 +67,6 @@ reviews:
         - Check for proper resource cleanup (defer statements)
         - Ensure Terraform Plugin Framework conventions are followed
         - Validate schema definitions and type safety
-        - Check for proper error handling in Go code
-        - Ensure all exported functions and types have documentation
-        - All public Go functions must have godoc comments
-        - Error messages should be lowercase and not end with punctuation
-        - Tests should follow table-driven test pattern where applicable
-        - Constants must use SCREAMING_SNAKE_CASE naming convention
-        - Functions must not exceed 35 lines of code
-        - Each struct should be in its own file
-        - Variable and function types must be explicit (no type inference for declarations)
 
     - path: "src/**/BUILD.bazel"
       instructions: |
@@ -92,8 +83,6 @@ reviews:
         - Ensure outputs are documented
         - Check for sensitive data handling
         - Verify Terraform schema definitions are correct
-        - All Terraform configurations must include examples in comments
-        - Use consistent naming: provider resources should be prefixed with 'n8n_'
 
     - path: ".github/workflows/*.yml"
       instructions: |
