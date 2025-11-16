@@ -58,7 +58,7 @@ def main():
 
     # Read current script
     script_path = Path("codegen/download-only.py")
-    with open(script_path, 'r') as f:
+    with open(script_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
     # Find current version
@@ -84,7 +84,7 @@ def main():
     new_content = re.sub(pattern, replacement, content)
 
     # Write back
-    with open(script_path, 'w') as f:
+    with open(script_path, 'w', encoding='utf-8') as f:
         f.write(new_content)
 
     print(f"✅ Updated codegen/download-only.py")

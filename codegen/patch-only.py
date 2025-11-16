@@ -59,7 +59,7 @@ def main():
 
     # 2. Add additionalProperties: true to credential schema
     print("🔧 Adding additionalProperties to credential schema...")
-    with open(spec_file, 'r') as f:
+    with open(spec_file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified = False
@@ -86,7 +86,7 @@ def main():
         i += 1
 
     if modified:
-        with open(spec_file, 'w') as f:
+        with open(spec_file, 'w', encoding='utf-8') as f:
             f.writelines(output)
         print("   ✓ Added additionalProperties\n")
     else:

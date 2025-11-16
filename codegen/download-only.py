@@ -29,7 +29,7 @@ def get_n8n_version(temp_dir, commit):
     try:
         package_json = Path(temp_dir) / "package.json"
         if package_json.exists():
-            with open(package_json, 'r') as f:
+            with open(package_json, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('version', 'unknown')
     except (json.JSONDecodeError, IOError, KeyError):
@@ -99,7 +99,7 @@ def fix_schema_aliases(spec_file):
     print("🔧 Fixing schema aliases...")
 
     # Read YAML to find aliases
-    with open(spec_file, 'r') as f:
+    with open(spec_file, 'r', encoding='utf-8') as f:
         spec = yaml.safe_load(f)
 
     schemas = spec.get('components', {}).get('schemas', {})
@@ -108,7 +108,7 @@ def fix_schema_aliases(spec_file):
                if isinstance(def_, dict) and len(def_) == 1 and '$ref' in def_]
 
     # Read as text to preserve formatting
-    with open(spec_file, 'r') as f:
+    with open(spec_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
     # Replace each alias with its target schema content
@@ -127,7 +127,7 @@ def fix_schema_aliases(spec_file):
                 alias_pattern = rf"(\n    {re.escape(alias_name)}:\n      \$ref: '#/components/schemas/{re.escape(target_name)}')"
                 content = re.sub(alias_pattern, f"\n    {alias_name}:\n{target_content}", content, count=1)
 
-    with open(spec_file, 'w') as f:
+    with open(spec_file, 'w', encoding='utf-8') as f:
         f.write(content)
     print(f"   ✓ Fixed {len(aliases)} aliases\n")
 
@@ -136,7 +136,7 @@ def add_version_info(spec_file, frozen_version, n8n_commit, latest_version):
     import yaml
 
     print("📝 Adding version information...")
-    with open(spec_file, 'r') as f:
+    with open(spec_file, 'r', encoding='utf-8') as f:
         openapi_content = f.read()
 
     # Add x-n8n-version-info extension to info section
@@ -154,7 +154,7 @@ def add_version_info(spec_file, frozen_version, n8n_commit, latest_version):
     }
 
     # Write back with proper indentation (2 spaces for nested content, 2 spaces offset for sequences)
-    with open(spec_file, 'w') as f:
+    with open(spec_file, 'w', encoding='utf-8') as f:
         yaml.dump(spec, f, default_flow_style=False, sort_keys=False, allow_unicode=True, indent=2, width=float("inf"))
 
     print(f"   ✓ Added version info\n")

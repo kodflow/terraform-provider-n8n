@@ -62,7 +62,7 @@ def create_patch():
         patch_content.append(line)
 
     # Write patch file
-    with open(patch_file, 'w') as f:
+    with open(patch_file, 'w', encoding='utf-8') as f:
         f.write('\n'.join(patch_content))
 
     print(f"✅ Patch created: {patch_file}")
@@ -111,7 +111,7 @@ def apply_git_commit_patch(commit_hash):
         patch_content.append(line)
 
     # Write patch file
-    with open(patch_file, 'w') as f:
+    with open(patch_file, 'w', encoding='utf-8') as f:
         f.write('\n'.join(patch_content))
 
     print(f"   ✓ Extracted changes")
@@ -150,7 +150,7 @@ def apply_git_commit_patch(commit_hash):
     print("✅ Validating YAML...")
     try:
         import yaml
-        with open(openapi_file, 'r') as f:
+        with open(openapi_file, 'r', encoding='utf-8') as f:
             yaml.safe_load(f)
         print("   ✓ YAML is valid")
     except (yaml.YAMLError, IOError) as e:
