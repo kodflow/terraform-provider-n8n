@@ -20,7 +20,7 @@ Each development iteration requires:
 4. Run `make lint` and fix ALL errors, warnings, and info messages - NO exceptions
 5. Verify test coverage is maintained or improved
 6. Update CHANGELOG.md using `make docs` if adding features
-7. Remove temporary files (bazel-_, _.out, \*.html)
+7. Remove temporary files (bazel-\*, \*.out, \*.html)
 8. **Repeat until EVERYTHING is perfect** - zero errors, zero warnings
 
 ## Self-Verification Checklist
@@ -45,7 +45,7 @@ Before completing tasks, Claude must verify:
 
 ## Testing Standards
 
-**CRITICAL: Pure unit tests with maximum coverage**
+### Pure Unit Tests with Maximum Coverage
 
 - **NEVER EVER use t.Skip()** - if a test is hard, mock everything needed
 - **ALWAYS write pure unit tests** - mock all external dependencies (HTTP, databases, APIs, etc.)
@@ -57,7 +57,7 @@ Before completing tasks, Claude must verify:
 
 ## Project Structure
 
-```
+```text
 /workspace/
 ├── src/
 │   ├── cmd/                          # CLI entry point

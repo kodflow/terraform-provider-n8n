@@ -16,4 +16,4 @@ Terraform provider for n8n automation platform
 ### Optional
 
 - `api_key` (String, Sensitive) API key for n8n instance authentication. Can also be set via N8N_API_KEY environment variable.
-- `base_url` (String) Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_API_URL environment variable.
+- `base_url` (String) Base URL of the n8n instance (e.g., <https://n8n.example.com>). Can also be set via N8N_API_URL environment variable.
