@@ -202,7 +202,7 @@ generate_coverage_table() {
 
   # Collect all unique function names for this file
   local ALL_FUNCS
-  ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
+  ALL_FUNCS=$(awk -F'\t' '{print $1}' "$FILE_DATA"/* 2>/dev/null | sort -u)
 
   if [ -z "$ALL_FUNCS" ]; then
     return
@@ -235,7 +235,7 @@ generate_coverage_table() {
           local FUNC_BODY
           FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
           local EXECUTABLE_LINES
-          EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+          EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -vc "^[[:space:]]*$")
 
           if [ "$EXECUTABLE_LINES" -eq 0 ]; then
             ROW="$ROW 🔵 N/A |"
