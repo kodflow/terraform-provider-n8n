@@ -297,7 +297,7 @@ for pkg in $ALL_PROVIDER_PACKAGES; do
 done
 
 if [ -n "$PRIMARY_PACKAGES" ]; then
-  generate_coverage_table "resource.go" $PRIMARY_PACKAGES
+  generate_coverage_table "resource.go" "$PRIMARY_PACKAGES"
 fi
 
 # === SECONDARY RESOURCES (Operations/Relations) ===
@@ -346,7 +346,7 @@ for FILE_SHORT in $SECONDARY_FILES; do
 
     echo "### $TITLE" >>COVERAGE.MD
     echo "" >>COVERAGE.MD
-    generate_coverage_table "$FILE_SHORT" $SEC_PACKAGES
+    generate_coverage_table "$FILE_SHORT" "$SEC_PACKAGES"
   fi
 done
 
@@ -369,7 +369,7 @@ done
 if [ -n "$DS_PACKAGES" ]; then
   echo "### datasource (singular)" >>COVERAGE.MD
   echo "" >>COVERAGE.MD
-  generate_coverage_table "datasource.go" $DS_PACKAGES
+  generate_coverage_table "datasource.go" "$DS_PACKAGES"
 fi
 
 # datasources.go (plural)
@@ -383,7 +383,7 @@ done
 if [ -n "$DSS_PACKAGES" ]; then
   echo "### datasources (plural)" >>COVERAGE.MD
   echo "" >>COVERAGE.MD
-  generate_coverage_table "datasources.go" $DSS_PACKAGES
+  generate_coverage_table "datasources.go" "$DSS_PACKAGES"
 fi
 
 # Add footer
