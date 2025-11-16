@@ -1,6 +1,6 @@
 module github.com/kodflow/terraform-provider-n8n
 
-go 1.25.3
+go 1.25.4
 
 require (
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
