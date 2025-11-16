@@ -77,7 +77,7 @@ reviews:
       instructions: |
         - Verify bzlmod dependency declarations
         - Check for version compatibility (Bazel 9+)
-        - Ensure Go toolchain version (1.24+)
+        - Ensure Go toolchain version (1.25.4+)
         - Validate rules_go and gazelle versions
 
 chat:
@@ -134,7 +134,7 @@ knowledge_base:
   learnings:
     - "This is a Terraform Provider built with Terraform Plugin Framework (not SDK)"
     - "Uses Bazel 9 with bzlmod for dependency management"
-    - "Go version must be 1.24+ for compatibility with terraform-plugin-framework v1.16+"
+    - "Go version must be 1.25.4+ for compatibility with terraform-plugin-framework v1.16+"
     - "Follows Conventional Commits for semantic versioning"
     - "All documentation must be in English"
     - "Provider targets n8n API for workflow automation management"
