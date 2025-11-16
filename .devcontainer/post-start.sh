@@ -43,7 +43,7 @@ if [ ! -x "$GO_BIN" ]; then
 fi
 if [ -x "$GO_BIN" ]; then
   # Check if tools are already installed to avoid reinstalling every time
-  if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null; then
+  if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null || [ ! -f "$HOME/.cache/go/bin/goreleaser" ]; then
     echo "🔨 Installing Go tools..."
 
     # Clean up any corrupted golangci-lint binary
@@ -68,6 +68,7 @@ if [ -x "$GO_BIN" ]; then
     # Install other Go tools using absolute path
     "$GO_BIN" install github.com/bazelbuild/buildtools/buildifier@latest
     "$GO_BIN" install mvdan.cc/sh/v3/cmd/shfmt@latest
+    "$GO_BIN" install github.com/goreleaser/goreleaser/v2@v2.6.1
     echo "✅ Go tools installed successfully!"
   else
     echo "✅ Go tools already installed"
