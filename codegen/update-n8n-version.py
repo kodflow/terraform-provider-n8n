@@ -27,7 +27,7 @@ def get_latest_version():
         result = run("curl -s https://api.github.com/repos/n8n-io/n8n/releases/latest", check=False)
         data = json.loads(result)
         return data.get('tag_name', 'unknown').lstrip('n8n@')
-    except:
+    except (json.JSONDecodeError, KeyError, AttributeError):
         return None
 
 def main():
@@ -52,7 +52,7 @@ def main():
 
         print(f"   ✓ Found commit: {latest_commit[:8]}\n")
 
-    except Exception as e:
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
         print(f"❌ Error fetching commit: {e}")
         sys.exit(1)
 
