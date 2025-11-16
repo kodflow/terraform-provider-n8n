@@ -87,7 +87,7 @@ def main():
     with open(script_path, 'w', encoding='utf-8') as f:
         f.write(new_content)
 
-    print(f"✅ Updated codegen/download-only.py")
+    print("✅ Updated codegen/download-only.py")
     print(f"   📌 New commit: {latest_commit[:8]} (n8n@{latest_version})")
     print()
     print("Next steps:")

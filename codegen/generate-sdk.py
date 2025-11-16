@@ -90,7 +90,7 @@ def main():
         check=False
     )
     if result.returncode != 0:
-        print(f"   ❌ Generator failed", file=sys.stderr)
+        print("   ❌ Generator failed", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
     print("   ✓ Generated\n")

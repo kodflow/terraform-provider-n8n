@@ -69,10 +69,10 @@ def download_from_github(n8n_commit, temp_dir, api_dir):
     print(f"   🆕 Latest n8n version: {latest_version}")
 
     if frozen_version != latest_version and frozen_version != 'unknown' and latest_version != 'unknown':
-        print(f"   ⚠️  Version mismatch detected!")
-        print(f"      Consider updating to latest by changing N8N_COMMIT\n")
+        print("   ⚠️  Version mismatch detected!")
+        print("      Consider updating to latest by changing N8N_COMMIT\n")
     else:
-        print(f"   ✓ Versions in sync\n")
+        print("   ✓ Versions in sync\n")
 
     source_path = api_dir / "openapi-source"
     if source_path.exists():
@@ -157,7 +157,7 @@ def add_version_info(spec_file, frozen_version, n8n_commit, latest_version):
     with open(spec_file, 'w', encoding='utf-8') as f:
         yaml.dump(spec, f, default_flow_style=False, sort_keys=False, allow_unicode=True, indent=2, width=float("inf"))
 
-    print(f"   ✓ Added version info\n")
+    print("   ✓ Added version info\n")
 
 def main():
     print("🚀 N8N OpenAPI Download (No Commit)\n")

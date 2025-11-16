@@ -83,7 +83,7 @@ def apply_git_commit_patch(commit_hash):
         sys.exit(1)
 
     # Get the diff from commit
-    print(f"📥 Extracting changes from commit...")
+    print("📥 Extracting changes from commit...")
     rc, stdout, stderr = run(f"git show {commit_hash} sdk/n8nsdk/api/openapi.yaml")
     if rc != 0:
         print(f"❌ Git error: {stderr}")
@@ -114,7 +114,7 @@ def apply_git_commit_patch(commit_hash):
     with open(patch_file, 'w', encoding='utf-8') as f:
         f.write('\n'.join(patch_content))
 
-    print(f"   ✓ Extracted changes")
+    print("   ✓ Extracted changes")
     print(f"   📝 {len([l for l in patch_content if l.startswith('+') and not l.startswith('+++')])} additions")
     print(f"   📝 {len([l for l in patch_content if l.startswith('-') and not l.startswith('---')])} deletions")
     print()
@@ -126,7 +126,7 @@ def apply_git_commit_patch(commit_hash):
 
     # Try with fuzzy matching (allows line number differences)
     # Use stdin parameter instead of shell redirection
-    with open(patch_file, 'r') as patch_input:
+    with open(patch_file, 'r', encoding='utf-8') as patch_input:
         result = subprocess.run(
             ['patch', '-p0', '--fuzz=3'],
             stdin=patch_input,
@@ -135,7 +135,7 @@ def apply_git_commit_patch(commit_hash):
             check=False
         )
     if result.returncode != 0:
-        print(f"❌ Patch failed!")
+        print("❌ Patch failed!")
         print(result.stderr)
         # Restore backup
         shutil.copy(backup_file, openapi_file)
