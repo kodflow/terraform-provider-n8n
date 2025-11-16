@@ -7,13 +7,16 @@ import subprocess
 import sys
 import json
 import re
+import shlex
 from pathlib import Path
 
 def run(cmd, check=True):
-    """Run command and optionally exit on error"""
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    """Run command and optionally exit on error (secure version without shell=True)"""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
     if check and result.returncode != 0:
-        print(f"❌ Command failed: {cmd}", file=sys.stderr)
+        print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
     return result.stdout.strip()

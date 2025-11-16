@@ -1,0 +1,926 @@
+{
+  "summary": {
+    "total_issues_retrieved": 329,
+    "total_issues_expected": 329,
+    "collection_complete": true,
+    "repository": "kodflow/terraform-provider-n8n",
+    "provider": "gh"
+  },
+  "issues_by_severity": {
+    "Error": 28,
+    "High": 96,
+    "Warning": 92,
+    "Info": 113
+  },
+  "issues_by_category": {
+    "BestPractice": 104,
+    "CodeStyle": 97,
+    "ErrorProne": 64,
+    "Security": 50,
+    "Complexity": 8,
+    "UnusedCode": 2,
+    "Documentation": 3,
+    "Performance": 1
+  },
+  "issues_by_tool": {
+    "markdownlint": 68,
+    "Pylint": 108,
+    "Semgrep": 55,
+    "Ruff": 15,
+    "ShellCheck": 33,
+    "Bandit": 20,
+    "Prospector": 28,
+    "Hadolint": 1,
+    "Lizard": 1
+  },
+  "issues_by_pattern": {
+    "markdownlint_MD043": {
+      "count": 28,
+      "description": "Required heading structure",
+      "severity": "Info",
+      "category": "BestPractice",
+      "files": [
+        "docs/resources/workflow.md:9",
+        "docs/resources/credential.md:12",
+        "docs/resources/execution_retry.md:9",
+        "docs/data-sources/user.md:9",
+        "README.md:1",
+        "docs/data-sources/workflow.md:9",
+        "docs/data-sources/variables.md:9",
+        "docs/resources/user.md:9",
+        "docs/resources/credential_transfer.md:9",
+        "docs/data-sources/tags.md:9",
+        "docs/resources/project.md:9",
+        "docs/index.md:8",
+        "LICENSE.md:1",
+        "docs/resources/source_control_pull.md:9",
+        "docs/resources/variable.md:9",
+        "docs/data-sources/workflows.md:9",
+        "docs/resources/workflow_transfer.md:9",
+        ".github/hooks/README.md:1",
+        "docs/data-sources/variable.md:9",
+        "docs/data-sources/execution.md:9",
+        "docs/resources/tag.md:9",
+        "CLAUDE.md:1",
+        "docs/resources/project_user.md:9",
+        "docs/data-sources/project.md:9",
+        "docs/data-sources/projects.md:9",
+        "docs/data-sources/tag.md:9",
+        ".github/CONTRIBUTING.md:5",
+        "docs/data-sources/users.md:9",
+        ".github/SECURITY.md:5",
+        "COVERAGE.MD:1",
+        "docs/data-sources/executions.md:9",
+        ".github/PULL_REQUEST_TEMPLATE.md:1"
+      ]
+    },
+    "markdownlint_MD040": {
+      "count": 4,
+      "description": "Fenced code blocks should have a language specified",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        ".github/CONTRIBUTING.md:126",
+        "CLAUDE.md:60",
+        "README.md:162"
+      ]
+    },
+    "markdownlint_MD033": {
+      "count": 6,
+      "description": "Inline HTML",
+      "severity": "Info",
+      "category": "BestPractice",
+      "files": [
+        "docs/data-sources/tags.md:21",
+        "docs/data-sources/projects.md:21",
+        "docs/data-sources/variables.md:26",
+        "docs/data-sources/users.md:21",
+        "docs/data-sources/executions.md:28",
+        "docs/data-sources/workflows.md:25"
+      ]
+    },
+    "markdownlint_MD041": {
+      "count": 1,
+      "description": "First line in a file should be a top-level heading",
+      "severity": "Info",
+      "category": "BestPractice",
+      "files": [
+        ".github/PULL_REQUEST_TEMPLATE.md:1"
+      ]
+    },
+    "markdownlint_MD037": {
+      "count": 1,
+      "description": "Spaces inside emphasis markers",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "CLAUDE.md:23"
+      ]
+    },
+    "markdownlint_MD012": {
+      "count": 1,
+      "description": "Multiple consecutive blank lines",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "COVERAGE.MD:159"
+      ]
+    },
+    "markdownlint_MD032": {
+      "count": 2,
+      "description": "Lists should be surrounded by blank lines",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "COVERAGE.MD:34",
+        "COVERAGE.MD:6"
+      ]
+    },
+    "markdownlint_MD034": {
+      "count": 2,
+      "description": "Bare URL used",
+      "severity": "Info",
+      "category": "BestPractice",
+      "files": [
+        "docs/index.md:19",
+        "LICENSE.md:63"
+      ]
+    },
+    "markdownlint_MD036": {
+      "count": 1,
+      "description": "Emphasis used instead of a heading",
+      "severity": "Info",
+      "category": "BestPractice",
+      "files": [
+        "CLAUDE.md:48"
+      ]
+    },
+    "PyLintPython3_C0301": {
+      "count": 15,
+      "description": "Line too long",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/patch-openapi.py:66",
+        "codegen/patch-openapi.py:67",
+        "codegen/patch-openapi.py:115",
+        "codegen/patch-openapi.py:116",
+        "codegen/download-only.py:48",
+        "codegen/download-only.py:59",
+        "codegen/download-only.py:74",
+        "codegen/download-only.py:91",
+        "codegen/download-only.py:127",
+        "codegen/download-only.py:128",
+        "codegen/download-only.py:151",
+        "codegen/download-only.py:154",
+        "codegen/download-only.py:156",
+        "codegen/generate-sdk.py:57",
+        "codegen/generate-sdk.py:73",
+        "codegen/generate-sdk.py:106",
+        "codegen/generate-sdk.py:110",
+        "codegen/update-n8n-version.py:42",
+        "codegen/update-n8n-version.py:62",
+        "codegen/update-n8n-version.py:79"
+      ]
+    },
+    "PyLintPython3_W1514": {
+      "count": 9,
+      "description": "Using open without explicitly specifying an encoding",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        "codegen/patch-openapi.py:62",
+        "codegen/patch-openapi.py:142",
+        "codegen/download-only.py:28",
+        "codegen/download-only.py:102",
+        "codegen/download-only.py:130",
+        "codegen/patch-only.py:56",
+        "codegen/patch-only.py:83",
+        "codegen/update-n8n-version.py:58",
+        "codegen/update-n8n-version.py:84"
+      ]
+    },
+    "PyLintPython3_W1510": {
+      "count": 7,
+      "description": "subprocess.run used without explicitly defining the value for 'check'",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "codegen/generate-sdk.py:14",
+        "codegen/generate-sdk.py:72",
+        "codegen/generate-sdk.py:139",
+        "codegen/download-only.py:16",
+        "codegen/patch-openapi.py:14",
+        "codegen/patch-only.py:13",
+        "codegen/patch-only.py:36",
+        "codegen/update-n8n-version.py:14"
+      ]
+    },
+    "PyLintPython3_C1805": {
+      "count": 5,
+      "description": "Simplify comparison to falsey value",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/generate-sdk.py:15",
+        "codegen/download-only.py:17",
+        "codegen/patch-openapi.py:31",
+        "codegen/patch-only.py:14",
+        "codegen/patch-only.py:42",
+        "codegen/update-n8n-version.py:15"
+      ]
+    },
+    "PyLintPython3_C0103": {
+      "count": 10,
+      "description": "Variable name doesn't conform to snake_case naming style",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/generate-sdk.py:1",
+        "codegen/generate-sdk.py:25",
+        "codegen/generate-sdk.py:26",
+        "codegen/generate-sdk.py:27",
+        "codegen/generate-sdk.py:28",
+        "codegen/download-only.py:1",
+        "codegen/download-only.py:48",
+        "codegen/download-only.py:49",
+        "codegen/download-only.py:50",
+        "codegen/patch-openapi.py:1",
+        "codegen/patch-only.py:1",
+        "codegen/patch-only.py:23",
+        "codegen/update-n8n-version.py:1"
+      ]
+    },
+    "PyLintPython3_W1309": {
+      "count": 9,
+      "description": "Using an f-string that does not have any interpolated variables",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/patch-openapi.py:83",
+        "codegen/patch-openapi.py:114",
+        "codegen/patch-openapi.py:127",
+        "codegen/download-only.py:75",
+        "codegen/download-only.py:76",
+        "codegen/download-only.py:78",
+        "codegen/download-only.py:158",
+        "codegen/generate-sdk.py:79",
+        "codegen/update-n8n-version.py:87"
+      ]
+    },
+    "PyLintPython3_C0415": {
+      "count": 4,
+      "description": "Import outside toplevel",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/patch-openapi.py:141",
+        "codegen/download-only.py:95",
+        "codegen/download-only.py:96"
+      ]
+    },
+    "PyLintPython3_R0914": {
+      "count": 1,
+      "description": "Too many local variables",
+      "severity": "Warning",
+      "category": "Complexity",
+      "files": [
+        "codegen/download-only.py:44"
+      ]
+    },
+    "PyLintPython3_R0915": {
+      "count": 4,
+      "description": "Too many statements",
+      "severity": "Warning",
+      "category": "Complexity",
+      "files": [
+        "codegen/download-only.py:44",
+        "codegen/generate-sdk.py:21",
+        "codegen/patch-openapi.py:70",
+        "codegen/patch-only.py:20"
+      ]
+    },
+    "PyLintPython3_R0912": {
+      "count": 2,
+      "description": "Too many branches",
+      "severity": "Warning",
+      "category": "Complexity",
+      "files": [
+        "codegen/generate-sdk.py:21",
+        "codegen/patch-only.py:20"
+      ]
+    },
+    "PyLintPython3_C0116": {
+      "count": 3,
+      "description": "Missing function or method docstring",
+      "severity": "Info",
+      "category": "Documentation",
+      "files": [
+        "codegen/download-only.py:44",
+        "codegen/generate-sdk.py:21",
+        "codegen/patch-only.py:20",
+        "codegen/update-n8n-version.py:30"
+      ]
+    },
+    "PyLintPython3_W0613": {
+      "count": 1,
+      "description": "Unused argument",
+      "severity": "Info",
+      "category": "UnusedCode",
+      "files": [
+        "codegen/download-only.py:23"
+      ]
+    },
+    "PyLintPython3_R1714": {
+      "count": 1,
+      "description": "Consider merging these comparisons with 'in'",
+      "severity": "Info",
+      "category": "Performance",
+      "files": [
+        "codegen/download-only.py:163"
+      ]
+    },
+    "PyLintPython3_W0404": {
+      "count": 1,
+      "description": "Reimport",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/download-only.py:140"
+      ]
+    },
+    "PyLintPython3_W0702": {
+      "count": 2,
+      "description": "No exception type(s) specified",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "codegen/download-only.py:31",
+        "codegen/update-n8n-version.py:27"
+      ]
+    },
+    "PyLintPython3_W0718": {
+      "count": 2,
+      "description": "Catching too general exception Exception",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "codegen/patch-openapi.py:145",
+        "codegen/update-n8n-version.py:52"
+      ]
+    },
+    "PyLintPython3_R0801": {
+      "count": 1,
+      "description": "Similar lines in 2 files",
+      "severity": "Warning",
+      "category": "Complexity",
+      "files": [
+        "codegen/generate-sdk.py:1"
+      ]
+    },
+    "Ruff_F541_f-string-missing-placeholders": {
+      "count": 11,
+      "description": "f-string without any placeholders",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        "codegen/patch-openapi.py:83",
+        "codegen/patch-openapi.py:114",
+        "codegen/patch-openapi.py:127",
+        "codegen/download-only.py:75",
+        "codegen/download-only.py:76",
+        "codegen/download-only.py:78",
+        "codegen/download-only.py:158",
+        "codegen/generate-sdk.py:79",
+        "codegen/update-n8n-version.py:87"
+      ]
+    },
+    "Ruff_E741_ambiguous-variable-name": {
+      "count": 4,
+      "description": "Ambiguous variable name: `l`",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/patch-openapi.py:66",
+        "codegen/patch-openapi.py:67",
+        "codegen/patch-openapi.py:115",
+        "codegen/patch-openapi.py:116"
+      ]
+    },
+    "Ruff_E722_bare-except": {
+      "count": 2,
+      "description": "Do not use bare `except`",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "codegen/download-only.py:31",
+        "codegen/update-n8n-version.py:27"
+      ]
+    },
+    "Semgrep_yaml.semgrep.duplicate-id.duplicate-id": {
+      "count": 18,
+      "description": "The 'id' field was used multiple times",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        ".golangci.yml:68",
+        ".golangci.yml:69",
+        ".golangci.yml:70",
+        ".golangci.yml:71",
+        ".golangci.yml:72",
+        ".golangci.yml:73",
+        ".golangci.yml:74",
+        ".golangci.yml:75",
+        ".golangci.yml:76",
+        ".golangci.yml:78",
+        ".golangci.yml:79",
+        ".golangci.yml:82",
+        ".golangci.yml:84",
+        ".golangci.yml:85",
+        ".golangci.yml:87",
+        ".golangci.yml:88",
+        ".golangci.yml:91",
+        ".golangci.yml:94"
+      ]
+    },
+    "Bandit_B404": {
+      "count": 5,
+      "description": "Consider possible security implications associated with the subprocess module",
+      "severity": "Info",
+      "category": "Security",
+      "files": [
+        "codegen/patch-openapi.py:9",
+        "codegen/download-only.py:8",
+        "codegen/generate-sdk.py:7",
+        "codegen/patch-only.py:7",
+        "codegen/update-n8n-version.py:6"
+      ]
+    },
+    "Bandit_B602": {
+      "count": 11,
+      "description": "subprocess call with shell=True identified, security issue",
+      "severity": "High",
+      "category": "Security",
+      "files": [
+        "codegen/patch-openapi.py:14",
+        "codegen/download-only.py:16",
+        "codegen/generate-sdk.py:14",
+        "codegen/generate-sdk.py:74",
+        "codegen/generate-sdk.py:139",
+        "codegen/patch-only.py:13",
+        "codegen/patch-only.py:38",
+        "codegen/update-n8n-version.py:14"
+      ]
+    },
+    "Bandit_B108": {
+      "count": 2,
+      "description": "Probable insecure usage of temp file/directory",
+      "severity": "Warning",
+      "category": "Security",
+      "files": [
+        "codegen/download-only.py:49",
+        "codegen/generate-sdk.py:27"
+      ]
+    },
+    "Bandit_B607": {
+      "count": 1,
+      "description": "Starting a process with a partial executable path",
+      "severity": "Warning",
+      "category": "Security",
+      "files": [
+        "codegen/generate-sdk.py:139"
+      ]
+    },
+    "Bandit_B110": {
+      "count": 1,
+      "description": "Try, Except, Pass detected",
+      "severity": "Warning",
+      "category": "Security",
+      "files": [
+        "codegen/download-only.py:31"
+      ]
+    },
+    "Prospector_pylint": {
+      "count": 28,
+      "description": "Various Prospector pylint issues",
+      "severity": "Mixed",
+      "category": "BestPractice",
+      "files": [
+        "Multiple Python files"
+      ]
+    },
+    "Prospector_bandit": {
+      "count": 12,
+      "description": "Various Prospector bandit security issues",
+      "severity": "High",
+      "category": "Security",
+      "files": [
+        "Multiple Python files"
+      ]
+    },
+    "Prospector_pycodestyle": {
+      "count": 4,
+      "description": "Expected 2 blank lines after class or function definition",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "codegen/patch-only.py:93",
+        "codegen/patch-openapi.py:158",
+        "codegen/download-only.py:167",
+        "codegen/update-n8n-version.py:98",
+        "codegen/generate-sdk.py:155"
+      ]
+    },
+    "Prospector_vulture": {
+      "count": 1,
+      "description": "Unused variable",
+      "severity": "Warning",
+      "category": "UnusedCode",
+      "files": [
+        "codegen/download-only.py:23"
+      ]
+    },
+    "Prospector_mypy": {
+      "count": 2,
+      "description": "Library stubs not installed for yaml",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "codegen/download-only.py:95",
+        "codegen/patch-openapi.py:141"
+      ]
+    },
+    "shellcheck_SC2034": {
+      "count": 2,
+      "description": "Variable appears unused",
+      "severity": "Warning",
+      "category": "ErrorProne",
+      "files": [
+        "scripts/generate-coverage.sh:8",
+        "scripts/add-copyright-headers.sh:11"
+      ]
+    },
+    "shellcheck_SC2126": {
+      "count": 1,
+      "description": "Consider using 'grep -c' instead of 'grep|wc -l'",
+      "severity": "Info",
+      "category": "CodeStyle",
+      "files": [
+        "scripts/generate-coverage.sh:232"
+      ]
+    },
+    "shellcheck_SC2155": {
+      "count": 6,
+      "description": "Declare and assign separately to avoid masking return values",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "scripts/generate-coverage.sh:203",
+        "scripts/generate-coverage.sh:225",
+        "scripts/generate-coverage.sh:226",
+        "scripts/generate-coverage.sh:231",
+        "scripts/generate-coverage.sh:232",
+        "scripts/generate-coverage.sh:243"
+      ]
+    },
+    "shellcheck_SC2001": {
+      "count": 5,
+      "description": "See if you can use ${variable//search/replace} instead",
+      "severity": "Warning",
+      "category": "Performance",
+      "files": [
+        "scripts/generate-coverage.sh:29",
+        "scripts/generate-coverage.sh:114",
+        "scripts/generate-coverage.sh:243",
+        "scripts/generate-coverage.sh:309",
+        "scripts/generate-coverage.sh:336"
+      ]
+    },
+    "shellcheck_SC2124": {
+      "count": 1,
+      "description": "Assigning an array to a string",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "scripts/generate-coverage.sh:194"
+      ]
+    },
+    "shellcheck_SC2046": {
+      "count": 8,
+      "description": "Quote this to prevent word splitting",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "scripts/generate-coverage.sh:55",
+        "scripts/generate-coverage.sh:117",
+        "scripts/generate-coverage.sh:119",
+        "scripts/generate-coverage.sh:244",
+        "scripts/generate-coverage.sh:246",
+        "scripts/generate-coverage.sh:248",
+        "scripts/generate-coverage.sh:408"
+      ]
+    },
+    "shellcheck_SC2129": {
+      "count": 3,
+      "description": "Consider using { cmd1; cmd2; } >> file instead of individual redirects",
+      "severity": "Info",
+      "category": "Performance",
+      "files": [
+        "scripts/add-copyright-headers.sh:94",
+        "scripts/generate-coverage.sh:279",
+        "scripts/generate-coverage.sh:297"
+      ]
+    },
+    "shellcheck_SC1091": {
+      "count": 1,
+      "description": "Not following file",
+      "severity": "Warning",
+      "category": "ErrorProne",
+      "files": [
+        ".devcontainer/post-create.sh:24"
+      ]
+    },
+    "shellcheck_SC1072": {
+      "count": 1,
+      "description": "Unexpected keyword/token",
+      "severity": "Warning",
+      "category": "ErrorProne",
+      "files": [
+        ".devcontainer/p10k.sh:24"
+      ]
+    },
+    "shellcheck_SC1073": {
+      "count": 1,
+      "description": "Couldn't parse this explicit subshell",
+      "severity": "Error",
+      "category": "ErrorProne",
+      "files": [
+        ".devcontainer/p10k.sh:24"
+      ]
+    },
+    "shellcheck_SC2010": {
+      "count": 1,
+      "description": "Don't use ls | grep. Use a glob or a for loop with a condition",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        "scripts/generate-coverage.sh:305"
+      ]
+    },
+    "shellcheck_SC2064": {
+      "count": 1,
+      "description": "Use single quotes, otherwise this expands now rather than when signalled",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        "scripts/generate-coverage.sh:147"
+      ]
+    },
+    "shellcheck_SC2086": {
+      "count": 4,
+      "description": "Double quote to prevent globbing and word splitting",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        "scripts/generate-coverage.sh:293",
+        "scripts/generate-coverage.sh:342",
+        "scripts/generate-coverage.sh:365",
+        "scripts/generate-coverage.sh:379"
+      ]
+    },
+    "shellcheck_SC2016": {
+      "count": 1,
+      "description": "Expressions don't expand in single quotes, use double quotes for that",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        ".devcontainer/post-create.sh:108"
+      ]
+    },
+    "Semgrep_python.lang.security.audit.subprocess-shell-true.subprocess-shell-true": {
+      "count": 6,
+      "description": "Found subprocess function with shell=True",
+      "severity": "Error",
+      "category": "Security",
+      "files": [
+        "codegen/patch-openapi.py:14",
+        "codegen/download-only.py:16",
+        "codegen/generate-sdk.py:14",
+        "codegen/generate-sdk.py:72",
+        "codegen/patch-only.py:13",
+        "codegen/update-n8n-version.py:14"
+      ]
+    },
+    "Semgrep_python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit": {
+      "count": 7,
+      "description": "Detected subprocess function without a static string",
+      "severity": "Error",
+      "category": "Security",
+      "files": [
+        "codegen/patch-openapi.py:14",
+        "codegen/download-only.py:16",
+        "codegen/generate-sdk.py:14",
+        "codegen/generate-sdk.py:72",
+        "codegen/patch-only.py:13",
+        "codegen/patch-only.py:36",
+        "codegen/update-n8n-version.py:14"
+      ]
+    },
+    "Semgrep_python_exec_rule-subprocess-popen-shell-true": {
+      "count": 7,
+      "description": "Found subprocess function with shell=True",
+      "severity": "High",
+      "category": "Security",
+      "files": [
+        "codegen/patch-openapi.py:14",
+        "codegen/download-only.py:16",
+        "codegen/generate-sdk.py:14",
+        "codegen/generate-sdk.py:72",
+        "codegen/patch-only.py:13",
+        "codegen/patch-only.py:36",
+        "codegen/update-n8n-version.py:14"
+      ]
+    },
+    "Semgrep_python.lang.best-practice.unspecified-open-encoding.unspecified-open-encoding": {
+      "count": 9,
+      "description": "Missing 'encoding' parameter in open()",
+      "severity": "Warning",
+      "category": "BestPractice",
+      "files": [
+        "codegen/patch-openapi.py:62",
+        "codegen/patch-openapi.py:142",
+        "codegen/download-only.py:28",
+        "codegen/download-only.py:102",
+        "codegen/download-only.py:130",
+        "codegen/patch-only.py:56",
+        "codegen/patch-only.py:83",
+        "codegen/update-n8n-version.py:58",
+        "codegen/update-n8n-version.py:84"
+      ]
+    },
+    "Semgrep_python_tmpdir_rule-hardcodedtmp": {
+      "count": 5,
+      "description": "Application creating files in /tmp without using tempfile.TemporaryFile",
+      "severity": "High",
+      "category": "Security",
+      "files": [
+        "codegen/download-only.py:56",
+        "codegen/download-only.py:57",
+        "codegen/download-only.py:67",
+        "codegen/download-only.py:85",
+        "codegen/generate-sdk.py:55"
+      ]
+    },
+    "Semgrep_bash.lang.best-practice.useless-cat.useless-cat": {
+      "count": 1,
+      "description": "Useless call to 'cat' in a pipeline",
+      "severity": "Info",
+      "category": "BestPractice",
+      "files": [
+        "scripts/generate-coverage.sh:203"
+      ]
+    },
+    "Semgrep_bash.lang.correctness.unquoted-expansion.unquoted-variable-expansion-in-command": {
+      "count": 4,
+      "description": "Variable expansions must be double-quoted",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "scripts/generate-coverage.sh:293",
+        "scripts/generate-coverage.sh:342",
+        "scripts/generate-coverage.sh:365",
+        "scripts/generate-coverage.sh:379"
+      ]
+    },
+    "Semgrep_go.lang.correctness.looppointer.exported_loop_pointer": {
+      "count": 1,
+      "description": "Loop pointer that may be exported from the loop",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "src/internal/provider/credential/helpers.go:97"
+      ]
+    },
+    "Semgrep_go_memory_rule-memoryaliasing": {
+      "count": 1,
+      "description": "Go's for...range statements create an iteration variable for each iteration",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        "src/internal/provider/credential/helpers.go:97"
+      ]
+    },
+    "Semgrep_python.lang.security.audit.dangerous-subprocess-use-tainted-env-args.dangerous-subprocess-use-tainted-env-args": {
+      "count": 1,
+      "description": "Detected subprocess function with user controlled data",
+      "severity": "Error",
+      "category": "Security",
+      "files": [
+        "codegen/patch-openapi.py:14"
+      ]
+    },
+    "Hadolint_DL4006": {
+      "count": 1,
+      "description": "Set the SHELL option -o pipefail before RUN with a pipe in it",
+      "severity": "High",
+      "category": "ErrorProne",
+      "files": [
+        ".devcontainer/Dockerfile:5"
+      ]
+    },
+    "Lizard_ccn-critical": {
+      "count": 1,
+      "description": "Method has a cyclomatic complexity of 16 (limit is 12)",
+      "severity": "Error",
+      "category": "Complexity",
+      "files": [
+        "codegen/download-only.py:44"
+      ]
+    }
+  },
+  "issues_by_file": {
+    "Markdown_files": {
+      "count": 68,
+      "files": [
+        "docs/resources/workflow.md",
+        "docs/resources/credential.md",
+        "docs/resources/execution_retry.md",
+        "docs/data-sources/user.md",
+        "README.md",
+        "docs/data-sources/workflow.md",
+        "docs/data-sources/variables.md",
+        "docs/resources/user.md",
+        "docs/resources/credential_transfer.md",
+        "docs/data-sources/tags.md",
+        "docs/resources/project.md",
+        "docs/index.md",
+        "LICENSE.md",
+        "docs/resources/source_control_pull.md",
+        "docs/resources/variable.md",
+        "docs/data-sources/workflows.md",
+        "docs/resources/workflow_transfer.md",
+        ".github/hooks/README.md",
+        "docs/data-sources/variable.md",
+        "docs/data-sources/execution.md",
+        "docs/resources/tag.md",
+        "CLAUDE.md",
+        "docs/resources/project_user.md",
+        "docs/data-sources/project.md",
+        "docs/data-sources/projects.md",
+        "docs/data-sources/tag.md",
+        ".github/CONTRIBUTING.md",
+        "docs/data-sources/users.md",
+        ".github/SECURITY.md",
+        "COVERAGE.MD",
+        "docs/data-sources/executions.md",
+        ".github/PULL_REQUEST_TEMPLATE.md"
+      ]
+    },
+    "Python_files": {
+      "count": 228,
+      "files": [
+        "codegen/patch-openapi.py",
+        "codegen/download-only.py",
+        "codegen/generate-sdk.py",
+        "codegen/patch-only.py",
+        "codegen/update-n8n-version.py"
+      ]
+    },
+    "Shell_files": {
+      "count": 33,
+      "files": [
+        "scripts/generate-coverage.sh",
+        "scripts/add-copyright-headers.sh",
+        ".devcontainer/post-create.sh",
+        ".devcontainer/p10k.sh"
+      ]
+    },
+    "YAML_files": {
+      "count": 18,
+      "files": [
+        ".golangci.yml"
+      ]
+    },
+    "Go_files": {
+      "count": 2,
+      "files": [
+        "src/internal/provider/credential/helpers.go"
+      ]
+    },
+    "Dockerfile": {
+      "count": 1,
+      "files": [
+        ".devcontainer/Dockerfile"
+      ]
+    }
+  },
+  "unique_issue_ids": [
+    "All 329 unique issue IDs are tracked in the pagination responses"
+  ],
+  "notes": {
+    "collection_method": "Paginated collection with cursor-based iteration",
+    "pages_collected": 7,
+    "issues_per_page": 50,
+    "last_page_size": 29
+  }
+}

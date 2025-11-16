@@ -7,13 +7,16 @@ Generates Go SDK from OpenAPI spec using openapi-generator
 import subprocess
 import sys
 import shutil
+import shlex
 from pathlib import Path
 
 def run(cmd, cwd=None):
-    """Run command and exit on error"""
-    result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
+    """Run command and exit on error (secure version without shell=True)"""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"❌ Command failed: {cmd}", file=sys.stderr)
+        print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
     return result.stdout
@@ -70,8 +73,16 @@ def main():
     # Generate SDK
     print("   → Running openapi-generator...")
     result = subprocess.run(
-        f"java -jar {GENERATOR_JAR} generate -i {OPENAPI_SPEC} -g go -o sdk/n8nsdk -c codegen/openapi-generator-config.yaml --skip-validate-spec",
-        shell=True,
+        [
+            'java', '-jar', GENERATOR_JAR,
+            'generate',
+            '-i', OPENAPI_SPEC,
+            '-g', 'go',
+            '-o', 'sdk/n8nsdk',
+            '-c', 'codegen/openapi-generator-config.yaml',
+            '--skip-validate-spec'
+        ],
+        shell=False,
         capture_output=True,
         text=True
     )
@@ -136,7 +147,7 @@ def main():
 
     # 3. Run go mod tidy
     print("   → Running go mod tidy...")
-    subprocess.run("go mod tidy", shell=True, cwd="sdk/n8nsdk", capture_output=True)
+    subprocess.run(['go', 'mod', 'tidy'], shell=False, cwd="sdk/n8nsdk", capture_output=True)
     print("   ✓ Done\n")
 
     # 4. Restore original openapi.yaml (generator may have reformatted it)

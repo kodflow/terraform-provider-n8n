@@ -7,11 +7,14 @@ Create and apply patches to openapi.yaml
 import sys
 import shutil
 import subprocess
+import shlex
 from pathlib import Path
 
 def run(cmd):
-    """Run command and return output"""
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    """Run command and return output (secure version without shell=True)"""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
     return result.returncode, result.stdout, result.stderr
 
 def create_patch():
@@ -122,10 +125,17 @@ def apply_git_commit_patch(commit_hash):
     shutil.copy(openapi_file, backup_file)
 
     # Try with fuzzy matching (allows line number differences)
-    rc, stdout, stderr = run(f"patch -p0 --fuzz=3 < {patch_file}")
-    if rc != 0:
+    # Use stdin parameter instead of shell redirection
+    with open(patch_file, 'r') as patch_input:
+        result = subprocess.run(
+            ['patch', '-p0', '--fuzz=3'],
+            stdin=patch_input,
+            capture_output=True,
+            text=True
+        )
+    if result.returncode != 0:
         print(f"❌ Patch failed!")
-        print(stderr)
+        print(result.stderr)
         # Restore backup
         shutil.copy(backup_file, openapi_file)
         backup_file.unlink()
