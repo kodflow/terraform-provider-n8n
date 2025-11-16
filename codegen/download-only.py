@@ -44,30 +44,23 @@ def get_latest_version():
     except:
         return 'unknown'
 
-def main():
-    print("🚀 N8N OpenAPI Download (No Commit)\n")
-
-    # Config
-    N8N_COMMIT = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
-    TEMP_DIR = "/tmp/n8n-openapi-download"
-    API_DIR = Path("sdk/n8nsdk/api")
-
-    # 1. Download from GitHub
+def download_from_github(n8n_commit, temp_dir, api_dir):
+    """Download OpenAPI spec from GitHub and return version info"""
     print("📥 Downloading OpenAPI from GitHub...")
-    print(f"   🔒 Using frozen commit: {N8N_COMMIT[:8]}\n")
+    print(f"   🔒 Using frozen commit: {n8n_commit[:8]}\n")
 
-    if Path(TEMP_DIR).exists():
-        shutil.rmtree(TEMP_DIR)
+    if Path(temp_dir).exists():
+        shutil.rmtree(temp_dir)
 
-    run(f"git clone --depth 1 --filter=blob:none --sparse https://github.com/n8n-io/n8n.git {TEMP_DIR}")
-    run("git sparse-checkout set packages/cli/src/public-api", cwd=TEMP_DIR)
-    run(f"git checkout {N8N_COMMIT}", cwd=TEMP_DIR)
+    run(f"git clone --depth 1 --filter=blob:none --sparse https://github.com/n8n-io/n8n.git {temp_dir}")
+    run("git sparse-checkout set packages/cli/src/public-api", cwd=temp_dir)
+    run(f"git checkout {n8n_commit}", cwd=temp_dir)
 
     # Get package.json separately to extract version
-    run(f"git checkout {N8N_COMMIT} -- package.json", cwd=TEMP_DIR, check=False)
+    run(f"git checkout {n8n_commit} -- package.json", cwd=temp_dir, check=False)
 
     # Get version from the frozen commit
-    frozen_version = get_n8n_version(TEMP_DIR, N8N_COMMIT)
+    frozen_version = get_n8n_version(temp_dir, n8n_commit)
     print(f"   📌 Frozen n8n version: {frozen_version}")
 
     # Get latest version from GitHub
@@ -80,24 +73,27 @@ def main():
     else:
         print(f"   ✓ Versions in sync\n")
 
-    source_path = API_DIR / "openapi-source"
+    source_path = api_dir / "openapi-source"
     if source_path.exists():
         # Force remove with chmod to handle permission issues
         run(f"chmod -R u+w {source_path}")
         shutil.rmtree(source_path)
-    shutil.copytree(f"{TEMP_DIR}/packages/cli/src/public-api", source_path)
-    shutil.rmtree(TEMP_DIR)
+    shutil.copytree(f"{temp_dir}/packages/cli/src/public-api", source_path)
+    shutil.rmtree(temp_dir)
     print("   ✓ Downloaded\n")
 
-    # 2. Bundle YAML
+    return frozen_version, latest_version
+
+def bundle_yaml_spec(source_path, api_dir):
+    """Bundle YAML files into single OpenAPI spec"""
     print("📦 Bundling YAML files...")
-    run(f"npx --yes @redocly/cli@latest bundle {source_path}/v1/openapi.yml -o {API_DIR}/openapi.yaml")
+    run(f"npx --yes @redocly/cli@latest bundle {source_path}/v1/openapi.yml -o {api_dir}/openapi.yaml")
     print("   ✓ Bundled\n")
 
-    # 3. Fix schema aliases
+def fix_schema_aliases(spec_file):
+    """Fix schema aliases in OpenAPI spec"""
     import yaml
     import re
-    spec_file = API_DIR / "openapi.yaml"
 
     print("🔧 Fixing schema aliases...")
 
@@ -134,13 +130,15 @@ def main():
         f.write(content)
     print(f"   ✓ Fixed {len(aliases)} aliases\n")
 
-    # 4. Add version info to OpenAPI spec
+def add_version_info(spec_file, frozen_version, n8n_commit, latest_version):
+    """Add version information to OpenAPI spec"""
+    import yaml
+
     print("📝 Adding version information...")
     with open(spec_file, 'r') as f:
         openapi_content = f.read()
 
     # Add x-n8n-version-info extension to info section
-    import yaml
     spec = yaml.safe_load(openapi_content)
 
     if 'info' not in spec:
@@ -148,7 +146,7 @@ def main():
 
     spec['info']['x-n8n-version-info'] = {
         'frozenVersion': frozen_version,
-        'frozenCommit': N8N_COMMIT,
+        'frozenCommit': n8n_commit,
         'latestVersion': latest_version,
         'inSync': frozen_version == latest_version,
         'note': 'This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.'
@@ -160,6 +158,28 @@ def main():
 
     print(f"   ✓ Added version info\n")
 
+def main():
+    print("🚀 N8N OpenAPI Download (No Commit)\n")
+
+    # Config
+    N8N_COMMIT = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
+    TEMP_DIR = "/tmp/n8n-openapi-download"
+    API_DIR = Path("sdk/n8nsdk/api")
+
+    # 1. Download from GitHub
+    frozen_version, latest_version = download_from_github(N8N_COMMIT, TEMP_DIR, API_DIR)
+
+    # 2. Bundle YAML
+    bundle_yaml_spec(API_DIR / "openapi-source", API_DIR)
+
+    # 3. Fix schema aliases
+    spec_file = API_DIR / "openapi.yaml"
+    fix_schema_aliases(spec_file)
+
+    # 4. Add version info to OpenAPI spec
+    add_version_info(spec_file, frozen_version, N8N_COMMIT, latest_version)
+
+    # Final output
     print("✅ OpenAPI spec downloaded and prepared!\n")
     print(f"   📄 {API_DIR}/openapi.yaml (bundled + aliases fixed + versioned)")
     print(f"   📌 Based on n8n {frozen_version} (commit {N8N_COMMIT[:8]})")
