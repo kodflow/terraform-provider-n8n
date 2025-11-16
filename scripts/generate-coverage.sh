@@ -144,7 +144,7 @@ EOF
 
 # Create a temporary directory for processing
 TMP_DIR=$(mktemp -d)
-trap "rm -rf $TMP_DIR" EXIT
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 # Get unique packages
 PACKAGES=$(echo "$COVERAGE_DATA" | grep -E "^github.com/kodflow/terraform-provider-n8n/src/internal/provider/" | grep -v "total:" | awk -F: '{print $1}' | sed 's|/[^/]*\.go$||' | sort -u)
@@ -309,7 +309,7 @@ echo "Special operations and resource relationship management." >>COVERAGE.MD
 echo "" >>COVERAGE.MD
 
 # Find all *_resource.go files (excluding resource.go)
-SECONDARY_FILES=$(ls "$TMP_DIR" 2>/dev/null | grep "_resource.go$" | grep -v "^resource.go$" | sort)
+SECONDARY_FILES=$(find "$TMP_DIR" -maxdepth 1 -name "*_resource.go" ! -name "resource.go" -printf "%f\n" 2>/dev/null | sort)
 
 for FILE_SHORT in $SECONDARY_FILES; do
   # Extract resource type (e.g., retry_resource.go -> retry)
