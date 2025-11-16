@@ -20,7 +20,7 @@ if [ -z "$GIT_ROOT" ]; then
 fi
 
 # Change to git repository root
-cd "$GIT_ROOT" || exit 1
+cd "$GIT_ROOT" || { echo -e "${YELLOW}⚠️  Failed to change directory to git root ($GIT_ROOT).${NC}"; exit 0; }
 
 # Define hooks directory (relative to workspace root)
 HOOKS_DIR=".github/hooks"
@@ -33,7 +33,11 @@ fi
 
 # Make all hooks executable
 echo -e "${BLUE}Setting executable permissions on hooks...${NC}"
-chmod +x "$HOOKS_DIR"/* 2>/dev/null || true
+if compgen -G "$HOOKS_DIR"/* > /dev/null; then
+  chmod +x "$HOOKS_DIR"/* 2>/dev/null || true
+else
+  echo -e "${YELLOW}⚠️  No hook files found in $HOOKS_DIR to make executable.${NC}"
+fi
 
 # Configure Git to use .github/hooks directory
 echo -e "${BLUE}Setting core.hooksPath to $HOOKS_DIR${NC}"
