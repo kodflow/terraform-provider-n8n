@@ -4,8 +4,6 @@
 # See LICENSE.md in the project root for license information.
 # Configure Git to use hooks from .github/hooks/ directory
 
-set -e
-
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -14,11 +12,15 @@ NC='\033[0m'
 
 echo -e "${BLUE}📦 Configuring git hooks...${NC}"
 
-# Check if we're in a git repository
-if [ ! -d ".git" ]; then
-  echo -e "${YELLOW}⚠️  Not in a git repository. Run this from the project root.${NC}"
-  exit 1
+# Find the git repository root
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [ -z "$GIT_ROOT" ]; then
+  echo -e "${YELLOW}⚠️  Not in a git repository.${NC}"
+  exit 0
 fi
+
+# Change to git repository root
+cd "$GIT_ROOT" || { echo -e "${YELLOW}⚠️  Failed to change directory to git root ($GIT_ROOT).${NC}"; exit 0; }
 
 # Define hooks directory (relative to workspace root)
 HOOKS_DIR=".github/hooks"
@@ -26,16 +28,23 @@ HOOKS_DIR=".github/hooks"
 # Check if hooks directory exists
 if [ ! -d "$HOOKS_DIR" ]; then
   echo -e "${YELLOW}⚠️  $HOOKS_DIR directory not found${NC}"
-  exit 1
+  exit 0
 fi
 
 # Make all hooks executable
 echo -e "${BLUE}Setting executable permissions on hooks...${NC}"
-chmod +x "$HOOKS_DIR"/*
+if compgen -G "$HOOKS_DIR"/* > /dev/null; then
+  chmod +x "$HOOKS_DIR"/* 2>/dev/null || true
+else
+  echo -e "${YELLOW}⚠️  No hook files found in $HOOKS_DIR to make executable.${NC}"
+fi
 
 # Configure Git to use .github/hooks directory
 echo -e "${BLUE}Setting core.hooksPath to $HOOKS_DIR${NC}"
-git config core.hooksPath "$HOOKS_DIR"
+if ! git config core.hooksPath "$HOOKS_DIR" 2>/dev/null; then
+  echo -e "${YELLOW}⚠️  Failed to configure git hooks (git might not be available)${NC}"
+  exit 0
+fi
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

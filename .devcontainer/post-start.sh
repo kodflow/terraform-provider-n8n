@@ -36,8 +36,12 @@ echo "🧹 Cleaning up old binaries..."
 rm -f "$HOME/.cache/go/bin/golangci-lint-real" # Old golangci-lint wrapper
 rm -f "$HOME/.cache/go/bin/ktn-linter"         # Duplicate (should be in .local/bin)
 
-# Install Go tools (now that Go is available in PATH)
-if command -v go &>/dev/null; then
+# Install Go tools (using absolute path to ensure Go is found)
+GO_BIN="/usr/local/go/bin/go"
+if [ ! -x "$GO_BIN" ]; then
+  GO_BIN="$(command -v go 2>/dev/null || echo "")"
+fi
+if [ -x "$GO_BIN" ]; then
   # Check if tools are already installed to avoid reinstalling every time
   if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null; then
     echo "🔨 Installing Go tools..."
@@ -61,22 +65,36 @@ if command -v go &>/dev/null; then
     chmod +x "$HOME/.cache/go/bin/golangci-lint"
     rm -rf /tmp/golangci-lint.tar.gz "/tmp/golangci-lint-${GOLANGCI_VERSION}-linux-${ARCH}"
 
-    # Install other Go tools
-    go install github.com/bazelbuild/buildtools/buildifier@latest
-    go install mvdan.cc/sh/v3/cmd/shfmt@latest
+    # Install other Go tools using absolute path
+    "$GO_BIN" install github.com/bazelbuild/buildtools/buildifier@latest
+    "$GO_BIN" install mvdan.cc/sh/v3/cmd/shfmt@latest
     echo "✅ Go tools installed successfully!"
   else
     echo "✅ Go tools already installed"
   fi
 else
-  echo "⚠️  Go not found in PATH, skipping Go tools installation"
+  if [ -z "$GO_BIN" ]; then
+    echo "⚠️  Go not found in PATH, skipping Go tools installation"
+  else
+    echo "⚠️  Go not found at $GO_BIN, skipping Go tools installation"
+  fi
 fi
 
-# Ensure git hooks are executable (in case they were reset)
-if [ -f "/workspace/scripts/install-hooks.sh" ]; then
-  echo "🪝 Ensuring git hooks are executable..."
-  chmod +x /workspace/scripts/install-hooks.sh
-  /workspace/scripts/install-hooks.sh
+# Ensure git hooks are configured (only if not already set)
+if [ ! -d "/workspace/.git" ]; then
+  echo "⚠️  Git repository not found, skipping git hooks configuration"
+elif [ ! -f "/workspace/scripts/install-hooks.sh" ]; then
+  echo "⚠️  Install hooks script not found, skipping git hooks configuration"
+else
+  # Check if hooks are already configured (handle both absolute and relative paths)
+  CURRENT_HOOKS_PATH=$(git config --get core.hooksPath 2>/dev/null || echo "")
+  if [[ "$CURRENT_HOOKS_PATH" != *".github/hooks" ]]; then
+    echo "🪝 Configuring git hooks..."
+    chmod +x /workspace/scripts/install-hooks.sh
+    /workspace/scripts/install-hooks.sh
+  else
+    echo "✅ Git hooks already configured"
+  fi
 fi
 
 # Setup MCP configuration

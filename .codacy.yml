@@ -17,3 +17,5 @@ exclude_paths:
   - "third_party/**"
   # Generated SDK
   - "sdk/**"
+  # DevContainer setup scripts
+  - ".devcontainer/**"
