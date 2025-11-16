@@ -1,5 +1,5 @@
-variable "n8n_api_url" {
-  description = "n8n API URL"
+variable "n8n_base_url" {
+  description = "n8n Base URL"
   type        = string
 }
 

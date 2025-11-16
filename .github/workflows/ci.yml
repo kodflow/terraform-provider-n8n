@@ -16,8 +16,8 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    name: CI Pipeline
+  build-and-test:
+    name: Build & Quality Checks
     runs-on: ubuntu-latest
     steps:
       # Checkout repository
@@ -80,12 +80,6 @@ jobs:
       - name: Install tools
         run: make tools
 
-      # Setup Terraform
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          terraform_version: latest
-
       # Check code formatting
       - name: Check formatting
         run: make fmt
@@ -127,9 +121,17 @@ jobs:
           coverage-reports: bazel-out/_coverage/_coverage_report.lcov
         continue-on-error: true
 
-      # Build provider
+      # Build provider with Bazel
       - name: Build provider
         run: make build
+
+      # Upload provider binary for test jobs
+      - name: Upload provider binary
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: terraform-provider-n8n
+          path: bazel-bin/src/terraform-provider-n8n_/terraform-provider-n8n
+          retention-days: 1
 
       # Run acceptance tests (pass env vars directly)
       - name: Run acceptance tests
@@ -144,3 +146,295 @@ jobs:
       # Generate documentation
       - name: Generate documentation
         run: make docs
+
+  plan-examples:
+    name: Plan - ${{ matrix.example-name }}
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example-name: basic-sample
+            example-path: examples/basic-sample
+          - example-name: community-credentials
+            example-path: examples/community/credentials/basic-auth
+          - example-name: community-tags
+            example-path: examples/community/tags/workflow-tags
+          - example-name: community-workflow-basic
+            example-path: examples/community/workflows/basic-workflow
+          - example-name: community-workflow-scheduled
+            example-path: examples/community/workflows/scheduled-workflow
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: latest
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Make provider binary executable
+      - name: Make provider executable
+        run: chmod +x /tmp/terraform-provider/terraform-provider-n8n
+
+      # Health check - verify n8n instance is reachable
+      - name: Health check n8n instance
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+        run: |
+          echo "🏥 Checking n8n instance health..."
+          if curl -f -s -o /dev/null -w "%{http_code}" --max-time 10 "$N8N_API_URL" | grep -q "200\|301\|302"; then
+            echo "✅ n8n instance is reachable"
+          else
+            echo "❌ n8n instance is not reachable"
+            exit 1
+          fi
+
+      # Configure Terraform to use local provider
+      - name: Configure Terraform dev overrides
+        run: |
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraformrc <<EOF
+          provider_installation {
+            dev_overrides {
+              "kodflow/n8n" = "/tmp/terraform-provider"
+            }
+            direct {}
+          }
+          EOF
+
+      # Terraform Validate & Plan
+      - name: Terraform Validate & Plan
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
+        working-directory: ${{ matrix.example-path }}
+        run: |
+          echo "🔍 Validating configuration..."
+          terraform validate -no-color
+
+          echo "📋 Planning infrastructure changes..."
+          terraform plan -no-color -input=false -out=tfplan
+
+      # Upload plan for apply job
+      - name: Upload Terraform plan
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: tfplan-${{ matrix.example-name }}
+          path: ${{ matrix.example-path }}/tfplan
+          retention-days: 1
+
+  apply-examples:
+    name: Apply - ${{ matrix.example-name }}
+    runs-on: ubuntu-latest
+    needs: plan-examples
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example-name: basic-sample
+            example-path: examples/basic-sample
+          - example-name: community-credentials
+            example-path: examples/community/credentials/basic-auth
+          - example-name: community-tags
+            example-path: examples/community/tags/workflow-tags
+          - example-name: community-workflow-basic
+            example-path: examples/community/workflows/basic-workflow
+          - example-name: community-workflow-scheduled
+            example-path: examples/community/workflows/scheduled-workflow
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: latest
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Download plan from plan job
+      - name: Download Terraform plan
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: tfplan-${{ matrix.example-name }}
+          path: ${{ matrix.example-path }}
+
+      # Make provider binary executable
+      - name: Make provider executable
+        run: chmod +x /tmp/terraform-provider/terraform-provider-n8n
+
+      # Configure Terraform to use local provider
+      - name: Configure Terraform dev overrides
+        run: |
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraformrc <<EOF
+          provider_installation {
+            dev_overrides {
+              "kodflow/n8n" = "/tmp/terraform-provider"
+            }
+            direct {}
+          }
+          EOF
+
+      # Terraform Apply
+      - name: Terraform Apply
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
+        working-directory: ${{ matrix.example-path }}
+        run: |
+          echo "🚀 Applying infrastructure changes..."
+          terraform apply -no-color -auto-approve tfplan
+
+          echo "📤 Outputs:"
+          terraform output -no-color || true
+
+      # Verify resources created via n8n API
+      - name: Verify resources via n8n API
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+        working-directory: ${{ matrix.example-path }}
+        run: |
+          echo "🔍 Verifying resources created via n8n API..."
+
+          # Extract resource IDs from terraform output
+          terraform output -json > outputs.json
+
+          # Check based on example type
+          case "${{ matrix.example-name }}" in
+            "community-tags")
+              echo "Checking tags via API..."
+              RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/tags")
+              echo "API Response: $RESPONSE"
+
+              # Verify tags were created (with timestamp format: ci-RUN_NUMBER-TIMESTAMP-TYPE)
+              # The timestamp is RUN_NUMBER-RUN_ATTEMPT, resulting in: ci-235-235-1-prod
+              if echo "$RESPONSE" | grep -q "ci-${{ github.run_number }}-${{ github.run_number }}-${{ github.run_attempt }}-"; then
+                echo "✅ Tags verified successfully"
+              else
+                echo "❌ Tags not found in API response"
+                exit 1
+              fi
+              ;;
+            "community-workflow-basic"|"community-workflow-scheduled")
+              echo "Checking workflows via API..."
+              RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows")
+              echo "API Response: $RESPONSE"
+
+              # Verify workflow was created
+              if echo "$RESPONSE" | grep -q "ci-${{ github.run_number }}"; then
+                echo "✅ Workflow verified successfully"
+              else
+                echo "❌ Workflow not found in API response"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "ℹ️  Skipping API verification for ${{ matrix.example-name }}"
+              ;;
+          esac
+
+      # Upload state file for destroy job
+      - name: Upload Terraform state
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: tfstate-${{ matrix.example-name }}
+          path: ${{ matrix.example-path }}/terraform.tfstate
+          retention-days: 1
+
+  destroy-examples:
+    name: Destroy - ${{ matrix.example-name }}
+    runs-on: ubuntu-latest
+    needs: apply-examples
+    if: always()
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example-name: basic-sample
+            example-path: examples/basic-sample
+          - example-name: community-credentials
+            example-path: examples/community/credentials/basic-auth
+          - example-name: community-tags
+            example-path: examples/community/tags/workflow-tags
+          - example-name: community-workflow-basic
+            example-path: examples/community/workflows/basic-workflow
+          - example-name: community-workflow-scheduled
+            example-path: examples/community/workflows/scheduled-workflow
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: latest
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Download state file from apply job
+      - name: Download Terraform state
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: tfstate-${{ matrix.example-name }}
+          path: ${{ matrix.example-path }}
+        continue-on-error: true
+
+      # Make provider binary executable
+      - name: Make provider executable
+        run: chmod +x /tmp/terraform-provider/terraform-provider-n8n
+
+      # Configure Terraform to use local provider
+      - name: Configure Terraform dev overrides
+        run: |
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraformrc <<EOF
+          provider_installation {
+            dev_overrides {
+              "kodflow/n8n" = "/tmp/terraform-provider"
+            }
+            direct {}
+          }
+          EOF
+
+      # Terraform Destroy
+      - name: Terraform Destroy
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
+        working-directory: ${{ matrix.example-path }}
+        run: |
+          echo "🧹 Destroying infrastructure..."
+          terraform destroy -no-color -input=false -auto-approve

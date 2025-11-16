@@ -1,5 +1,5 @@
-variable "n8n_api_url" {
-  description = "N8N API URL"
+variable "n8n_base_url" {
+  description = "N8N Base URL"
   type        = string
   default     = "http://localhost:5678"
 }

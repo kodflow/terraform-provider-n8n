@@ -3,22 +3,22 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 0.1.0"
+      version = "~> 1.0"
     }
   }
 }
 
 provider "n8n" {
-  api_url = var.n8n_api_url
-  api_key = var.n8n_api_key
+  base_url = var.n8n_base_url
+  api_key  = var.n8n_api_key
 }
 
 # Create a simple webhook workflow
 resource "n8n_workflow" "webhook_example" {
-  name   = "Simple Webhook Workflow"
+  name   = "ci-${var.run_id}-Simple Webhook Workflow"
   active = true
 
-  nodes = jsonencode([
+  nodes_json = jsonencode([
     {
       id       = "webhook-node"
       name     = "Webhook"
@@ -50,7 +50,7 @@ resource "n8n_workflow" "webhook_example" {
     }
   ])
 
-  connections = jsonencode({
+  connections_json = jsonencode({
     "Webhook" = {
       main = [[{
         node  = "Set Values"
@@ -58,15 +58,6 @@ resource "n8n_workflow" "webhook_example" {
         index = 0
       }]]
     }
-  })
-
-  settings = jsonencode({
-    saveExecutionProgress    = true
-    saveManualExecutions     = true
-    saveDataErrorExecution   = "all"
-    saveDataSuccessExecution = "all"
-    executionTimeout         = 3600
-    timezone                 = "America/New_York"
   })
 }
 
