@@ -39,8 +39,55 @@ echo -e "${BOLD}  Pre-commit checks${RESET}"
 echo -e "${BOLD}${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo ""
 
+# Verify all commits in branch are GPG signed
+echo -e "${BOLD}1. Verifying GPG signatures on all commits in branch...${RESET}"
+
+# Get merge base with main branch
+MERGE_BASE=$(git merge-base main HEAD 2>/dev/null || echo "")
+
+if [ -n "$MERGE_BASE" ]; then
+  # Get all commits in the branch
+  COMMITS=$(git rev-list $MERGE_BASE..HEAD)
+
+  if [ -n "$COMMITS" ]; then
+    UNSIGNED_COMMITS=""
+    TOTAL_COMMITS=$(echo "$COMMITS" | wc -l | tr -d ' ')
+    CHECKED=0
+
+    for commit in $COMMITS; do
+      CHECKED=$((CHECKED + 1))
+      # Check if commit has a valid GPG signature
+      if ! git verify-commit "$commit" >/dev/null 2>&1; then
+        COMMIT_MSG=$(git log -1 --format=%s "$commit")
+        UNSIGNED_COMMITS="${UNSIGNED_COMMITS}\n  - ${CYAN}${commit:0:7}${RESET} $COMMIT_MSG"
+      fi
+    done
+
+    if [ -n "$UNSIGNED_COMMITS" ]; then
+      echo ""
+      echo -e "${BOLD}${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+      echo -e "${BOLD}${RED}❌ ERROR: Found unsigned commits in branch!${RESET}"
+      echo -e "${BOLD}${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+      echo ""
+      echo -e "The following commits are ${RED}NOT signed${RESET} with GPG:"
+      echo -e "$UNSIGNED_COMMITS"
+      echo ""
+      echo -e "${BOLD}To fix this, re-sign all commits with:${RESET}"
+      echo -e "  ${CYAN}git rebase --exec 'git commit --amend --no-edit -S' $MERGE_BASE${RESET}"
+      echo ""
+      echo -e "Then force push:"
+      echo -e "  ${CYAN}git push --force-with-lease${RESET}"
+      echo ""
+      exit 1
+    fi
+
+    echo -e "${GREEN}✓${RESET} All $TOTAL_COMMITS commits are GPG signed"
+  fi
+fi
+echo ""
+
 # Add copyright headers to modified files
-echo -e "${BOLD}1. Adding copyright headers...${RESET}"
+echo -e "${BOLD}2. Adding copyright headers...${RESET}"
 if ! ./scripts/add-copyright-headers.sh; then
   echo -e "${RED}✗${RESET} Failed to add copyright headers"
   exit 1
@@ -48,7 +95,7 @@ fi
 echo ""
 
 # Generate documentation (COVERAGE.MD)
-echo -e "${BOLD}2. Generating coverage documentation...${RESET}"
+echo -e "${BOLD}3. Generating coverage documentation...${RESET}"
 ./scripts/generate-coverage.sh > /dev/null 2>&1
 
 # Stage coverage file if it was modified
