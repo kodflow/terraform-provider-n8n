@@ -5,7 +5,6 @@ set -e
 CYAN='\033[36m'
 GREEN='\033[32m'
 YELLOW='\033[33m'
-RED='\033[31m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
@@ -26,7 +25,7 @@ COVERAGE_DATA=$(go tool cover -func=coverage.out)
 
 # Extract total coverage
 TOTAL_COVERAGE=$(echo "$COVERAGE_DATA" | tail -1 | awk '{print $3}')
-TOTAL_VALUE=$(echo "$TOTAL_COVERAGE" | sed 's/%//')
+TOTAL_VALUE=${TOTAL_COVERAGE//%/}
 
 echo -e "${CYAN}→${RESET} Parsing package coverage..."
 
@@ -52,7 +51,7 @@ Automatically generated coverage report.
 |--------|-------|
 | **Total Coverage** | **${TOTAL_COVERAGE}** |
 | **Threshold** | **70.0%** |
-| **Status** | $(if [ $(awk "BEGIN {print ($TOTAL_VALUE >= 70.0)}") -eq 1 ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
+| **Status** | $(if [ "$(awk "BEGIN {print ($TOTAL_VALUE >= 70.0)}")" -eq 1 ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi) |
 
 ---
 
@@ -69,13 +68,14 @@ ACCEPTANCE_TESTS=$(find src/internal/provider -name "*_acceptance_test.go" -type
 
 for test_file in $ACCEPTANCE_TESTS; do
   # Extract package name (e.g., credential, workflow, tag)
-  pkg_name=$(echo "$test_file" | sed 's|src/internal/provider/||' | sed 's|/.*||')
+  temp=${test_file#src/internal/provider/}
+  pkg_name=${temp%%/*}
 
   # Count TestAcc* functions in the file
   test_count=$(grep -c "^func TestAcc" "$test_file" 2>/dev/null || echo "0")
 
   # Get test function names
-  test_names=$(grep "^func TestAcc" "$test_file" 2>/dev/null | sed 's/func //' | sed 's/(.*$//' || echo "")
+  test_names=$(grep "^func TestAcc" "$test_file" 2>/dev/null | awk '{gsub(/func /, ""); gsub(/\(.*$/, ""); print}' || echo "")
 
   if [ "$test_count" -gt 0 ]; then
     # Format test names as a comma-separated list with backticks
@@ -111,12 +111,12 @@ echo "$COVERAGE_BY_PKG" | while IFS= read -r line; do
     continue
   fi
 
-  PKG_VALUE=$(echo "$coverage" | sed 's/%//')
+  PKG_VALUE=${coverage//%/}
 
   # Determine icon
-  if [ $(awk "BEGIN {print ($PKG_VALUE >= 90.0)}") -eq 1 ]; then
+  if [ "$(awk "BEGIN {print ($PKG_VALUE >= 90.0)}")" -eq 1 ]; then
     ICON="🟢"
-  elif [ $(awk "BEGIN {print ($PKG_VALUE >= 70.0)}") -eq 1 ]; then
+  elif [ "$(awk "BEGIN {print ($PKG_VALUE >= 70.0)}")" -eq 1 ]; then
     ICON="🟡"
   else
     ICON="🔴"
@@ -144,14 +144,15 @@ EOF
 
 # Create a temporary directory for processing
 TMP_DIR=$(mktemp -d)
-trap "rm -rf $TMP_DIR" EXIT
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 # Get unique packages
 PACKAGES=$(echo "$COVERAGE_DATA" | grep -E "^github.com/kodflow/terraform-provider-n8n/src/internal/provider/" | grep -v "total:" | awk -F: '{print $1}' | sed 's|/[^/]*\.go$||' | sort -u)
 
 # First pass: collect all data organized by filename
 for pkg in $PACKAGES; do
-  PKG_SHORT=$(echo "$pkg" | sed 's|github.com/kodflow/terraform-provider-n8n/src/internal/provider||' | sed 's|^/||')
+  temp=${pkg#github.com/kodflow/terraform-provider-n8n/src/internal/provider}
+  PKG_SHORT=${temp#/}
   if [ -z "$PKG_SHORT" ]; then
     PKG_SHORT="provider"
   fi
@@ -200,7 +201,8 @@ generate_coverage_table() {
   fi
 
   # Collect all unique function names for this file
-  local ALL_FUNCS=$(cat "$FILE_DATA"/* 2>/dev/null | awk -F'\t' '{print $1}' | sort -u)
+  local ALL_FUNCS
+  ALL_FUNCS=$(awk -F'\t' '{print $1}' "$FILE_DATA"/* 2>/dev/null | sort -u)
 
   if [ -z "$ALL_FUNCS" ]; then
     return
@@ -222,14 +224,18 @@ generate_coverage_table() {
     local ROW="| \`$func\` |"
 
     for pkg in $PACKAGES; do
-      local PKG_SAFE=$(echo "$pkg" | tr '/' '_')
-      local COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
+      local PKG_SAFE
+      PKG_SAFE=$(echo "$pkg" | tr '/' '_')
+      local COV
+      COV=$(grep "^$func"$'\t' "$FILE_DATA/$PKG_SAFE" 2>/dev/null | awk -F'\t' '{print $2}')
 
       if [ -z "$COV" ]; then
         local PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
         if [ -f "$PKG_PATH" ] && grep -q "func.*[[:space:]]$func(" "$PKG_PATH"; then
-          local FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
-          local EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -v "^[[:space:]]*$" | wc -l)
+          local FUNC_BODY
+          FUNC_BODY=$(awk "/func.*[[:space:]]$func\(/,/^}/" "$PKG_PATH" | grep -v "^//" | grep -v "^[[:space:]]*//")
+          local EXECUTABLE_LINES
+          EXECUTABLE_LINES=$(echo "$FUNC_BODY" | tail -n +2 | head -n -1 | grep -vc "^[[:space:]]*$")
 
           if [ "$EXECUTABLE_LINES" -eq 0 ]; then
             ROW="$ROW 🔵 N/A |"
@@ -240,12 +246,13 @@ generate_coverage_table() {
           ROW="$ROW 🔵 N/A |"
         fi
       else
-        local COV_VALUE=$(echo "$COV" | sed 's/%//')
-        if [ $(awk "BEGIN {print ($COV_VALUE >= 90.0)}") -eq 1 ]; then
+        local COV_VALUE
+        COV_VALUE=${COV//%/}
+        if [ "$(awk "BEGIN {print ($COV_VALUE >= 90.0)}")" -eq 1 ]; then
           local ICON="🟢"
-        elif [ $(awk "BEGIN {print ($COV_VALUE >= 70.0)}") -eq 1 ]; then
+        elif [ "$(awk "BEGIN {print ($COV_VALUE >= 70.0)}")" -eq 1 ]; then
           local ICON="🟡"
-        elif [ $(awk "BEGIN {print ($COV_VALUE > 0.0)}") -eq 1 ]; then
+        elif [ "$(awk "BEGIN {print ($COV_VALUE > 0.0)}")" -eq 1 ]; then
           local ICON="🟠"
         else
           local PKG_PATH="src/internal/provider/$pkg/$FILE_SHORT"
@@ -290,7 +297,7 @@ for pkg in $ALL_PROVIDER_PACKAGES; do
 done
 
 if [ -n "$PRIMARY_PACKAGES" ]; then
-  generate_coverage_table "resource.go" $PRIMARY_PACKAGES
+  generate_coverage_table "resource.go" "$PRIMARY_PACKAGES"
 fi
 
 # === SECONDARY RESOURCES (Operations/Relations) ===
@@ -302,11 +309,11 @@ echo "Special operations and resource relationship management." >>COVERAGE.MD
 echo "" >>COVERAGE.MD
 
 # Find all *_resource.go files (excluding resource.go)
-SECONDARY_FILES=$(ls "$TMP_DIR" 2>/dev/null | grep "_resource.go$" | grep -v "^resource.go$" | sort)
+SECONDARY_FILES=$(find "$TMP_DIR" -maxdepth 1 -name "*_resource.go" ! -name "resource.go" -printf "%f\n" 2>/dev/null | sort)
 
 for FILE_SHORT in $SECONDARY_FILES; do
   # Extract resource type (e.g., retry_resource.go -> retry)
-  RES_TYPE=$(echo "$FILE_SHORT" | sed 's/_resource\.go$//')
+  RES_TYPE=${FILE_SHORT%_resource.go}
 
   # Find packages that have this file
   SEC_PACKAGES=""
@@ -339,7 +346,7 @@ for FILE_SHORT in $SECONDARY_FILES; do
 
     echo "### $TITLE" >>COVERAGE.MD
     echo "" >>COVERAGE.MD
-    generate_coverage_table "$FILE_SHORT" $SEC_PACKAGES
+    generate_coverage_table "$FILE_SHORT" "$SEC_PACKAGES"
   fi
 done
 
@@ -362,7 +369,7 @@ done
 if [ -n "$DS_PACKAGES" ]; then
   echo "### datasource (singular)" >>COVERAGE.MD
   echo "" >>COVERAGE.MD
-  generate_coverage_table "datasource.go" $DS_PACKAGES
+  generate_coverage_table "datasource.go" "$DS_PACKAGES"
 fi
 
 # datasources.go (plural)
@@ -376,7 +383,7 @@ done
 if [ -n "$DSS_PACKAGES" ]; then
   echo "### datasources (plural)" >>COVERAGE.MD
   echo "" >>COVERAGE.MD
-  generate_coverage_table "datasources.go" $DSS_PACKAGES
+  generate_coverage_table "datasources.go" "$DSS_PACKAGES"
 fi
 
 # Add footer
@@ -405,6 +412,6 @@ echo -e "  ${CYAN}Total Coverage:${RESET} ${TOTAL_COVERAGE}"
 echo ""
 
 # Check if coverage meets threshold (warning only, no exit)
-if [ $(awk "BEGIN {print ($TOTAL_VALUE < 70.0)}") -eq 1 ]; then
+if [ "$(awk "BEGIN {print ($TOTAL_VALUE < 70.0)}")" -eq 1 ]; then
   echo -e "${YELLOW}⚠️  Info: Coverage is below 70% threshold${RESET}"
 fi

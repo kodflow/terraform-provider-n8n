@@ -7,13 +7,19 @@ import subprocess
 import sys
 import json
 import re
+import shlex
 from pathlib import Path
 
 def run(cmd, check=True):
-    """Run command and optionally exit on error"""
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    """Run command and optionally exit on error (secure version without shell=True)"""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    # nosec B603 nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    result = subprocess.run(
+        cmd, shell=False, capture_output=True, text=True, check=False
+    )
     if check and result.returncode != 0:
-        print(f"❌ Command failed: {cmd}", file=sys.stderr)
+        print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
     return result.stdout.strip()
@@ -24,7 +30,7 @@ def get_latest_version():
         result = run("curl -s https://api.github.com/repos/n8n-io/n8n/releases/latest", check=False)
         data = json.loads(result)
         return data.get('tag_name', 'unknown').lstrip('n8n@')
-    except:
+    except (json.JSONDecodeError, KeyError, AttributeError):
         return None
 
 def main():
@@ -49,13 +55,13 @@ def main():
 
         print(f"   ✓ Found commit: {latest_commit[:8]}\n")
 
-    except Exception as e:
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
         print(f"❌ Error fetching commit: {e}")
         sys.exit(1)
 
     # Read current script
     script_path = Path("codegen/download-only.py")
-    with open(script_path, 'r') as f:
+    with open(script_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
     # Find current version
@@ -81,10 +87,10 @@ def main():
     new_content = re.sub(pattern, replacement, content)
 
     # Write back
-    with open(script_path, 'w') as f:
+    with open(script_path, 'w', encoding='utf-8') as f:
         f.write(new_content)
 
-    print(f"✅ Updated codegen/download-only.py")
+    print("✅ Updated codegen/download-only.py")
     print(f"   📌 New commit: {latest_commit[:8]} (n8n@{latest_version})")
     print()
     print("Next steps:")

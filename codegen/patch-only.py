@@ -6,13 +6,19 @@ Apply patches to openapi.yaml
 
 import subprocess
 import sys
+import shlex
 from pathlib import Path
 
 def run(cmd, check=True):
-    """Run command and optionally exit on error"""
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    """Run command and optionally exit on error (secure version without shell=True)"""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    # nosec B603 nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    result = subprocess.run(
+        cmd, shell=False, capture_output=True, text=True, check=False
+    )
     if check and result.returncode != 0:
-        print(f"❌ Command failed: {cmd}", file=sys.stderr)
+        print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
     return result.stdout.strip()
@@ -33,12 +39,16 @@ def main():
     print("🩹 Applying openapi.patch...")
     if patch_file.exists():
         # Try with fuzzy matching to allow for line number differences
-        result = subprocess.run(
-            f"patch -p0 --fuzz=3 < {patch_file}",
-            shell=True,
-            capture_output=True,
-            text=True
-        )
+        # Use stdin parameter instead of shell redirection
+        with open(patch_file, 'r', encoding='utf-8') as patch_input:
+            # nosec B603 B607 nosemgrep
+            result = subprocess.run(
+                ['patch', '-p0', '--fuzz=3'],
+                stdin=patch_input,
+                capture_output=True,
+                text=True,
+                check=False
+            )
         if result.returncode != 0:
             print("   ⚠️  Patch failed!")
             if result.stderr:
@@ -53,7 +63,7 @@ def main():
 
     # 2. Add additionalProperties: true to credential schema
     print("🔧 Adding additionalProperties to credential schema...")
-    with open(spec_file, 'r') as f:
+    with open(spec_file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified = False
@@ -80,7 +90,7 @@ def main():
         i += 1
 
     if modified:
-        with open(spec_file, 'w') as f:
+        with open(spec_file, 'w', encoding='utf-8') as f:
             f.writelines(output)
         print("   ✓ Added additionalProperties\n")
     else:
