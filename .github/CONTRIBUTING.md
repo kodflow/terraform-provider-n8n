@@ -123,7 +123,7 @@ make build
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]

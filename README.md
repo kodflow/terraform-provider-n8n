@@ -168,7 +168,7 @@ Hooks are automatically installed in DevContainer.
 
 ## Project Architecture
 
-```
+```text
 .
 ├── src/                          # Provider source code
 │   ├── main.go                   # Entry point
