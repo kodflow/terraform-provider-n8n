@@ -171,5 +171,5 @@ Reading n8n resources without managing their lifecycle.
 
 ---
 
-*Report generated on: 2025-11-15*
+*Report generated on: 2025-11-16*
 *Threshold: 70.0%*

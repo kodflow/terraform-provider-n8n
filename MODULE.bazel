@@ -35,4 +35,4 @@ use_repo(
 
 # Register Go toolchain - use specific version to avoid Bazel 9.0.0rc1 host detection bug
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.25.3")
+go_sdk.download(version = "1.25.4")
