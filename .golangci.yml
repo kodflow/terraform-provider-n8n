@@ -66,8 +66,7 @@ linters:
       - legacy
       - std-error-handling
     rules:
-      - id: test-files-common-linters
-        linters:
+      - linters:
           - errcheck
           - gocognit
           - goconst
@@ -75,28 +74,22 @@ linters:
           - gosec
           - unparam
         path: _test\.go
-      - id: helpers-internal-test-govet
-        linters:
+      - linters:
           - govet
         path: helpers_internal_test\.go
-      - id: resource-internal-test-govet
-        linters:
+      - linters:
           - govet
         path: resource_internal_test\.go
-      - id: provider-gocritic
-        linters:
+      - linters:
           - gocritic
         path: internal/provider/
-      - id: protobuf-generated
-        linters:
+      - linters:
           - all
         path: .*\.pb\.go$
-      - id: mock-files
-        linters:
+      - linters:
           - all
         path: mock_.*\.go$
-      - id: test-files-goconst
-        linters:
+      - linters:
           - goconst
         path: (.+)_test\.go
     paths:

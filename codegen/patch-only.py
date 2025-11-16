@@ -13,7 +13,7 @@ def run(cmd, check=True):
     """Run command and optionally exit on error (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=False, capture_output=True, text=True, check=False)  # nosec B603
     if check and result.returncode != 0:
         print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
@@ -37,7 +37,7 @@ def main():
     if patch_file.exists():
         # Try with fuzzy matching to allow for line number differences
         # Use stdin parameter instead of shell redirection
-        with open(patch_file, 'r') as patch_input:
+        with open(patch_file, 'r', encoding='utf-8') as patch_input:
             result = subprocess.run(
                 ['patch', '-p0', '--fuzz=3'],
                 stdin=patch_input,
