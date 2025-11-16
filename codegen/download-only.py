@@ -11,6 +11,8 @@ import shutil
 import json
 import shlex
 import tempfile
+import re
+import yaml
 from pathlib import Path
 
 def run(cmd, cwd=None, check=True):
@@ -42,7 +44,7 @@ def get_latest_version():
         result = run("curl -s https://api.github.com/repos/n8n-io/n8n/releases/latest", check=False)
         data = json.loads(result)
         return data.get('tag_name', 'unknown').lstrip('n8n@')
-    except:
+    except (json.JSONDecodeError, KeyError, TypeError):
         return 'unknown'
 
 def download_from_github(n8n_commit, temp_dir, api_dir):
@@ -93,9 +95,6 @@ def bundle_yaml_spec(source_path, api_dir):
 
 def fix_schema_aliases(spec_file):
     """Fix schema aliases in OpenAPI spec"""
-    import yaml
-    import re
-
     print("🔧 Fixing schema aliases...")
 
     # Read YAML to find aliases
@@ -133,8 +132,6 @@ def fix_schema_aliases(spec_file):
 
 def add_version_info(spec_file, frozen_version, n8n_commit, latest_version):
     """Add version information to OpenAPI spec"""
-    import yaml
-
     print("📝 Adding version information...")
     with open(spec_file, 'r', encoding='utf-8') as f:
         openapi_content = f.read()

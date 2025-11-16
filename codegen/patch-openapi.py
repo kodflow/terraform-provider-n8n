@@ -8,6 +8,7 @@ import sys
 import shutil
 import subprocess
 import shlex
+import yaml
 from pathlib import Path
 
 def run(cmd):
@@ -149,7 +150,6 @@ def apply_git_commit_patch(commit_hash):
     # Validate YAML
     print("✅ Validating YAML...")
     try:
-        import yaml
         with open(openapi_file, 'r', encoding='utf-8') as f:
             yaml.safe_load(f)
         print("   ✓ YAML is valid")
