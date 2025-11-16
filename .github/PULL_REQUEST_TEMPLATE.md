@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD041 MD043 -->
+
 ## Summary
 
 <!-- Provide a brief, clear description of the changes made by this PR -->

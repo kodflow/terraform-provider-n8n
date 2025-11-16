@@ -65,6 +65,7 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+    # nosemgrep: yaml.semgrep.duplicate-id.duplicate-id
     rules:
       - linters:
           - errcheck

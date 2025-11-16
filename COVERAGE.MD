@@ -3,6 +3,7 @@
 Automatically generated coverage report.
 
 **Legend:**
+
 - 🟢 ≥90% - Excellent coverage
 - 🟡 70-89% - Good coverage
 - 🔴 <70% - Insufficient coverage
@@ -31,6 +32,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | `workflow` | ✅ | `TestAccWorkflowResource` |
 
 **Legend:**
+
 - ✅ Acceptance tests present
 - Acceptance tests verify real operations via the n8n API
 
@@ -155,7 +157,6 @@ Reading n8n resources without managing their lifecycle.
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 95.2% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-
 
 ---
 

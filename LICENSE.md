@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD043 -->
+
 # Sustainable Use License
 
 Version 1.0
@@ -60,7 +62,7 @@ to direct its management and policies by vote, contract, or otherwise. Control c
 This project is built for the n8n workflow automation platform. n8n is a trademark of n8n GmbH. This Terraform Provider is an independent project and is not
 officially affiliated with or endorsed by n8n GmbH.
 
-For more information about n8n, visit: https://n8n.io
+For more information about n8n, visit: <https://n8n.io>
 
 ---
 

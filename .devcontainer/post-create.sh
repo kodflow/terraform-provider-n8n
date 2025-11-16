@@ -106,6 +106,7 @@ fi
 
 # Install golangci-lint v2 (supports Go 1.25+)
 echo "🧹 Installing golangci-lint v2..."
+# shellcheck disable=SC2016
 safe_run bash -c 'curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$HOME/.local/bin" v2.6.1' || echo "⚠️  Failed to install golangci-lint"
 
 # Install git hooks
@@ -128,6 +129,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Git User:  $(git config --global user.name) <$(git config --global user.email)>"
 
 if [ -f "/host-gpg/gpg-config.env" ]; then
+  # shellcheck disable=SC1091
   source /host-gpg/gpg-config.env
   echo "GPG Key:   $KEYID"
   echo "Signing:   Commits ✅ | Tags ✅"
