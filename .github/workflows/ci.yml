@@ -161,10 +161,6 @@ jobs:
             example-path: examples/community/credentials/basic-auth
           - example-name: community-tags
             example-path: examples/community/tags/workflow-tags
-          - example-name: community-users
-            example-path: examples/community/users/basic-user
-          - example-name: community-variables
-            example-path: examples/community/variables/environment-vars
           - example-name: community-workflow-basic
             example-path: examples/community/workflows/basic-workflow
           - example-name: community-workflow-scheduled
@@ -254,10 +250,6 @@ jobs:
             example-path: examples/community/credentials/basic-auth
           - example-name: community-tags
             example-path: examples/community/tags/workflow-tags
-          - example-name: community-users
-            example-path: examples/community/users/basic-user
-          - example-name: community-variables
-            example-path: examples/community/variables/environment-vars
           - example-name: community-workflow-basic
             example-path: examples/community/workflows/basic-workflow
           - example-name: community-workflow-scheduled
@@ -388,10 +380,6 @@ jobs:
             example-path: examples/community/credentials/basic-auth
           - example-name: community-tags
             example-path: examples/community/tags/workflow-tags
-          - example-name: community-users
-            example-path: examples/community/users/basic-user
-          - example-name: community-variables
-            example-path: examples/community/variables/environment-vars
           - example-name: community-workflow-basic
             example-path: examples/community/workflows/basic-workflow
           - example-name: community-workflow-scheduled
