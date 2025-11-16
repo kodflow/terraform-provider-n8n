@@ -7,11 +7,19 @@ Create and apply patches to openapi.yaml
 import sys
 import shutil
 import subprocess
+import shlex
+import yaml
 from pathlib import Path
 
 def run(cmd):
-    """Run command and return output"""
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    """Run command and return output (secure version without shell=True)"""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    # nosec B603 nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
+    result = subprocess.run(
+        cmd, shell=False, capture_output=True, text=True, check=False
+    )
     return result.returncode, result.stdout, result.stderr
 
 def create_patch():
@@ -59,7 +67,7 @@ def create_patch():
         patch_content.append(line)
 
     # Write patch file
-    with open(patch_file, 'w') as f:
+    with open(patch_file, 'w', encoding='utf-8') as f:
         f.write('\n'.join(patch_content))
 
     print(f"✅ Patch created: {patch_file}")
@@ -80,7 +88,7 @@ def apply_git_commit_patch(commit_hash):
         sys.exit(1)
 
     # Get the diff from commit
-    print(f"📥 Extracting changes from commit...")
+    print("📥 Extracting changes from commit...")
     rc, stdout, stderr = run(f"git show {commit_hash} sdk/n8nsdk/api/openapi.yaml")
     if rc != 0:
         print(f"❌ Git error: {stderr}")
@@ -108,10 +116,10 @@ def apply_git_commit_patch(commit_hash):
         patch_content.append(line)
 
     # Write patch file
-    with open(patch_file, 'w') as f:
+    with open(patch_file, 'w', encoding='utf-8') as f:
         f.write('\n'.join(patch_content))
 
-    print(f"   ✓ Extracted changes")
+    print("   ✓ Extracted changes")
     print(f"   📝 {len([l for l in patch_content if l.startswith('+') and not l.startswith('+++')])} additions")
     print(f"   📝 {len([l for l in patch_content if l.startswith('-') and not l.startswith('---')])} deletions")
     print()
@@ -122,10 +130,18 @@ def apply_git_commit_patch(commit_hash):
     shutil.copy(openapi_file, backup_file)
 
     # Try with fuzzy matching (allows line number differences)
-    rc, stdout, stderr = run(f"patch -p0 --fuzz=3 < {patch_file}")
-    if rc != 0:
-        print(f"❌ Patch failed!")
-        print(stderr)
+    # Use stdin parameter instead of shell redirection
+    with open(patch_file, 'r', encoding='utf-8') as patch_input:
+        result = subprocess.run(  # nosec B603 B607
+            ['patch', '-p0', '--fuzz=3'],
+            stdin=patch_input,
+            capture_output=True,
+            text=True,
+            check=False
+        )
+    if result.returncode:
+        print("❌ Patch failed!")
+        print(result.stderr)
         # Restore backup
         shutil.copy(backup_file, openapi_file)
         backup_file.unlink()
@@ -138,11 +154,10 @@ def apply_git_commit_patch(commit_hash):
     # Validate YAML
     print("✅ Validating YAML...")
     try:
-        import yaml
-        with open(openapi_file, 'r') as f:
+        with open(openapi_file, 'r', encoding='utf-8') as f:
             yaml.safe_load(f)
         print("   ✓ YAML is valid")
-    except Exception as e:
+    except (yaml.YAMLError, IOError) as e:
         print(f"❌ YAML validation failed: {e}")
         sys.exit(1)
 

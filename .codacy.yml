@@ -11,6 +11,10 @@ exclude_paths:
   # DevContainer generated files with secrets
   - ".devcontainer/mcp.json"
 
+  # Build and codegen scripts (development tools, not production code)
+  - "codegen/**"
+  - "scripts/**"
+
   # Generated SDK and Bazel files
   - "sdk/n8nsdk/**"
   - "bazel-*/**"

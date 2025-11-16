@@ -21,6 +21,7 @@ git config --global user.email "133899878+kodflow@users.noreply.github.com"
 # Configure GPG signing if GPG key is available
 if [ -f "/host-gpg/gpg-config.env" ]; then
   echo "🔐 Configuring GPG signing..."
+  # shellcheck disable=SC1091
   source /host-gpg/gpg-config.env
 
   # Verify GPG key is imported
