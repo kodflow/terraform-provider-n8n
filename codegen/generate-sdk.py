@@ -99,7 +99,7 @@ def main():
     print("   → Fixing model_workflow.go...")
     workflow_model = sdk_dir / "model_workflow.go"
     if workflow_model.exists():
-        content = workflow_model.read_text()
+        content = workflow_model.read_text(encoding='utf-8')
 
         # Check if fields are already there
         if 'VersionId' not in content:
@@ -130,7 +130,7 @@ def main():
             # Add getter/setter methods (simplified - just the struct is enough for now)
             # Full methods can be added later if needed
 
-            workflow_model.write_text(content)
+            workflow_model.write_text(content, encoding='utf-8')
             print("   ✓ Added missing workflow fields\n")
         else:
             print("   ✓ Fields already present\n")
@@ -140,12 +140,12 @@ def main():
     # 3. Fix module paths
     print("   → Fixing module paths...")
     for go_file in sdk_dir.rglob("*.go"):
-        content = go_file.read_text()
+        content = go_file.read_text(encoding='utf-8')
         content = content.replace(
             "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk",
             "github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
         )
-        go_file.write_text(content)
+        go_file.write_text(content, encoding='utf-8')
     print("   ✓ Fixed\n")
 
     # 3. Run go mod tidy
