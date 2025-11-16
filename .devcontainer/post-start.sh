@@ -42,15 +42,14 @@ if [ ! -x "$GO_BIN" ]; then
   GO_BIN="$(command -v go 2>/dev/null || echo "")"
 fi
 if [ -x "$GO_BIN" ]; then
-  # Check if tools are already installed to avoid reinstalling every time
+  # Install golangci-lint if missing or corrupted
   if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null; then
-    echo "🔨 Installing Go tools..."
+    echo "🔨 Installing golangci-lint..."
 
     # Clean up any corrupted golangci-lint binary
     rm -f "$HOME/.cache/go/bin/golangci-lint"
 
     # Install golangci-lint v2.6.1 from GitHub releases
-    echo "📦 Installing golangci-lint v2.6.1..."
     ARCH="$(uname -m)"
     case "$ARCH" in
       x86_64) ARCH="amd64" ;;
@@ -64,13 +63,27 @@ if [ -x "$GO_BIN" ]; then
     cp "/tmp/golangci-lint-${GOLANGCI_VERSION}-linux-${ARCH}/golangci-lint" "$HOME/.cache/go/bin/golangci-lint"
     chmod +x "$HOME/.cache/go/bin/golangci-lint"
     rm -rf /tmp/golangci-lint.tar.gz "/tmp/golangci-lint-${GOLANGCI_VERSION}-linux-${ARCH}"
+    echo "✅ golangci-lint installed successfully!"
+  fi
 
-    # Install other Go tools using absolute path
+  # Install goreleaser if missing
+  if [ ! -f "$HOME/.cache/go/bin/goreleaser" ]; then
+    echo "🔨 Installing goreleaser..."
+    "$GO_BIN" install github.com/goreleaser/goreleaser/v2@v2.6.1
+    echo "✅ goreleaser installed successfully!"
+  fi
+
+  # Install other Go tools if missing
+  if [ ! -f "$HOME/.cache/go/bin/buildifier" ] || [ ! -f "$HOME/.cache/go/bin/shfmt" ]; then
+    echo "🔨 Installing other Go tools..."
     "$GO_BIN" install github.com/bazelbuild/buildtools/buildifier@latest
     "$GO_BIN" install mvdan.cc/sh/v3/cmd/shfmt@latest
     echo "✅ Go tools installed successfully!"
-  else
-    echo "✅ Go tools already installed"
+  fi
+
+  # Report final status
+  if [ -f "$HOME/.cache/go/bin/golangci-lint" ] && [ -f "$HOME/.cache/go/bin/goreleaser" ] && [ -f "$HOME/.cache/go/bin/buildifier" ] && [ -f "$HOME/.cache/go/bin/shfmt" ]; then
+    echo "✅ All Go tools are installed"
   fi
 else
   if [ -z "$GO_BIN" ]; then
