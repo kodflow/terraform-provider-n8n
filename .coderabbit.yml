@@ -2,6 +2,8 @@
 # Licensed under the Sustainable Use License 1.0
 # See LICENSE.md in the project root for license information.
 
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
 # CodeRabbit Configuration for Terraform Provider n8n
 # Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
 
@@ -39,6 +41,21 @@ reviews:
   # Auto-reply to comments
   auto_reply: true
 
+  # Path filters - files to exclude from review
+  path_filters:
+    exclude:
+      - "**/*.pb.go"
+      - "**/*.gen.go"
+      - "**/vendor/**"
+      - "bazel-*/**"
+      - "**/*.sum"
+      - ".bazelrc"
+      - ".bazelversion"
+      - "CHANGELOG.md"
+      - "**/node_modules/**"
+      - "**/*.md"
+      - "**/*.lock"
+
   # Path-specific instructions
   path_instructions:
     - path: "src/**/*.go"
@@ -50,6 +67,15 @@ reviews:
         - Check for proper resource cleanup (defer statements)
         - Ensure Terraform Plugin Framework conventions are followed
         - Validate schema definitions and type safety
+        - Check for proper error handling in Go code
+        - Ensure all exported functions and types have documentation
+        - All public Go functions must have godoc comments
+        - Error messages should be lowercase and not end with punctuation
+        - Tests should follow table-driven test pattern where applicable
+        - Constants must use SCREAMING_SNAKE_CASE naming convention
+        - Functions must not exceed 35 lines of code
+        - Each struct should be in its own file
+        - Variable and function types must be explicit (no type inference for declarations)
 
     - path: "src/**/BUILD.bazel"
       instructions: |
@@ -57,6 +83,7 @@ reviews:
         - Check dependencies are properly declared
         - Ensure visibility rules are appropriate
         - Validate test targets have proper data dependencies
+        - Verify Bazel build files are correctly structured
 
     - path: "**/*.tf"
       instructions: |
@@ -64,6 +91,9 @@ reviews:
         - Verify variable types and descriptions
         - Ensure outputs are documented
         - Check for sensitive data handling
+        - Verify Terraform schema definitions are correct
+        - All Terraform configurations must include examples in comments
+        - Use consistent naming: provider resources should be prefixed with 'n8n_'
 
     - path: ".github/workflows/*.yml"
       instructions: |
@@ -72,6 +102,7 @@ reviews:
         - Ensure jobs have proper dependencies
         - Validate caching strategies
         - Check for conventional commits validation
+        - Check for potential security issues (secrets, API keys)
 
     - path: "MODULE.bazel"
       instructions: |
@@ -80,57 +111,58 @@ reviews:
         - Ensure Go toolchain version (1.25.4+)
         - Validate rules_go and gazelle versions
 
+    - path: "**/*"
+      instructions: |
+        - Ensure tests are comprehensive and follow Bazel best practices
+        - Check that changes maintain backward compatibility unless marked as breaking
+        - Verify conventional commit format in PR title
+
+  # Tools configuration
+  tools:
+    # Ruff for Python (if any)
+    ruff:
+      enabled: false
+
+    # Shellcheck for shell scripts
+    shellcheck:
+      enabled: true
+
+    # Gitleaks for secret detection
+    gitleaks:
+      enabled: true
+
+    # Hadolint for Dockerfile
+    hadolint:
+      enabled: true
+
+    # Yamllint for YAML files
+    yamllint:
+      enabled: true
+
+    # Markdownlint for Markdown
+    markdownlint:
+      enabled: true
+
+    # Golangci-lint for Go code (includes ktn-linter custom integration)
+    golangci-lint:
+      enabled: true
+      # Uses custom .golangci.yml configuration with ktn-linter integration
+      # ktn-linter enforces strict code quality standards (28 rules)
+      # See: https://github.com/kodflow/ktn-linter
+
+    # Actionlint for GitHub Actions
+    actionlint:
+      enabled: true
+
 chat:
   # Enable chat functionality
   auto_reply: true
 
-# Tools configuration
-tools:
-  # Ruff for Python (if any)
-  ruff:
-    enabled: false
-
-  # Shellcheck for shell scripts
-  shellcheck:
-    enabled: true
-
-  # Gitleaks for secret detection
-  gitleaks:
-    enabled: true
-
-  # Hadolint for Dockerfile
-  hadolint:
-    enabled: true
-
-  # Yamllint for YAML files
-  yamllint:
-    enabled: true
-
-  # Markdownlint for Markdown
-  markdownlint:
-    enabled: true
-
-  # Golangci-lint for Go code (includes ktn-linter custom integration)
-  golangci-lint:
-    enabled: true
-    # Uses custom .golangci.yml configuration with ktn-linter integration
-    # ktn-linter enforces strict code quality standards (28 rules)
-    # See: https://github.com/kodflow/ktn-linter
-
-  # Actionlint for GitHub Actions
-  actionlint:
-    enabled: true
-
-# Issue labels to apply
-labels:
-  - "coderabbit"
-
-# Abort review on certain file patterns
-abort_on_close: true
-
 # Knowledge base settings
 knowledge_base:
   enabled: true
+
+  # Project-specific learnings
   learnings:
     framework: "This is a Terraform Provider built with Terraform Plugin Framework (not SDK)"
     build_system: "Uses Bazel 9 with bzlmod for dependency management"
@@ -142,48 +174,17 @@ knowledge_base:
     breaking_changes: "Breaking changes require major version bump (use ! or BREAKING CHANGE)"
     linter: "Uses ktn-linter (github.com/kodflow/ktn-linter) for strict Go code quality enforcement"
 
-# Review filters
-reviews_filters:
-  # Files to exclude from review
-  exclude_patterns:
-    - "**/*.pb.go"
-    - "**/*.gen.go"
-    - "**/vendor/**"
-    - "bazel-*/**"
-    - "**/*.sum"
-    - ".bazelrc"
-    - ".bazelversion"
-    - "CHANGELOG.md"
-    - "**/node_modules/**"
-    - "**/*.md" # Only exclude basic markdown review, still check with markdownlint
-    - "**/*.lock"
-
-  # File size limits (in KB)
-  max_file_size: 500
-
-# Code conventions
-conventions:
-  - "Use conventional commits format: <type>(<scope>): <description>"
-  - "PR titles must follow conventional commits"
-  - "Breaking changes must be clearly marked with ! or BREAKING CHANGE"
-  - "All public Go functions must have godoc comments"
-  - "Error messages should be lowercase and not end with punctuation"
-  - "Use consistent naming: provider resources should be prefixed with 'n8n_'"
-  - "Tests should follow table-driven test pattern where applicable"
-  - "All Terraform configurations must include examples in comments"
-  - "Constants must use SCREAMING_SNAKE_CASE naming convention"
-  - "Functions must not exceed 35 lines of code"
-  - "Each struct should be in its own file"
-  - "Variable and function types must be explicit (no type inference for declarations)"
-
-# Custom prompts
-prompts:
-  review:
-    - "Check for proper error handling in Go code"
-    - "Verify Terraform schema definitions are correct"
-    - "Ensure tests are comprehensive and follow Bazel best practices"
-    - "Check that changes maintain backward compatibility unless marked as breaking"
-    - "Verify conventional commit format in PR title"
-    - "Check for potential security issues (secrets, API keys)"
-    - "Ensure all exported functions and types have documentation"
-    - "Verify Bazel build files are correctly structured"
+  # Code guidelines and conventions
+  code_guidelines:
+    commits: "Use conventional commits format: <type>(<scope>): <description>"
+    pr_titles: "PR titles must follow conventional commits"
+    breaking_changes: "Breaking changes must be clearly marked with ! or BREAKING CHANGE"
+    documentation: "All public Go functions must have godoc comments"
+    error_messages: "Error messages should be lowercase and not end with punctuation"
+    naming: "Use consistent naming: provider resources should be prefixed with 'n8n_'"
+    testing: "Tests should follow table-driven test pattern where applicable"
+    examples: "All Terraform configurations must include examples in comments"
+    constants: "Constants must use SCREAMING_SNAKE_CASE naming convention"
+    functions: "Functions must not exceed 35 lines of code"
+    structs: "Each struct should be in its own file"
+    types: "Variable and function types must be explicit (no type inference for declarations)"
