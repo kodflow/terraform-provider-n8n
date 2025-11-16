@@ -65,8 +65,6 @@ release:
   draft: false
   prerelease: auto
   mode: append
-  extra_files:
-    - glob: terraform-registry-manifest.json
   header: |
     ## Terraform Registry Installation
 
