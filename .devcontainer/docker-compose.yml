@@ -5,8 +5,8 @@ services:
 
     # Build locally - no remote image needed
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
       # Build arguments for optimization
       args:
         BUILDKIT_INLINE_CACHE: 1
