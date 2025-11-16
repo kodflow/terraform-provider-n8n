@@ -131,7 +131,8 @@ def apply_git_commit_patch(commit_hash):
             ['patch', '-p0', '--fuzz=3'],
             stdin=patch_input,
             capture_output=True,
-            text=True
+            text=True,
+            check=False
         )
     if result.returncode != 0:
         print(f"❌ Patch failed!")
