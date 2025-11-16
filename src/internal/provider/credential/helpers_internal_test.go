@@ -622,3 +622,55 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 		})
 	}
 }
+
+// mockFailingBody is a mock io.ReadCloser that fails on Close().
+type mockFailingBody struct{}
+
+func (m *mockFailingBody) Read(p []byte) (n int, err error) {
+	return 0, nil
+}
+
+func (m *mockFailingBody) Close() error {
+	return assert.AnError
+}
+
+// Test_closeResponseBody tests the closeResponseBody helper function.
+func Test_closeResponseBody(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		resp *http.Response
+	}{
+		{
+			name: "nil response",
+			resp: nil,
+		},
+		{
+			name: "response with nil body",
+			resp: &http.Response{Body: nil},
+		},
+		{
+			name: "response with closed body",
+			resp: &http.Response{Body: http.NoBody},
+		},
+		{
+			name: "body close error - should log warning",
+			resp: &http.Response{Body: &mockFailingBody{}},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			// Should not panic with any input
+			assert.NotPanics(t, func() {
+				closeResponseBody(ctx, tt.resp)
+			})
+		})
+	}
+}

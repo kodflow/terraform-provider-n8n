@@ -11,8 +11,16 @@ run:
   modules-download-mode: readonly
 
 linters:
-  # Note: revive is intentionally not enabled due to conflicts with ktn-linter requirements
+  # Aligned with Codacy configuration
+  # Codacy enabled tools: Aligncheck, Revive, Staticcheck, Deadcode, Gosec
   enable:
+    # Codacy: Gosec (37 patterns enabled)
+    - gosec
+    # Codacy: Staticcheck (143 patterns enabled)
+    - staticcheck
+    # Codacy: Revive (96 patterns enabled)
+    - revive
+    # Additional quality linters
     - bodyclose
     - errname
     - errorlint
@@ -23,7 +31,6 @@ linters:
     - godot
     - gomodguard
     - goprintffuncname
-    - gosec
     - misspell
     - noctx
     - predeclared
@@ -50,14 +57,56 @@ linters:
         - performance
     gocyclo:
       min-complexity: 15
+    # Codacy: Gosec configuration (all 37 patterns enabled)
     gosec:
-      excludes:
-        - G104
-        - G306
+      # Enable all security checks to match Codacy
+      config:
+        global:
+          nosec: false
+          show-ignored: true
+          audit: true
+    # Codacy: Staticcheck configuration (143 patterns enabled)
     staticcheck:
       checks:
         - all
         - "-ST1003" # Disabled due to conflict with ktn-linter constant naming requirements
+    # Codacy: Revive configuration (96 patterns enabled)
+    revive:
+      # Enable all default rules to match Codacy's 96 enabled patterns
+      enable-all-rules: true
+      # Disable rules that conflict with ktn-linter or project standards
+      rules:
+        # Disable rules that conflict with Terraform provider patterns
+        - name: unused-parameter
+          disabled: true # Terraform provider interfaces require specific signatures
+        - name: unused-receiver
+          disabled: true # Terraform provider interfaces require specific signatures
+        - name: line-length-limit
+          disabled: true # Disabled - Terraform MarkdownDescription fields can be very long
+        - name: function-length
+          disabled: false
+          arguments: [60, 0] # Relaxed for complex Terraform CRUD operations
+        - name: cognitive-complexity
+          disabled: false
+          arguments: [20] # Relaxed for complex Terraform resource logic (aligned with gocognit)
+        - name: cyclomatic
+          disabled: false
+          arguments: [15] # Aligned with gocyclo setting
+        - name: max-public-structs
+          disabled: false
+          arguments: [15]
+        - name: file-header
+          disabled: true # Project uses license headers managed separately
+        - name: add-constant
+          disabled: true # Too strict for configuration values
+        - name: var-naming
+          disabled: true # Conflicts with existing constants (e.g., ROTATION_THROTTLE_MS)
+        - name: var-declaration
+          disabled: true # Allow explicit type declarations for clarity
+        - name: defer
+          disabled: false # Prevent defer in loops to avoid resource leaks
+        - name: exported
+          disabled: true # Terraform providers have specific naming conventions
   exclusions:
     generated: lax
     presets:
@@ -65,8 +114,9 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    # nosemgrep: yaml.semgrep.duplicate-id.duplicate-id
+    # Aligned with Codacy exclude_paths configuration
     rules:
+      # Test files - reduce strictness
       - linters:
           - errcheck
           - gocognit
@@ -74,6 +124,7 @@ linters:
           - gocyclo
           - gosec
           - unparam
+          - revive
         path: _test\.go
       - linters:
           - govet
@@ -84,6 +135,7 @@ linters:
       - linters:
           - gocritic
         path: internal/provider/
+      # Generated files - skip all linters
       - linters:
           - all
         path: .*\.pb\.go$
@@ -91,17 +143,27 @@ linters:
           - all
         path: mock_.*\.go$
       - linters:
+          - all
+        path: .*\.gen\.go$
+      - linters:
           - goconst
+          - revive
         path: (.+)_test\.go
     paths:
-      - .*\.pb\.go$
-      - .*\.gen\.go$
-      - vendor
-      - testdata
-      - bazel-*
-      - third_party$
-      - builtin$
-      - examples$
+      # Exclude paths matching Codacy configuration
+      - docs/ # Terraform plugin generated documentation
+      - bazel-* # Bazel build artifacts
+      - vendor/ # Third-party dependencies
+      - third_party/
+      - sdk/ # Generated SDK
+      - generated/ # OpenAPI generator output
+      - \.openapi-generator/
+      - \.devcontainer/ # DevContainer setup scripts
+      - codegen/ # Code generation scripts
+      - scripts/ # Build and automation scripts
+      - examples/ # Examples and templates
+      - testdata/
+      - builtin/
 
 issues:
   max-issues-per-linter: 0
