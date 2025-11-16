@@ -14,11 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/execution"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/sourcecontrol"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/user"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable"
@@ -167,23 +165,17 @@ func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		// Workflow domain
 		workflow.NewWorkflowResourceWrapper,
-		workflow.NewWorkflowTransferResourceWrapper,
 		// Project domain
 		project.NewProjectResourceWrapper,
 		project.NewProjectUserResourceWrapper,
 		// Credential domain
 		credential.NewCredentialResourceWrapper,
-		credential.NewCredentialTransferResourceWrapper,
-		// Execution domain
-		execution.NewExecutionRetryResourceWrapper,
 		// Tag domain
 		tag.NewTagResourceWrapper,
 		// Variable domain
 		variable.NewVariableResourceWrapper,
 		// User domain
 		user.NewUserResourceWrapper,
-		// Source control domain
-		sourcecontrol.NewSourceControlPullResourceWrapper,
 	}
 }
 
@@ -204,9 +196,6 @@ func (p *N8nProvider) DataSources(_ctx context.Context) []func() datasource.Data
 		// Project domain
 		project.NewProjectDataSourceWrapper,
 		project.NewProjectsDataSourceWrapper,
-		// Execution domain
-		execution.NewExecutionDataSourceWrapper,
-		execution.NewExecutionsDataSourceWrapper,
 		// Tag domain
 		tag.NewTagDataSourceWrapper,
 		tag.NewTagsDataSourceWrapper,
