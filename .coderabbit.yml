@@ -41,20 +41,19 @@ reviews:
   # Auto-reply to comments
   auto_reply: true
 
-  # Path filters - files to exclude from review
+  # Path filters - glob patterns to exclude from review (! prefix = exclude)
   path_filters:
-    exclude:
-      - "**/*.pb.go"
-      - "**/*.gen.go"
-      - "**/vendor/**"
-      - "bazel-*/**"
-      - "**/*.sum"
-      - ".bazelrc"
-      - ".bazelversion"
-      - "CHANGELOG.md"
-      - "**/node_modules/**"
-      - "**/*.md"
-      - "**/*.lock"
+    - "!**/*.pb.go"
+    - "!**/*.gen.go"
+    - "!**/vendor/**"
+    - "!bazel-*/**"
+    - "!**/*.sum"
+    - "!.bazelrc"
+    - "!.bazelversion"
+    - "!CHANGELOG.md"
+    - "!**/node_modules/**"
+    - "!**/*.md"
+    - "!**/*.lock"
 
   # Path-specific instructions
   path_instructions:
