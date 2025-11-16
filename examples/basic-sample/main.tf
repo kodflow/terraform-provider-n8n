@@ -185,6 +185,31 @@ resource "n8n_workflow" "data_processor" {
 }
 
 # ============================================================================
+# Projects (Organization)
+# ============================================================================
+
+resource "n8n_project" "sample_project" {
+  name = "ci-${var.run_id}-TF Basic Sample Project"
+}
+
+# ============================================================================
+# Users (Instance Owner Only)
+# ============================================================================
+
+# Note: Commented out by default as user management requires instance owner privileges
+# Uncomment these if you're running with instance owner credentials
+
+# resource "n8n_user" "sample_admin" {
+#   email = "admin-ci-${var.timestamp}@example.com"
+#   role  = "global:admin"
+# }
+
+# resource "n8n_user" "sample_member" {
+#   email = "member-ci-${var.timestamp}@example.com"
+#   role  = "global:member"
+# }
+
+# ============================================================================
 # Data Sources
 # ============================================================================
 
@@ -204,4 +229,18 @@ data "n8n_tags" "all" {
     n8n_tag.environment_dev,
     n8n_tag.automated
   ]
+}
+
+# Query all projects
+data "n8n_projects" "all" {
+  depends_on = [
+    n8n_project.sample_project
+  ]
+}
+
+# Query the created project
+data "n8n_project" "sample" {
+  id = n8n_project.sample_project.id
+
+  depends_on = [n8n_project.sample_project]
 }
