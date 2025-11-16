@@ -16,7 +16,10 @@ def run(cmd, cwd=None):
     """Run command and exit on error (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True, check=False)  # nosec B603
+    # nosec B603 nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    result = subprocess.run(
+        cmd, shell=False, cwd=cwd, capture_output=True, text=True, check=False
+    )
     if result.returncode != 0:
         print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
@@ -59,7 +62,12 @@ def main():
     # Download openapi-generator JAR if needed
     if not Path(generator_jar).exists():
         print("   → Downloading openapi-generator JAR...")
-        run(f"wget -q https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/{generator_version}/openapi-generator-cli-{generator_version}.jar -O {generator_jar}")
+        jar_url = (
+            f"https://repo1.maven.org/maven2/org/openapitools/"
+            f"openapi-generator-cli/{generator_version}/"
+            f"openapi-generator-cli-{generator_version}.jar"
+        )
+        run(f"wget -q {jar_url} -O {generator_jar}")
         print("   ✓ Downloaded\n")
 
     # Clean previous generation (keep api directory)
@@ -74,6 +82,7 @@ def main():
 
     # Generate SDK
     print("   → Running openapi-generator...")
+    # nosec B603 nosemgrep
     result = subprocess.run(
         [
             'java', '-jar', generator_jar,
@@ -150,7 +159,14 @@ def main():
 
     # 3. Run go mod tidy
     print("   → Running go mod tidy...")
-    subprocess.run(['go', 'mod', 'tidy'], shell=False, cwd="sdk/n8nsdk", capture_output=True, check=False)
+    # nosec B603 B607 nosemgrep
+    subprocess.run(
+        ['go', 'mod', 'tidy'],
+        shell=False,
+        cwd="sdk/n8nsdk",
+        capture_output=True,
+        check=False
+    )
     print("   ✓ Done\n")
 
     # 4. Restore original openapi.yaml (generator may have reformatted it)

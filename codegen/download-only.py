@@ -19,7 +19,10 @@ def run(cmd, cwd=None, check=True):
     """Run command and optionally exit on error (secure version without shell=True)"""
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    result = subprocess.run(cmd, shell=False, cwd=cwd, capture_output=True, text=True, check=False)  # nosec B603
+    # nosec B603 nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    result = subprocess.run(
+        cmd, shell=False, cwd=cwd, capture_output=True, text=True, check=False
+    )
     if check and result.returncode != 0:
         print(f"❌ Command failed: {' '.join(cmd)}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
@@ -168,7 +171,8 @@ def main():
     print("🚀 N8N OpenAPI Download (No Commit)\n")
 
     # Config
-    n8n_commit = "4bf741ae67124724eb94e582de94daf0d70f9bd0"  # Frozen commit for API stability (n8n@1.119.2)
+    # Frozen commit for API stability (n8n@1.119.2)
+    n8n_commit = "4bf741ae67124724eb94e582de94daf0d70f9bd0"
     temp_dir = tempfile.mkdtemp(prefix="n8n-openapi-")
     api_dir = Path("sdk/n8nsdk/api")
 
