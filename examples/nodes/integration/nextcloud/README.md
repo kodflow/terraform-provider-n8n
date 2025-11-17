@@ -1,6 +1,8 @@
 # Nextcloud Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.nextCloud` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.nextCloud`
+**Latest Version**: 1
 
 ## Description
 

@@ -1,6 +1,8 @@
 # Interact with Telegram using our pre-built Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.preBuiltAgentsCalloutTelegram` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.preBuiltAgentsCalloutTelegram`
+**Latest Version**: 1
 
 ## Description
 
@@ -48,9 +50,7 @@ terraform apply -var="n8n_api_key=YOUR_API_KEY"
 
 Edit the `parameters` in `main.tf` to customize the Interact with Telegram using our pre-built node behavior.
 
-See
-[n8n Interact with Telegram using our pre-built documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.interact-with-telegram-using-our-pre-built/)
-for available parameters.
+See [n8n Interact with Telegram using our pre-built documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.interact-with-telegram-using-our-pre-built/) for available parameters.
 
 ## Notes
 

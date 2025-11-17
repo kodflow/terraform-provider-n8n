@@ -1,6 +1,8 @@
 # Read PDF Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.readPDF` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.readPDF`
+**Latest Version**: 1
 
 ## Description
 

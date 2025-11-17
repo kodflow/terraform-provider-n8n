@@ -1,6 +1,8 @@
 # Mailjet Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.mailjet` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.mailjet`
+**Latest Version**: 1
 
 ## Description
 

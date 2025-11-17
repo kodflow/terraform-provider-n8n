@@ -1,6 +1,8 @@
 # ActiveCampaign Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.activeCampaign` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.activeCampaign`
+**Latest Version**: 1
 
 ## Description
 

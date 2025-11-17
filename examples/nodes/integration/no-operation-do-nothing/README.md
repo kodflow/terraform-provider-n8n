@@ -1,6 +1,8 @@
 # No Operation, do nothing Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.noOp` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.noOp`
+**Latest Version**: 1
 
 ## Description
 
@@ -48,8 +50,7 @@ terraform apply -var="n8n_api_key=YOUR_API_KEY"
 
 Edit the `parameters` in `main.tf` to customize the No Operation, do nothing node behavior.
 
-See [n8n No Operation, do nothing documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.no-operation-do-nothing/) for available
-parameters.
+See [n8n No Operation, do nothing documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.no-operation-do-nothing/) for available parameters.
 
 ## Notes
 

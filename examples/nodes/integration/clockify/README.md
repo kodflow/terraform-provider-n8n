@@ -1,6 +1,8 @@
 # Clockify Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.clockify` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.clockify`
+**Latest Version**: 1
 
 ## Description
 

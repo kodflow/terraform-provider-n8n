@@ -1,6 +1,8 @@
 # Taiga Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.taiga` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.taiga`
+**Latest Version**: 1
 
 ## Description
 

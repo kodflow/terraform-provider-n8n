@@ -1,6 +1,8 @@
 # Wufoo Trigger Node Test
 
-**Category**: Trigger **Type**: `n8n-nodes-base.wufooTrigger` **Latest Version**: 1
+**Category**: Trigger
+**Type**: `n8n-nodes-base.wufooTrigger`
+**Latest Version**: 1
 
 ## Description
 

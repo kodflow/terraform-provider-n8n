@@ -1,6 +1,8 @@
 # Netlify Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.netlify` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.netlify`
+**Latest Version**: 1
 
 ## Description
 

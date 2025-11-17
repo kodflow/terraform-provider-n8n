@@ -31,28 +31,54 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "conditions" : {
-        "boolean" : [
-          {
-            "value1" : "={{ $json.isValid }}",
-            "value2" : true
-          }
-        ]
-      }
+        "conditions": {
+            "boolean": [
+                {
+                    "value1": "={{ $json.isValid }}",
+                    "value2": true
+                }
+            ]
+        }
     }
   )
 }
 
-# OUTPUT: Display result
-resource "n8n_workflow_node" "display_result" {
-  name     = "Display Result"
+# OUTPUT 1: True (When condition is true)
+resource "n8n_workflow_node" "output_0" {
+  name     = "Output: True"
   type     = "n8n-nodes-base.set"
-  position = [650, 300]
+  position = [650, 225]
 
   parameters = jsonencode({
     mode = "manual"
     fields = {
       values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "True"
+      }, {
+        name  = "result"
+        type  = "string"
+        value = "={{ $json }}"
+      }]
+    }
+  })
+}
+
+# OUTPUT 2: False (When condition is false)
+resource "n8n_workflow_node" "output_1" {
+  name     = "Output: False"
+  type     = "n8n-nodes-base.set"
+  position = [650, 375]
+
+  parameters = jsonencode({
+    mode = "manual"
+    fields = {
+      values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "False"
+      }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -71,11 +97,22 @@ resource "n8n_workflow_connection" "input_to_test" {
   target_input_index  = 0
 }
 
-resource "n8n_workflow_connection" "test_to_output" {
+# Connection from test node output[0] (True) to output node
+resource "n8n_workflow_connection" "test_to_output_0" {
   source_node         = n8n_workflow_node.test_node.name
   source_output       = "main"
   source_output_index = 0
-  target_node         = n8n_workflow_node.display_result.name
+  target_node         = n8n_workflow_node.output_0.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+# Connection from test node output[1] (False) to output node
+resource "n8n_workflow_connection" "test_to_output_1" {
+  source_node         = n8n_workflow_node.test_node.name
+  source_output       = "main"
+  source_output_index = 1
+  target_node         = n8n_workflow_node.output_1.name
   target_input        = "main"
   target_input_index  = 0
 }
@@ -88,7 +125,8 @@ resource "n8n_workflow" "test_if" {
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.manual_trigger.node_json),
     jsondecode(n8n_workflow_node.test_node.node_json),
-    jsondecode(n8n_workflow_node.display_result.node_json)
+    jsondecode(n8n_workflow_node.output_0.node_json),
+    jsondecode(n8n_workflow_node.output_1.node_json)
   ])
 
   connections_json = jsonencode({
@@ -100,11 +138,18 @@ resource "n8n_workflow" "test_if" {
       }]]
     }
     (n8n_workflow_node.test_node.name) = {
-      main = [[{
-        node  = n8n_workflow_node.display_result.name
-        type  = "main"
-        index = 0
-      }]]
+      main = [
+        [{
+          node  = n8n_workflow_node.output_0.name
+          type  = "main"
+          index = 0
+        }],
+        [{
+          node  = n8n_workflow_node.output_1.name
+          type  = "main"
+          index = 0
+        }]
+      ]
     }
   })
 }

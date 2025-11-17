@@ -1,6 +1,8 @@
 # Strava Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.strava` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.strava`
+**Latest Version**: 1
 
 ## Description
 

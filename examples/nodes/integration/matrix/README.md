@@ -1,6 +1,8 @@
 # Matrix Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.matrix` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.matrix`
+**Latest Version**: 1
 
 ## Description
 

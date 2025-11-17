@@ -31,14 +31,36 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "note" : "Configure Compare Datasets parameters here"
+        "note": "Configure Compare Datasets parameters here"
     }
   )
 }
 
-# OUTPUT: Display result
-resource "n8n_workflow_node" "display_result" {
-  name     = "Display Result"
+# OUTPUT 1: Match (Matching items)
+resource "n8n_workflow_node" "output_0" {
+  name     = "Output: Match"
+  type     = "n8n-nodes-base.set"
+  position = [650, 150]
+
+  parameters = jsonencode({
+    mode = "manual"
+    fields = {
+      values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "Match"
+      }, {
+        name  = "result"
+        type  = "string"
+        value = "={{ $json }}"
+      }]
+    }
+  })
+}
+
+# OUTPUT 2: Mismatch (Mismatched items)
+resource "n8n_workflow_node" "output_1" {
+  name     = "Output: Mismatch"
   type     = "n8n-nodes-base.set"
   position = [650, 300]
 
@@ -46,6 +68,32 @@ resource "n8n_workflow_node" "display_result" {
     mode = "manual"
     fields = {
       values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "Mismatch"
+      }, {
+        name  = "result"
+        type  = "string"
+        value = "={{ $json }}"
+      }]
+    }
+  })
+}
+
+# OUTPUT 3: No Match (Items with no match)
+resource "n8n_workflow_node" "output_2" {
+  name     = "Output: No Match"
+  type     = "n8n-nodes-base.set"
+  position = [650, 450]
+
+  parameters = jsonencode({
+    mode = "manual"
+    fields = {
+      values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "No Match"
+      }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -64,11 +112,32 @@ resource "n8n_workflow_connection" "input_to_test" {
   target_input_index  = 0
 }
 
-resource "n8n_workflow_connection" "test_to_output" {
+# Connection from test node output[0] (Match) to output node
+resource "n8n_workflow_connection" "test_to_output_0" {
   source_node         = n8n_workflow_node.test_node.name
   source_output       = "main"
   source_output_index = 0
-  target_node         = n8n_workflow_node.display_result.name
+  target_node         = n8n_workflow_node.output_0.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+# Connection from test node output[1] (Mismatch) to output node
+resource "n8n_workflow_connection" "test_to_output_1" {
+  source_node         = n8n_workflow_node.test_node.name
+  source_output       = "main"
+  source_output_index = 1
+  target_node         = n8n_workflow_node.output_1.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+# Connection from test node output[2] (No Match) to output node
+resource "n8n_workflow_connection" "test_to_output_2" {
+  source_node         = n8n_workflow_node.test_node.name
+  source_output       = "main"
+  source_output_index = 2
+  target_node         = n8n_workflow_node.output_2.name
   target_input        = "main"
   target_input_index  = 0
 }
@@ -81,7 +150,9 @@ resource "n8n_workflow" "test_compare-datasets" {
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.manual_trigger.node_json),
     jsondecode(n8n_workflow_node.test_node.node_json),
-    jsondecode(n8n_workflow_node.display_result.node_json)
+    jsondecode(n8n_workflow_node.output_0.node_json),
+    jsondecode(n8n_workflow_node.output_1.node_json),
+    jsondecode(n8n_workflow_node.output_2.node_json)
   ])
 
   connections_json = jsonencode({
@@ -93,11 +164,23 @@ resource "n8n_workflow" "test_compare-datasets" {
       }]]
     }
     (n8n_workflow_node.test_node.name) = {
-      main = [[{
-        node  = n8n_workflow_node.display_result.name
-        type  = "main"
-        index = 0
-      }]]
+      main = [
+        [{
+          node  = n8n_workflow_node.output_0.name
+          type  = "main"
+          index = 0
+        }],
+        [{
+          node  = n8n_workflow_node.output_1.name
+          type  = "main"
+          index = 0
+        }],
+        [{
+          node  = n8n_workflow_node.output_2.name
+          type  = "main"
+          index = 0
+        }]
+      ]
     }
   })
 }

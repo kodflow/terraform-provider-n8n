@@ -1,6 +1,8 @@
 # Stop and Error Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.stopAndError` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.stopAndError`
+**Latest Version**: 1
 
 ## Description
 

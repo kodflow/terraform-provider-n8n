@@ -1,6 +1,8 @@
 # Dropcontact Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.dropcontact` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.dropcontact`
+**Latest Version**: 1
 
 ## Description
 

@@ -1,6 +1,8 @@
 # HubSpot Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.hubspot` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.hubspot`
+**Latest Version**: 1
 
 ## Description
 

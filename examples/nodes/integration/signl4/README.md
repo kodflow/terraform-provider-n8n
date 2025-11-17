@@ -1,6 +1,8 @@
 # SIGNL4 Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.signl4` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.signl4`
+**Latest Version**: 1
 
 ## Description
 

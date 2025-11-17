@@ -24,7 +24,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "note" : "Configure Toggl Trigger parameters here"
+        "note": "Configure Toggl Trigger parameters here"
     }
   )
 }

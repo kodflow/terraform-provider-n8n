@@ -1,6 +1,8 @@
 # Help Scout Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.helpScout` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.helpScout`
+**Latest Version**: 1
 
 ## Description
 

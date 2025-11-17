@@ -1,6 +1,8 @@
 # Background Color Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.Blur` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.Blur`
+**Latest Version**: 1
 
 ## Description
 

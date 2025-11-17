@@ -1,6 +1,8 @@
 # Set Node Test
 
-**Category**: Core **Type**: `n8n-nodes-base.set` **Latest Version**: 1
+**Category**: Core
+**Type**: `n8n-nodes-base.set`
+**Latest Version**: 1
 
 ## Description
 

@@ -1,6 +1,8 @@
 # Twake Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.twake` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.twake`
+**Latest Version**: 1
 
 ## Description
 

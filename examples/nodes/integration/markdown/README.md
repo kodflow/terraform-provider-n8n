@@ -1,6 +1,8 @@
 # Markdown Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.markdown` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.markdown`
+**Latest Version**: 1
 
 ## Description
 

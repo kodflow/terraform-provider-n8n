@@ -24,9 +24,9 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "path" : "test-webhook",
-      "httpMethod" : "POST",
-      "responseMode" : "onReceived"
+        "path": "test-webhook",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
     }
   )
 }

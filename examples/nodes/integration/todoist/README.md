@@ -1,6 +1,8 @@
 # Todoist Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.todoist` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.todoist`
+**Latest Version**: 1
 
 ## Description
 

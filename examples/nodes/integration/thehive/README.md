@@ -1,6 +1,8 @@
 # TheHive Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.theHive` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.theHive`
+**Latest Version**: 1
 
 ## Description
 
