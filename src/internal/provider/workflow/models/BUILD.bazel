@@ -3,9 +3,11 @@ load("@rules_go//go:def.bzl", "go_library")
 go_library(
     name = "models",
     srcs = [
+        "connection_resource.go",
         "datasource.go",
         "datasources.go",
         "item.go",
+        "node_resource.go",
         "resource.go",
         "transfer.go",
     ],

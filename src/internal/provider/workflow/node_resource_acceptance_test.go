@@ -1,18 +1,14 @@
 //go:build acceptance
 
-package node_test
+package workflow_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
 
 // TestAccWorkflowNodeResource tests the n8n_workflow_node resource.
@@ -178,18 +174,6 @@ resource "n8n_workflow" "test" {
 `
 }
 
-func testAccPreCheck(t *testing.T) {
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping acceptance test")
-	}
-
-	provider.TestAccPreCheckEnv(t)
-	t.Logf("🔍 Running node acceptance tests against n8n instance: %s", os.Getenv("N8N_API_URL"))
-}
-
-var testAccProtoV6ProviderFactories = provider.TestAccProtoV6ProviderFactories
-
 // testAccCheckNodeJSONValid verifies the node_json attribute is valid JSON.
 func testAccCheckNodeJSONValid(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -240,92 +224,4 @@ func testAccCheckNodeJSONContainsField(resourceName, field string) resource.Test
 
 		return nil
 	}
-}
-
-// testAccCheckWorkflowExists verifies the workflow exists in n8n via API call.
-func testAccCheckWorkflowExists(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("workflow ID is not set")
-		}
-
-		n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
-
-		workflow, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
-
-		if err != nil {
-			return fmt.Errorf("workflow %s does not exist in n8n: %w", rs.Primary.ID, err)
-		}
-
-		if workflow.Id == nil || *workflow.Id != rs.Primary.ID {
-			return fmt.Errorf("workflow ID mismatch: expected %s, got %v", rs.Primary.ID, workflow.Id)
-		}
-
-		return nil
-	}
-}
-
-// testAccCheckWorkflowHasNodes verifies workflow has expected number of nodes via API.
-func testAccCheckWorkflowHasNodes(resourceName string, expectedNodeCount int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
-
-		workflow, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
-
-		if err != nil {
-			return fmt.Errorf("failed to get workflow: %w", err)
-		}
-
-		if len(workflow.Nodes) != expectedNodeCount {
-			return fmt.Errorf("workflow has %d nodes, expected %d", len(workflow.Nodes), expectedNodeCount)
-		}
-
-		return nil
-	}
-}
-
-// testAccCheckWorkflowDestroy verifies the workflow has been destroyed via API call.
-func testAccCheckWorkflowDestroy(s *terraform.State) error {
-	n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "n8n_workflow" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			continue
-		}
-
-		_, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
-		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
-		}
-
-		if err == nil {
-			return fmt.Errorf("workflow %s still exists in n8n", rs.Primary.ID)
-		}
-
-		if httpResp != nil && httpResp.StatusCode != 404 {
-			return fmt.Errorf("unexpected error checking workflow deletion: status %d", httpResp.StatusCode)
-		}
-	}
-
-	return nil
 }

@@ -21,8 +21,6 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/user"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/connection"
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/node"
 )
 
 // Compile-time assertions to ensure N8nProvider implements required interfaces.
@@ -167,8 +165,8 @@ func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		// Workflow domain
 		workflow.NewWorkflowResourceWrapper,
-		node.NewWorkflowNodeResource,
-		connection.NewWorkflowConnectionResource,
+		workflow.NewWorkflowNodeResourceWrapper,
+		workflow.NewWorkflowConnectionResourceWrapper,
 		// Project domain
 		project.NewProjectResourceWrapper,
 		project.NewProjectUserResourceWrapper,

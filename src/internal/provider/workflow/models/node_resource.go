@@ -2,17 +2,17 @@
 // Licensed under the Sustainable Use License 1.0
 // See LICENSE in the project root for license information.
 
-// Package models contains data models for workflow node resources.
+// Package models defines data structures for workflow resources.
 package models
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Resource describes the workflow node resource data model.
+// NodeResource describes the workflow node resource data model.
 // This resource exists only in Terraform state and does not make API calls.
 // It generates a node JSON structure that can be used in n8n_workflow resources.
-type Resource struct {
+type NodeResource struct {
 	// ID is a computed unique identifier for this node (auto-generated).
 	ID types.String `tfsdk:"id"`
 

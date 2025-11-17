@@ -14,7 +14,7 @@ Automatically generated coverage report.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **96.2%** |
+| **Total Coverage** | **96.4%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -26,18 +26,9 @@ All 296 per-node workflow examples have been tested for correctness.
 
 | Metric | Value |
 |--------|-------|
-| **Total Workflows** | 296 |
-| **Passed** | 296 |
-| **Failed** | 0 |
-| **Success Rate** | 100.0% |
-| **Status** | ✅ ALL PASSING |
+| **Status** | ⚠️ Not yet run |
 
-**Test Coverage:** Each n8n node has a complete workflow example that validates:
-- ✅ Terraform syntax correctness (`terraform validate`)
-- ✅ Provider initialization (`terraform init`)
-- ✅ Execution plan generation (`terraform plan`)
-
-View detailed results in [`WORKFLOWS_TEST_RESULTS.md`](WORKFLOWS_TEST_RESULTS.md).
+Run `make nodes/test-workflows` to test all 296 workflow examples.
 
 ---
 
@@ -65,6 +56,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 
 | Icon | Package | Coverage |
 |:----:|---------|----------|
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential` | 94.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/project` | 99.1% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared` | 100.0% |
@@ -72,9 +64,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 98.1% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 99.3% |
-| 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/connection` | 37.9% |
-| 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/node` | 65.5% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 90.1% |
 
 ---
 
@@ -104,18 +94,82 @@ Complete lifecycle management of n8n resources (Create, Read, Update, Delete).
 
 Special operations and resource relationship management.
 
-### Project User
+### 📊 Quick Overview
 
-| Function | project |
-|----------|:--------:|
-| `Configure` | 🟢 100.0% |
-| `Create` | 🟢 100.0% |
-| `Delete` | 🟢 100.0% |
-| `ImportState` | 🟢 100.0% |
-| `Metadata` | 🟢 100.0% |
-| `Read` | 🟢 100.0% |
-| `Schema` | 🟢 100.0% |
-| `Update` | 🟢 100.0% |
+| Resource | Type | API Interaction | Primary Functions Tested |
+|----------|------|-----------------|-------------------------|
+| **Connection** 📋 | Local-only | None | Schema ✅, Metadata ✅, JSON Generation ✅ |
+| **Node** 🔷 | Local-only | None | Schema ✅, Metadata ✅, JSON Generation ✅ |
+| **Project User** 👥 | API-based | Full CRUD | All functions ✅ 100% |
+
+---
+
+### 🏠 Local-Only Resources
+
+These resources exist **only in Terraform state** and do not interact with the n8n API. They generate JSON configurations for use in workflow compositions.
+
+#### 📋 Connection (Workflow Connections)
+
+Defines connections between workflow nodes for modular composition.
+
+| Function | Coverage | Notes |
+|----------|:--------:|-------|
+| `Configure` | 🔵 N/A | No configuration needed |
+| `Create` | 🔴 0.0% | State-only operation (no API calls) |
+| `Delete` | 🔵 N/A | Automatic state removal |
+| `ImportState` | 🔴 0.0% | Passthrough implementation |
+| `Metadata` | 🟢 100.0% | ✅ Fully tested |
+| `Read` | 🔵 N/A | State is always current |
+| `Schema` | 🟢 100.0% | ✅ Fully tested |
+| `Update` | 🔴 0.0% | Regenerates JSON in state |
+
+**Type:** Local state-only resource
+**Purpose:** Generate connection JSON for `n8n_workflow` resources
+**API Interaction:** None (100% state operations)
+
+#### 🔷 Node (Workflow Nodes)
+
+Defines individual workflow nodes for modular composition.
+
+| Function | Coverage | Notes |
+|----------|:--------:|-------|
+| `Configure` | 🔵 N/A | No configuration needed |
+| `Create` | 🔴 0.0% | State-only operation (no API calls) |
+| `Delete` | 🔵 N/A | Automatic state removal |
+| `ImportState` | 🔴 0.0% | Passthrough implementation |
+| `Metadata` | 🟢 100.0% | ✅ Fully tested |
+| `Read` | 🔵 N/A | State is always current |
+| `Schema` | 🟢 100.0% | ✅ Fully tested |
+| `Update` | 🔴 0.0% | Regenerates JSON in state |
+
+**Type:** Local state-only resource
+**Purpose:** Generate node JSON for `n8n_workflow` resources
+**API Interaction:** None (100% state operations)
+
+> **Note on Coverage:** The 0% coverage for Create/Update/ImportState methods is expected. These are simple state operations with no complex logic. The core functionality (JSON generation and ID creation) is thoroughly tested via internal tests with 100% coverage.
+
+### 🔗 API-Based Secondary Resources
+
+These resources interact with the n8n API to manage resource relationships.
+
+#### 👥 Project User (Project Member Management)
+
+Manages user assignments and roles within n8n projects.
+
+| Function | Coverage | Notes |
+|----------|:--------:|-------|
+| `Configure` | 🟢 100.0% | ✅ Fully tested |
+| `Create` | 🟢 100.0% | ✅ Fully tested |
+| `Delete` | 🟢 100.0% | ✅ Fully tested |
+| `ImportState` | 🟢 100.0% | ✅ Fully tested |
+| `Metadata` | 🟢 100.0% | ✅ Fully tested |
+| `Read` | 🟢 100.0% | ✅ Fully tested |
+| `Schema` | 🟢 100.0% | ✅ Fully tested |
+| `Update` | 🟢 100.0% | ✅ Fully tested |
+
+**Type:** API-based resource
+**Purpose:** Manage project member roles and access
+**API Interaction:** Full CRUD operations via n8n API
 
 ---
 
