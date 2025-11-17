@@ -1,0 +1,283 @@
+# Integration Nodes Examples
+
+This directory contains examples for **Integration** category nodes.
+
+Total nodes in this category: **266**
+
+## Nodes in this Category
+
+- **Action Network** (`actionNetwork`) - Consume the Action Network API
+- **ActiveCampaign** (`activeCampaign`) - Create and edit data in ActiveCampaign
+- **Adalo** (`adalo`) - Consume Adalo API
+- **Affinity** (`affinity`) - Consume Affinity API
+- **Agile CRM** (`agileCrm`) - Consume Agile CRM API
+- **AI Transform** (`aiTransform`) - Modify data based on instructions written in plain english
+- **Airtable** (`airtable`) - Read, update, write and delete data from Airtable
+- **Airtop** (`airtop`) - Scrape and control any site with Airtop
+- **AMQP Sender** (`amqp`) - Sends a raw-message via AMQP 1.0, executed once per item
+- **APITemplate.io** (`apiTemplateIo`) - Consume the APITemplate.io API
+- **Asana** (`asana`) - Consume Asana REST API
+- **Automizy** (`automizy`) - Consume Automizy API
+- **Autopilot** (`autopilot`) - Consume Autopilot API
+- **AWS Lambda** (`awsLambda`) - Invoke functions on AWS Lambda
+- **Background Color** (`Blur`) - Adds a blur to the image and so makes it less sharp
+- **BambooHr** (`n8n-nodes-base.bamboohr`) -
+- **Bannerbear** (`bannerbear`) - Consume Bannerbear API
+- **Baserow** (`baserow`) - Consume the Baserow API
+- **Beeminder** (`beeminder`) - Consume Beeminder API
+- **Bitly** (`bitly`) - Consume Bitly API
+- **Bitwarden** (`bitwarden`) - Consume the Bitwarden API
+- **Box** (`box`) - Consume Box API
+- **Brandfetch** (`Brandfetch`) - Consume Brandfetch API
+- **Brevo** (`sendInBlue`) - Consume Brevo API
+- **Bubble** (`bubble`) - Consume the Bubble Data API
+- **Chargebee** (`chargebee`) - Retrieve data from Chargebee API
+- **CircleCI** (`circleCi`) - Consume CircleCI API
+- **Clearbit** (`clearbit`) - Consume Clearbit API
+- **ClickUp** (`clickUp`) - Consume ClickUp API (Beta)
+- **Clockify** (`clockify`) - Consume Clockify REST API
+- **Cloudflare** (`cloudflare`) - Consume Cloudflare API
+- **Cockpit** (`cockpit`) - Consume Cockpit API
+- **Coda** (`coda`) - Consume Coda API
+- **CoinGecko** (`coinGecko`) - Consume CoinGecko API
+- **Compare Datasets** (`compareDatasets`) - Compare two inputs for changes
+- **Compression** (`compression`) - Compress and decompress files
+- **Contentful** (`contentful`) - Consume Contentful API
+- **Convert to/from binary data** (`moveBinaryData`) - Move data between binary and JSON properties
+- **ConvertKit** (`convertKit`) - Consume ConvertKit API
+- **Copper** (`copper`) - Consume the Copper API
+- **Cortex** (`cortex`) - Apply the Cortex analyzer/responder on the given entity
+- **CrateDB** (`crateDb`) - Add and update data in CrateDB
+- **Cron** (`cron`) - Triggers the workflow at a specific time
+- **crowd.dev** (`crowdDev`) - crowd.dev is an open-source suite of community and data tools built to unlock community-led growth for your organization.
+- **Crypto** (`crypto`) - Provide cryptographic utilities
+- **Customer Datastore (n8n training)** (`Jay Gatsby`) - Dummy node used for n8n training
+- **Customer Messenger (n8n training)** (`n8nTrainingCustomerMessenger`) - Dummy node used for n8n training
+- **Customer.io** (`customerIo`) - Consume Customer.io API
+- **Data table** (`dataTable`) - Permanently save data across workflow executions in a table
+- **Date & Time** (`dateTime`) - Allows you to manipulate date and time values
+- **DebugHelper** (`debugHelper`) - Causes problems intentionally and generates useful data for debugging
+- **DeepL** (`deepL`) - Translate data using DeepL
+- **Demio** (`demio`) - Consume the Demio API
+- **DHL** (`dhl`) - Consume DHL API
+- **Discord** (`discord`) - Sends data to Discord
+- **Discourse** (`discourse`) - Consume Discourse API
+- **Disqus** (`disqus`) - Access data on Disqus
+- **Drift** (`drift`) - Consume Drift API
+- **Dropbox** (`dropbox`) - Access data on Dropbox
+- **Dropcontact** (`dropcontact`) - Find B2B emails and enrich contacts
+- **E-goi** (`egoi`) - Consume E-goi API
+- **E2E Test** (`e2eTest`) - Dummy node used for e2e testing
+- **Emelia** (`emelia`) - Consume the Emelia API
+- **ERPNext** (`erpNext`) - Consume ERPNext API
+- **Execute Command** (`executeCommand`) - Executes a command on the host
+- **Execution Data** (`executionData`) - Add execution data for search
+- **Extraction Values** (`extractionValues`) - The key under which the extracted value should be saved
+- **Facebook Graph API** (`facebookGraphApi`) - Interacts with Facebook using the Graph API
+- **FileMaker** (`filemaker`) - Retrieve data from the FileMaker data API
+- **Filter** (`filter`) - Remove items matching a condition
+- **Flow** (`flow`) - Consume Flow API
+- **Freshdesk** (`freshdesk`) - Consume Freshdesk API
+- **Freshservice** (`freshservice`) - Consume the Freshservice API
+- **Freshworks CRM** (`freshworksCrm`) - Consume the Freshworks CRM API
+- **FTP** (`ftp`) - Transfer files via FTP or SFTP
+- **Function** (`function`) - Run custom function code which gets executed once and allows you to add, remove, change and replace items
+- **Function Item** (`functionItem`) - Run custom function code which gets executed once per item
+- **GetResponse** (`getResponse`) - Consume GetResponse API
+- **Ghost** (`ghost`) - Consume Ghost API
+- **Git** (`git`) - Control git.
+- **GitHub** (`github`) - Consume GitHub API
+- **GitLab** (`gitlab`) - Retrieve data from GitLab API
+- **Gong** (`gong`) - Interact with Gong API
+- **Gotify** (`gotify`) - Consume Gotify API
+- **GoToWebinar** (`goToWebinar`) - Consume the GoToWebinar API
+- **Grafana** (`grafana`) - Consume the Grafana API
+- **GraphQL** (`graphql`) - Makes a GraphQL request and returns the received data
+- **Grist** (`grist`) - Consume the Grist API
+- **Hacker News** (`hackerNews`) - Consume Hacker News API
+- **HaloPSA** (`haloPSA`) - Consume HaloPSA API
+- **Harvest** (`harvest`) - Access data on Harvest
+- **Help Scout** (`helpScout`) - Consume Help Scout API
+- **HighLevel** (`highLevel`) - Consume HighLevel API
+- **Home Assistant** (`homeAssistant`) - Consume Home Assistant API
+- **HTML Extract** (`htmlExtract`) - Extracts data from HTML
+- **HTTP Request** (`httpRequest`) - Makes an HTTP request and returns the response data
+- **HubSpot** (`hubspot`) - Consume HubSpot API
+- **Humantic AI** (`humanticAi`) - Consume Humantic AI API
+- **Hunter** (`hunter`) - Consume Hunter API
+- **iCalendar** (`iCal`) - Create iCalendar file
+- **Interact with Telegram using our pre-built** (`preBuiltAgentsCalloutTelegram`) - Sends data to Telegram
+- **Intercom** (`intercom`) - Consume Intercom API
+- **Interval** (`interval`) - Triggers the workflow in a given interval
+- **Invoice Ninja** (`invoiceNinja`) - Consume Invoice Ninja API
+- **Item Lists** (`itemLists`) - Helper for working with lists of items and transforming arrays
+- **Iterable** (`iterable`) - Consume Iterable API
+- **Jenkins** (`jenkins`) - Consume Jenkins API
+- **Jina AI** (`jinaAi`) - Interact with Jina AI API
+- **Jira Software** (`jira`) - Consume Jira Software API
+- **JWT** (`jwt`) - Be sure to add a valid JWT token to the
+- **Kafka** (`kafka`) - Sends messages to a Kafka topic
+- **Keap** (`keap`) - Consume Keap API
+- **Kitemaker** (`kitemaker`) - Consume the Kitemaker GraphQL API
+- **KoBoToolbox** (`koBoToolbox`) - Work with KoBoToolbox forms and submissions
+- **Ldap** (`ldap`) - Interact with LDAP servers
+- **Lemlist** (`lemlist`) - Consume the Lemlist API
+- **Limit Wait Time** (`limitWaitTime`) - Whether to limit the time this node should wait for a user response before execution resumes
+- **Line** (`line`) - Consume Line API
+- **Linear** (`linear`) - Consume Linear API
+- **LingvaNex** (`lingvaNex`) - Consume LingvaNex API
+- **LinkedIn** (`linkedIn`) - Consume LinkedIn API
+- **LoneScale** (`loneScale`) - Create List, add / delete items
+- **Magento 2** (`magento2`) - Consume Magento API
+- **Mailcheck** (`mailcheck`) - Consume Mailcheck API
+- **Mailchimp** (`mailchimp`) - Consume Mailchimp API
+- **MailerLite** (`mailerLite`) - Consume MailerLite API
+- **Mailgun** (`mailgun`) - Sends an email via Mailgun
+- **Mailjet** (`mailjet`) - Consume Mailjet API
+- **Mandrill** (`mandrill`) - Consume Mandrill API
+- **Markdown** (`markdown`) - Convert data between Markdown and HTML
+- **Marketstack** (`marketstack`) - Consume Marketstack API
+- **Matrix** (`matrix`) - Consume Matrix API
+- **Mattermost** (`mattermost`) - Sends data to Mattermost
+- **Mautic** (`mautic`) - Consume Mautic API
+- **Medium** (`medium`) - Consume Medium API
+- **MessageBird** (`messageBird`) - Sends SMS via MessageBird
+- **Metabase** (`metabase`) - Use the Metabase API
+- **Mindee** (`mindee`) - Consume Mindee API
+- **MISP** (`misp`) - Consume the MISP API
+- **Mistral AI** (`mistralAi`) - Consume Mistral AI API
+- **Mocean** (`mocean`) - Send SMS and voice messages via Mocean
+- **Monday.com** (`mondayCom`) - Consume Monday.com API
+- **MongoDB** (`mongoDb`) - Find, insert and update documents in MongoDB
+- **Monica CRM** (`monicaCrm`) - Consume the Monica CRM API
+- **MQTT** (`mqtt`) - Push messages to MQTT
+- **MSG91** (`msg91`) - Sends transactional SMS via MSG91
+- **MySQL** (`mySql`) - Get, add and update data in MySQL
+- **n8n** (`n8n`) - Handle events and perform actions on your n8n instance
+- **NASA** (`nasa`) - Retrieve data from the NASA API
+- **Netlify** (`netlify`) - Consume Netlify API
+- **Nextcloud** (`nextCloud`) - Access data on Nextcloud
+- **No Operation, do nothing** (`noOp`) - No Operation
+- **NocoDB** (`nocoDb`) - Read, update, write and delete data from NocoDB
+- **Notion** (`notion`) - Consume Notion API
+- **Npm** (`npm`) - Consume NPM registry API
+- **Odoo** (`odoo`) - Consume Odoo API
+- **Okta** (`okta`) - Use the Okta API
+- **One Simple API** (`oneSimpleApi`) - A toolbox of no-code utilities
+- **Onfleet** (`onfleet`) - Consume Onfleet API
+- **OpenAI** (`openAi`) - Consume Open AI
+- **OpenThesaurus** (`openThesaurus`) - Get synonmns for German words using the OpenThesaurus API
+- **OpenWeatherMap** (`openWeatherMap`) - Gets current and future weather information
+- **Orbit** (`orbit`) - Consume Orbit API
+- **Oura** (`oura`) - Consume Oura API
+- **Paddle** (`paddle`) - Consume Paddle API
+- **PagerDuty** (`pagerDuty`) - Consume PagerDuty API
+- **PayPal** (`payPal`) - Consume PayPal API
+- **Peekalink** (`peekalink`) - Consume the Peekalink API
+- **Perplexity** (`perplexity`) - Interact with the Perplexity API to generate AI responses with citations
+- **Phantombuster** (`phantombuster`) - Consume Phantombuster API
+- **Philips Hue** (`philipsHue`) - Consume Philips Hue API
+- **Pipedrive** (`pipedrive`) - Create and edit data in Pipedrive
+- **Plivo** (`plivo`) - Send SMS/MMS messages or make phone calls
+- **PostBin** (`postBin`) - Consume PostBin API
+- **Postgres** (`postgres`) - Get, add and update data in Postgres
+- **PostHog** (`postHog`) - Consume PostHog API
+- **ProfitWell** (`profitWell`) - Consume ProfitWell API
+- **Pushbullet** (`pushbullet`) - Consume Pushbullet API
+- **Pushcut** (`pushcut`) - Consume Pushcut API
+- **Pushover** (`pushover`) - Consume Pushover API
+- **QuestDB** (`questDb`) - Get, add and update data in QuestDB
+- **Quick Base** (`quickbase`) - Integrate with the Quick Base RESTful API
+- **QuickBooks Online** (`quickbooks`) - Consume the QuickBooks Online API
+- **QuickChart** (`quickChart`) - Create a chart via QuickChart
+- **RabbitMQ** (`rabbitmq`) - Sends messages to a RabbitMQ topic
+- **Raindrop** (`raindrop`) - Consume the Raindrop API
+- **Read Binary File** (`readBinaryFile`) - Reads a binary file from disk
+- **Read Binary Files** (`readBinaryFiles`) - Reads binary files from disk
+- **Read PDF** (`readPDF`) - Reads a PDF and extracts its content
+- **Reddit** (`reddit`) - Consume the Reddit API
+- **Redis** (`redis`) - Get, send and update data in Redis
+- **Rename Keys** (`renameKeys`) - Update item field names
+- **Respond With** (`respondWith`) - Respond with all input JSON items
+- **RocketChat** (`rocketchat`) - Consume RocketChat API
+- **RSS Read** (`rssFeedRead`) - Reads data from an RSS Feed
+- **Rundeck** (`rundeck`) - Manage Rundeck API
+- **S3** (`s3`) - Sends data to any S3-compatible service
+- **Salesforce** (`salesforce`) - Consume Salesforce API
+- **Salesmate** (`salesmate`) - Consume Salesmate API
+- **Schedule Trigger** (`scheduleTrigger`) - Triggers the workflow on a given schedule
+- **SeaTable** (`seaTable`) - Read, update, write and delete data from SeaTable
+- **SecurityScorecard** (`securityScorecard`) - Consume SecurityScorecard API
+- **Segment** (`segment`) - Consume Segment API
+- **Send Email** (`emailSend`) - Sends an email using SMTP protocol
+- **SendGrid** (`sendGrid`) - Consume SendGrid API
+- **Sendy** (`sendy`) - Consume Sendy API
+- **Sentry.io** (`sentryIo`) - Consume Sentry.io API
+- **ServiceNow** (`serviceNow`) - Consume ServiceNow API
+- **seven** (`sms77`) - Send SMS and make text-to-speech calls
+- **Shopify** (`shopify`) - Consume Shopify API
+- **SIGNL4** (`signl4`) - Consume SIGNL4 API
+- **Simulate** (`simulate`) - Simulate a node
+- **Slack** (`slack`) - Consume Slack API
+- **Snowflake** (`snowflake`) - Get, add and update data in Snowflake
+- **Split In Batches** (`splitInBatches`) - Split data into batches and iterate over each batch
+- **Splunk** (`splunk`) - Consume the Splunk Enterprise API
+- **Spontit** (`spontit`) - Consume Spontit API
+- **Spotify** (`spotify`) - Access public song data via the Spotify API
+- **Spreadsheet File** (`spreadsheetFile`) - Reads and writes data from a spreadsheet file like CSV, XLS, ODS, etc
+- **SSH** (`ssh`) - Execute commands via SSH
+- **Stackby** (`stackby`) - Read, write, and delete data in Stackby
+- **Start** (`start`) - Starts the workflow execution from this node
+- **Sticky Note** (`stickyNote`) - Make your workflow easier to understand
+- **Stop and Error** (`stopAndError`) - Throw an error in the workflow
+- **Storyblok** (`storyblok`) - Consume Storyblok API
+- **Strapi** (`strapi`) - Consume Strapi API
+- **Strava** (`strava`) - Consume Strava API
+- **Stripe** (`stripe`) - Consume the Stripe API
+- **Supabase** (`supabase`) - Add, get, delete and update data in a table
+- **SyncroMSP** (`syncroMsp`) - Manage contacts, tickets and more from Syncro MSP
+- **Taiga** (`taiga`) - Consume Taiga API
+- **Tapfiliate** (`tapfiliate`) - Consume Tapfiliate API
+- **TheHive** (`theHive`) - Consume TheHive API
+- **TheHiveProject** (`n8n-nodes-base.thehiveproject`) -
+- **TimescaleDB** (`timescaleDb`) - Add and update data in TimescaleDB
+- **Todoist** (`todoist`) - Consume Todoist API
+- **TOTP** (`totp`) - Generate a time-based one-time password
+- **TravisCI** (`travisCi`) - Consume TravisCI API
+- **Trello** (`trello`) - Create, change and delete boards and cards
+- **Twake** (`twake`) - Consume Twake API
+- **Twilio** (`twilio`) - Send SMS and WhatsApp messages or make phone calls
+- **Twist** (`twist`) - Consume Twist API
+- **Unleashed Software** (`unleashedSoftware`) - Consume Unleashed Software API
+- **Uplead** (`uplead`) - Consume Uplead API
+- **uProc** (`uproc`) - Consume uProc API
+- **UptimeRobot** (`uptimeRobot`) - Consume UptimeRobot API
+- **urlscan.io** (`urlScanIo`) - Provides various utilities for monitoring websites like health checks or screenshots
+- **Vero** (`vero`) - Consume Vero API
+- **Vonage** (`vonage`) - Consume Vonage API
+- **Wait Amount** (`amount`) - The time to wait
+- **Webflow** (`webflow`) - Consume the Webflow API
+- **Wekan** (`wekan`) - Consume Wekan API
+- **WhatsApp Business Cloud** (`whatsApp`) - Access WhatsApp API
+- **Wise** (`wise`) - Consume the Wise API
+- **WooCommerce** (`wooCommerce`) - Consume WooCommerce API
+- **Wordpress** (`wordpress`) - Consume Wordpress API
+- **Write Binary File** (`writeBinaryFile`) - Writes a binary file to disk
+- **X (Formerly Twitter)** (`twitter`) - Consume the X API
+- **Xero** (`xero`) - Consume Xero API
+- **XML** (`xml`) - Convert data from and to XML
+- **Yourls** (`yourls`) - Consume Yourls API
+- **Zammad** (`zammad`) - Consume the Zammad API
+- **Zendesk** (`zendesk`) - Consume Zendesk API
+- **Zoho CRM** (`zohoCrm`) - Consume Zoho CRM API
+- **Zoom** (`zoom`) - Consume Zoom API
+- **Zulip** (`zulip`) - Consume Zulip API
+
+## Usage
+
+```bash
+cd examples/nodes/integration
+terraform init
+terraform plan
+terraform apply
+```

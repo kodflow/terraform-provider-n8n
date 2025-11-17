@@ -206,3 +206,4 @@ yarn-error.log*
 yarn.lock
 ISSUES.md
 codacy_issues_analysis.json
+.n8n-repo-cache/

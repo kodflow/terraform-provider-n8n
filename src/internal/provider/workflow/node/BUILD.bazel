@@ -1,0 +1,37 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "node",
+    srcs = ["resource.go"],
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/node",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//src/internal/provider/workflow/node/models",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_hashicorp_terraform_plugin_framework//diag",
+        "@com_github_hashicorp_terraform_plugin_framework//path",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema/booldefault",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema/int64default",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema/planmodifier",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema/stringdefault",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema/stringplanmodifier",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+    ],
+)
+
+go_test(
+    name = "node_test",
+    srcs = ["resource_internal_test.go"],
+    embed = [":node"],
+    deps = [
+        "//src/internal/provider/workflow/node/models",
+        "@com_github_hashicorp_terraform_plugin_framework//attr",
+        "@com_github_hashicorp_terraform_plugin_framework//diag",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
+)

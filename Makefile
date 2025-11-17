@@ -28,6 +28,7 @@ BOLD := \033[1m
 
 include makefiles/sdk.mk
 include makefiles/test.mk
+include makefiles/nodes.mk
 include makefiles/quality.mk
 include makefiles/build.mk
 include makefiles/tools.mk
