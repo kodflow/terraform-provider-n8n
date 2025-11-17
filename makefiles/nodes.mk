@@ -7,7 +7,7 @@ BLUE ?= \033[36m
 GREEN ?= \033[32m
 NC ?= \033[0m
 
-.PHONY: nodes nodes/fetch nodes/parse nodes/diff nodes/generate nodes/workflows nodes/sync-report nodes/docs nodes/stats nodes/test nodes/clean
+.PHONY: nodes nodes/fetch nodes/parse nodes/diff nodes/generate nodes/workflows nodes/mega-workflow nodes/mega-workflow/test nodes/sync-report nodes/docs nodes/stats nodes/test nodes/clean
 
 # Main nodes synchronization command
 nodes: nodes/fetch nodes/parse nodes/sync-report nodes/diff nodes/generate nodes/test ## Synchronize n8n nodes from official repository
@@ -40,6 +40,29 @@ nodes/workflows: ## Generate per-node workflow examples (296 examples)
 	@chmod +x scripts/nodes/generate-node-workflows.js
 	@node scripts/nodes/generate-node-workflows.js
 	@echo "$(GREEN)✓ Per-node workflows generated$(NC)"
+
+# Generate MEGA workflow with ALL 296 nodes in a single workflow
+nodes/mega-workflow: ## Generate single mega-workflow with ALL 296 nodes
+	@echo "$(BLUE)[1mGenerating MEGA workflow (298 nodes in 1 workflow)...$(NC)"
+	@chmod +x scripts/nodes/generate-mega-workflow.js
+	@node scripts/nodes/generate-mega-workflow.js
+	@echo "$(GREEN)✓ MEGA workflow generated in examples/mega-workflow/$(NC)"
+
+# Test MEGA workflow (plan/apply/verify/destroy)
+nodes/mega-workflow/test: nodes/mega-workflow ## Test MEGA workflow with real n8n instance
+	@echo "$(BLUE)[1mTesting MEGA workflow...$(NC)"
+	@echo "$(BLUE)ℹ  Using REAL n8n instance: $${N8N_API_URL}$(NC)"
+	@echo ""
+	@cd examples/mega-workflow && terraform init -upgrade >/dev/null 2>&1
+	@cd examples/mega-workflow && terraform plan -var="n8n_base_url=$${N8N_API_URL}" -var="n8n_api_key=$${N8N_API_KEY}" -out=tfplan
+	@echo ""
+	@echo "$(BLUE)▶ Applying MEGA workflow (298 nodes)...$(NC)"
+	@cd examples/mega-workflow && terraform apply -auto-approve tfplan
+	@echo ""
+	@echo "$(GREEN)✓ MEGA workflow created successfully$(NC)"
+	@echo "$(BLUE)▶ Destroying MEGA workflow...$(NC)"
+	@cd examples/mega-workflow && terraform destroy -var="n8n_base_url=$${N8N_API_URL}" -var="n8n_api_key=$${N8N_API_KEY}" -auto-approve
+	@echo "$(GREEN)✓ MEGA workflow test completed$(NC)"
 
 # Generate synchronization report for Claude agent
 nodes/sync-report: ## Generate detailed sync report (NODES_SYNC.md)
