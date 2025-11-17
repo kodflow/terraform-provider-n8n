@@ -180,6 +180,7 @@ temp/
 *.tfstate
 *.tfstate.backup
 tfplan
+.terraform-context
 /test/tmp/
 /test/version_tmp/
 Thumbs.db
