@@ -1,8 +1,6 @@
 # Mautic Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.mautic`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.mautic` **Latest Version**: 1
 
 ## Description
 

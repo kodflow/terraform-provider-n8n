@@ -1,8 +1,6 @@
 # n8n Trigger Node Test
 
-**Category**: Trigger
-**Type**: `n8n-nodes-base.n8nTrigger`
-**Latest Version**: 1
+**Category**: Trigger **Type**: `n8n-nodes-base.n8nTrigger` **Latest Version**: 1
 
 ## Description
 

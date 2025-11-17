@@ -1,8 +1,6 @@
 # Iterable Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.iterable`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.iterable` **Latest Version**: 1
 
 ## Description
 

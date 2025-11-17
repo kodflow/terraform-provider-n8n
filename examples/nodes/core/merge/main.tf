@@ -31,15 +31,15 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "mode": "combine",
-        "mergeByFields": {
-            "values": [
-                {
-                    "field1": "id",
-                    "field2": "id"
-                }
-            ]
-        }
+      "mode" : "combine",
+      "mergeByFields" : {
+        "values" : [
+          {
+            "field1" : "id",
+            "field2" : "id"
+          }
+        ]
+      }
     }
   )
 }

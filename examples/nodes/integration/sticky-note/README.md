@@ -1,8 +1,6 @@
 # Sticky Note Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.stickyNote`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.stickyNote` **Latest Version**: 1
 
 ## Description
 

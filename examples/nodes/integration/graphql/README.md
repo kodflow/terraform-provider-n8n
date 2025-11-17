@@ -1,8 +1,6 @@
 # GraphQL Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.graphql`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.graphql` **Latest Version**: 1
 
 ## Description
 

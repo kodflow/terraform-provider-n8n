@@ -1,8 +1,6 @@
 # Philips Hue Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.philipsHue`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.philipsHue` **Latest Version**: 1
 
 ## Description
 

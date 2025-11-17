@@ -1,8 +1,6 @@
 # Send Email Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.emailSend`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.emailSend` **Latest Version**: 1
 
 ## Description
 

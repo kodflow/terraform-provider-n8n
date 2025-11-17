@@ -1,8 +1,6 @@
 # Drift Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.drift`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.drift` **Latest Version**: 1
 
 ## Description
 

@@ -1,8 +1,6 @@
 # GitHub Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.github`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.github` **Latest Version**: 1
 
 ## Description
 

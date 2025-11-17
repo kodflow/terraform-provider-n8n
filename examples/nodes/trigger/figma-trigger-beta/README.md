@@ -1,8 +1,6 @@
 # Figma Trigger (Beta) Node Test
 
-**Category**: Trigger
-**Type**: `n8n-nodes-base.figmaTrigger`
-**Latest Version**: 1
+**Category**: Trigger **Type**: `n8n-nodes-base.figmaTrigger` **Latest Version**: 1
 
 ## Description
 

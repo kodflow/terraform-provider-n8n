@@ -1,8 +1,6 @@
 # GetResponse Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.getResponse`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.getResponse` **Latest Version**: 1
 
 ## Description
 

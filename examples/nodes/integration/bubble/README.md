@@ -1,8 +1,6 @@
 # Bubble Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.bubble`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.bubble` **Latest Version**: 1
 
 ## Description
 

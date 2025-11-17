@@ -26,6 +26,7 @@ The provider supports **all 296 n8n nodes** with complete workflow composition c
 **📚 [View complete node catalog →](SUPPORTED_NODES.md)**
 
 Each node has:
+
 - ✅ Complete Terraform workflow example
 - ✅ Tested with `terraform init` and `validate` (100% pass rate)
 - ✅ Documentation with credential requirements
@@ -35,15 +36,15 @@ Each node has:
 
 The provider fully supports **n8n Community Edition** (free/self-hosted):
 
-| Resource/Data Source | Status       | Description                           |
-| -------------------- | ------------ | ------------------------------------- |
-| `n8n_workflow`       | ✅ Available | Create and manage workflows           |
-| `n8n_workflow_node`  | ✅ Available | Modular workflow node composition     |
-| `n8n_workflow_connection` | ✅ Available | Connect nodes in workflows    |
-| `n8n_credential`     | ✅ Available | Store API credentials securely        |
-| `n8n_tag`            | ✅ Available | Organize resources with tags          |
-| `n8n_variable`       | ✅ Available | Manage environment variables          |
-| `n8n_execution`      | ✅ Available | Query workflow executions (read-only) |
+| Resource/Data Source      | Status       | Description                           |
+| ------------------------- | ------------ | ------------------------------------- |
+| `n8n_workflow`            | ✅ Available | Create and manage workflows           |
+| `n8n_workflow_node`       | ✅ Available | Modular workflow node composition     |
+| `n8n_workflow_connection` | ✅ Available | Connect nodes in workflows            |
+| `n8n_credential`          | ✅ Available | Store API credentials securely        |
+| `n8n_tag`                 | ✅ Available | Organize resources with tags          |
+| `n8n_variable`            | ✅ Available | Manage environment variables          |
+| `n8n_execution`           | ✅ Available | Query workflow executions (read-only) |
 
 ### Enterprise Edition Support
 
@@ -128,11 +129,13 @@ The provider includes comprehensive examples for different use cases:
 **296 complete workflow examples** - one for each n8n node:
 
 📂 **[`examples/nodes/`](examples/nodes/)** - Organized by category:
+
 - `core/` - 5 core nodes (Code, If, Merge, Set, Switch)
 - `trigger/` - 25 trigger nodes (Webhook, Manual, Cron, etc.)
 - `integration/` - 266 integration nodes (Slack, GitHub, AWS, etc.)
 
 Each example includes:
+
 - `main.tf` - Complete workflow demonstrating the node
 - `variables.tf` - Provider configuration
 - `README.md` - Node-specific documentation

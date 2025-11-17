@@ -1,8 +1,6 @@
 # Facebook Lead Ads Trigger Node Test
 
-**Category**: Trigger
-**Type**: `n8n-nodes-base.facebookLeadAdsTrigger`
-**Latest Version**: 1
+**Category**: Trigger **Type**: `n8n-nodes-base.facebookLeadAdsTrigger` **Latest Version**: 1
 
 ## Description
 
@@ -50,7 +48,8 @@ terraform apply -var="n8n_api_key=YOUR_API_KEY"
 
 Edit the `parameters` in `main.tf` to customize the Facebook Lead Ads Trigger node behavior.
 
-See [n8n Facebook Lead Ads Trigger documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.facebook-lead-ads-trigger/) for available parameters.
+See [n8n Facebook Lead Ads Trigger documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.facebook-lead-ads-trigger/) for available
+parameters.
 
 ## Notes
 
