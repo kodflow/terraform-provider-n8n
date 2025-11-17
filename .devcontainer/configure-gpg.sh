@@ -16,7 +16,7 @@ if [ ! -f "/.dockerenv" ] && [ ! -f "/run/.containerenv" ]; then
 fi
 
 # Check if GPG is installed
-if ! command -v gpg &> /dev/null; then
+if ! command -v gpg &>/dev/null; then
   echo "❌ GPG is not installed"
   exit 1
 fi
@@ -116,7 +116,7 @@ echo ""
 
 # Save to file
 GPG_PUBLIC_KEY_FILE="/workspace/.devcontainer/gpg-public-key.asc"
-gpg --armor --export "$KEYID" > "$GPG_PUBLIC_KEY_FILE"
+gpg --armor --export "$KEYID" >"$GPG_PUBLIC_KEY_FILE"
 echo "✅ Public key also saved to: $GPG_PUBLIC_KEY_FILE"
 echo ""
 
@@ -134,12 +134,12 @@ if [ -d "/host-gpg" ]; then
     echo "📝 Creating configuration files in /host-gpg..."
 
     # Export private key
-    gpg --export-secret-keys --armor "$KEYID" > /host-gpg/private.key
+    gpg --export-secret-keys --armor "$KEYID" >/host-gpg/private.key
     chmod 600 /host-gpg/private.key
     echo "✅ Private key exported to /host-gpg/private.key"
 
     # Create config file with Git identity (quote values for safety)
-    cat > /host-gpg/gpg-config.env <<EOF
+    cat >/host-gpg/gpg-config.env <<EOF
 KEYID="$KEYID"
 GIT_NAME="$GIT_NAME"
 GIT_EMAIL="$GIT_EMAIL"
