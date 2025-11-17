@@ -125,6 +125,10 @@ jobs:
       - name: Build provider
         run: make build
 
+      # Validate all Terraform examples with locally built provider
+      - name: Validate Terraform examples
+        run: make test/validate-examples
+
       # Upload provider binary for test jobs
       - name: Upload provider binary
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
