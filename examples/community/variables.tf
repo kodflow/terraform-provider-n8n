@@ -1,6 +1,6 @@
 # Community Edition Variables
 
-variable "n8n_api_url" {
+variable "n8n_base_url" {
   description = "n8n instance URL"
   type        = string
 }
