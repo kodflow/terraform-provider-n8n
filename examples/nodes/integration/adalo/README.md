@@ -1,8 +1,6 @@
 # Adalo Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.adalo`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.adalo` **Latest Version**: 1
 
 ## Description
 

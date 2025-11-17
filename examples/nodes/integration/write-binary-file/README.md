@@ -1,8 +1,6 @@
 # Write Binary File Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.writeBinaryFile`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.writeBinaryFile` **Latest Version**: 1
 
 ## Description
 

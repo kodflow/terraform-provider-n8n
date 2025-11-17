@@ -1,8 +1,6 @@
 # DHL Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.dhl`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.dhl` **Latest Version**: 1
 
 ## Description
 

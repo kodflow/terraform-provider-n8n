@@ -1,8 +1,6 @@
 # Mocean Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.mocean`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.mocean` **Latest Version**: 1
 
 ## Description
 

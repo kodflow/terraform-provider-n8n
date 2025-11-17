@@ -1,8 +1,6 @@
 # Yourls Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.yourls`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.yourls` **Latest Version**: 1
 
 ## Description
 

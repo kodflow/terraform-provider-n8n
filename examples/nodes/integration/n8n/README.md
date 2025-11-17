@@ -1,8 +1,6 @@
 # n8n Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.n8n`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.n8n` **Latest Version**: 1
 
 ## Description
 

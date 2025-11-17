@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "note": "Configure Compare Datasets parameters here"
+      "note" : "Configure Compare Datasets parameters here"
     }
   )
 }
@@ -49,7 +49,7 @@ resource "n8n_workflow_node" "output_0" {
         name  = "output_type"
         type  = "string"
         value = "Match"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -71,7 +71,7 @@ resource "n8n_workflow_node" "output_1" {
         name  = "output_type"
         type  = "string"
         value = "Mismatch"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -93,7 +93,7 @@ resource "n8n_workflow_node" "output_2" {
         name  = "output_type"
         type  = "string"
         value = "No Match"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"

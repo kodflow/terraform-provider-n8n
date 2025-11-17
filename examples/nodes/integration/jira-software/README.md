@@ -1,8 +1,6 @@
 # Jira Software Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.jira`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.jira` **Latest Version**: 1
 
 ## Description
 

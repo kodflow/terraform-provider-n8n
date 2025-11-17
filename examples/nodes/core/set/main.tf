@@ -31,16 +31,16 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "mode": "manual",
-        "fields": {
-            "values": [
-                {
-                    "name": "output",
-                    "type": "string",
-                    "value": "={{ $json }}"
-                }
-            ]
-        }
+      "mode" : "manual",
+      "fields" : {
+        "values" : [
+          {
+            "name" : "output",
+            "type" : "string",
+            "value" : "={{ $json }}"
+          }
+        ]
+      }
     }
   )
 }

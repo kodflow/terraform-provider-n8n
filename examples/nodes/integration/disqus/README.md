@@ -1,8 +1,6 @@
 # Disqus Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.disqus`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.disqus` **Latest Version**: 1
 
 ## Description
 

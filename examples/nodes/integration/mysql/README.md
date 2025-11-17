@@ -1,8 +1,6 @@
 # MySQL Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.mySql`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.mySql` **Latest Version**: 1
 
 ## Description
 

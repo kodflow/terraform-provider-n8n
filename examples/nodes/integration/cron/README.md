@@ -1,8 +1,6 @@
 # Cron Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.cron`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.cron` **Latest Version**: 1
 
 ## Description
 

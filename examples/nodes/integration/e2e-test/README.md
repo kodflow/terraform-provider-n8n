@@ -1,8 +1,6 @@
 # E2E Test Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.e2eTest`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.e2eTest` **Latest Version**: 1
 
 ## Description
 

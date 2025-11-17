@@ -1,8 +1,6 @@
 # FileMaker Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.filemaker`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.filemaker` **Latest Version**: 1
 
 ## Description
 

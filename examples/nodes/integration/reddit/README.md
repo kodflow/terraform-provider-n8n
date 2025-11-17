@@ -1,8 +1,6 @@
 # Reddit Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.reddit`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.reddit` **Latest Version**: 1
 
 ## Description
 

@@ -1,8 +1,6 @@
 # Stackby Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.stackby`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.stackby` **Latest Version**: 1
 
 ## Description
 

@@ -1,8 +1,6 @@
 # Home Assistant Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.homeAssistant`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.homeAssistant` **Latest Version**: 1
 
 ## Description
 
