@@ -1,6 +1,8 @@
 # Extraction Values Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.extractionValues` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.extractionValues`
+**Latest Version**: 1
 
 ## Description
 

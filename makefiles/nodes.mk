@@ -7,7 +7,7 @@ BLUE ?= \033[36m
 GREEN ?= \033[32m
 NC ?= \033[0m
 
-.PHONY: nodes nodes/fetch nodes/parse nodes/diff nodes/generate nodes/workflows nodes/mega-workflow nodes/mega-workflow/test nodes/sync-report nodes/docs nodes/stats nodes/test nodes/clean
+.PHONY: nodes nodes/fetch nodes/parse nodes/diff nodes/generate nodes/workflows nodes/mega-workflow nodes/mega-workflow/test nodes/validate-coverage nodes/sync-report nodes/docs nodes/stats nodes/test nodes/clean
 
 # Main nodes synchronization command
 nodes: nodes/fetch nodes/parse nodes/sync-report nodes/diff nodes/generate nodes/test ## Synchronize n8n nodes from official repository
@@ -63,6 +63,12 @@ nodes/mega-workflow/test: nodes/mega-workflow ## Test MEGA workflow with real n8
 	@echo "$(BLUE)▶ Destroying MEGA workflow...$(NC)"
 	@cd examples/mega-workflow && terraform destroy -var="n8n_base_url=$${N8N_API_URL}" -var="n8n_api_key=$${N8N_API_KEY}" -auto-approve
 	@echo "$(GREEN)✓ MEGA workflow test completed$(NC)"
+
+# Validate test coverage for all workflows
+nodes/validate-coverage: ## Validate that all node tests cover ALL scenarios (inputs/outputs)
+	@echo "$(BLUE)[1mValidating node workflow test coverage...$(NC)"
+	@chmod +x scripts/nodes/validate-test-coverage.js
+	@node scripts/nodes/validate-test-coverage.js
 
 # Generate synchronization report for Claude agent
 nodes/sync-report: ## Generate detailed sync report (NODES_SYNC.md)

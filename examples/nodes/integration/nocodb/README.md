@@ -1,6 +1,8 @@
 # NocoDB Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.nocoDb` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.nocoDb`
+**Latest Version**: 1
 
 ## Description
 

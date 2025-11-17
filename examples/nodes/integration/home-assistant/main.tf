@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "note" : "Configure Home Assistant parameters here"
+        "note": "Configure Home Assistant parameters here"
     }
   )
 }

@@ -1,6 +1,8 @@
 # Plivo Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.plivo` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.plivo`
+**Latest Version**: 1
 
 ## Description
 

@@ -1,6 +1,8 @@
 # Acuity Scheduling Trigger Node Test
 
-**Category**: Trigger **Type**: `n8n-nodes-base.acuitySchedulingTrigger` **Latest Version**: 1
+**Category**: Trigger
+**Type**: `n8n-nodes-base.acuitySchedulingTrigger`
+**Latest Version**: 1
 
 ## Description
 
@@ -48,8 +50,7 @@ terraform apply -var="n8n_api_key=YOUR_API_KEY"
 
 Edit the `parameters` in `main.tf` to customize the Acuity Scheduling Trigger node behavior.
 
-See [n8n Acuity Scheduling Trigger documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.acuity-scheduling-trigger/) for available
-parameters.
+See [n8n Acuity Scheduling Trigger documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.acuity-scheduling-trigger/) for available parameters.
 
 ## Notes
 

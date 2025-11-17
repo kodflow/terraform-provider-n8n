@@ -1,6 +1,8 @@
 # Baserow Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.baserow` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.baserow`
+**Latest Version**: 1
 
 ## Description
 

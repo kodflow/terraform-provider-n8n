@@ -1,6 +1,8 @@
 # Harvest Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.harvest` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.harvest`
+**Latest Version**: 1
 
 ## Description
 

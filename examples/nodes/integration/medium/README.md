@@ -1,6 +1,8 @@
 # Medium Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.medium` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.medium`
+**Latest Version**: 1
 
 ## Description
 

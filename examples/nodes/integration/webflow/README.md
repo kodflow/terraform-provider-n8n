@@ -1,6 +1,8 @@
 # Webflow Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.webflow` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.webflow`
+**Latest Version**: 1
 
 ## Description
 

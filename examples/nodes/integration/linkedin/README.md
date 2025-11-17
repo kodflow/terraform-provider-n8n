@@ -1,6 +1,8 @@
 # LinkedIn Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.linkedIn` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.linkedIn`
+**Latest Version**: 1
 
 ## Description
 

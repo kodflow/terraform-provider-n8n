@@ -1,6 +1,8 @@
 # Magento 2 Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.magento2` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.magento2`
+**Latest Version**: 1
 
 ## Description
 

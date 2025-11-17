@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "note" : "Configure Grafana parameters here"
+        "note": "Configure Grafana parameters here"
     }
   )
 }

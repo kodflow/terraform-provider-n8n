@@ -1,6 +1,8 @@
 # Humantic AI Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.humanticAi` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.humanticAi`
+**Latest Version**: 1
 
 ## Description
 

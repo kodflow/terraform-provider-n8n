@@ -1,6 +1,8 @@
 # Brandfetch Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.Brandfetch` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.Brandfetch`
+**Latest Version**: 1
 
 ## Description
 

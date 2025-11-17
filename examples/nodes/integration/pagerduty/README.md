@@ -1,6 +1,8 @@
 # PagerDuty Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.pagerDuty` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.pagerDuty`
+**Latest Version**: 1
 
 ## Description
 

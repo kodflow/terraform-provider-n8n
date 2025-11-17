@@ -31,8 +31,8 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "mode" : "runOnceForAllItems",
-      "jsCode" : "// Process data\nconst items = $input.all();\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    processed: true,\n    timestamp: new Date().toISOString()\n  }\n}));"
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Process data\nconst items = $input.all();\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    processed: true,\n    timestamp: new Date().toISOString()\n  }\n}));"
     }
   )
 }

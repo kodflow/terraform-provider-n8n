@@ -24,7 +24,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-      "note" : "Configure Figma Trigger (Beta) parameters here"
+        "note": "Configure Figma Trigger (Beta) parameters here"
     }
   )
 }

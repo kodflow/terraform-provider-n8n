@@ -125,6 +125,63 @@ function getExampleParameters(node) {
 }
 
 /**
+ * Get node connection configuration (outputs/inputs)
+ */
+function getNodeConnectionConfig(fullNodeType) {
+  // Nodes with multiple outputs
+  const multiOutputNodes = {
+    'n8n-nodes-base.if': {
+      outputs: [
+        { index: 0, name: 'True', description: 'When condition is true' },
+        { index: 1, name: 'False', description: 'When condition is false' }
+      ]
+    },
+    'n8n-nodes-base.switch': {
+      outputs: [
+        { index: 0, name: 'Output 1', description: 'First matching rule' },
+        { index: 1, name: 'Output 2', description: 'Second matching rule' },
+        { index: 2, name: 'Output 3', description: 'Third matching rule' },
+        { index: 3, name: 'Fallback', description: 'No rules matched' }
+      ]
+    },
+    'n8n-nodes-base.filter': {
+      outputs: [
+        { index: 0, name: 'Pass', description: 'Items that pass the filter' },
+        { index: 1, name: 'Fail', description: 'Items that fail the filter' }
+      ]
+    },
+    'n8n-nodes-base.splitInBatches': {
+      outputs: [
+        { index: 0, name: 'Batch', description: 'Current batch items' },
+        { index: 1, name: 'Done', description: 'All batches processed' }
+      ]
+    },
+    'n8n-nodes-base.compareDatasets': {
+      outputs: [
+        { index: 0, name: 'Match', description: 'Matching items' },
+        { index: 1, name: 'Mismatch', description: 'Mismatched items' },
+        { index: 2, name: 'No Match', description: 'Items with no match' }
+      ]
+    }
+  };
+
+  // Nodes with multiple inputs
+  const multiInputNodes = {
+    'n8n-nodes-base.merge': {
+      inputs: [
+        { index: 0, name: 'Input 1' },
+        { index: 1, name: 'Input 2' }
+      ]
+    }
+  };
+
+  return {
+    outputs: multiOutputNodes[fullNodeType]?.outputs || [{ index: 0, name: 'Main', description: 'Default output' }],
+    inputs: multiInputNodes[fullNodeType]?.inputs || [{ index: 0, name: 'Main' }]
+  };
+}
+
+/**
  * Generate main.tf for a node
  */
 function generateMainTf(node) {
@@ -132,6 +189,9 @@ function generateMainTf(node) {
   const needsInput = !isTrigger;
   const nodeSlug = toSlug(node.name);
   const fullNodeType = getFullNodeType(node.type);
+
+  // Get connection configuration
+  const connConfig = getNodeConnectionConfig(fullNodeType);
 
   const params = getExampleParameters(node);
   const paramsJson = JSON.stringify(params, null, 4).split('\n').map(line => '    ' + line).join('\n');
@@ -156,9 +216,24 @@ provider "n8n" {
 
 `;
 
-  // Add input node if needed
+  // Add input nodes (multiple for nodes like Merge)
+  const hasMultipleInputs = connConfig.inputs.length > 1;
   if (needsInput) {
-    content += `# INPUT: Manual trigger to start the workflow
+    if (hasMultipleInputs) {
+      // Generate multiple input nodes for multi-input nodes (e.g., Merge)
+      connConfig.inputs.forEach((input, idx) => {
+        content += `# INPUT ${idx + 1}: ${input.name}
+resource "n8n_workflow_node" "input_${idx}" {
+  name     = "${input.name}"
+  type     = "n8n-nodes-base.manualTrigger"
+  position = [250, ${300 + (idx * 150)}]
+}
+
+`;
+      });
+    } else {
+      // Single input node
+      content += `# INPUT: Manual trigger to start the workflow
 resource "n8n_workflow_node" "manual_trigger" {
   name     = "Manual Trigger"
   type     = "n8n-nodes-base.manualTrigger"
@@ -166,14 +241,16 @@ resource "n8n_workflow_node" "manual_trigger" {
 }
 
 `;
+    }
   }
 
   // Add the tested node
+  const testNodeY = hasMultipleInputs ? 300 + ((connConfig.inputs.length - 1) * 75) : 300;
   content += `# TESTED NODE: ${node.name}
 resource "n8n_workflow_node" "test_node" {
   name     = "${node.name}"
   type     = "${fullNodeType}"
-  position = [${needsInput ? 450 : 250}, 300]
+  position = [${needsInput ? 450 : 250}, ${testNodeY}]
 
   parameters = jsonencode(
 ${paramsJson}
@@ -182,8 +259,38 @@ ${paramsJson}
 
 `;
 
-  // Add output node
-  content += `# OUTPUT: Display result
+  // Add output nodes (one per output for multi-output nodes)
+  const hasMultipleOutputs = connConfig.outputs.length > 1;
+  if (hasMultipleOutputs) {
+    // Generate multiple output nodes
+    connConfig.outputs.forEach((output, idx) => {
+      content += `# OUTPUT ${idx + 1}: ${output.name} (${output.description})
+resource "n8n_workflow_node" "output_${idx}" {
+  name     = "Output: ${output.name}"
+  type     = "n8n-nodes-base.set"
+  position = [${needsInput ? 650 : 450}, ${testNodeY + (idx * 150 - (connConfig.outputs.length - 1) * 75)}]
+
+  parameters = jsonencode({
+    mode = "manual"
+    fields = {
+      values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "${output.name}"
+      }, {
+        name  = "result"
+        type  = "string"
+        value = "={{ $json }}"
+      }]
+    }
+  })
+}
+
+`;
+    });
+  } else {
+    // Single output node
+    content += `# OUTPUT: Display result
 resource "n8n_workflow_node" "display_result" {
   name     = "Display Result"
   type     = "n8n-nodes-base.set"
@@ -202,12 +309,31 @@ resource "n8n_workflow_node" "display_result" {
 }
 
 `;
+  }
 
   // Add connections
   content += `# CONNECTIONS\n`;
 
+  // Input connections
   if (needsInput) {
-    content += `resource "n8n_workflow_connection" "input_to_test" {
+    if (hasMultipleInputs) {
+      // Multiple inputs (e.g., Merge node)
+      connConfig.inputs.forEach((input, idx) => {
+        content += `# Connection from ${input.name} to test node
+resource "n8n_workflow_connection" "input_${idx}_to_test" {
+  source_node         = n8n_workflow_node.input_${idx}.name
+  source_output       = "main"
+  source_output_index = 0
+  target_node         = n8n_workflow_node.test_node.name
+  target_input        = "main"
+  target_input_index  = ${input.index}
+}
+
+`;
+      });
+    } else {
+      // Single input
+      content += `resource "n8n_workflow_connection" "input_to_test" {
   source_node         = n8n_workflow_node.manual_trigger.name
   source_output       = "main"
   source_output_index = 0
@@ -217,9 +343,28 @@ resource "n8n_workflow_node" "display_result" {
 }
 
 `;
+    }
   }
 
-  content += `resource "n8n_workflow_connection" "test_to_output" {
+  // Output connections
+  if (hasMultipleOutputs) {
+    // Multiple outputs (e.g., IF, Switch, Filter nodes)
+    connConfig.outputs.forEach((output, idx) => {
+      content += `# Connection from test node output[${output.index}] (${output.name}) to output node
+resource "n8n_workflow_connection" "test_to_output_${idx}" {
+  source_node         = n8n_workflow_node.test_node.name
+  source_output       = "main"
+  source_output_index = ${output.index}
+  target_node         = n8n_workflow_node.output_${idx}.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+`;
+    });
+  } else {
+    // Single output
+    content += `resource "n8n_workflow_connection" "test_to_output" {
   source_node         = n8n_workflow_node.test_node.name
   source_output       = "main"
   source_output_index = 0
@@ -229,11 +374,33 @@ resource "n8n_workflow_node" "display_result" {
 }
 
 `;
+  }
 
   // Build workflow
-  const nodes = needsInput
-    ? ['manual_trigger', 'test_node', 'display_result']
-    : ['test_node', 'display_result'];
+  let nodes = [];
+
+  // Add input nodes
+  if (needsInput) {
+    if (hasMultipleInputs) {
+      connConfig.inputs.forEach((input, idx) => {
+        nodes.push(`input_${idx}`);
+      });
+    } else {
+      nodes.push('manual_trigger');
+    }
+  }
+
+  // Add test node
+  nodes.push('test_node');
+
+  // Add output nodes
+  if (hasMultipleOutputs) {
+    connConfig.outputs.forEach((output, idx) => {
+      nodes.push(`output_${idx}`);
+    });
+  } else {
+    nodes.push('display_result');
+  }
 
   content += `# WORKFLOW
 resource "n8n_workflow" "test_${nodeSlug}" {
@@ -247,8 +414,21 @@ resource "n8n_workflow" "test_${nodeSlug}" {
   connections_json = jsonencode({
 `;
 
+  // Input connections in JSON
   if (needsInput) {
-    content += `    (n8n_workflow_node.manual_trigger.name) = {
+    if (hasMultipleInputs) {
+      connConfig.inputs.forEach((input, idx) => {
+        content += `    (n8n_workflow_node.input_${idx}.name) = {
+      main = [[{
+        node  = n8n_workflow_node.test_node.name
+        type  = "main"
+        index = ${input.index}
+      }]]
+    }
+`;
+      });
+    } else {
+      content += `    (n8n_workflow_node.manual_trigger.name) = {
       main = [[{
         node  = n8n_workflow_node.test_node.name
         type  = "main"
@@ -256,16 +436,34 @@ resource "n8n_workflow" "test_${nodeSlug}" {
       }]]
     }
 `;
+    }
   }
 
-  content += `    (n8n_workflow_node.test_node.name) = {
+  // Output connections in JSON
+  if (hasMultipleOutputs) {
+    content += `    (n8n_workflow_node.test_node.name) = {\n`;
+    content += `      main = [\n`;
+    connConfig.outputs.forEach((output, idx) => {
+      content += `        [{
+          node  = n8n_workflow_node.output_${idx}.name
+          type  = "main"
+          index = 0
+        }]${idx < connConfig.outputs.length - 1 ? ',' : ''}\n`;
+    });
+    content += `      ]\n`;
+    content += `    }\n`;
+  } else {
+    content += `    (n8n_workflow_node.test_node.name) = {
       main = [[{
         node  = n8n_workflow_node.display_result.name
         type  = "main"
         index = 0
       }]]
     }
-  })
+`;
+  }
+
+  content += `  })
 }
 
 # OUTPUTS

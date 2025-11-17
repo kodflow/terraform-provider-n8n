@@ -1,6 +1,8 @@
 # Facebook Graph API Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.facebookGraphApi` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.facebookGraphApi`
+**Latest Version**: 1
 
 ## Description
 

@@ -1,6 +1,8 @@
 # HaloPSA Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.haloPSA` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.haloPSA`
+**Latest Version**: 1
 
 ## Description
 

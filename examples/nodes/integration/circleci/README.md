@@ -1,6 +1,8 @@
 # CircleCI Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.circleCi` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.circleCi`
+**Latest Version**: 1
 
 ## Description
 

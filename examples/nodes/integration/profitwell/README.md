@@ -1,6 +1,8 @@
 # ProfitWell Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.profitWell` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.profitWell`
+**Latest Version**: 1
 
 ## Description
 

@@ -1,6 +1,8 @@
 # Notion Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.notion` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.notion`
+**Latest Version**: 1
 
 ## Description
 

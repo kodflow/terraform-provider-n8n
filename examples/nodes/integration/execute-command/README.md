@@ -1,6 +1,8 @@
 # Execute Command Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.executeCommand` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.executeCommand`
+**Latest Version**: 1
 
 ## Description
 

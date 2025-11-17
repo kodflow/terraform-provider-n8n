@@ -1,6 +1,8 @@
 # Clearbit Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.clearbit` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.clearbit`
+**Latest Version**: 1
 
 ## Description
 

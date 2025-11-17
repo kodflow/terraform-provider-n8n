@@ -1,10 +1,12 @@
 # JWT Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.jwt` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.jwt`
+**Latest Version**: 1
 
 ## Description
 
-Be sure to add a valid JWT token to the
+Be sure to add a valid JWT token to the 
 
 ## Node Information
 

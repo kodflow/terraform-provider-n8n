@@ -1,6 +1,8 @@
 # Ghost Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.ghost` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.ghost`
+**Latest Version**: 1
 
 ## Description
 

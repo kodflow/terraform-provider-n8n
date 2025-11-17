@@ -1,6 +1,8 @@
 # iCalendar Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.iCal` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.iCal`
+**Latest Version**: 1
 
 ## Description
 

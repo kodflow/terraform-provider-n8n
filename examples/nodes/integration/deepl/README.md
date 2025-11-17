@@ -1,6 +1,8 @@
 # DeepL Node Test
 
-**Category**: Integration **Type**: `n8n-nodes-base.deepL` **Latest Version**: 1
+**Category**: Integration
+**Type**: `n8n-nodes-base.deepL`
+**Latest Version**: 1
 
 ## Description
 
