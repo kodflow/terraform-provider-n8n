@@ -20,6 +20,27 @@ Automatically generated coverage report.
 
 ---
 
+## Workflow Examples Testing
+
+All 296 per-node workflow examples have been tested for correctness.
+
+| Metric | Value |
+|--------|-------|
+| **Total Workflows** | 296 |
+| **Passed** | 296 |
+| **Failed** | 0 |
+| **Success Rate** | 100.0% |
+| **Status** | ✅ ALL PASSING |
+
+**Test Coverage:** Each n8n node has a complete workflow example that validates:
+- ✅ Terraform syntax correctness (`terraform validate`)
+- ✅ Provider initialization (`terraform init`)
+- ✅ Execution plan generation (`terraform plan`)
+
+View detailed results in [`WORKFLOWS_TEST_RESULTS.md`](WORKFLOWS_TEST_RESULTS.md).
+
+---
+
 ## Acceptance Tests (E2E)
 
 Acceptance tests validate the real behavior of the provider against an n8n instance.

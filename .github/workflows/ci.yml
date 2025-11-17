@@ -161,6 +161,261 @@ jobs:
       - name: Generate documentation
         run: make docs
 
+  test-node-workflows:
+    name: Test Node Workflows
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.13.5"
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Make provider binary executable
+      - name: Make provider executable
+        run: chmod +x /tmp/terraform-provider/terraform-provider-n8n
+
+      # Configure Terraform to use local provider
+      - name: Configure Terraform dev overrides
+        run: |
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraformrc <<EOF
+          provider_installation {
+            dev_overrides {
+              "kodflow/n8n" = "/tmp/terraform-provider"
+            }
+            direct {}
+          }
+          EOF
+
+      # Test all 296 node workflow examples
+      - name: Test all node workflows
+        env:
+          TF_VAR_n8n_base_url: "http://localhost:5678"
+          TF_VAR_n8n_api_key: "mock-api-key-for-testing"
+        run: |
+          echo "🧪 Testing all 296 node workflow examples..."
+          echo ""
+
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          declare -a FAILED_WORKFLOWS
+
+          # Find all workflow directories
+          WORKFLOW_DIRS=$(find examples/nodes -mindepth 2 -maxdepth 2 -type d | sort)
+
+          for workflow_dir in $WORKFLOW_DIRS; do
+            TOTAL=$((TOTAL + 1))
+            category=$(basename $(dirname "$workflow_dir"))
+            node_name=$(basename "$workflow_dir")
+
+            echo "[$TOTAL] Testing: ${category}/${node_name}"
+
+            cd "$workflow_dir" || continue
+
+            # Test: terraform init
+            if ! terraform init -no-color > /dev/null 2>&1; then
+              echo "  ❌ init failed"
+              FAILED=$((FAILED + 1))
+              FAILED_WORKFLOWS+=("${category}/${node_name} (init)")
+              cd - > /dev/null
+              continue
+            fi
+
+            # Test: terraform validate
+            if ! terraform validate -no-color > /dev/null 2>&1; then
+              echo "  ❌ validate failed"
+              FAILED=$((FAILED + 1))
+              FAILED_WORKFLOWS+=("${category}/${node_name} (validate)")
+              cd - > /dev/null
+              continue
+            fi
+
+            echo "  ✅ Passed"
+            PASSED=$((PASSED + 1))
+            cd - > /dev/null
+          done
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Test Summary"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "  Total Workflows: ${TOTAL}"
+          echo "  ✅ Passed: ${PASSED}"
+          echo "  ❌ Failed: ${FAILED}"
+          echo ""
+
+          if [ ${#FAILED_WORKFLOWS[@]} -gt 0 ]; then
+            echo "Failed workflows:"
+            for workflow in "${FAILED_WORKFLOWS[@]}"; do
+              echo "  - $workflow"
+            done
+            echo ""
+            exit 1
+          fi
+
+          echo "✅ All node workflows passed!"
+
+  sample-node-workflows:
+    name: Sample Node E2E - ${{ matrix.workflow-name }}
+    runs-on: ubuntu-latest
+    needs: test-node-workflows
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Sample of different node types to test end-to-end
+          - workflow-name: core-code
+            workflow-path: examples/nodes/core/code
+          - workflow-name: core-if
+            workflow-path: examples/nodes/core/if
+          - workflow-name: trigger-webhook
+            workflow-path: examples/nodes/trigger/webhook
+          - workflow-name: trigger-manual
+            workflow-path: examples/nodes/trigger/manual-trigger
+          - workflow-name: integration-filter
+            workflow-path: examples/nodes/integration/filter
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.13.5"
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Make provider binary executable
+      - name: Make provider executable
+        run: chmod +x /tmp/terraform-provider/terraform-provider-n8n
+
+      # Configure Terraform to use local provider
+      - name: Configure Terraform dev overrides
+        run: |
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraformrc <<EOF
+          provider_installation {
+            dev_overrides {
+              "kodflow/n8n" = "/tmp/terraform-provider"
+            }
+            direct {}
+          }
+          EOF
+
+      # Terraform Plan
+      - name: Terraform Plan
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+        working-directory: ${{ matrix.workflow-path }}
+        run: |
+          echo "🔍 Planning node workflow..."
+          terraform validate -no-color
+          terraform plan -no-color -input=false -out=tfplan
+
+      # Terraform Apply
+      - name: Terraform Apply
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+        working-directory: ${{ matrix.workflow-path }}
+        run: |
+          echo "🚀 Applying node workflow..."
+          terraform apply -no-color -auto-approve tfplan
+          terraform output -no-color || true
+
+      # Verify workflow created via n8n API
+      - name: Verify workflow via n8n API
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+        working-directory: ${{ matrix.workflow-path }}
+        run: |
+          echo "🔍 Verifying workflow created via n8n API..."
+
+          # Get workflow ID from terraform output
+          WORKFLOW_ID=$(terraform output -raw workflow_id 2>/dev/null || echo "")
+
+          if [ -z "$WORKFLOW_ID" ]; then
+            echo "⚠️  No workflow_id output found, checking if workflow exists in API..."
+            RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows")
+            echo "API Response: $RESPONSE"
+
+            # Check if response contains workflow data
+            if echo "$RESPONSE" | jq -e '.data | length > 0' >/dev/null 2>&1; then
+              echo "✅ Workflows found in API"
+            else
+              echo "❌ No workflows found in API response"
+              exit 1
+            fi
+          else
+            echo "Workflow ID: $WORKFLOW_ID"
+
+            # Fetch the specific workflow from API
+            RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows/$WORKFLOW_ID")
+            echo "API Response: $RESPONSE"
+
+            # Verify workflow exists and has correct structure
+            if echo "$RESPONSE" | jq -e '.id' >/dev/null 2>&1; then
+              WORKFLOW_NAME=$(echo "$RESPONSE" | jq -r '.name')
+              NODE_COUNT=$(echo "$RESPONSE" | jq '.nodes | length')
+              CONNECTION_COUNT=$(echo "$RESPONSE" | jq '.connections | length')
+
+              echo "✅ Workflow verified:"
+              echo "   Name: $WORKFLOW_NAME"
+              echo "   Nodes: $NODE_COUNT"
+              echo "   Connections: $CONNECTION_COUNT"
+
+              # Verify workflow has at least the expected nodes (trigger + test node + display)
+              if [ "$NODE_COUNT" -lt 3 ]; then
+                echo "⚠️  Warning: Expected at least 3 nodes, found $NODE_COUNT"
+              fi
+
+              # Verify workflow has the tested node type
+              NODE_TYPES=$(echo "$RESPONSE" | jq -r '.nodes[].type' | tr '\n' ' ')
+              echo "   Node types: $NODE_TYPES"
+
+              echo "✅ Workflow successfully created and verified in n8n"
+            else
+              echo "❌ Workflow not found or invalid response from API"
+              echo "Response: $RESPONSE"
+              exit 1
+            fi
+          fi
+
+      # Terraform Destroy
+      - name: Terraform Destroy
+        if: always()
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+        working-directory: ${{ matrix.workflow-path }}
+        run: |
+          echo "🧹 Destroying node workflow..."
+          terraform destroy -no-color -input=false -auto-approve
+
   plan-examples:
     name: Plan - ${{ matrix.example-name }}
     runs-on: ubuntu-latest

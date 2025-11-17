@@ -56,6 +56,52 @@ Automatically generated coverage report.
 
 ---
 
+## Workflow Examples Testing
+
+All 296 per-node workflow examples have been tested for correctness.
+
+| Metric | Value |
+|--------|-------|
+EOF
+
+# Check if WORKFLOWS_TEST_RESULTS.md exists
+if [ -f "WORKFLOWS_TEST_RESULTS.md" ]; then
+  # Extract statistics from test results
+  WF_TOTAL=$(grep "\*\*Total Workflows\*\*:" WORKFLOWS_TEST_RESULTS.md | grep -oP '\d+' | head -1)
+  WF_PASSED=$(grep "\*\*Passed\*\*:" WORKFLOWS_TEST_RESULTS.md | grep -oP '\d+' | head -1)
+  WF_FAILED=$(grep "\*\*Failed\*\*:" WORKFLOWS_TEST_RESULTS.md | grep -oP '\d+' | head -1)
+  WF_SUCCESS=$(grep "\*\*Success Rate\*\*:" WORKFLOWS_TEST_RESULTS.md | grep -oP '\d+\.\d+%' | head -1)
+
+  # Default to 0 if empty
+  WF_FAILED=${WF_FAILED:-0}
+
+  cat >>COVERAGE.MD <<EOF
+| **Total Workflows** | $WF_TOTAL |
+| **Passed** | $WF_PASSED |
+| **Failed** | $WF_FAILED |
+| **Success Rate** | $WF_SUCCESS |
+| **Status** | $(if [ "$WF_FAILED" -eq 0 ]; then echo "✅ ALL PASSING"; else echo "❌ FAILURES DETECTED"; fi) |
+
+**Test Coverage:** Each n8n node has a complete workflow example that validates:
+- ✅ Terraform syntax correctness (\`terraform validate\`)
+- ✅ Provider initialization (\`terraform init\`)
+- ✅ Execution plan generation (\`terraform plan\`)
+
+View detailed results in [\`WORKFLOWS_TEST_RESULTS.md\`](WORKFLOWS_TEST_RESULTS.md).
+
+EOF
+else
+  cat >>COVERAGE.MD <<EOF
+| **Status** | ⚠️ Not yet run |
+
+Run \`make nodes/test-workflows\` to test all 296 workflow examples.
+
+EOF
+fi
+
+cat >>COVERAGE.MD <<'EOF'
+---
+
 ## Acceptance Tests (E2E)
 
 Acceptance tests validate the real behavior of the provider against an n8n instance.

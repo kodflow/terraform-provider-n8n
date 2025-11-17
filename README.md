@@ -15,6 +15,22 @@ Terraform provider to manage n8n resources (workflows, credentials, projects, us
 
 ## Features
 
+### Supported N8N Nodes
+
+The provider supports **all 296 n8n nodes** with complete workflow composition capabilities:
+
+- **5 Core Nodes** - Essential workflow building blocks (Code, If, Merge, Set, Switch)
+- **25 Trigger Nodes** - Event-based workflow initiators
+- **266 Integration Nodes** - Third-party service integrations
+
+**📚 [View complete node catalog →](SUPPORTED_NODES.md)**
+
+Each node has:
+- ✅ Complete Terraform workflow example
+- ✅ Tested with `terraform init` and `validate` (100% pass rate)
+- ✅ Documentation with credential requirements
+- ✅ Ready-to-use templates in `examples/nodes/`
+
 ### Community Edition Support
 
 The provider fully supports **n8n Community Edition** (free/self-hosted):
@@ -22,6 +38,8 @@ The provider fully supports **n8n Community Edition** (free/self-hosted):
 | Resource/Data Source | Status       | Description                           |
 | -------------------- | ------------ | ------------------------------------- |
 | `n8n_workflow`       | ✅ Available | Create and manage workflows           |
+| `n8n_workflow_node`  | ✅ Available | Modular workflow node composition     |
+| `n8n_workflow_connection` | ✅ Available | Connect nodes in workflows    |
 | `n8n_credential`     | ✅ Available | Store API credentials securely        |
 | `n8n_tag`            | ✅ Available | Organize resources with tags          |
 | `n8n_variable`       | ✅ Available | Manage environment variables          |
@@ -105,6 +123,22 @@ See [examples/](examples/) directory for more examples.
 
 The provider includes comprehensive examples for different use cases:
 
+### Per-Node Workflow Examples
+
+**296 complete workflow examples** - one for each n8n node:
+
+📂 **[`examples/nodes/`](examples/nodes/)** - Organized by category:
+- `core/` - 5 core nodes (Code, If, Merge, Set, Switch)
+- `trigger/` - 25 trigger nodes (Webhook, Manual, Cron, etc.)
+- `integration/` - 266 integration nodes (Slack, GitHub, AWS, etc.)
+
+Each example includes:
+- `main.tf` - Complete workflow demonstrating the node
+- `variables.tf` - Provider configuration
+- `README.md` - Node-specific documentation
+
+**Testing status:** ✅ All 296 workflows tested and passing
+
 ### Community Edition Examples
 
 Browse complete examples in [`examples/community/`](examples/community/):
@@ -114,6 +148,12 @@ Browse complete examples in [`examples/community/`](examples/community/):
 - **[Tags](examples/community/tags/)** - Workflow organization with tags
 - **[Variables](examples/community/variables/)** - Environment variable management
 - **[Executions](examples/community/executions/)** - Query and filter workflow executions
+
+### Comprehensive Examples
+
+Production-ready workflow examples at [`examples/comprehensive/`](examples/comprehensive/):
+
+- **[Complete Modular Workflow](examples/comprehensive/complete-modular-workflow/)** - Advanced multi-node workflow with error handling
 
 ### Enterprise Edition Examples
 
@@ -131,6 +171,19 @@ make fmt           # Format all source files
 make lint          # Run code linters (zero tolerance)
 make docs          # Generate CHANGELOG.md and COVERAGE.MD
 make openapi       # Regenerate SDK from n8n OpenAPI spec
+```
+
+### Node Management Commands
+
+```bash
+make nodes                # Synchronize n8n nodes from official repository
+make nodes/fetch          # Fetch latest n8n repository
+make nodes/parse          # Parse nodes and generate registry
+make nodes/workflows      # Generate 296 per-node workflow examples
+make nodes/docs           # Generate SUPPORTED_NODES.md documentation
+make nodes/test-workflows # Test all 296 workflow examples
+make nodes/sync-report    # Generate sync report for changes
+make nodes/clean          # Clean nodes cache
 ```
 
 ### Quality Standards
