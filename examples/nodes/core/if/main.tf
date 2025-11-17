@@ -1,0 +1,166 @@
+# Test workflow for If
+# Category: Core
+# Type: n8n-nodes-base.if
+
+terraform {
+  required_providers {
+    n8n = {
+      source  = "kodflow/n8n"
+      version = "~> 1.0"
+    }
+  }
+}
+
+provider "n8n" {
+  base_url = var.n8n_base_url
+  api_key  = var.n8n_api_key
+}
+
+# INPUT: Manual trigger to start the workflow
+resource "n8n_workflow_node" "manual_trigger" {
+  name     = "Manual Trigger"
+  type     = "n8n-nodes-base.manualTrigger"
+  position = [250, 300]
+}
+
+# TESTED NODE: If
+resource "n8n_workflow_node" "test_node" {
+  name     = "If"
+  type     = "n8n-nodes-base.if"
+  position = [450, 300]
+
+  parameters = jsonencode(
+    {
+      "conditions" : {
+        "boolean" : [
+          {
+            "value1" : "={{ $json.isValid }}",
+            "value2" : true
+          }
+        ]
+      }
+    }
+  )
+}
+
+# OUTPUT 1: True (When condition is true)
+resource "n8n_workflow_node" "output_0" {
+  name     = "Output: True"
+  type     = "n8n-nodes-base.set"
+  position = [650, 225]
+
+  parameters = jsonencode({
+    mode = "manual"
+    fields = {
+      values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "True"
+        }, {
+        name  = "result"
+        type  = "string"
+        value = "={{ $json }}"
+      }]
+    }
+  })
+}
+
+# OUTPUT 2: False (When condition is false)
+resource "n8n_workflow_node" "output_1" {
+  name     = "Output: False"
+  type     = "n8n-nodes-base.set"
+  position = [650, 375]
+
+  parameters = jsonencode({
+    mode = "manual"
+    fields = {
+      values = [{
+        name  = "output_type"
+        type  = "string"
+        value = "False"
+        }, {
+        name  = "result"
+        type  = "string"
+        value = "={{ $json }}"
+      }]
+    }
+  })
+}
+
+# CONNECTIONS
+resource "n8n_workflow_connection" "input_to_test" {
+  source_node         = n8n_workflow_node.manual_trigger.name
+  source_output       = "main"
+  source_output_index = 0
+  target_node         = n8n_workflow_node.test_node.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+# Connection from test node output[0] (True) to output node
+resource "n8n_workflow_connection" "test_to_output_0" {
+  source_node         = n8n_workflow_node.test_node.name
+  source_output       = "main"
+  source_output_index = 0
+  target_node         = n8n_workflow_node.output_0.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+# Connection from test node output[1] (False) to output node
+resource "n8n_workflow_connection" "test_to_output_1" {
+  source_node         = n8n_workflow_node.test_node.name
+  source_output       = "main"
+  source_output_index = 1
+  target_node         = n8n_workflow_node.output_1.name
+  target_input        = "main"
+  target_input_index  = 0
+}
+
+# WORKFLOW
+resource "n8n_workflow" "test_if" {
+  name   = "Test: If"
+  active = false
+
+  nodes_json = jsonencode([
+    jsondecode(n8n_workflow_node.manual_trigger.node_json),
+    jsondecode(n8n_workflow_node.test_node.node_json),
+    jsondecode(n8n_workflow_node.output_0.node_json),
+    jsondecode(n8n_workflow_node.output_1.node_json)
+  ])
+
+  connections_json = jsonencode({
+    (n8n_workflow_node.manual_trigger.name) = {
+      main = [[{
+        node  = n8n_workflow_node.test_node.name
+        type  = "main"
+        index = 0
+      }]]
+    }
+    (n8n_workflow_node.test_node.name) = {
+      main = [
+        [{
+          node  = n8n_workflow_node.output_0.name
+          type  = "main"
+          index = 0
+        }],
+        [{
+          node  = n8n_workflow_node.output_1.name
+          type  = "main"
+          index = 0
+        }]
+      ]
+    }
+  })
+}
+
+# OUTPUTS
+output "workflow_id" {
+  value       = n8n_workflow.test_if.id
+  description = "ID of the test workflow"
+}
+
+output "workflow_name" {
+  value       = n8n_workflow.test_if.name
+  description = "Name of the test workflow"
+}
