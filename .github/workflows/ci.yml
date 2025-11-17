@@ -208,11 +208,18 @@ jobs:
         run: |
           echo "🧪 Testing all 296 node workflow examples..."
           echo ""
+          echo "📍 Working directory: $(pwd)"
+          echo "🔧 Terraform version: $(terraform version -json | jq -r '.terraform_version')"
+          echo "📦 Provider path: /tmp/terraform-provider"
+          echo "✅ Provider binary exists: $(ls -lh /tmp/terraform-provider/terraform-provider-n8n)"
+          echo "📄 Terraform RC: $(cat ~/.terraformrc)"
+          echo ""
 
           TOTAL=0
           PASSED=0
           FAILED=0
           declare -a FAILED_WORKFLOWS
+          SHOW_ERRORS=5  # Show detailed errors for first 5 failures
 
           # Find all workflow directories
           WORKFLOW_DIRS=$(find examples/nodes -mindepth 2 -maxdepth 2 -type d | sort)
@@ -227,19 +234,37 @@ jobs:
             cd "$workflow_dir" || continue
 
             # Test: terraform init
-            if ! terraform init -no-color > /dev/null 2>&1; then
+            INIT_OUTPUT=$(terraform init -no-color 2>&1)
+            if [ $? -ne 0 ]; then
               echo "  ❌ init failed"
               FAILED=$((FAILED + 1))
               FAILED_WORKFLOWS+=("${category}/${node_name} (init)")
+
+              # Show detailed error for first few failures
+              if [ $FAILED -le $SHOW_ERRORS ]; then
+                echo "  📋 Error details:"
+                echo "$INIT_OUTPUT" | sed 's/^/     /'
+                echo ""
+              fi
+
               cd - > /dev/null
               continue
             fi
 
             # Test: terraform validate
-            if ! terraform validate -no-color > /dev/null 2>&1; then
+            VALIDATE_OUTPUT=$(terraform validate -no-color 2>&1)
+            if [ $? -ne 0 ]; then
               echo "  ❌ validate failed"
               FAILED=$((FAILED + 1))
               FAILED_WORKFLOWS+=("${category}/${node_name} (validate)")
+
+              # Show detailed error for first few failures
+              if [ $FAILED -le $SHOW_ERRORS ]; then
+                echo "  📋 Error details:"
+                echo "$VALIDATE_OUTPUT" | sed 's/^/     /'
+                echo ""
+              fi
+
               cd - > /dev/null
               continue
             fi
