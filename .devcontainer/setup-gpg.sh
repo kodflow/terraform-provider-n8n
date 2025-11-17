@@ -43,12 +43,19 @@ pkill -9 -f dirmngr 2>/dev/null || true
 rm -f ~/.gnupg/*.lock ~/.gnupg/S.* ~/.gnupg/d.* 2>/dev/null || true
 sleep 1
 
-# Check if private key file exists
-if [ -f "/host-gpg/private.key" ]; then
-  echo "🔑 Importing GPG private key..."
+# Check if private key file exists (try both naming conventions)
+PRIVATE_KEY_FILE=""
+if [ -f "/host-gpg/private-key.asc" ]; then
+  PRIVATE_KEY_FILE="/host-gpg/private-key.asc"
+elif [ -f "/host-gpg/private.key" ]; then
+  PRIVATE_KEY_FILE="/host-gpg/private.key"
+fi
+
+if [ -n "$PRIVATE_KEY_FILE" ]; then
+  echo "🔑 Importing GPG private key from $(basename "$PRIVATE_KEY_FILE")..."
 
   # Copy key to writable location to avoid "Forbidden" errors with readonly mounts
-  cp /host-gpg/private.key /tmp/private.key.import
+  cp "$PRIVATE_KEY_FILE" /tmp/private.key.import
   chmod 600 /tmp/private.key.import
 
   # Import the key (suppress output for security)
@@ -63,7 +70,7 @@ if [ -f "/host-gpg/private.key" ]; then
   # Clean up temporary key file
   rm -f /tmp/private.key.import
 else
-  echo "ℹ️  No private.key file found in /host-gpg/"
+  echo "ℹ️  No private key file found in /host-gpg/"
   echo "ℹ️  Checking if key is already in keyring..."
 fi
 
@@ -79,5 +86,10 @@ echo "✅ GPG key $KEYID is available"
 # Set ultimate trust on the key (required for signing)
 echo "🔒 Setting trust level..."
 echo "$KEYID:6:" | gpg --import-ownertrust >/dev/null 2>&1 || true
+
+# Configure git to use GPG signing
+echo "⚙️  Configuring git GPG signing..."
+git config --global commit.gpgsign true
+git config --global user.signingkey "$KEYID"
 
 echo "✅ GPG setup completed successfully"
