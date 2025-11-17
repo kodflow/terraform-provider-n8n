@@ -132,3 +132,10 @@ test/tf/community: build ## Test community resources with Terraform (uses .env)
 	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform destroy -no-color -auto-approve && \
 	echo "$(GREEN)✓$(RESET) Test cleanup completed" && \
 	echo "" || (echo "$(RED)✗$(RESET) Community test failed" && exit 1)
+
+.PHONY: test/validate-examples
+test/validate-examples: build ## Validate all Terraform examples syntax with local provider (no .env needed)
+	@echo ""
+	@echo "$(BOLD)Validating Terraform examples syntax...$(RESET)"
+	@./scripts/validate-examples.sh
+	@echo ""
