@@ -28,6 +28,7 @@ BOLD := \033[1m
 
 include makefiles/sdk.mk
 include makefiles/test.mk
+include makefiles/nodes.mk
 include makefiles/quality.mk
 include makefiles/build.mk
 include makefiles/tools.mk
@@ -52,6 +53,9 @@ help: ## Display available commands
 	@echo ""
 	@echo "$(BOLD)Terraform Operations:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/terraform.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(BOLD)Nodes Operations:$(RESET)"
+	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/nodes.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)Code Quality:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/quality.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'

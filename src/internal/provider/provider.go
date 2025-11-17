@@ -165,6 +165,8 @@ func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		// Workflow domain
 		workflow.NewWorkflowResourceWrapper,
+		workflow.NewWorkflowNodeResourceWrapper,
+		workflow.NewWorkflowConnectionResourceWrapper,
 		// Project domain
 		project.NewProjectResourceWrapper,
 		project.NewProjectUserResourceWrapper,
