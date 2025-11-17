@@ -94,19 +94,18 @@ resource "n8n_workflow" "test" {
 `, name, active)
 }
 
+// testAccPreCheck performs pre-flight checks for acceptance tests.
 func testAccPreCheck(t *testing.T) {
 	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping acceptance test")
 	}
 
-	// Verify required environment variables
 	provider.TestAccPreCheckEnv(t)
-
-	// Log test environment info
-	t.Logf("🔍 Running acceptance tests against n8n instance: %s", os.Getenv("N8N_API_URL"))
+	t.Logf("🔍 Running workflow acceptance tests against n8n instance: %s", os.Getenv("N8N_API_URL"))
 }
 
+// testAccProtoV6ProviderFactories provides the provider factory for acceptance tests.
 var testAccProtoV6ProviderFactories = provider.TestAccProtoV6ProviderFactories
 
 // testAccCheckWorkflowExists verifies the workflow exists in n8n via API call.
@@ -121,10 +120,8 @@ func testAccCheckWorkflowExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("workflow ID is not set")
 		}
 
-		// Create n8n client
 		n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
 
-		// Call n8n API to verify workflow exists
 		workflow, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
@@ -150,10 +147,8 @@ func testAccCheckWorkflowHasNodes(resourceName string, expectedNodeCount int) re
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		// Create n8n client
 		n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
 
-		// Get workflow from API
 		workflow, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
@@ -173,7 +168,6 @@ func testAccCheckWorkflowHasNodes(resourceName string, expectedNodeCount int) re
 
 // testAccCheckWorkflowDestroy verifies the workflow has been destroyed via API call.
 func testAccCheckWorkflowDestroy(s *terraform.State) error {
-	// Create n8n client
 	n8nClient := client.NewN8nClient(os.Getenv("N8N_API_URL"), os.Getenv("N8N_API_KEY"))
 
 	for _, rs := range s.RootModule().Resources {
@@ -185,18 +179,15 @@ func testAccCheckWorkflowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to get workflow from n8n API
 		_, httpResp, err := n8nClient.APIClient.WorkflowAPI.WorkflowsIdGet(context.Background(), rs.Primary.ID).Execute()
 		if httpResp != nil && httpResp.Body != nil {
 			defer httpResp.Body.Close()
 		}
 
-		// If workflow still exists (no 404), return error
 		if err == nil {
 			return fmt.Errorf("workflow %s still exists in n8n", rs.Primary.ID)
 		}
 
-		// Check if error is 404 Not Found (expected after delete)
 		if httpResp != nil && httpResp.StatusCode != 404 {
 			return fmt.Errorf("unexpected error checking workflow deletion: status %d", httpResp.StatusCode)
 		}
