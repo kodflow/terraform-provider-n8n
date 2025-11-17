@@ -78,14 +78,14 @@ for example_dir in $EXAMPLES; do
     # Clean terraform artifacts
     rm -rf "$example_dir/.terraform" "$example_dir/.terraform.lock.hcl" 2>/dev/null || true
 
-    # Try to validate
-    if (cd "$example_dir" && terraform init -no-color -upgrade > /dev/null 2>&1 && terraform validate -no-color > /dev/null 2>&1); then
+    # Try to validate (skip init with dev_overrides as per Terraform documentation)
+    if (cd "$example_dir" && terraform validate -no-color > /dev/null 2>&1); then
         printf "    ${GREEN}✓${RESET} Valid\n"
         PASSED_COUNT=$((PASSED_COUNT + 1))
     else
         printf "    ${RED}✗${RESET} Invalid\n"
         # Show error details
-        (cd "$example_dir" && terraform init -no-color -upgrade > /dev/null 2>&1 && terraform validate -no-color 2>&1) | sed 's/^/      /'
+        (cd "$example_dir" && terraform validate -no-color 2>&1) | sed 's/^/      /'
         FAILED_EXAMPLES+=("$EXAMPLE_NAME")
     fi
 
