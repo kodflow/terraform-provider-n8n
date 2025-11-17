@@ -65,6 +65,22 @@ test/terraform: build ## Run ALL Terraform examples (plan/apply/destroy) with lo
 .PHONY: test/tf
 test/tf: test/terraform ## Alias for test/terraform (backward compatibility)
 
+.PHONY: test/nodes
+test/nodes: build ## Test ALL node examples (plan/apply/destroy) with local provider
+	@echo ""
+	@echo "$(BOLD)Testing all node examples...$(RESET)"
+	@if [ ! -f .env ]; then \
+		printf "  $(RED)✗$(RESET) .env file not found\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_API_URL and N8N_API_KEY\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Example:\n"; \
+		printf "      N8N_API_URL=http://localhost:5678\n"; \
+		printf "      N8N_API_KEY=your-api-key-here\n"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@./scripts/test-nodes.sh
+	@echo ""
+
 .PHONY: test/tf/basic-sample
 test/tf/basic-sample: build ## Test basic-sample example with Terraform (uses .env)
 	@echo ""
