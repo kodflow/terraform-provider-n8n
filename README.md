@@ -259,7 +259,7 @@ Every contribution makes a difference! Thank you! 🙏
 
 Sustainable Use License 1.0
 
-See [LICENSE.md](LICENSE.md) for details.
+See [LICENSE](LICENSE) for details.
 
 ---
 
