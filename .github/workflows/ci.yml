@@ -234,8 +234,12 @@ jobs:
             cd "$workflow_dir" || continue
 
             # Test: terraform init
+            set +e  # Disable exit on error temporarily
             INIT_OUTPUT=$(terraform init -no-color 2>&1)
-            if [ $? -ne 0 ]; then
+            INIT_EXIT_CODE=$?
+            set -e  # Re-enable exit on error
+
+            if [ $INIT_EXIT_CODE -ne 0 ]; then
               echo "  ❌ init failed"
               FAILED=$((FAILED + 1))
               FAILED_WORKFLOWS+=("${category}/${node_name} (init)")
@@ -252,8 +256,12 @@ jobs:
             fi
 
             # Test: terraform validate
+            set +e  # Disable exit on error temporarily
             VALIDATE_OUTPUT=$(terraform validate -no-color 2>&1)
-            if [ $? -ne 0 ]; then
+            VALIDATE_EXIT_CODE=$?
+            set -e  # Re-enable exit on error
+
+            if [ $VALIDATE_EXIT_CODE -ne 0 ]; then
               echo "  ❌ validate failed"
               FAILED=$((FAILED + 1))
               FAILED_WORKFLOWS+=("${category}/${node_name} (validate)")
