@@ -43,6 +43,8 @@ lint: build ## Run code linters + validate Terraform examples
 docs: ## Generate documentation (Terraform docs + coverage report)
 	@echo ""
 	@echo "$(BOLD)$(CYAN)📝 Generating documentation...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Cleaning previous documentation\n"
+	@rm -rf docs
 	@printf "  $(CYAN)→$(RESET) Generating Terraform provider documentation\n"
 	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-dir src --provider-name n8n --rendered-website-dir ../docs
 	@printf "  $(CYAN)→$(RESET) Generating COVERAGE.md\n"

@@ -46,6 +46,9 @@ if [ -x "$GO_BIN" ]; then
   if [ ! -f "$HOME/.cache/go/bin/golangci-lint" ] || ! "$HOME/.cache/go/bin/golangci-lint" version &>/dev/null; then
     echo "🔨 Installing golangci-lint..."
 
+    # Create directory if it doesn't exist
+    mkdir -p "$HOME/.cache/go/bin"
+
     # Clean up any corrupted golangci-lint binary
     rm -f "$HOME/.cache/go/bin/golangci-lint"
 

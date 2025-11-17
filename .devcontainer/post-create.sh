@@ -15,48 +15,51 @@ echo "🔧 Installing development tools..."
 
 # Configure git identity
 echo "👤 Configuring git identity..."
-git config --global user.name "Kodflow"
-git config --global user.email "133899878+kodflow@users.noreply.github.com"
 
-# Configure GPG signing if GPG key is available
+# Read Git identity from GPG config if available
 if [ -f "/host-gpg/gpg-config.env" ]; then
-  echo "🔐 Configuring GPG signing..."
   # shellcheck disable=SC1091
   source /host-gpg/gpg-config.env
 
-  # Verify GPG key is imported
-  echo "   Checking GPG key import..."
-  if gpg --list-secret-keys "$KEYID" >/dev/null 2>&1; then
-    echo "   ✅ GPG key $KEYID is imported"
-
-    # Display key info
-    KEY_INFO=$(gpg --list-keys "$KEYID" 2>/dev/null | grep -A 1 "^pub" | tail -n 1 | xargs)
-    echo "   📋 Key: $KEY_INFO"
+  if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ]; then
+    git config --global user.name "$GIT_NAME"
+    git config --global user.email "$GIT_EMAIL"
+    echo "   ✅ Using Git identity from host: $GIT_NAME <$GIT_EMAIL>"
   else
-    echo "   ❌ GPG key $KEYID not found in keyring"
-    exit 1
-  fi
-
-  # Configure Git
-  git config --global user.signingkey "$KEYID"
-  git config --global gpg.program gpg
-  git config --global commit.gpgsign true
-  git config --global tag.gpgsign true
-
-  # Verify Git configuration
-  echo "   Verifying Git GPG configuration..."
-  SIGNING_KEY=$(git config --global user.signingkey)
-  COMMIT_SIGN=$(git config --global commit.gpgsign)
-  TAG_SIGN=$(git config --global tag.gpgsign)
-
-  if [ "$SIGNING_KEY" = "$KEYID" ] && [ "$COMMIT_SIGN" = "true" ] && [ "$TAG_SIGN" = "true" ]; then
-    echo "   ✅ Git configured to sign commits and tags with key $KEYID"
-  else
-    echo "   ❌ Git GPG configuration verification failed"
-    exit 1
+    # Fallback to defaults if not set in config
+    git config --global user.name "Developer"
+    git config --global user.email "developer@example.com"
+    echo "   ⚠️  Git identity not found in config, using defaults"
   fi
 else
-  echo "ℹ️  No GPG key found, skipping GPG configuration"
+  # No GPG config, use defaults
+  git config --global user.name "Developer"
+  git config --global user.email "developer@example.com"
+  echo "   ⚠️  No GPG config found, using default Git identity"
+  echo "   💡 Run init.sh on host to configure Git identity and GPG"
+fi
+
+# Configure GPG signing if GPG key is available (imported by .devcontainer/setup-gpg.sh)
+if [ -f "/host-gpg/gpg-config.env" ]; then
+  echo "🔐 Configuring Git GPG signing..."
+  # shellcheck disable=SC1091
+  source /host-gpg/gpg-config.env
+
+  # Verify GPG key is available (should be imported by scripts/setup-gpg.sh)
+  if gpg --list-secret-keys "$KEYID" >/dev/null 2>&1; then
+    # Configure Git to use GPG signing
+    git config --global user.signingkey "$KEYID"
+    git config --global gpg.program gpg
+    git config --global commit.gpgsign true
+    git config --global tag.gpgsign true
+
+    echo "   ✅ Git configured to sign commits and tags with key $KEYID"
+  else
+    echo "   ⚠️  GPG key $KEYID not found - commits will not be signed"
+    echo "   ℹ️  Run scripts/setup-gpg.sh manually if you want to enable signing"
+  fi
+else
+  echo "ℹ️  No GPG configuration found, commits will not be signed"
 fi
 
 # Configure npm for local global packages (no sudo needed)

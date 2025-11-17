@@ -3,3 +3,6 @@ mcp.json
 
 # Environment variables (may contain secrets)
 .env
+
+# GPG public key (exported by configure-gpg.sh)
+gpg-public-key.asc
