@@ -186,6 +186,41 @@ func (r *WorkflowNodeResource) generateNodeID(plan *models.Resource) string {
 	return uuid.NewSHA1(uuid.NameSpaceOID, hash[:]).String()
 }
 
+// parseNodeParameters parses and adds parameters to the node.
+func (r *WorkflowNodeResource) parseNodeParameters(plan *models.Resource, node map[string]any, diags *diag.Diagnostics) bool {
+	if !plan.Parameters.IsNull() && !plan.Parameters.IsUnknown() {
+		var params map[string]any
+		if err := json.Unmarshal([]byte(plan.Parameters.ValueString()), &params); err != nil {
+			diags.AddError(
+				"Invalid parameters JSON",
+				fmt.Sprintf("Could not parse parameters: %s", err.Error()),
+			)
+			return false
+		}
+		node["parameters"] = params
+	} else if plan.Parameters.IsNull() {
+		// Set empty parameters if null to ensure it's known after apply
+		plan.Parameters = types.StringValue("{}")
+		node["parameters"] = map[string]any{}
+	}
+	return true
+}
+
+// addOptionalNodeFields adds optional fields to the node.
+func (r *WorkflowNodeResource) addOptionalNodeFields(plan *models.Resource, node map[string]any) {
+	if !plan.WebhookID.IsNull() && !plan.WebhookID.IsUnknown() {
+		node["webhookId"] = plan.WebhookID.ValueString()
+	}
+
+	if !plan.Disabled.IsNull() && !plan.Disabled.IsUnknown() && plan.Disabled.ValueBool() {
+		node["disabled"] = true
+	}
+
+	if !plan.Notes.IsNull() && !plan.Notes.IsUnknown() {
+		node["notes"] = plan.Notes.ValueString()
+	}
+}
+
 // generateNodeJSON creates the JSON representation of the node.
 func (r *WorkflowNodeResource) generateNodeJSON(ctx context.Context, plan *models.Resource, diags *diag.Diagnostics) bool {
 	// Build node structure.
@@ -209,34 +244,12 @@ func (r *WorkflowNodeResource) generateNodeJSON(ctx context.Context, plan *model
 	node["position"] = position
 
 	// Add parameters.
-	if !plan.Parameters.IsNull() && !plan.Parameters.IsUnknown() {
-		var params map[string]any
-		if err := json.Unmarshal([]byte(plan.Parameters.ValueString()), &params); err != nil {
-			diags.AddError(
-				"Invalid parameters JSON",
-				fmt.Sprintf("Could not parse parameters: %s", err.Error()),
-			)
-			return false
-		}
-		node["parameters"] = params
-	} else if plan.Parameters.IsNull() {
-		// Set empty parameters if null to ensure it's known after apply
-		plan.Parameters = types.StringValue("{}")
-		node["parameters"] = map[string]any{}
+	if !r.parseNodeParameters(plan, node, diags) {
+		return false
 	}
 
 	// Add optional fields.
-	if !plan.WebhookID.IsNull() && !plan.WebhookID.IsUnknown() {
-		node["webhookId"] = plan.WebhookID.ValueString()
-	}
-
-	if !plan.Disabled.IsNull() && !plan.Disabled.IsUnknown() && plan.Disabled.ValueBool() {
-		node["disabled"] = true
-	}
-
-	if !plan.Notes.IsNull() && !plan.Notes.IsUnknown() {
-		node["notes"] = plan.Notes.ValueString()
-	}
+	r.addOptionalNodeFields(plan, node)
 
 	// Marshal to JSON.
 	jsonBytes, err := json.Marshal(node)

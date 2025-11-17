@@ -337,6 +337,7 @@ jobs:
 
       # Terraform Apply
       - name: Terraform Apply
+        id: terraform-apply
         env:
           TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
           TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
@@ -407,7 +408,7 @@ jobs:
 
       # Terraform Destroy
       - name: Terraform Destroy
-        if: always()
+        if: ${{ always() && steps.terraform-apply.conclusion != 'skipped' }}
         env:
           TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
           TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
@@ -638,7 +639,7 @@ jobs:
     name: Destroy - ${{ matrix.example-name }}
     runs-on: ubuntu-latest
     needs: apply-examples
-    if: always()
+    if: ${{ always() && needs.apply-examples.result != 'skipped' }}
     strategy:
       fail-fast: false
       matrix:

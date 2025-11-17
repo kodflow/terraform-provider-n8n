@@ -31,17 +31,17 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "mode": "rules",
-        "rules": {
-            "values": [
-                {
-                    "value": "={{ $json.type === \"A\" }}"
-                },
-                {
-                    "value": "={{ $json.type === \"B\" }}"
-                }
-            ]
-        }
+      "mode" : "rules",
+      "rules" : {
+        "values" : [
+          {
+            "value" : "={{ $json.type === \"A\" }}"
+          },
+          {
+            "value" : "={{ $json.type === \"B\" }}"
+          }
+        ]
+      }
     }
   )
 }

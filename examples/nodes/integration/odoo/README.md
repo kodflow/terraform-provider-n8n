@@ -1,8 +1,6 @@
 # Odoo Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.odoo`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.odoo` **Latest Version**: 1
 
 ## Description
 

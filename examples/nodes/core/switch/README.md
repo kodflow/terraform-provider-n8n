@@ -1,8 +1,6 @@
 # Switch Node Test
 
-**Category**: Core
-**Type**: `n8n-nodes-base.switch`
-**Latest Version**: 1
+**Category**: Core **Type**: `n8n-nodes-base.switch` **Latest Version**: 1
 
 ## Description
 

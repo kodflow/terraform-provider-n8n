@@ -1,8 +1,6 @@
 # Strapi Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.strapi`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.strapi` **Latest Version**: 1
 
 ## Description
 

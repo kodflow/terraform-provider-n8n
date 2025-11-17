@@ -31,10 +31,10 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "method": "GET",
-        "url": "https://httpbin.org/get",
-        "authentication": "none",
-        "options": {}
+      "method" : "GET",
+      "url" : "https://httpbin.org/get",
+      "authentication" : "none",
+      "options" : {}
     }
   )
 }

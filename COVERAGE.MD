@@ -74,7 +74,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 98.1% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 99.3% |
 | 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/connection` | 37.9% |
-| 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/node` | 62.7% |
+| 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/node` | 65.5% |
 
 ---
 

@@ -1,8 +1,6 @@
 # Monday.com Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.mondayCom`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.mondayCom` **Latest Version**: 1
 
 ## Description
 

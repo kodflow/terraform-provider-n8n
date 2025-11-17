@@ -1,8 +1,6 @@
 # Trello Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.trello`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.trello` **Latest Version**: 1
 
 ## Description
 

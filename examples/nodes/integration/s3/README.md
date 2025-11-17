@@ -1,8 +1,6 @@
 # S3 Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.s3`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.s3` **Latest Version**: 1
 
 ## Description
 

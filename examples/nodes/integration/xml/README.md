@@ -1,8 +1,6 @@
 # XML Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.xml`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.xml` **Latest Version**: 1
 
 ## Description
 

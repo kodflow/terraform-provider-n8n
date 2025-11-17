@@ -1,8 +1,6 @@
 # Tapfiliate Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.tapfiliate`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.tapfiliate` **Latest Version**: 1
 
 ## Description
 

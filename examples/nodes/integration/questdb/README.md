@@ -1,8 +1,6 @@
 # QuestDB Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.questDb`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.questDb` **Latest Version**: 1
 
 ## Description
 

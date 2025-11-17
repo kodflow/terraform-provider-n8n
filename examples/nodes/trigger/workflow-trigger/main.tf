@@ -24,7 +24,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "note": "Configure Workflow Trigger parameters here"
+      "note" : "Configure Workflow Trigger parameters here"
     }
   )
 }

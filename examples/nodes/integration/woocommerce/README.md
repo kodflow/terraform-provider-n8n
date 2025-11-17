@@ -1,8 +1,6 @@
 # WooCommerce Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.wooCommerce`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.wooCommerce` **Latest Version**: 1
 
 ## Description
 

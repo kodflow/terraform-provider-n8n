@@ -1,8 +1,6 @@
 # WhatsApp Business Cloud Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.whatsApp`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.whatsApp` **Latest Version**: 1
 
 ## Description
 
@@ -50,7 +48,8 @@ terraform apply -var="n8n_api_key=YOUR_API_KEY"
 
 Edit the `parameters` in `main.tf` to customize the WhatsApp Business Cloud node behavior.
 
-See [n8n WhatsApp Business Cloud documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.whatsapp-business-cloud/) for available parameters.
+See [n8n WhatsApp Business Cloud documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.whatsapp-business-cloud/) for available
+parameters.
 
 ## Notes
 

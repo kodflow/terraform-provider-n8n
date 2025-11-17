@@ -1,8 +1,6 @@
 # Convert to/from binary data Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.moveBinaryData`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.moveBinaryData` **Latest Version**: 1
 
 ## Description
 
@@ -50,7 +48,8 @@ terraform apply -var="n8n_api_key=YOUR_API_KEY"
 
 Edit the `parameters` in `main.tf` to customize the Convert to/from binary data node behavior.
 
-See [n8n Convert to/from binary data documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.convert-to-from-binary-data/) for available parameters.
+See [n8n Convert to/from binary data documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.convert-to-from-binary-data/) for
+available parameters.
 
 ## Notes
 

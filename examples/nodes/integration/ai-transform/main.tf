@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "note": "Configure AI Transform parameters here"
+      "note" : "Configure AI Transform parameters here"
     }
   )
 }

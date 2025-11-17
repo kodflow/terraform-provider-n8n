@@ -1,8 +1,6 @@
 # Box Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.box`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.box` **Latest Version**: 1
 
 ## Description
 
