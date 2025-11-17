@@ -9,74 +9,58 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6ad65f0b28b64849ad2799943e8ad338)](https://app.codacy.com/gh/kodflow/terraform-provider-n8n/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/6ad65f0b28b64849ad2799943e8ad338)](https://app.codacy.com/gh/kodflow/terraform-provider-n8n/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
-## Description
-
-Terraform provider to manage n8n resources (workflows, credentials, projects, users, and more).
+Manage your n8n workflows, credentials, and resources as code with Terraform.
 
 ## Features
 
-### Supported N8N Nodes
+### Complete n8n Node Support
 
-The provider supports **all 296 n8n nodes** with complete workflow composition capabilities:
+✅ **296 n8n nodes** fully supported with comprehensive workflow composition:
 
-- **5 Core Nodes** - Essential workflow building blocks (Code, If, Merge, Set, Switch)
-- **25 Trigger Nodes** - Event-based workflow initiators
-- **266 Integration Nodes** - Third-party service integrations
+| Category        | Count | Description                                                         |
+| --------------- | ----- | ------------------------------------------------------------------- |
+| **Core**        | 5     | Essential workflow building blocks (Code, If, Merge, Set, Switch)   |
+| **Trigger**     | 25    | Event-based workflow initiators (Webhook, Manual, Cron, etc.)       |
+| **Integration** | 266   | Third-party service integrations (Slack, GitHub, AWS, Google, etc.) |
 
-**📚 [View complete node catalog →](SUPPORTED_NODES.md)**
-
-Each node has:
+Each node includes:
 
 - ✅ Complete Terraform workflow example
-- ✅ Fully tested with complete Terraform lifecycle (init/plan/apply/destroy)
-- ✅ 100% test pass rate with real n8n instance validation
-- ✅ Documentation with credential requirements
-- ✅ Ready-to-use templates in `examples/nodes/`
+- ✅ Full lifecycle testing (init/plan/apply/destroy)
+- ✅ 100% test pass rate with real n8n validation
+- ✅ Ready-to-use templates
 
-**📊 [View detailed test coverage →](COVERAGE.MD)**
+**📊 [View test coverage →](COVERAGE.MD)** | **📚 [Browse all nodes →](examples/nodes/)**
 
-### Community Edition Support
+### Community Edition Resources
 
-The provider fully supports **n8n Community Edition** (free/self-hosted):
+Full support for **n8n Community Edition** (free/self-hosted):
 
-| Resource/Data Source      | Status       | Description                           |
-| ------------------------- | ------------ | ------------------------------------- |
-| `n8n_workflow`            | ✅ Available | Create and manage workflows           |
-| `n8n_workflow_node`       | ✅ Available | Modular workflow node composition     |
-| `n8n_workflow_connection` | ✅ Available | Connect nodes in workflows            |
-| `n8n_credential`          | ✅ Available | Store API credentials securely        |
-| `n8n_tag`                 | ✅ Available | Organize resources with tags          |
-| `n8n_variable`            | ✅ Available | Manage environment variables          |
-| `n8n_execution`           | ✅ Available | Query workflow executions (read-only) |
+| Resource                  | Status | Description                             |
+| ------------------------- | ------ | --------------------------------------- |
+| `n8n_workflow`            | ✅     | Create and manage workflows             |
+| `n8n_workflow_node`       | ✅     | Modular node composition                |
+| `n8n_workflow_connection` | ✅     | Connect nodes in workflows              |
+| `n8n_credential`          | ✅     | Store API credentials securely          |
+| `n8n_tag`                 | ✅     | Organize resources with tags            |
+| `n8n_variable`            | ✅     | Manage environment variables            |
+| `n8n_execution`           | ✅     | Query workflow executions (data source) |
 
-### Enterprise Edition Support
+### Enterprise Edition Resources
 
-**Enterprise features** require an n8n Enterprise license:
+Enterprise features require n8n Enterprise license:
 
-| Resource/Data Source | Status            | License Required |
+| Resource             | Status            | License Required |
 | -------------------- | ----------------- | ---------------- |
 | `n8n_project`        | 🚧 In Development | Enterprise       |
 | `n8n_user`           | 🚧 In Development | Enterprise       |
 | `n8n_source_control` | 🚧 In Development | Enterprise       |
 
-> **Note:** Enterprise features are in development and will be available once enterprise license access is obtained for testing.
+## Quick Start
 
-## Prerequisites
+### Installation
 
-### DevContainer (Recommended)
-
-The project includes a fully configured DevContainer with all required tools:
-
-- **Go 1.25.4**
-- **Bazel 9.0**
-- **Terraform** & **OpenTofu**
-- All development tools pre-installed
-
-**Just open the project in VS Code and rebuild the container - everything works out of the box.**
-
-## Installation
-
-### Via Terraform Registry (Coming Soon)
+#### Via Terraform Registry
 
 ```hcl
 terraform {
@@ -89,28 +73,26 @@ terraform {
 }
 
 provider "n8n" {
-  api_url = "https://your-n8n-instance.com"
-  api_key = var.n8n_api_key
+  base_url = "https://your-n8n-instance.com"
+  api_key  = var.n8n_api_key
 }
 ```
 
-### Local Development
+#### Local Development
 
 ```bash
 make build
 # Provider installed at: ~/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/
 ```
 
-## Quick Start
-
-### Get Your API Key
+### Get Your n8n API Key
 
 1. Open your n8n instance
 2. Go to **Settings** > **API**
 3. Click **Create API Key**
 4. Set as `N8N_API_KEY` environment variable
 
-### Run Examples
+### Run Your First Example
 
 ```bash
 export N8N_API_URL="http://localhost:5678"
@@ -121,42 +103,20 @@ terraform init
 terraform apply
 ```
 
-See [examples/](examples/) directory for more examples.
-
 ## Examples
 
-The provider includes comprehensive examples for different use cases:
+### Node Workflow Examples
 
-### Per-Node Workflow Examples
+Browse **296 complete workflow examples** in [`examples/nodes/`](examples/nodes/):
 
-**296 complete workflow examples** - one for each n8n node:
+- **[Core Nodes](examples/nodes/#core-nodes-5)** - Essential workflow building blocks
+- **[Trigger Nodes](examples/nodes/#trigger-nodes-25)** - Event-based workflow initiators
+- **[Integration Nodes](examples/nodes/#integration-nodes-266)** - Third-party service integrations
+- **[MEGA Workflow](examples/mega-workflow/)** - All 296 nodes in a single workflow
 
-📂 **[`examples/nodes/`](examples/nodes/)** - Organized by category:
+Each node example includes `main.tf`, `variables.tf`, and documentation.
 
-- `core/` - 5 core nodes (Code, If, Merge, Set, Switch)
-- `trigger/` - 25 trigger nodes (Webhook, Manual, Cron, etc.)
-- `integration/` - 266 integration nodes (Slack, GitHub, AWS, etc.)
-
-Each example includes:
-
-- `main.tf` - Complete workflow demonstrating the node
-- `variables.tf` - Provider configuration
-- `README.md` - Node-specific documentation
-
-**Testing status:** ✅ All 296 workflows tested and passing (init/plan/apply/destroy)
-
-### MEGA Workflow Example
-
-**Single workflow with all 296 nodes** for comprehensive testing:
-
-📂 **[`examples/mega-workflow/`](examples/mega-workflow/)** - Contains:
-
-- All 296 n8n nodes in one workflow
-- 298 total nodes (start trigger + 296 nodes + end node)
-- 297 sequential connections
-- Complete test coverage validation
-
-Perfect for testing provider capabilities and n8n performance at scale.
+**Testing status:** ✅ All 296 workflows tested and passing
 
 ### Community Edition Examples
 
@@ -170,15 +130,22 @@ Browse complete examples in [`examples/community/`](examples/community/):
 
 ### Comprehensive Examples
 
-Production-ready workflow examples at [`examples/comprehensive/`](examples/comprehensive/):
+Production-ready examples at [`examples/comprehensive/`](examples/comprehensive/):
 
 - **[Complete Modular Workflow](examples/comprehensive/complete-modular-workflow/)** - Advanced multi-node workflow with error handling
 
-### Enterprise Edition Examples
-
-Enterprise examples are currently in development at [`examples/enterprise/`](examples/enterprise/).
-
 ## Development
+
+### Prerequisites
+
+**Recommended:** Use the included DevContainer with all tools pre-installed:
+
+- Go 1.25.4
+- Bazel 9.0
+- Terraform & OpenTofu
+- All development tools
+
+Just open the project in VS Code and rebuild the container.
 
 ### Essential Commands
 
@@ -189,10 +156,9 @@ make test          # Run full test suite
 make fmt           # Format all source files
 make lint          # Run code linters (zero tolerance)
 make docs          # Generate CHANGELOG.md and COVERAGE.MD
-make openapi       # Regenerate SDK from n8n OpenAPI spec
 ```
 
-### Node Management Commands
+### Node Management
 
 ```bash
 make nodes                   # Synchronize n8n nodes from official repository
@@ -200,12 +166,9 @@ make nodes/fetch             # Fetch latest n8n repository
 make nodes/parse             # Parse nodes and generate registry
 make nodes/workflows         # Generate 296 per-node workflow examples
 make nodes/mega-workflow     # Generate MEGA workflow with all 296 nodes
-make nodes/mega-workflow/test # Test MEGA workflow (plan/apply/verify/destroy)
 make nodes/validate-coverage # Validate test coverage completeness
-make nodes/docs              # Generate SUPPORTED_NODES.md documentation
-make nodes/sync-report       # Generate sync report for changes
+make nodes/docs              # Generate node documentation
 make nodes/stats             # Display node statistics
-make nodes/clean             # Clean nodes cache
 ```
 
 ### Quality Standards
@@ -219,25 +182,18 @@ make nodes/clean             # Clean nodes cache
 
 ### SDK Generation
 
-The provider uses auto-generated Go SDK from n8n OpenAPI specification:
+Auto-generate Go SDK from n8n OpenAPI specification:
 
 ```bash
 make openapi       # Download and prepare n8n OpenAPI spec
 make sdk           # Generate Go SDK from OpenAPI spec
 ```
 
-**Auto-generated files:**
-
-- `sdk/n8nsdk/*.go` - Go client for n8n API
-- `sdk/n8nsdk/api/openapi.yaml` - Patched OpenAPI spec (not committed)
-
-See [`codegen/`](codegen/) for generation scripts and patches.
-
 ### Git Workflow
 
-The project uses git hooks for quality enforcement:
+Git hooks enforce quality:
 
-- **Pre-commit**: Formats code, generates documentation, validates changes
+- **Pre-commit**: Formats code, generates docs, validates changes
 - **Commit-msg**: Validates commit message format
 - **Pre-push**: Runs tests before pushing
 
@@ -252,18 +208,17 @@ Hooks are automatically installed in DevContainer.
 │   └── internal/provider/        # Provider implementation
 │       ├── credential/           # Credential resource
 │       ├── execution/            # Execution data source
-│       ├── project/              # Project resource (Enterprise)
-│       ├── sourcecontrol/        # Source control (Enterprise)
 │       ├── tag/                  # Tag resource
-│       ├── user/                 # User resource (Enterprise)
 │       ├── variable/             # Variable resource
 │       ├── workflow/             # Workflow resource
 │       └── shared/               # Shared utilities
 ├── sdk/n8nsdk/                   # Auto-generated n8n SDK
 ├── codegen/                      # SDK generation scripts
 ├── examples/                     # Terraform examples
+│   ├── nodes/                    # 296 node examples
 │   ├── community/                # Community edition examples
-│   └── enterprise/               # Enterprise edition examples
+│   ├── comprehensive/            # Production-ready examples
+│   └── mega-workflow/            # All nodes in one workflow
 ├── scripts/                      # Build and automation scripts
 ├── Makefile                      # Main development commands
 └── .devcontainer/                # DevContainer configuration
@@ -271,11 +226,7 @@ Hooks are automatically installed in DevContainer.
 
 ## Release Process
 
-Releases are fully automated via GitHub Actions:
-
-### Semantic Versioning
-
-Push commits to `main` branch with conventional commit messages:
+Releases are fully automated via GitHub Actions using semantic versioning:
 
 - `feat:` → Minor version bump (v0.1.0 → v0.2.0)
 - `fix:` → Patch version bump (v0.1.0 → v0.1.1)
@@ -287,11 +238,9 @@ The CI/CD pipeline automatically:
 2. Determines next version
 3. Updates CHANGELOG.md
 4. Creates signed tags
-5. Compiles multi-platform binaries (Linux, macOS, Windows, FreeBSD)
+5. Compiles multi-platform binaries
 6. Generates checksums and signatures
-7. Creates GitHub Release with all artifacts
-
-All releases are compatible with Terraform Registry.
+7. Creates GitHub Release
 
 View all releases at [GitHub Releases](../../releases).
 
@@ -302,7 +251,7 @@ Contributions are welcome! Follow these steps:
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feat/my-feature`
 3. Develop and test: `make test && make lint && make build`
-4. Commit your changes (follow conventional commits)
+4. Commit your changes (follow [Conventional Commits](https://www.conventionalcommits.org/))
 5. Push and create a Pull Request
 
 ### Contribution Standards
@@ -310,11 +259,11 @@ Contributions are welcome! Follow these steps:
 - ✅ All tests must pass
 - ✅ Code must be formatted and linted
 - ✅ Tests required for new features
-- ✅ Follow [Conventional Commits](https://www.conventionalcommits.org/) format
+- ✅ Follow Conventional Commits format
 
 See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
 
-## Support this Project
+## Support This Project
 
 If you find this project useful, consider sponsoring its development:
 
