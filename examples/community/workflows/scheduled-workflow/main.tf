@@ -3,22 +3,22 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 0.1.0"
+      version = "~> 1.0"
     }
   }
 }
 
 provider "n8n" {
-  api_url = var.n8n_api_url
-  api_key = var.n8n_api_key
+  base_url = var.n8n_base_url
+  api_key  = var.n8n_api_key
 }
 
 # Create a scheduled workflow that runs every hour
 resource "n8n_workflow" "scheduled_example" {
-  name   = "Hourly Scheduled Workflow"
+  name   = "ci-${var.run_id}-Hourly Scheduled Workflow"
   active = true
 
-  nodes = jsonencode([
+  nodes_json = jsonencode([
     {
       id       = "schedule-node"
       name     = "Schedule Trigger"
@@ -45,7 +45,7 @@ resource "n8n_workflow" "scheduled_example" {
     }
   ])
 
-  connections = jsonencode({
+  connections_json = jsonencode({
     "Schedule Trigger" = {
       main = [[{
         node  = "Process Data"
@@ -53,15 +53,6 @@ resource "n8n_workflow" "scheduled_example" {
         index = 0
       }]]
     }
-  })
-
-  settings = jsonencode({
-    saveExecutionProgress    = true
-    saveManualExecutions     = true
-    saveDataErrorExecution   = "all"
-    saveDataSuccessExecution = "all"
-    executionTimeout         = 3600
-    timezone                 = "America/New_York"
   })
 }
 

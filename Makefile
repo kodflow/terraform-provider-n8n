@@ -31,6 +31,7 @@ include makefiles/test.mk
 include makefiles/quality.mk
 include makefiles/build.mk
 include makefiles/tools.mk
+include makefiles/terraform.mk
 
 # ============================================================================
 # Help Target
@@ -48,6 +49,9 @@ help: ## Display available commands
 	@echo ""
 	@echo "$(BOLD)Testing:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/test.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(BOLD)Terraform Operations:$(RESET)"
+	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/terraform.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)Code Quality:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/quality.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'

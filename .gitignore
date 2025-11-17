@@ -173,6 +173,14 @@ temp/
 # Temporary files
 /terraform-provider-n8n
 *.test
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+tfplan
+.terraform-context
 /test/tmp/
 /test/version_tmp/
 Thumbs.db

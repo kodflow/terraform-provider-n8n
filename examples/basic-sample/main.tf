@@ -20,15 +20,15 @@ provider "n8n" {
 # ============================================================================
 
 resource "n8n_tag" "basic_sample" {
-  name = "tf:basic-sample"
+  name = "ci-${var.run_id}-tf:basic-sample"
 }
 
 resource "n8n_tag" "environment_dev" {
-  name = "env:dev"
+  name = "ci-${var.run_id}-env:dev"
 }
 
 resource "n8n_tag" "automated" {
-  name = "automated"
+  name = "ci-${var.run_id}-automated"
 }
 
 # ============================================================================
@@ -36,7 +36,7 @@ resource "n8n_tag" "automated" {
 # ============================================================================
 
 resource "n8n_workflow" "simple" {
-  name   = "TF Basic Sample - Simple Workflow"
+  name   = "ci-${var.run_id}-TF Basic Sample - Simple Workflow"
   active = false
   tags   = [n8n_tag.basic_sample.id, n8n_tag.environment_dev.id]
 }
@@ -46,7 +46,7 @@ resource "n8n_workflow" "simple" {
 # ============================================================================
 
 resource "n8n_workflow" "api_test" {
-  name   = "TF Basic Sample - API Test"
+  name   = "ci-${var.run_id}-TF Basic Sample - API Test"
   active = false
   tags   = [n8n_tag.basic_sample.id, n8n_tag.automated.id]
 
@@ -130,7 +130,7 @@ resource "n8n_workflow" "api_test" {
 # ============================================================================
 
 resource "n8n_workflow" "data_processor" {
-  name   = "TF Basic Sample - Data Processor"
+  name   = "ci-${var.run_id}-TF Basic Sample - Data Processor"
   active = false
   tags   = [n8n_tag.basic_sample.id, n8n_tag.automated.id]
 
@@ -185,6 +185,35 @@ resource "n8n_workflow" "data_processor" {
 }
 
 # ============================================================================
+# Projects (Enterprise Only)
+# ============================================================================
+
+# Note: Projects require n8n Enterprise license
+# Commented out by default as Community Edition doesn't support projects
+# Error: "Your license does not allow for feat:projectRole:admin"
+
+# resource "n8n_project" "sample_project" {
+#   name = "ci-${var.run_id}-TF Basic Sample Project"
+# }
+
+# ============================================================================
+# Users (Instance Owner Only)
+# ============================================================================
+
+# Note: Commented out by default as user management requires instance owner privileges
+# Uncomment these if you're running with instance owner credentials
+
+# resource "n8n_user" "sample_admin" {
+#   email = "admin-ci-${var.timestamp}@example.com"
+#   role  = "global:admin"
+# }
+
+# resource "n8n_user" "sample_member" {
+#   email = "member-ci-${var.timestamp}@example.com"
+#   role  = "global:member"
+# }
+
+# ============================================================================
 # Data Sources
 # ============================================================================
 
@@ -205,3 +234,14 @@ data "n8n_tags" "all" {
     n8n_tag.automated
   ]
 }
+
+# Query all projects - Requires Enterprise license
+# Commented out due to Community Edition limitations
+# data "n8n_projects" "all" {}
+
+# Query the created project - Requires Enterprise license
+# Commented out due to Community Edition limitations
+# data "n8n_project" "sample" {
+#   id = n8n_project.sample_project.id
+#   depends_on = [n8n_project.sample_project]
+# }

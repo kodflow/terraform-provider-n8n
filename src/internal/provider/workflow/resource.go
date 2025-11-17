@@ -326,12 +326,13 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 	plan.ID = types.StringPointerValue(workflow.Id)
 
 	// Handle workflow activation after creation if requested
+	// Must be done BEFORE mapping to preserve plan.Active value
 	if !r.handlePostCreationActivation(ctx, plan, workflow, &resp.Diagnostics) {
 		return false
 	}
 
-	// Map workflow state to model
-	// No need to re-read as activation is separate operation
+	// Map workflow state to model.
+	// Note: plan.Active retains value from plan or activation result.
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
 	// Return success.
@@ -377,6 +378,14 @@ func (r *WorkflowResource) handlePostCreationActivation(ctx context.Context, pla
 
 	// Activate the workflow
 	r.handleWorkflowActivation(ctx, plan, currentState, diags)
+
+	// Update workflow object to reflect successful activation
+	// This ensures mapWorkflowToModel will use the correct active status
+	if !diags.HasError() {
+		activated := true
+		workflow.Active = &activated
+	}
+
 	// Return success if no errors occurred
 	return !diags.HasError()
 }

@@ -45,8 +45,25 @@ test/acceptance/ci: ## Run E2E tests in CI mode (expects env vars)
 	@go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/... && echo "$(GREEN)✓$(RESET) E2E tests completed" || (printf "  $(YELLOW)⚠$(RESET)  E2E tests failed\n" && printf "  $(CYAN)ℹ$(RESET)  Verify N8N_API_URL is accessible and N8N_API_KEY is valid\n" && exit 1)
 	@echo ""
 
+.PHONY: test/terraform
+test/terraform: build ## Run ALL Terraform examples (plan/apply/destroy) with local provider
+	@echo ""
+	@echo "$(BOLD)Testing all Terraform examples...$(RESET)"
+	@if [ ! -f .env ]; then \
+		printf "  $(RED)✗$(RESET) .env file not found\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Create .env with N8N_API_URL and N8N_API_KEY\n"; \
+		printf "  $(CYAN)ℹ$(RESET)  Example:\n"; \
+		printf "      N8N_API_URL=http://localhost:5678\n"; \
+		printf "      N8N_API_KEY=your-api-key-here\n"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@printf "  $(CYAN)→$(RESET) Loading credentials from .env\n"
+	@export $$(cat .env | xargs) && ./scripts/test-examples.sh
+	@echo ""
+
 .PHONY: test/tf
-test/tf: test/tf/basic-sample test/tf/community ## Run all Terraform example tests
+test/tf: test/terraform ## Alias for test/terraform (backward compatibility)
 
 .PHONY: test/tf/basic-sample
 test/tf/basic-sample: build ## Test basic-sample example with Terraform (uses .env)
@@ -115,3 +132,10 @@ test/tf/community: build ## Test community resources with Terraform (uses .env)
 	TF_VAR_n8n_api_url=$$N8N_API_URL TF_VAR_n8n_api_key=$$N8N_API_KEY terraform destroy -no-color -auto-approve && \
 	echo "$(GREEN)✓$(RESET) Test cleanup completed" && \
 	echo "" || (echo "$(RED)✗$(RESET) Community test failed" && exit 1)
+
+.PHONY: test/validate-examples
+test/validate-examples: build ## Validate all Terraform examples syntax with local provider (no .env needed)
+	@echo ""
+	@echo "$(BOLD)Validating Terraform examples syntax...$(RESET)"
+	@./scripts/validate-examples.sh
+	@echo ""

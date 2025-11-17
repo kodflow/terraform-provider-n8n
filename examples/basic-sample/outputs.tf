@@ -46,6 +46,22 @@ output "workflow_data_processor_url" {
   value       = "${var.n8n_base_url}/workflow/${n8n_workflow.data_processor.id}"
 }
 
+# Projects - Commented out (requires Enterprise license)
+# output "project_id" {
+#   description = "ID of the sample project"
+#   value       = n8n_project.sample_project.id
+# }
+
+# output "project_name" {
+#   description = "Name of the sample project"
+#   value       = n8n_project.sample_project.name
+# }
+
+# output "project_type" {
+#   description = "Type of the sample project"
+#   value       = n8n_project.sample_project.type
+# }
+
 # Summary
 output "summary" {
   description = "Summary of all created resources"
@@ -84,7 +100,15 @@ output "summary" {
         url    = "${var.n8n_base_url}/workflow/${n8n_workflow.data_processor.id}"
       }
     }
+    # projects = {  # Commented out - requires Enterprise license
+    #   sample_project = {
+    #     id   = n8n_project.sample_project.id
+    #     name = n8n_project.sample_project.name
+    #     type = n8n_project.sample_project.type
+    #   }
+    # }
     total_tags      = length(data.n8n_tags.all.tags)
     total_workflows = length(data.n8n_workflows.all.workflows)
+    # total_projects  = length(data.n8n_projects.all.projects)  # Commented out - requires Enterprise license
   }
 }
