@@ -59,18 +59,19 @@ nodes/docs: ## Generate SUPPORTED_NODES.md documentation
 nodes/stats: ## Display node statistics
 	@bash scripts/nodes/sync-n8n-nodes.sh stats
 
-# Run node-related tests
-nodes/test: ## Run node-related tests
-	@echo "$(BLUE)[1mRunning node tests...$(NC)"
-	@bazel test //src/internal/provider/workflow/node/...
-	@bazel test //src/internal/provider/workflow/connection/...
+# NOTE: Use 'make test/unit' to run unit tests for workflow nodes/connections
+# The paths //src/internal/provider/workflow/node/ and /connection/ no longer exist
+# after flattening the structure. All tests are now in test/unit.
 
-# Test all 296 workflow examples
-nodes/test-workflows: ## Test all per-node workflow examples (296 tests)
-	@echo "$(BLUE)[1mTesting all workflow examples...$(NC)"
+# Test all 296 workflow examples (VALIDATION ONLY - no real infrastructure)
+nodes/test-workflows: ## Validate all 296 node examples (init/validate/plan with MOCK credentials)
+	@echo "$(BLUE)[1mValidating all workflow examples (syntax only)...$(NC)"
+	@echo "$(BLUE)ℹ  Using MOCK credentials for validation only$(NC)"
+	@echo "$(BLUE)ℹ  For REAL infrastructure testing, use: make test/nodes$(NC)"
+	@echo ""
 	@chmod +x scripts/nodes/test-all-workflows.sh
 	@bash scripts/nodes/test-all-workflows.sh
-	@echo "$(GREEN)✓ Workflow tests completed$(NC)"
+	@echo "$(GREEN)✓ Workflow validation completed$(NC)"
 
 # Clean cache
 nodes/clean: ## Clean nodes cache directory
