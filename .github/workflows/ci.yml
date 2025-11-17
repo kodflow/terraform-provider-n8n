@@ -76,9 +76,19 @@ jobs:
           disk-cache: true
           repository-cache: true
 
+      # Setup Terraform (needed for terraform validate in lint step)
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.0"
+
       # Install all development tools (includes dependencies, dev tools, and linting tools)
       - name: Install tools
         run: make tools
+
+      # Build provider (needed for terraform validate in lint step)
+      - name: Build provider for validation
+        run: make build
 
       # Check code formatting
       - name: Check formatting
