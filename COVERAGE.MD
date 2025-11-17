@@ -14,7 +14,7 @@ Automatically generated coverage report.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **98.5%** |
+| **Total Coverage** | **96.2%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -29,6 +29,8 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | `credential` | ✅ | `TestAccCredentialResource` |
 | `tag` | ✅ | `TestAccTagResource` |
 | `variable` | ✅ | `TestAccVariableResource` |
+| `workflow` | ✅ | `TestAccWorkflowConnectionResource`, `TestAccWorkflowConnectionResource_InCompleteWorkflow` |
+| `workflow` | ✅ | `TestAccWorkflowNodeResource`, `TestAccWorkflowNodeResource_InCompleteWorkflow` |
 | `workflow` | ✅ | `TestAccWorkflowResource` |
 
 **Legend:**
@@ -50,6 +52,8 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 98.1% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 99.3% |
+| 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/connection` | 37.9% |
+| 🔴 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/node` | 62.7% |
 
 ---
 
