@@ -1,6 +1,6 @@
 # N8N Terraform Provider - Supported Nodes
 
-**Generated**: 2025-11-17T15:23:04.863Z **Provider Version**: Latest **N8N Version**: unknown **Last Sync**: 2025-11-17T14:22:04.436Z
+**Generated**: 2025-11-17T23:50:52.540Z **Provider Version**: Latest **N8N Version**: unknown **Last Sync**: 2025-11-17T22:58:30.216Z
 
 ## Overview
 
@@ -17,11 +17,11 @@ This document lists all **296 n8n nodes** currently supported by the Terraform p
 
 ### Testing Status
 
-All 296 nodes have been tested with `terraform init` and `terraform validate`:
+All 296 nodes have been tested with `terraform init`, `terraform validate`, `terraform apply`, and `terraform destroy`:
 
 - ✅ **296/296 workflows passed** (100% success rate)
-- Each node has a complete example workflow in `examples/nodes/{category}/{node-slug}/`
-- Full test results available in `WORKFLOWS_TEST_RESULTS.md`
+- Each node has a complete example workflow in `{category}/{node-slug}/` (relative to this README)
+- Full test results available in root `COVERAGE.MD`
 
 ---
 
@@ -41,13 +41,13 @@ Essential workflow building blocks for data manipulation, flow control, and logi
 
 **Total**: 5 nodes
 
-| Node       | Type     | Description                                                            | Credentials | Example                                                      |
-| ---------- | -------- | ---------------------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| **Code**   | `code`   | Run custom JavaScript or Python code                                   | ✅ None     | [`examples/nodes/core/code/`](examples/nodes/core/code/)     |
-| **If**     | `if`     | Route items to different branches (true/false)                         | ✅ None     | [`examples/nodes/core/if/`](examples/nodes/core/if/)         |
-| **Merge**  | `merge`  | Merges data of multiple streams once data from both is available       | ✅ None     | [`examples/nodes/core/merge/`](examples/nodes/core/merge/)   |
-| **Set**    | `set`    | Add or edit fields on an input item and optionally remove other fields | ✅ None     | [`examples/nodes/core/set/`](examples/nodes/core/set/)       |
-| **Switch** | `switch` | Route items depending on defined expression or rules                   | ✅ None     | [`examples/nodes/core/switch/`](examples/nodes/core/switch/) |
+| Node       | Type     | Description                                                            | Credentials | Example                        |
+| ---------- | -------- | ---------------------------------------------------------------------- | ----------- | ------------------------------ |
+| **Code**   | `code`   | Run custom JavaScript or Python code                                   | ✅ None     | [`core/code/`](core/code/)     |
+| **If**     | `if`     | Route items to different branches (true/false)                         | ✅ None     | [`core/if/`](core/if/)         |
+| **Merge**  | `merge`  | Merges data of multiple streams once data from both is available       | ✅ None     | [`core/merge/`](core/merge/)   |
+| **Set**    | `set`    | Add or edit fields on an input item and optionally remove other fields | ✅ None     | [`core/set/`](core/set/)       |
+| **Switch** | `switch` | Route items depending on defined expression or rules                   | ✅ None     | [`core/switch/`](core/switch/) |
 
 ## Trigger Nodes
 
@@ -55,33 +55,33 @@ Event-based nodes that initiate workflow execution.
 
 **Total**: 25 nodes
 
-| Node                          | Type                      | Description                                                                   | Credentials                | Example                                                                                                  |
-| ----------------------------- | ------------------------- | ----------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Acuity Scheduling Trigger** | `acuitySchedulingTrigger` | Handle Acuity Scheduling events via webhooks                                  | ✅ None                    | [`examples/nodes/trigger/acuity-scheduling-trigger/`](examples/nodes/trigger/acuity-scheduling-trigger/) |
-| **Bitbucket Trigger**         | `bitbucketTrigger`        | Handle Bitbucket events via webhooks                                          | ✅ None                    | [`examples/nodes/trigger/bitbucket-trigger/`](examples/nodes/trigger/bitbucket-trigger/)                 |
-| **Cal.com Trigger**           | `calTrigger`              | Handle Cal.com events via webhooks                                            | ✅ None                    | [`examples/nodes/trigger/cal-com-trigger/`](examples/nodes/trigger/cal-com-trigger/)                     |
-| **Calendly Trigger**          | `calendlyTrigger`         | Starts the workflow when Calendly events occur                                | ✅ None                    | [`examples/nodes/trigger/calendly-trigger/`](examples/nodes/trigger/calendly-trigger/)                   |
-| **Email Trigger (IMAP)**      | `emailReadImap`           | Triggers the workflow when a new email is received                            | ✅ None                    | [`examples/nodes/trigger/email-trigger-imap/`](examples/nodes/trigger/email-trigger-imap/)               |
-| **Error Trigger**             | `errorTrigger`            | Triggers the workflow when another workflow has an error                      | ✅ None                    | [`examples/nodes/trigger/error-trigger/`](examples/nodes/trigger/error-trigger/)                         |
-| **Eventbrite Trigger**        | `eventbriteTrigger`       | Handle Eventbrite events via webhooks                                         | ✅ None                    | [`examples/nodes/trigger/eventbrite-trigger/`](examples/nodes/trigger/eventbrite-trigger/)               |
-| **Facebook Lead Ads Trigger** | `facebookLeadAdsTrigger`  | Handle Facebook Lead Ads events via webhooks                                  | ⚠️ Authentication Required | [`examples/nodes/trigger/facebook-lead-ads-trigger/`](examples/nodes/trigger/facebook-lead-ads-trigger/) |
-| **Figma Trigger (Beta)**      | `figmaTrigger`            | Starts the workflow when Figma events occur                                   | ✅ None                    | [`examples/nodes/trigger/figma-trigger-beta/`](examples/nodes/trigger/figma-trigger-beta/)               |
-| **Form.io Trigger**           | `formIoTrigger`           | Handle form.io events via webhooks                                            | ✅ None                    | [`examples/nodes/trigger/form-io-trigger/`](examples/nodes/trigger/form-io-trigger/)                     |
-| **Formstack Trigger**         | `formstackTrigger`        | Starts the workflow on a Formstack form submission.                           | ✅ None                    | [`examples/nodes/trigger/formstack-trigger/`](examples/nodes/trigger/formstack-trigger/)                 |
-| **Gumroad Trigger**           | `gumroadTrigger`          | Handle Gumroad events via webhooks                                            | ✅ None                    | [`examples/nodes/trigger/gumroad-trigger/`](examples/nodes/trigger/gumroad-trigger/)                     |
-| **Jotform Trigger**           | `jotFormTrigger`          | Handle Jotform events via webhooks                                            | ✅ None                    | [`examples/nodes/trigger/jotform-trigger/`](examples/nodes/trigger/jotform-trigger/)                     |
-| **Local File Trigger**        | `localFileTrigger`        | Triggers a workflow on file system changes                                    | ✅ None                    | [`examples/nodes/trigger/local-file-trigger/`](examples/nodes/trigger/local-file-trigger/)               |
-| **Manual Trigger**            | `manualTrigger`           | Runs the flow on clicking a button in n8n                                     | ✅ None                    | [`examples/nodes/trigger/manual-trigger/`](examples/nodes/trigger/manual-trigger/)                       |
-| **n8n Trigger**               | `n8nTrigger`              | Handle events and perform actions on your n8n instance                        | ✅ None                    | [`examples/nodes/trigger/n8n-trigger/`](examples/nodes/trigger/n8n-trigger/)                             |
-| **Postmark Trigger**          | `postmarkTrigger`         | Starts the workflow when Postmark events occur                                | ✅ None                    | [`examples/nodes/trigger/postmark-trigger/`](examples/nodes/trigger/postmark-trigger/)                   |
-| **SSE Trigger**               | `sseTrigger`              | Triggers the workflow when Server-Sent Events occur                           | ✅ None                    | [`examples/nodes/trigger/sse-trigger/`](examples/nodes/trigger/sse-trigger/)                             |
-| **SurveyMonkey Trigger**      | `surveyMonkeyTrigger`     | Starts the workflow when Survey Monkey events occur                           | ⚠️ Authentication Required | [`examples/nodes/trigger/surveymonkey-trigger/`](examples/nodes/trigger/surveymonkey-trigger/)           |
-| **Toggl Trigger**             | `togglTrigger`            | Starts the workflow when Toggl events occur                                   | ✅ None                    | [`examples/nodes/trigger/toggl-trigger/`](examples/nodes/trigger/toggl-trigger/)                         |
-| **Typeform Trigger**          | `typeformTrigger`         | Starts the workflow on a Typeform form submission                             | ✅ None                    | [`examples/nodes/trigger/typeform-trigger/`](examples/nodes/trigger/typeform-trigger/)                   |
-| **Webhook**                   | `webhook`                 | Starts the workflow when a webhook is called                                  | ✅ None                    | [`examples/nodes/trigger/webhook/`](examples/nodes/trigger/webhook/)                                     |
-| **Workable Trigger**          | `workableTrigger`         | Starts the workflow when Workable events occur                                | ✅ None                    | [`examples/nodes/trigger/workable-trigger/`](examples/nodes/trigger/workable-trigger/)                   |
-| **Workflow Trigger**          | `workflowTrigger`         | Triggers based on various lifecycle events, like when a workflow is activated | ✅ None                    | [`examples/nodes/trigger/workflow-trigger/`](examples/nodes/trigger/workflow-trigger/)                   |
-| **Wufoo Trigger**             | `wufooTrigger`            | Handle Wufoo events via webhooks                                              | ✅ None                    | [`examples/nodes/trigger/wufoo-trigger/`](examples/nodes/trigger/wufoo-trigger/)                         |
+| Node                          | Type                      | Description                                                                   | Credentials                | Example                                                                    |
+| ----------------------------- | ------------------------- | ----------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------- |
+| **Acuity Scheduling Trigger** | `acuitySchedulingTrigger` | Handle Acuity Scheduling events via webhooks                                  | ✅ None                    | [`trigger/acuity-scheduling-trigger/`](trigger/acuity-scheduling-trigger/) |
+| **Bitbucket Trigger**         | `bitbucketTrigger`        | Handle Bitbucket events via webhooks                                          | ✅ None                    | [`trigger/bitbucket-trigger/`](trigger/bitbucket-trigger/)                 |
+| **Cal.com Trigger**           | `calTrigger`              | Handle Cal.com events via webhooks                                            | ✅ None                    | [`trigger/cal-com-trigger/`](trigger/cal-com-trigger/)                     |
+| **Calendly Trigger**          | `calendlyTrigger`         | Starts the workflow when Calendly events occur                                | ✅ None                    | [`trigger/calendly-trigger/`](trigger/calendly-trigger/)                   |
+| **Email Trigger (IMAP)**      | `emailReadImap`           | Triggers the workflow when a new email is received                            | ✅ None                    | [`trigger/email-trigger-imap/`](trigger/email-trigger-imap/)               |
+| **Error Trigger**             | `errorTrigger`            | Triggers the workflow when another workflow has an error                      | ✅ None                    | [`trigger/error-trigger/`](trigger/error-trigger/)                         |
+| **Eventbrite Trigger**        | `eventbriteTrigger`       | Handle Eventbrite events via webhooks                                         | ✅ None                    | [`trigger/eventbrite-trigger/`](trigger/eventbrite-trigger/)               |
+| **Facebook Lead Ads Trigger** | `facebookLeadAdsTrigger`  | Handle Facebook Lead Ads events via webhooks                                  | ⚠️ Authentication Required | [`trigger/facebook-lead-ads-trigger/`](trigger/facebook-lead-ads-trigger/) |
+| **Figma Trigger (Beta)**      | `figmaTrigger`            | Starts the workflow when Figma events occur                                   | ✅ None                    | [`trigger/figma-trigger-beta/`](trigger/figma-trigger-beta/)               |
+| **Form.io Trigger**           | `formIoTrigger`           | Handle form.io events via webhooks                                            | ✅ None                    | [`trigger/form-io-trigger/`](trigger/form-io-trigger/)                     |
+| **Formstack Trigger**         | `formstackTrigger`        | Starts the workflow on a Formstack form submission.                           | ✅ None                    | [`trigger/formstack-trigger/`](trigger/formstack-trigger/)                 |
+| **Gumroad Trigger**           | `gumroadTrigger`          | Handle Gumroad events via webhooks                                            | ✅ None                    | [`trigger/gumroad-trigger/`](trigger/gumroad-trigger/)                     |
+| **Jotform Trigger**           | `jotFormTrigger`          | Handle Jotform events via webhooks                                            | ✅ None                    | [`trigger/jotform-trigger/`](trigger/jotform-trigger/)                     |
+| **Local File Trigger**        | `localFileTrigger`        | Triggers a workflow on file system changes                                    | ✅ None                    | [`trigger/local-file-trigger/`](trigger/local-file-trigger/)               |
+| **Manual Trigger**            | `manualTrigger`           | Runs the flow on clicking a button in n8n                                     | ✅ None                    | [`trigger/manual-trigger/`](trigger/manual-trigger/)                       |
+| **n8n Trigger**               | `n8nTrigger`              | Handle events and perform actions on your n8n instance                        | ✅ None                    | [`trigger/n8n-trigger/`](trigger/n8n-trigger/)                             |
+| **Postmark Trigger**          | `postmarkTrigger`         | Starts the workflow when Postmark events occur                                | ✅ None                    | [`trigger/postmark-trigger/`](trigger/postmark-trigger/)                   |
+| **SSE Trigger**               | `sseTrigger`              | Triggers the workflow when Server-Sent Events occur                           | ✅ None                    | [`trigger/sse-trigger/`](trigger/sse-trigger/)                             |
+| **SurveyMonkey Trigger**      | `surveyMonkeyTrigger`     | Starts the workflow when Survey Monkey events occur                           | ⚠️ Authentication Required | [`trigger/surveymonkey-trigger/`](trigger/surveymonkey-trigger/)           |
+| **Toggl Trigger**             | `togglTrigger`            | Starts the workflow when Toggl events occur                                   | ✅ None                    | [`trigger/toggl-trigger/`](trigger/toggl-trigger/)                         |
+| **Typeform Trigger**          | `typeformTrigger`         | Starts the workflow on a Typeform form submission                             | ✅ None                    | [`trigger/typeform-trigger/`](trigger/typeform-trigger/)                   |
+| **Webhook**                   | `webhook`                 | Starts the workflow when a webhook is called                                  | ✅ None                    | [`trigger/webhook/`](trigger/webhook/)                                     |
+| **Workable Trigger**          | `workableTrigger`         | Starts the workflow when Workable events occur                                | ✅ None                    | [`trigger/workable-trigger/`](trigger/workable-trigger/)                   |
+| **Workflow Trigger**          | `workflowTrigger`         | Triggers based on various lifecycle events, like when a workflow is activated | ✅ None                    | [`trigger/workflow-trigger/`](trigger/workflow-trigger/)                   |
+| **Wufoo Trigger**             | `wufooTrigger`            | Handle Wufoo events via webhooks                                              | ✅ None                    | [`trigger/wufoo-trigger/`](trigger/wufoo-trigger/)                         |
 
 ## Integration Nodes
 
@@ -89,274 +89,274 @@ Third-party service integrations for connecting to external platforms.
 
 **Total**: 266 nodes
 
-| Node                                           | Type                            | Description                                                                                          | Credentials                | Example                                                                                                                                            |
-| ---------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Action Network**                             | `actionNetwork`                 | Consume the Action Network API                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/action-network/`](examples/nodes/integration/action-network/)                                                         |
-| **ActiveCampaign**                             | `activeCampaign`                | Create and edit data in ActiveCampaign                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/activecampaign/`](examples/nodes/integration/activecampaign/)                                                         |
-| **Adalo**                                      | `adalo`                         | Consume Adalo API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/adalo/`](examples/nodes/integration/adalo/)                                                                           |
-| **Affinity**                                   | `affinity`                      | Consume Affinity API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/affinity/`](examples/nodes/integration/affinity/)                                                                     |
-| **Agile CRM**                                  | `agileCrm`                      | Consume Agile CRM API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/agile-crm/`](examples/nodes/integration/agile-crm/)                                                                   |
-| **AI Transform**                               | `aiTransform`                   | Modify data based on instructions written in plain english                                           | ⚠️ Authentication Required | [`examples/nodes/integration/ai-transform/`](examples/nodes/integration/ai-transform/)                                                             |
-| **Airtable**                                   | `airtable`                      | Read, update, write and delete data from Airtable                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/airtable/`](examples/nodes/integration/airtable/)                                                                     |
-| **Airtop**                                     | `airtop`                        | Scrape and control any site with Airtop                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/airtop/`](examples/nodes/integration/airtop/)                                                                         |
-| **AMQP Sender**                                | `amqp`                          | Sends a raw-message via AMQP 1.0, executed once per item                                             | ⚠️ Authentication Required | [`examples/nodes/integration/amqp-sender/`](examples/nodes/integration/amqp-sender/)                                                               |
-| **APITemplate.io**                             | `apiTemplateIo`                 | Consume the APITemplate.io API                                                                       | ⚠️ API Key                 | [`examples/nodes/integration/apitemplate-io/`](examples/nodes/integration/apitemplate-io/)                                                         |
-| **Asana**                                      | `asana`                         | Consume Asana REST API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/asana/`](examples/nodes/integration/asana/)                                                                           |
-| **Automizy**                                   | `automizy`                      | Consume Automizy API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/automizy/`](examples/nodes/integration/automizy/)                                                                     |
-| **Autopilot**                                  | `autopilot`                     | Consume Autopilot API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/autopilot/`](examples/nodes/integration/autopilot/)                                                                   |
-| **AWS Lambda**                                 | `awsLambda`                     | Invoke functions on AWS Lambda                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/aws-lambda/`](examples/nodes/integration/aws-lambda/)                                                                 |
-| **Background Color**                           | `Blur`                          | Adds a blur to the image and so makes it less sharp                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/background-color/`](examples/nodes/integration/background-color/)                                                     |
-| **BambooHr**                                   | `n8n-nodes-base.bamboohr`       | N/A                                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/bamboohr/`](examples/nodes/integration/bamboohr/)                                                                     |
-| **Bannerbear**                                 | `bannerbear`                    | Consume Bannerbear API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/bannerbear/`](examples/nodes/integration/bannerbear/)                                                                 |
-| **Baserow**                                    | `baserow`                       | Consume the Baserow API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/baserow/`](examples/nodes/integration/baserow/)                                                                       |
-| **Beeminder**                                  | `beeminder`                     | Consume Beeminder API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/beeminder/`](examples/nodes/integration/beeminder/)                                                                   |
-| **Bitly**                                      | `bitly`                         | Consume Bitly API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/bitly/`](examples/nodes/integration/bitly/)                                                                           |
-| **Bitwarden**                                  | `bitwarden`                     | Consume the Bitwarden API                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/bitwarden/`](examples/nodes/integration/bitwarden/)                                                                   |
-| **Box**                                        | `box`                           | Consume Box API                                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/box/`](examples/nodes/integration/box/)                                                                               |
-| **Brandfetch**                                 | `Brandfetch`                    | Consume Brandfetch API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/brandfetch/`](examples/nodes/integration/brandfetch/)                                                                 |
-| **Brevo**                                      | `sendInBlue`                    | Consume Brevo API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/brevo/`](examples/nodes/integration/brevo/)                                                                           |
-| **Bubble**                                     | `bubble`                        | Consume the Bubble Data API                                                                          | ⚠️ Authentication Required | [`examples/nodes/integration/bubble/`](examples/nodes/integration/bubble/)                                                                         |
-| **Chargebee**                                  | `chargebee`                     | Retrieve data from Chargebee API                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/chargebee/`](examples/nodes/integration/chargebee/)                                                                   |
-| **CircleCI**                                   | `circleCi`                      | Consume CircleCI API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/circleci/`](examples/nodes/integration/circleci/)                                                                     |
-| **Clearbit**                                   | `clearbit`                      | Consume Clearbit API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/clearbit/`](examples/nodes/integration/clearbit/)                                                                     |
-| **ClickUp**                                    | `clickUp`                       | Consume ClickUp API (Beta)                                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/clickup/`](examples/nodes/integration/clickup/)                                                                       |
-| **Clockify**                                   | `clockify`                      | Consume Clockify REST API                                                                            | ✅ None                    | [`examples/nodes/integration/clockify/`](examples/nodes/integration/clockify/)                                                                     |
-| **Cloudflare**                                 | `cloudflare`                    | Consume Cloudflare API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/cloudflare/`](examples/nodes/integration/cloudflare/)                                                                 |
-| **Cockpit**                                    | `cockpit`                       | Consume Cockpit API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/cockpit/`](examples/nodes/integration/cockpit/)                                                                       |
-| **Coda**                                       | `coda`                          | Consume Coda API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/coda/`](examples/nodes/integration/coda/)                                                                             |
-| **CoinGecko**                                  | `coinGecko`                     | Consume CoinGecko API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/coingecko/`](examples/nodes/integration/coingecko/)                                                                   |
-| **Compare Datasets**                           | `compareDatasets`               | Compare two inputs for changes                                                                       | ✅ None                    | [`examples/nodes/integration/compare-datasets/`](examples/nodes/integration/compare-datasets/)                                                     |
-| **Compression**                                | `compression`                   | Compress and decompress files                                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/compression/`](examples/nodes/integration/compression/)                                                               |
-| **Contentful**                                 | `contentful`                    | Consume Contentful API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/contentful/`](examples/nodes/integration/contentful/)                                                                 |
-| **Convert to/from binary data**                | `moveBinaryData`                | Move data between binary and JSON properties                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/convert-to-from-binary-data/`](examples/nodes/integration/convert-to-from-binary-data/)                               |
-| **ConvertKit**                                 | `convertKit`                    | Consume ConvertKit API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/convertkit/`](examples/nodes/integration/convertkit/)                                                                 |
-| **Copper**                                     | `copper`                        | Consume the Copper API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/copper/`](examples/nodes/integration/copper/)                                                                         |
-| **Cortex**                                     | `cortex`                        | Apply the Cortex analyzer/responder on the given entity                                              | ⚠️ Authentication Required | [`examples/nodes/integration/cortex/`](examples/nodes/integration/cortex/)                                                                         |
-| **CrateDB**                                    | `crateDb`                       | Add and update data in CrateDB                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/cratedb/`](examples/nodes/integration/cratedb/)                                                                       |
-| **Cron**                                       | `cron`                          | Triggers the workflow at a specific time                                                             | ✅ None                    | [`examples/nodes/integration/cron/`](examples/nodes/integration/cron/)                                                                             |
-| **crowd.dev**                                  | `crowdDev`                      | crowd.dev is an open-source suite of community and data tools built to unlock community-led growth f | ⚠️ Authentication Required | [`examples/nodes/integration/crowd-dev/`](examples/nodes/integration/crowd-dev/)                                                                   |
-| **Crypto**                                     | `crypto`                        | Provide cryptographic utilities                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/crypto/`](examples/nodes/integration/crypto/)                                                                         |
-| **Customer Datastore (n8n training)**          | `Jay Gatsby`                    | Dummy node used for n8n training                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/customer-datastore-n8n-training/`](examples/nodes/integration/customer-datastore-n8n-training/)                       |
-| **Customer Messenger (n8n training)**          | `n8nTrainingCustomerMessenger`  | Dummy node used for n8n training                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/customer-messenger-n8n-training/`](examples/nodes/integration/customer-messenger-n8n-training/)                       |
-| **Customer.io**                                | `customerIo`                    | Consume Customer.io API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/customer-io/`](examples/nodes/integration/customer-io/)                                                               |
-| **Data table**                                 | `dataTable`                     | Permanently save data across workflow executions in a table                                          | ⚠️ Authentication Required | [`examples/nodes/integration/data-table/`](examples/nodes/integration/data-table/)                                                                 |
-| **Date & Time**                                | `dateTime`                      | Allows you to manipulate date and time values                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/date-time/`](examples/nodes/integration/date-time/)                                                                   |
-| **DebugHelper**                                | `debugHelper`                   | Causes problems intentionally and generates useful data for debugging                                | ⚠️ Authentication Required | [`examples/nodes/integration/debughelper/`](examples/nodes/integration/debughelper/)                                                               |
-| **DeepL**                                      | `deepL`                         | Translate data using DeepL                                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/deepl/`](examples/nodes/integration/deepl/)                                                                           |
-| **Demio**                                      | `demio`                         | Consume the Demio API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/demio/`](examples/nodes/integration/demio/)                                                                           |
-| **DHL**                                        | `dhl`                           | Consume DHL API                                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/dhl/`](examples/nodes/integration/dhl/)                                                                               |
-| **Discord**                                    | `discord`                       | Sends data to Discord                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/discord/`](examples/nodes/integration/discord/)                                                                       |
-| **Discourse**                                  | `discourse`                     | Consume Discourse API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/discourse/`](examples/nodes/integration/discourse/)                                                                   |
-| **Disqus**                                     | `disqus`                        | Access data on Disqus                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/disqus/`](examples/nodes/integration/disqus/)                                                                         |
-| **Drift**                                      | `drift`                         | Consume Drift API                                                                                    | ✅ None                    | [`examples/nodes/integration/drift/`](examples/nodes/integration/drift/)                                                                           |
-| **Dropbox**                                    | `dropbox`                       | Access data on Dropbox                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/dropbox/`](examples/nodes/integration/dropbox/)                                                                       |
-| **Dropcontact**                                | `dropcontact`                   | Find B2B emails and enrich contacts                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/dropcontact/`](examples/nodes/integration/dropcontact/)                                                               |
-| **E-goi**                                      | `egoi`                          | Consume E-goi API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/e-goi/`](examples/nodes/integration/e-goi/)                                                                           |
-| **E2E Test**                                   | `e2eTest`                       | Dummy node used for e2e testing                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/e2e-test/`](examples/nodes/integration/e2e-test/)                                                                     |
-| **Emelia**                                     | `emelia`                        | Consume the Emelia API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/emelia/`](examples/nodes/integration/emelia/)                                                                         |
-| **ERPNext**                                    | `erpNext`                       | Consume ERPNext API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/erpnext/`](examples/nodes/integration/erpnext/)                                                                       |
-| **Execute Command**                            | `executeCommand`                | Executes a command on the host                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/execute-command/`](examples/nodes/integration/execute-command/)                                                       |
-| **Execution Data**                             | `executionData`                 | Add execution data for search                                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/execution-data/`](examples/nodes/integration/execution-data/)                                                         |
-| **Extraction Values**                          | `extractionValues`              | The key under which the extracted value should be saved                                              | ⚠️ Authentication Required | [`examples/nodes/integration/extraction-values/`](examples/nodes/integration/extraction-values/)                                                   |
-| **Facebook Graph API**                         | `facebookGraphApi`              | Interacts with Facebook using the Graph API                                                          | ⚠️ API Key                 | [`examples/nodes/integration/facebook-graph-api/`](examples/nodes/integration/facebook-graph-api/)                                                 |
-| **FileMaker**                                  | `filemaker`                     | Retrieve data from the FileMaker data API                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/filemaker/`](examples/nodes/integration/filemaker/)                                                                   |
-| **Filter**                                     | `filter`                        | Remove items matching a condition                                                                    | ✅ None                    | [`examples/nodes/integration/filter/`](examples/nodes/integration/filter/)                                                                         |
-| **Flow**                                       | `flow`                          | Consume Flow API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/flow/`](examples/nodes/integration/flow/)                                                                             |
-| **Freshdesk**                                  | `freshdesk`                     | Consume Freshdesk API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/freshdesk/`](examples/nodes/integration/freshdesk/)                                                                   |
-| **Freshservice**                               | `freshservice`                  | Consume the Freshservice API                                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/freshservice/`](examples/nodes/integration/freshservice/)                                                             |
-| **Freshworks CRM**                             | `freshworksCrm`                 | Consume the Freshworks CRM API                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/freshworks-crm/`](examples/nodes/integration/freshworks-crm/)                                                         |
-| **FTP**                                        | `ftp`                           | Transfer files via FTP or SFTP                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/ftp/`](examples/nodes/integration/ftp/)                                                                               |
-| **Function**                                   | `function`                      | Run custom function code which gets executed once and allows you to add, remove, change and replace  | ✅ None                    | [`examples/nodes/integration/function/`](examples/nodes/integration/function/)                                                                     |
-| **Function Item**                              | `functionItem`                  | Run custom function code which gets executed once per item                                           | ✅ None                    | [`examples/nodes/integration/function-item/`](examples/nodes/integration/function-item/)                                                           |
-| **GetResponse**                                | `getResponse`                   | Consume GetResponse API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/getresponse/`](examples/nodes/integration/getresponse/)                                                               |
-| **Ghost**                                      | `ghost`                         | Consume Ghost API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/ghost/`](examples/nodes/integration/ghost/)                                                                           |
-| **Git**                                        | `git`                           | Control git.                                                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/git/`](examples/nodes/integration/git/)                                                                               |
-| **GitHub**                                     | `github`                        | Consume GitHub API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/github/`](examples/nodes/integration/github/)                                                                         |
-| **GitLab**                                     | `gitlab`                        | Retrieve data from GitLab API                                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/gitlab/`](examples/nodes/integration/gitlab/)                                                                         |
-| **Gong**                                       | `gong`                          | Interact with Gong API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/gong/`](examples/nodes/integration/gong/)                                                                             |
-| **Gotify**                                     | `gotify`                        | Consume Gotify API                                                                                   | ✅ None                    | [`examples/nodes/integration/gotify/`](examples/nodes/integration/gotify/)                                                                         |
-| **GoToWebinar**                                | `goToWebinar`                   | Consume the GoToWebinar API                                                                          | ⚠️ Authentication Required | [`examples/nodes/integration/gotowebinar/`](examples/nodes/integration/gotowebinar/)                                                               |
-| **Grafana**                                    | `grafana`                       | Consume the Grafana API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/grafana/`](examples/nodes/integration/grafana/)                                                                       |
-| **GraphQL**                                    | `graphql`                       | Makes a GraphQL request and returns the received data                                                | ⚠️ Authentication Required | [`examples/nodes/integration/graphql/`](examples/nodes/integration/graphql/)                                                                       |
-| **Grist**                                      | `grist`                         | Consume the Grist API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/grist/`](examples/nodes/integration/grist/)                                                                           |
-| **Hacker News**                                | `hackerNews`                    | Consume Hacker News API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/hacker-news/`](examples/nodes/integration/hacker-news/)                                                               |
-| **HaloPSA**                                    | `haloPSA`                       | Consume HaloPSA API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/halopsa/`](examples/nodes/integration/halopsa/)                                                                       |
-| **Harvest**                                    | `harvest`                       | Access data on Harvest                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/harvest/`](examples/nodes/integration/harvest/)                                                                       |
-| **Help Scout**                                 | `helpScout`                     | Consume Help Scout API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/help-scout/`](examples/nodes/integration/help-scout/)                                                                 |
-| **HighLevel**                                  | `highLevel`                     | Consume HighLevel API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/highlevel/`](examples/nodes/integration/highlevel/)                                                                   |
-| **Home Assistant**                             | `homeAssistant`                 | Consume Home Assistant API                                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/home-assistant/`](examples/nodes/integration/home-assistant/)                                                         |
-| **HTML Extract**                               | `htmlExtract`                   | Extracts data from HTML                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/html-extract/`](examples/nodes/integration/html-extract/)                                                             |
-| **HTTP Request**                               | `httpRequest`                   | Makes an HTTP request and returns the response data                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/http-request/`](examples/nodes/integration/http-request/)                                                             |
-| **HubSpot**                                    | `hubspot`                       | Consume HubSpot API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/hubspot/`](examples/nodes/integration/hubspot/)                                                                       |
-| **Humantic AI**                                | `humanticAi`                    | Consume Humantic AI API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/humantic-ai/`](examples/nodes/integration/humantic-ai/)                                                               |
-| **Hunter**                                     | `hunter`                        | Consume Hunter API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/hunter/`](examples/nodes/integration/hunter/)                                                                         |
-| **iCalendar**                                  | `iCal`                          | Create iCalendar file                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/icalendar/`](examples/nodes/integration/icalendar/)                                                                   |
-| **Interact with Telegram using our pre-built** | `preBuiltAgentsCalloutTelegram` | Sends data to Telegram                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/interact-with-telegram-using-our-pre-built/`](examples/nodes/integration/interact-with-telegram-using-our-pre-built/) |
-| **Intercom**                                   | `intercom`                      | Consume Intercom API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/intercom/`](examples/nodes/integration/intercom/)                                                                     |
-| **Interval**                                   | `interval`                      | Triggers the workflow in a given interval                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/interval/`](examples/nodes/integration/interval/)                                                                     |
-| **Invoice Ninja**                              | `invoiceNinja`                  | Consume Invoice Ninja API                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/invoice-ninja/`](examples/nodes/integration/invoice-ninja/)                                                           |
-| **Item Lists**                                 | `itemLists`                     | Helper for working with lists of items and transforming arrays                                       | ⚠️ Authentication Required | [`examples/nodes/integration/item-lists/`](examples/nodes/integration/item-lists/)                                                                 |
-| **Iterable**                                   | `iterable`                      | Consume Iterable API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/iterable/`](examples/nodes/integration/iterable/)                                                                     |
-| **Jenkins**                                    | `jenkins`                       | Consume Jenkins API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/jenkins/`](examples/nodes/integration/jenkins/)                                                                       |
-| **Jina AI**                                    | `jinaAi`                        | Interact with Jina AI API                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/jina-ai/`](examples/nodes/integration/jina-ai/)                                                                       |
-| **Jira Software**                              | `jira`                          | Consume Jira Software API                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/jira-software/`](examples/nodes/integration/jira-software/)                                                           |
-| **JWT**                                        | `jwt`                           | Be sure to add a valid JWT token to the                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/jwt/`](examples/nodes/integration/jwt/)                                                                               |
-| **Kafka**                                      | `kafka`                         | Sends messages to a Kafka topic                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/kafka/`](examples/nodes/integration/kafka/)                                                                           |
-| **Keap**                                       | `keap`                          | Consume Keap API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/keap/`](examples/nodes/integration/keap/)                                                                             |
-| **Kitemaker**                                  | `kitemaker`                     | Consume the Kitemaker GraphQL API                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/kitemaker/`](examples/nodes/integration/kitemaker/)                                                                   |
-| **KoBoToolbox**                                | `koBoToolbox`                   | Work with KoBoToolbox forms and submissions                                                          | ⚠️ Authentication Required | [`examples/nodes/integration/kobotoolbox/`](examples/nodes/integration/kobotoolbox/)                                                               |
-| **Ldap**                                       | `ldap`                          | Interact with LDAP servers                                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/ldap/`](examples/nodes/integration/ldap/)                                                                             |
-| **Lemlist**                                    | `lemlist`                       | Consume the Lemlist API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/lemlist/`](examples/nodes/integration/lemlist/)                                                                       |
-| **Limit Wait Time**                            | `limitWaitTime`                 | Whether to limit the time this node should wait for a user response before execution resumes         | ✅ None                    | [`examples/nodes/integration/limit-wait-time/`](examples/nodes/integration/limit-wait-time/)                                                       |
-| **Line**                                       | `line`                          | Consume Line API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/line/`](examples/nodes/integration/line/)                                                                             |
-| **Linear**                                     | `linear`                        | Consume Linear API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/linear/`](examples/nodes/integration/linear/)                                                                         |
-| **LingvaNex**                                  | `lingvaNex`                     | Consume LingvaNex API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/lingvanex/`](examples/nodes/integration/lingvanex/)                                                                   |
-| **LinkedIn**                                   | `linkedIn`                      | Consume LinkedIn API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/linkedin/`](examples/nodes/integration/linkedin/)                                                                     |
-| **LoneScale**                                  | `loneScale`                     | Create List, add / delete items                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/lonescale/`](examples/nodes/integration/lonescale/)                                                                   |
-| **Magento 2**                                  | `magento2`                      | Consume Magento API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/magento-2/`](examples/nodes/integration/magento-2/)                                                                   |
-| **Mailcheck**                                  | `mailcheck`                     | Consume Mailcheck API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/mailcheck/`](examples/nodes/integration/mailcheck/)                                                                   |
-| **Mailchimp**                                  | `mailchimp`                     | Consume Mailchimp API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/mailchimp/`](examples/nodes/integration/mailchimp/)                                                                   |
-| **MailerLite**                                 | `mailerLite`                    | Consume MailerLite API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/mailerlite/`](examples/nodes/integration/mailerlite/)                                                                 |
-| **Mailgun**                                    | `mailgun`                       | Sends an email via Mailgun                                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/mailgun/`](examples/nodes/integration/mailgun/)                                                                       |
-| **Mailjet**                                    | `mailjet`                       | Consume Mailjet API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/mailjet/`](examples/nodes/integration/mailjet/)                                                                       |
-| **Mandrill**                                   | `mandrill`                      | Consume Mandrill API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/mandrill/`](examples/nodes/integration/mandrill/)                                                                     |
-| **Markdown**                                   | `markdown`                      | Convert data between Markdown and HTML                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/markdown/`](examples/nodes/integration/markdown/)                                                                     |
-| **Marketstack**                                | `marketstack`                   | Consume Marketstack API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/marketstack/`](examples/nodes/integration/marketstack/)                                                               |
-| **Matrix**                                     | `matrix`                        | Consume Matrix API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/matrix/`](examples/nodes/integration/matrix/)                                                                         |
-| **Mattermost**                                 | `mattermost`                    | Sends data to Mattermost                                                                             | ⚠️ Authentication Required | [`examples/nodes/integration/mattermost/`](examples/nodes/integration/mattermost/)                                                                 |
-| **Mautic**                                     | `mautic`                        | Consume Mautic API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/mautic/`](examples/nodes/integration/mautic/)                                                                         |
-| **Medium**                                     | `medium`                        | Consume Medium API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/medium/`](examples/nodes/integration/medium/)                                                                         |
-| **MessageBird**                                | `messageBird`                   | Sends SMS via MessageBird                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/messagebird/`](examples/nodes/integration/messagebird/)                                                               |
-| **Metabase**                                   | `metabase`                      | Use the Metabase API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/metabase/`](examples/nodes/integration/metabase/)                                                                     |
-| **Mindee**                                     | `mindee`                        | Consume Mindee API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/mindee/`](examples/nodes/integration/mindee/)                                                                         |
-| **MISP**                                       | `misp`                          | Consume the MISP API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/misp/`](examples/nodes/integration/misp/)                                                                             |
-| **Mistral AI**                                 | `mistralAi`                     | Consume Mistral AI API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/mistral-ai/`](examples/nodes/integration/mistral-ai/)                                                                 |
-| **Mocean**                                     | `mocean`                        | Send SMS and voice messages via Mocean                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/mocean/`](examples/nodes/integration/mocean/)                                                                         |
-| **Monday.com**                                 | `mondayCom`                     | Consume Monday.com API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/monday-com/`](examples/nodes/integration/monday-com/)                                                                 |
-| **MongoDB**                                    | `mongoDb`                       | Find, insert and update documents in MongoDB                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/mongodb/`](examples/nodes/integration/mongodb/)                                                                       |
-| **Monica CRM**                                 | `monicaCrm`                     | Consume the Monica CRM API                                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/monica-crm/`](examples/nodes/integration/monica-crm/)                                                                 |
-| **MQTT**                                       | `mqtt`                          | Push messages to MQTT                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/mqtt/`](examples/nodes/integration/mqtt/)                                                                             |
-| **MSG91**                                      | `msg91`                         | Sends transactional SMS via MSG91                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/msg91/`](examples/nodes/integration/msg91/)                                                                           |
-| **MySQL**                                      | `mySql`                         | Get, add and update data in MySQL                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/mysql/`](examples/nodes/integration/mysql/)                                                                           |
-| **n8n**                                        | `n8n`                           | Handle events and perform actions on your n8n instance                                               | ⚠️ Authentication Required | [`examples/nodes/integration/n8n/`](examples/nodes/integration/n8n/)                                                                               |
-| **NASA**                                       | `nasa`                          | Retrieve data from the NASA API                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/nasa/`](examples/nodes/integration/nasa/)                                                                             |
-| **Netlify**                                    | `netlify`                       | Consume Netlify API                                                                                  | ✅ None                    | [`examples/nodes/integration/netlify/`](examples/nodes/integration/netlify/)                                                                       |
-| **Nextcloud**                                  | `nextCloud`                     | Access data on Nextcloud                                                                             | ⚠️ Authentication Required | [`examples/nodes/integration/nextcloud/`](examples/nodes/integration/nextcloud/)                                                                   |
-| **No Operation, do nothing**                   | `noOp`                          | No Operation                                                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/no-operation-do-nothing/`](examples/nodes/integration/no-operation-do-nothing/)                                       |
-| **NocoDB**                                     | `nocoDb`                        | Read, update, write and delete data from NocoDB                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/nocodb/`](examples/nodes/integration/nocodb/)                                                                         |
-| **Notion**                                     | `notion`                        | Consume Notion API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/notion/`](examples/nodes/integration/notion/)                                                                         |
-| **Npm**                                        | `npm`                           | Consume NPM registry API                                                                             | ⚠️ Authentication Required | [`examples/nodes/integration/npm/`](examples/nodes/integration/npm/)                                                                               |
-| **Odoo**                                       | `odoo`                          | Consume Odoo API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/odoo/`](examples/nodes/integration/odoo/)                                                                             |
-| **Okta**                                       | `okta`                          | Use the Okta API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/okta/`](examples/nodes/integration/okta/)                                                                             |
-| **One Simple API**                             | `oneSimpleApi`                  | A toolbox of no-code utilities                                                                       | ⚠️ API Key                 | [`examples/nodes/integration/one-simple-api/`](examples/nodes/integration/one-simple-api/)                                                         |
-| **Onfleet**                                    | `onfleet`                       | Consume Onfleet API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/onfleet/`](examples/nodes/integration/onfleet/)                                                                       |
-| **OpenAI**                                     | `openAi`                        | Consume Open AI                                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/openai/`](examples/nodes/integration/openai/)                                                                         |
-| **OpenThesaurus**                              | `openThesaurus`                 | Get synonmns for German words using the OpenThesaurus API                                            | ⚠️ Authentication Required | [`examples/nodes/integration/openthesaurus/`](examples/nodes/integration/openthesaurus/)                                                           |
-| **OpenWeatherMap**                             | `openWeatherMap`                | Gets current and future weather information                                                          | ⚠️ Authentication Required | [`examples/nodes/integration/openweathermap/`](examples/nodes/integration/openweathermap/)                                                         |
-| **Orbit**                                      | `orbit`                         | Consume Orbit API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/orbit/`](examples/nodes/integration/orbit/)                                                                           |
-| **Oura**                                       | `oura`                          | Consume Oura API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/oura/`](examples/nodes/integration/oura/)                                                                             |
-| **Paddle**                                     | `paddle`                        | Consume Paddle API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/paddle/`](examples/nodes/integration/paddle/)                                                                         |
-| **PagerDuty**                                  | `pagerDuty`                     | Consume PagerDuty API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/pagerduty/`](examples/nodes/integration/pagerduty/)                                                                   |
-| **PayPal**                                     | `payPal`                        | Consume PayPal API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/paypal/`](examples/nodes/integration/paypal/)                                                                         |
-| **Peekalink**                                  | `peekalink`                     | Consume the Peekalink API                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/peekalink/`](examples/nodes/integration/peekalink/)                                                                   |
-| **Perplexity**                                 | `perplexity`                    | Interact with the Perplexity API to generate AI responses with citations                             | ⚠️ Authentication Required | [`examples/nodes/integration/perplexity/`](examples/nodes/integration/perplexity/)                                                                 |
-| **Phantombuster**                              | `phantombuster`                 | Consume Phantombuster API                                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/phantombuster/`](examples/nodes/integration/phantombuster/)                                                           |
-| **Philips Hue**                                | `philipsHue`                    | Consume Philips Hue API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/philips-hue/`](examples/nodes/integration/philips-hue/)                                                               |
-| **Pipedrive**                                  | `pipedrive`                     | Create and edit data in Pipedrive                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/pipedrive/`](examples/nodes/integration/pipedrive/)                                                                   |
-| **Plivo**                                      | `plivo`                         | Send SMS/MMS messages or make phone calls                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/plivo/`](examples/nodes/integration/plivo/)                                                                           |
-| **PostBin**                                    | `postBin`                       | Consume PostBin API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/postbin/`](examples/nodes/integration/postbin/)                                                                       |
-| **Postgres**                                   | `postgres`                      | Get, add and update data in Postgres                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/postgres/`](examples/nodes/integration/postgres/)                                                                     |
-| **PostHog**                                    | `postHog`                       | Consume PostHog API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/posthog/`](examples/nodes/integration/posthog/)                                                                       |
-| **ProfitWell**                                 | `profitWell`                    | Consume ProfitWell API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/profitwell/`](examples/nodes/integration/profitwell/)                                                                 |
-| **Pushbullet**                                 | `pushbullet`                    | Consume Pushbullet API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/pushbullet/`](examples/nodes/integration/pushbullet/)                                                                 |
-| **Pushcut**                                    | `pushcut`                       | Consume Pushcut API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/pushcut/`](examples/nodes/integration/pushcut/)                                                                       |
-| **Pushover**                                   | `pushover`                      | Consume Pushover API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/pushover/`](examples/nodes/integration/pushover/)                                                                     |
-| **QuestDB**                                    | `questDb`                       | Get, add and update data in QuestDB                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/questdb/`](examples/nodes/integration/questdb/)                                                                       |
-| **Quick Base**                                 | `quickbase`                     | Integrate with the Quick Base RESTful API                                                            | ⚠️ Authentication Required | [`examples/nodes/integration/quick-base/`](examples/nodes/integration/quick-base/)                                                                 |
-| **QuickBooks Online**                          | `quickbooks`                    | Consume the QuickBooks Online API                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/quickbooks-online/`](examples/nodes/integration/quickbooks-online/)                                                   |
-| **QuickChart**                                 | `quickChart`                    | Create a chart via QuickChart                                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/quickchart/`](examples/nodes/integration/quickchart/)                                                                 |
-| **RabbitMQ**                                   | `rabbitmq`                      | Sends messages to a RabbitMQ topic                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/rabbitmq/`](examples/nodes/integration/rabbitmq/)                                                                     |
-| **Raindrop**                                   | `raindrop`                      | Consume the Raindrop API                                                                             | ⚠️ Authentication Required | [`examples/nodes/integration/raindrop/`](examples/nodes/integration/raindrop/)                                                                     |
-| **Read Binary File**                           | `readBinaryFile`                | Reads a binary file from disk                                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/read-binary-file/`](examples/nodes/integration/read-binary-file/)                                                     |
-| **Read Binary Files**                          | `readBinaryFiles`               | Reads binary files from disk                                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/read-binary-files/`](examples/nodes/integration/read-binary-files/)                                                   |
-| **Read PDF**                                   | `readPDF`                       | Reads a PDF and extracts its content                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/read-pdf/`](examples/nodes/integration/read-pdf/)                                                                     |
-| **Reddit**                                     | `reddit`                        | Consume the Reddit API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/reddit/`](examples/nodes/integration/reddit/)                                                                         |
-| **Redis**                                      | `redis`                         | Get, send and update data in Redis                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/redis/`](examples/nodes/integration/redis/)                                                                           |
-| **Rename Keys**                                | `renameKeys`                    | Update item field names                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/rename-keys/`](examples/nodes/integration/rename-keys/)                                                               |
-| **Respond With**                               | `respondWith`                   | Respond with all input JSON items                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/respond-with/`](examples/nodes/integration/respond-with/)                                                             |
-| **RocketChat**                                 | `rocketchat`                    | Consume RocketChat API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/rocketchat/`](examples/nodes/integration/rocketchat/)                                                                 |
-| **RSS Read**                                   | `rssFeedRead`                   | Reads data from an RSS Feed                                                                          | ⚠️ Authentication Required | [`examples/nodes/integration/rss-read/`](examples/nodes/integration/rss-read/)                                                                     |
-| **Rundeck**                                    | `rundeck`                       | Manage Rundeck API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/rundeck/`](examples/nodes/integration/rundeck/)                                                                       |
-| **S3**                                         | `s3`                            | Sends data to any S3-compatible service                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/s3/`](examples/nodes/integration/s3/)                                                                                 |
-| **Salesforce**                                 | `salesforce`                    | Consume Salesforce API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/salesforce/`](examples/nodes/integration/salesforce/)                                                                 |
-| **Salesmate**                                  | `salesmate`                     | Consume Salesmate API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/salesmate/`](examples/nodes/integration/salesmate/)                                                                   |
-| **Schedule Trigger**                           | `scheduleTrigger`               | Triggers the workflow on a given schedule                                                            | ✅ None                    | [`examples/nodes/integration/schedule-trigger/`](examples/nodes/integration/schedule-trigger/)                                                     |
-| **SeaTable**                                   | `seaTable`                      | Read, update, write and delete data from SeaTable                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/seatable/`](examples/nodes/integration/seatable/)                                                                     |
-| **SecurityScorecard**                          | `securityScorecard`             | Consume SecurityScorecard API                                                                        | ⚠️ Authentication Required | [`examples/nodes/integration/securityscorecard/`](examples/nodes/integration/securityscorecard/)                                                   |
-| **Segment**                                    | `segment`                       | Consume Segment API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/segment/`](examples/nodes/integration/segment/)                                                                       |
-| **Send Email**                                 | `emailSend`                     | Sends an email using SMTP protocol                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/send-email/`](examples/nodes/integration/send-email/)                                                                 |
-| **SendGrid**                                   | `sendGrid`                      | Consume SendGrid API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/sendgrid/`](examples/nodes/integration/sendgrid/)                                                                     |
-| **Sendy**                                      | `sendy`                         | Consume Sendy API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/sendy/`](examples/nodes/integration/sendy/)                                                                           |
-| **Sentry.io**                                  | `sentryIo`                      | Consume Sentry.io API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/sentry-io/`](examples/nodes/integration/sentry-io/)                                                                   |
-| **ServiceNow**                                 | `serviceNow`                    | Consume ServiceNow API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/servicenow/`](examples/nodes/integration/servicenow/)                                                                 |
-| **seven**                                      | `sms77`                         | Send SMS and make text-to-speech calls                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/seven/`](examples/nodes/integration/seven/)                                                                           |
-| **Shopify**                                    | `shopify`                       | Consume Shopify API                                                                                  | ✅ None                    | [`examples/nodes/integration/shopify/`](examples/nodes/integration/shopify/)                                                                       |
-| **SIGNL4**                                     | `signl4`                        | Consume SIGNL4 API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/signl4/`](examples/nodes/integration/signl4/)                                                                         |
-| **Simulate**                                   | `simulate`                      | Simulate a node                                                                                      | ⚠️ Authentication Required | [`examples/nodes/integration/simulate/`](examples/nodes/integration/simulate/)                                                                     |
-| **Slack**                                      | `slack`                         | Consume Slack API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/slack/`](examples/nodes/integration/slack/)                                                                           |
-| **Snowflake**                                  | `snowflake`                     | Get, add and update data in Snowflake                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/snowflake/`](examples/nodes/integration/snowflake/)                                                                   |
-| **Split In Batches**                           | `splitInBatches`                | Split data into batches and iterate over each batch                                                  | ✅ None                    | [`examples/nodes/integration/split-in-batches/`](examples/nodes/integration/split-in-batches/)                                                     |
-| **Splunk**                                     | `splunk`                        | Consume the Splunk Enterprise API                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/splunk/`](examples/nodes/integration/splunk/)                                                                         |
-| **Spontit**                                    | `spontit`                       | Consume Spontit API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/spontit/`](examples/nodes/integration/spontit/)                                                                       |
-| **Spotify**                                    | `spotify`                       | Access public song data via the Spotify API                                                          | ✅ None                    | [`examples/nodes/integration/spotify/`](examples/nodes/integration/spotify/)                                                                       |
-| **Spreadsheet File**                           | `spreadsheetFile`               | Reads and writes data from a spreadsheet file like CSV, XLS, ODS, etc                                | ⚠️ Authentication Required | [`examples/nodes/integration/spreadsheet-file/`](examples/nodes/integration/spreadsheet-file/)                                                     |
-| **SSH**                                        | `ssh`                           | Execute commands via SSH                                                                             | ⚠️ Authentication Required | [`examples/nodes/integration/ssh/`](examples/nodes/integration/ssh/)                                                                               |
-| **Stackby**                                    | `stackby`                       | Read, write, and delete data in Stackby                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/stackby/`](examples/nodes/integration/stackby/)                                                                       |
-| **Start**                                      | `start`                         | Starts the workflow execution from this node                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/start/`](examples/nodes/integration/start/)                                                                           |
-| **Sticky Note**                                | `stickyNote`                    | Make your workflow easier to understand                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/sticky-note/`](examples/nodes/integration/sticky-note/)                                                               |
-| **Stop and Error**                             | `stopAndError`                  | Throw an error in the workflow                                                                       | ✅ None                    | [`examples/nodes/integration/stop-and-error/`](examples/nodes/integration/stop-and-error/)                                                         |
-| **Storyblok**                                  | `storyblok`                     | Consume Storyblok API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/storyblok/`](examples/nodes/integration/storyblok/)                                                                   |
-| **Strapi**                                     | `strapi`                        | Consume Strapi API                                                                                   | ⚠️ API Key                 | [`examples/nodes/integration/strapi/`](examples/nodes/integration/strapi/)                                                                         |
-| **Strava**                                     | `strava`                        | Consume Strava API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/strava/`](examples/nodes/integration/strava/)                                                                         |
-| **Stripe**                                     | `stripe`                        | Consume the Stripe API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/stripe/`](examples/nodes/integration/stripe/)                                                                         |
-| **Supabase**                                   | `supabase`                      | Add, get, delete and update data in a table                                                          | ⚠️ Authentication Required | [`examples/nodes/integration/supabase/`](examples/nodes/integration/supabase/)                                                                     |
-| **SyncroMSP**                                  | `syncroMsp`                     | Manage contacts, tickets and more from Syncro MSP                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/syncromsp/`](examples/nodes/integration/syncromsp/)                                                                   |
-| **Taiga**                                      | `taiga`                         | Consume Taiga API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/taiga/`](examples/nodes/integration/taiga/)                                                                           |
-| **Tapfiliate**                                 | `tapfiliate`                    | Consume Tapfiliate API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/tapfiliate/`](examples/nodes/integration/tapfiliate/)                                                                 |
-| **TheHive**                                    | `theHive`                       | Consume TheHive API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/thehive/`](examples/nodes/integration/thehive/)                                                                       |
-| **TheHiveProject**                             | `n8n-nodes-base.thehiveproject` | N/A                                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/thehiveproject/`](examples/nodes/integration/thehiveproject/)                                                         |
-| **TimescaleDB**                                | `timescaleDb`                   | Add and update data in TimescaleDB                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/timescaledb/`](examples/nodes/integration/timescaledb/)                                                               |
-| **Todoist**                                    | `todoist`                       | Consume Todoist API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/todoist/`](examples/nodes/integration/todoist/)                                                                       |
-| **TOTP**                                       | `totp`                          | Generate a time-based one-time password                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/totp/`](examples/nodes/integration/totp/)                                                                             |
-| **TravisCI**                                   | `travisCi`                      | Consume TravisCI API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/travisci/`](examples/nodes/integration/travisci/)                                                                     |
-| **Trello**                                     | `trello`                        | Create, change and delete boards and cards                                                           | ⚠️ Authentication Required | [`examples/nodes/integration/trello/`](examples/nodes/integration/trello/)                                                                         |
-| **Twake**                                      | `twake`                         | Consume Twake API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/twake/`](examples/nodes/integration/twake/)                                                                           |
-| **Twilio**                                     | `twilio`                        | Send SMS and WhatsApp messages or make phone calls                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/twilio/`](examples/nodes/integration/twilio/)                                                                         |
-| **Twist**                                      | `twist`                         | Consume Twist API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/twist/`](examples/nodes/integration/twist/)                                                                           |
-| **Unleashed Software**                         | `unleashedSoftware`             | Consume Unleashed Software API                                                                       | ⚠️ Authentication Required | [`examples/nodes/integration/unleashed-software/`](examples/nodes/integration/unleashed-software/)                                                 |
-| **Uplead**                                     | `uplead`                        | Consume Uplead API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/uplead/`](examples/nodes/integration/uplead/)                                                                         |
-| **uProc**                                      | `uproc`                         | Consume uProc API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/uproc/`](examples/nodes/integration/uproc/)                                                                           |
-| **UptimeRobot**                                | `uptimeRobot`                   | Consume UptimeRobot API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/uptimerobot/`](examples/nodes/integration/uptimerobot/)                                                               |
-| **urlscan.io**                                 | `urlScanIo`                     | Provides various utilities for monitoring websites like health checks or screenshots                 | ⚠️ Authentication Required | [`examples/nodes/integration/urlscan-io/`](examples/nodes/integration/urlscan-io/)                                                                 |
-| **Vero**                                       | `vero`                          | Consume Vero API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/vero/`](examples/nodes/integration/vero/)                                                                             |
-| **Vonage**                                     | `vonage`                        | Consume Vonage API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/vonage/`](examples/nodes/integration/vonage/)                                                                         |
-| **Wait Amount**                                | `amount`                        | The time to wait                                                                                     | ✅ None                    | [`examples/nodes/integration/wait-amount/`](examples/nodes/integration/wait-amount/)                                                               |
-| **Webflow**                                    | `webflow`                       | Consume the Webflow API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/webflow/`](examples/nodes/integration/webflow/)                                                                       |
-| **Wekan**                                      | `wekan`                         | Consume Wekan API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/wekan/`](examples/nodes/integration/wekan/)                                                                           |
-| **WhatsApp Business Cloud**                    | `whatsApp`                      | Access WhatsApp API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/whatsapp-business-cloud/`](examples/nodes/integration/whatsapp-business-cloud/)                                       |
-| **Wise**                                       | `wise`                          | Consume the Wise API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/wise/`](examples/nodes/integration/wise/)                                                                             |
-| **WooCommerce**                                | `wooCommerce`                   | Consume WooCommerce API                                                                              | ⚠️ Authentication Required | [`examples/nodes/integration/woocommerce/`](examples/nodes/integration/woocommerce/)                                                               |
-| **Wordpress**                                  | `wordpress`                     | Consume Wordpress API                                                                                | ⚠️ Authentication Required | [`examples/nodes/integration/wordpress/`](examples/nodes/integration/wordpress/)                                                                   |
-| **Write Binary File**                          | `writeBinaryFile`               | Writes a binary file to disk                                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/write-binary-file/`](examples/nodes/integration/write-binary-file/)                                                   |
-| **X (Formerly Twitter)**                       | `twitter`                       | Consume the X API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/x-formerly-twitter/`](examples/nodes/integration/x-formerly-twitter/)                                                 |
-| **Xero**                                       | `xero`                          | Consume Xero API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/xero/`](examples/nodes/integration/xero/)                                                                             |
-| **XML**                                        | `xml`                           | Convert data from and to XML                                                                         | ⚠️ Authentication Required | [`examples/nodes/integration/xml/`](examples/nodes/integration/xml/)                                                                               |
-| **Yourls**                                     | `yourls`                        | Consume Yourls API                                                                                   | ⚠️ Authentication Required | [`examples/nodes/integration/yourls/`](examples/nodes/integration/yourls/)                                                                         |
-| **Zammad**                                     | `zammad`                        | Consume the Zammad API                                                                               | ⚠️ Authentication Required | [`examples/nodes/integration/zammad/`](examples/nodes/integration/zammad/)                                                                         |
-| **Zendesk**                                    | `zendesk`                       | Consume Zendesk API                                                                                  | ⚠️ Authentication Required | [`examples/nodes/integration/zendesk/`](examples/nodes/integration/zendesk/)                                                                       |
-| **Zoho CRM**                                   | `zohoCrm`                       | Consume Zoho CRM API                                                                                 | ⚠️ Authentication Required | [`examples/nodes/integration/zoho-crm/`](examples/nodes/integration/zoho-crm/)                                                                     |
-| **Zoom**                                       | `zoom`                          | Consume Zoom API                                                                                     | ⚠️ Authentication Required | [`examples/nodes/integration/zoom/`](examples/nodes/integration/zoom/)                                                                             |
-| **Zulip**                                      | `zulip`                         | Consume Zulip API                                                                                    | ⚠️ Authentication Required | [`examples/nodes/integration/zulip/`](examples/nodes/integration/zulip/)                                                                           |
+| Node                                           | Type                            | Description                                                                                          | Credentials                | Example                                                                                                              |
+| ---------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Action Network**                             | `actionNetwork`                 | Consume the Action Network API                                                                       | ⚠️ Authentication Required | [`integration/action-network/`](integration/action-network/)                                                         |
+| **ActiveCampaign**                             | `activeCampaign`                | Create and edit data in ActiveCampaign                                                               | ⚠️ Authentication Required | [`integration/activecampaign/`](integration/activecampaign/)                                                         |
+| **Adalo**                                      | `adalo`                         | Consume Adalo API                                                                                    | ⚠️ Authentication Required | [`integration/adalo/`](integration/adalo/)                                                                           |
+| **Affinity**                                   | `affinity`                      | Consume Affinity API                                                                                 | ⚠️ Authentication Required | [`integration/affinity/`](integration/affinity/)                                                                     |
+| **Agile CRM**                                  | `agileCrm`                      | Consume Agile CRM API                                                                                | ⚠️ Authentication Required | [`integration/agile-crm/`](integration/agile-crm/)                                                                   |
+| **AI Transform**                               | `aiTransform`                   | Modify data based on instructions written in plain english                                           | ⚠️ Authentication Required | [`integration/ai-transform/`](integration/ai-transform/)                                                             |
+| **Airtable**                                   | `airtable`                      | Read, update, write and delete data from Airtable                                                    | ⚠️ Authentication Required | [`integration/airtable/`](integration/airtable/)                                                                     |
+| **Airtop**                                     | `airtop`                        | Scrape and control any site with Airtop                                                              | ⚠️ Authentication Required | [`integration/airtop/`](integration/airtop/)                                                                         |
+| **AMQP Sender**                                | `amqp`                          | Sends a raw-message via AMQP 1.0, executed once per item                                             | ⚠️ Authentication Required | [`integration/amqp-sender/`](integration/amqp-sender/)                                                               |
+| **APITemplate.io**                             | `apiTemplateIo`                 | Consume the APITemplate.io API                                                                       | ⚠️ API Key                 | [`integration/apitemplate-io/`](integration/apitemplate-io/)                                                         |
+| **Asana**                                      | `asana`                         | Consume Asana REST API                                                                               | ⚠️ Authentication Required | [`integration/asana/`](integration/asana/)                                                                           |
+| **Automizy**                                   | `automizy`                      | Consume Automizy API                                                                                 | ⚠️ Authentication Required | [`integration/automizy/`](integration/automizy/)                                                                     |
+| **Autopilot**                                  | `autopilot`                     | Consume Autopilot API                                                                                | ⚠️ Authentication Required | [`integration/autopilot/`](integration/autopilot/)                                                                   |
+| **AWS Lambda**                                 | `awsLambda`                     | Invoke functions on AWS Lambda                                                                       | ⚠️ Authentication Required | [`integration/aws-lambda/`](integration/aws-lambda/)                                                                 |
+| **Background Color**                           | `Blur`                          | Adds a blur to the image and so makes it less sharp                                                  | ⚠️ Authentication Required | [`integration/background-color/`](integration/background-color/)                                                     |
+| **BambooHr**                                   | `n8n-nodes-base.bamboohr`       | N/A                                                                                                  | ⚠️ Authentication Required | [`integration/bamboohr/`](integration/bamboohr/)                                                                     |
+| **Bannerbear**                                 | `bannerbear`                    | Consume Bannerbear API                                                                               | ⚠️ Authentication Required | [`integration/bannerbear/`](integration/bannerbear/)                                                                 |
+| **Baserow**                                    | `baserow`                       | Consume the Baserow API                                                                              | ⚠️ Authentication Required | [`integration/baserow/`](integration/baserow/)                                                                       |
+| **Beeminder**                                  | `beeminder`                     | Consume Beeminder API                                                                                | ⚠️ Authentication Required | [`integration/beeminder/`](integration/beeminder/)                                                                   |
+| **Bitly**                                      | `bitly`                         | Consume Bitly API                                                                                    | ⚠️ Authentication Required | [`integration/bitly/`](integration/bitly/)                                                                           |
+| **Bitwarden**                                  | `bitwarden`                     | Consume the Bitwarden API                                                                            | ⚠️ Authentication Required | [`integration/bitwarden/`](integration/bitwarden/)                                                                   |
+| **Box**                                        | `box`                           | Consume Box API                                                                                      | ⚠️ Authentication Required | [`integration/box/`](integration/box/)                                                                               |
+| **Brandfetch**                                 | `Brandfetch`                    | Consume Brandfetch API                                                                               | ⚠️ Authentication Required | [`integration/brandfetch/`](integration/brandfetch/)                                                                 |
+| **Brevo**                                      | `sendInBlue`                    | Consume Brevo API                                                                                    | ⚠️ Authentication Required | [`integration/brevo/`](integration/brevo/)                                                                           |
+| **Bubble**                                     | `bubble`                        | Consume the Bubble Data API                                                                          | ⚠️ Authentication Required | [`integration/bubble/`](integration/bubble/)                                                                         |
+| **Chargebee**                                  | `chargebee`                     | Retrieve data from Chargebee API                                                                     | ⚠️ Authentication Required | [`integration/chargebee/`](integration/chargebee/)                                                                   |
+| **CircleCI**                                   | `circleCi`                      | Consume CircleCI API                                                                                 | ⚠️ Authentication Required | [`integration/circleci/`](integration/circleci/)                                                                     |
+| **Clearbit**                                   | `clearbit`                      | Consume Clearbit API                                                                                 | ⚠️ Authentication Required | [`integration/clearbit/`](integration/clearbit/)                                                                     |
+| **ClickUp**                                    | `clickUp`                       | Consume ClickUp API (Beta)                                                                           | ⚠️ Authentication Required | [`integration/clickup/`](integration/clickup/)                                                                       |
+| **Clockify**                                   | `clockify`                      | Consume Clockify REST API                                                                            | ✅ None                    | [`integration/clockify/`](integration/clockify/)                                                                     |
+| **Cloudflare**                                 | `cloudflare`                    | Consume Cloudflare API                                                                               | ⚠️ Authentication Required | [`integration/cloudflare/`](integration/cloudflare/)                                                                 |
+| **Cockpit**                                    | `cockpit`                       | Consume Cockpit API                                                                                  | ⚠️ Authentication Required | [`integration/cockpit/`](integration/cockpit/)                                                                       |
+| **Coda**                                       | `coda`                          | Consume Coda API                                                                                     | ⚠️ Authentication Required | [`integration/coda/`](integration/coda/)                                                                             |
+| **CoinGecko**                                  | `coinGecko`                     | Consume CoinGecko API                                                                                | ⚠️ Authentication Required | [`integration/coingecko/`](integration/coingecko/)                                                                   |
+| **Compare Datasets**                           | `compareDatasets`               | Compare two inputs for changes                                                                       | ✅ None                    | [`integration/compare-datasets/`](integration/compare-datasets/)                                                     |
+| **Compression**                                | `compression`                   | Compress and decompress files                                                                        | ⚠️ Authentication Required | [`integration/compression/`](integration/compression/)                                                               |
+| **Contentful**                                 | `contentful`                    | Consume Contentful API                                                                               | ⚠️ Authentication Required | [`integration/contentful/`](integration/contentful/)                                                                 |
+| **Convert to/from binary data**                | `moveBinaryData`                | Move data between binary and JSON properties                                                         | ⚠️ Authentication Required | [`integration/convert-to-from-binary-data/`](integration/convert-to-from-binary-data/)                               |
+| **ConvertKit**                                 | `convertKit`                    | Consume ConvertKit API                                                                               | ⚠️ Authentication Required | [`integration/convertkit/`](integration/convertkit/)                                                                 |
+| **Copper**                                     | `copper`                        | Consume the Copper API                                                                               | ⚠️ Authentication Required | [`integration/copper/`](integration/copper/)                                                                         |
+| **Cortex**                                     | `cortex`                        | Apply the Cortex analyzer/responder on the given entity                                              | ⚠️ Authentication Required | [`integration/cortex/`](integration/cortex/)                                                                         |
+| **CrateDB**                                    | `crateDb`                       | Add and update data in CrateDB                                                                       | ⚠️ Authentication Required | [`integration/cratedb/`](integration/cratedb/)                                                                       |
+| **Cron**                                       | `cron`                          | Triggers the workflow at a specific time                                                             | ✅ None                    | [`integration/cron/`](integration/cron/)                                                                             |
+| **crowd.dev**                                  | `crowdDev`                      | crowd.dev is an open-source suite of community and data tools built to unlock community-led growth f | ⚠️ Authentication Required | [`integration/crowd-dev/`](integration/crowd-dev/)                                                                   |
+| **Crypto**                                     | `crypto`                        | Provide cryptographic utilities                                                                      | ⚠️ Authentication Required | [`integration/crypto/`](integration/crypto/)                                                                         |
+| **Customer Datastore (n8n training)**          | `Jay Gatsby`                    | Dummy node used for n8n training                                                                     | ⚠️ Authentication Required | [`integration/customer-datastore-n8n-training/`](integration/customer-datastore-n8n-training/)                       |
+| **Customer Messenger (n8n training)**          | `n8nTrainingCustomerMessenger`  | Dummy node used for n8n training                                                                     | ⚠️ Authentication Required | [`integration/customer-messenger-n8n-training/`](integration/customer-messenger-n8n-training/)                       |
+| **Customer.io**                                | `customerIo`                    | Consume Customer.io API                                                                              | ⚠️ Authentication Required | [`integration/customer-io/`](integration/customer-io/)                                                               |
+| **Data table**                                 | `dataTable`                     | Permanently save data across workflow executions in a table                                          | ⚠️ Authentication Required | [`integration/data-table/`](integration/data-table/)                                                                 |
+| **Date & Time**                                | `dateTime`                      | Allows you to manipulate date and time values                                                        | ⚠️ Authentication Required | [`integration/date-time/`](integration/date-time/)                                                                   |
+| **DebugHelper**                                | `debugHelper`                   | Causes problems intentionally and generates useful data for debugging                                | ⚠️ Authentication Required | [`integration/debughelper/`](integration/debughelper/)                                                               |
+| **DeepL**                                      | `deepL`                         | Translate data using DeepL                                                                           | ⚠️ Authentication Required | [`integration/deepl/`](integration/deepl/)                                                                           |
+| **Demio**                                      | `demio`                         | Consume the Demio API                                                                                | ⚠️ Authentication Required | [`integration/demio/`](integration/demio/)                                                                           |
+| **DHL**                                        | `dhl`                           | Consume DHL API                                                                                      | ⚠️ Authentication Required | [`integration/dhl/`](integration/dhl/)                                                                               |
+| **Discord**                                    | `discord`                       | Sends data to Discord                                                                                | ⚠️ Authentication Required | [`integration/discord/`](integration/discord/)                                                                       |
+| **Discourse**                                  | `discourse`                     | Consume Discourse API                                                                                | ⚠️ Authentication Required | [`integration/discourse/`](integration/discourse/)                                                                   |
+| **Disqus**                                     | `disqus`                        | Access data on Disqus                                                                                | ⚠️ Authentication Required | [`integration/disqus/`](integration/disqus/)                                                                         |
+| **Drift**                                      | `drift`                         | Consume Drift API                                                                                    | ✅ None                    | [`integration/drift/`](integration/drift/)                                                                           |
+| **Dropbox**                                    | `dropbox`                       | Access data on Dropbox                                                                               | ⚠️ Authentication Required | [`integration/dropbox/`](integration/dropbox/)                                                                       |
+| **Dropcontact**                                | `dropcontact`                   | Find B2B emails and enrich contacts                                                                  | ⚠️ Authentication Required | [`integration/dropcontact/`](integration/dropcontact/)                                                               |
+| **E-goi**                                      | `egoi`                          | Consume E-goi API                                                                                    | ⚠️ Authentication Required | [`integration/e-goi/`](integration/e-goi/)                                                                           |
+| **E2E Test**                                   | `e2eTest`                       | Dummy node used for e2e testing                                                                      | ⚠️ Authentication Required | [`integration/e2e-test/`](integration/e2e-test/)                                                                     |
+| **Emelia**                                     | `emelia`                        | Consume the Emelia API                                                                               | ⚠️ Authentication Required | [`integration/emelia/`](integration/emelia/)                                                                         |
+| **ERPNext**                                    | `erpNext`                       | Consume ERPNext API                                                                                  | ⚠️ Authentication Required | [`integration/erpnext/`](integration/erpnext/)                                                                       |
+| **Execute Command**                            | `executeCommand`                | Executes a command on the host                                                                       | ⚠️ Authentication Required | [`integration/execute-command/`](integration/execute-command/)                                                       |
+| **Execution Data**                             | `executionData`                 | Add execution data for search                                                                        | ⚠️ Authentication Required | [`integration/execution-data/`](integration/execution-data/)                                                         |
+| **Extraction Values**                          | `extractionValues`              | The key under which the extracted value should be saved                                              | ⚠️ Authentication Required | [`integration/extraction-values/`](integration/extraction-values/)                                                   |
+| **Facebook Graph API**                         | `facebookGraphApi`              | Interacts with Facebook using the Graph API                                                          | ⚠️ API Key                 | [`integration/facebook-graph-api/`](integration/facebook-graph-api/)                                                 |
+| **FileMaker**                                  | `filemaker`                     | Retrieve data from the FileMaker data API                                                            | ⚠️ Authentication Required | [`integration/filemaker/`](integration/filemaker/)                                                                   |
+| **Filter**                                     | `filter`                        | Remove items matching a condition                                                                    | ✅ None                    | [`integration/filter/`](integration/filter/)                                                                         |
+| **Flow**                                       | `flow`                          | Consume Flow API                                                                                     | ⚠️ Authentication Required | [`integration/flow/`](integration/flow/)                                                                             |
+| **Freshdesk**                                  | `freshdesk`                     | Consume Freshdesk API                                                                                | ⚠️ Authentication Required | [`integration/freshdesk/`](integration/freshdesk/)                                                                   |
+| **Freshservice**                               | `freshservice`                  | Consume the Freshservice API                                                                         | ⚠️ Authentication Required | [`integration/freshservice/`](integration/freshservice/)                                                             |
+| **Freshworks CRM**                             | `freshworksCrm`                 | Consume the Freshworks CRM API                                                                       | ⚠️ Authentication Required | [`integration/freshworks-crm/`](integration/freshworks-crm/)                                                         |
+| **FTP**                                        | `ftp`                           | Transfer files via FTP or SFTP                                                                       | ⚠️ Authentication Required | [`integration/ftp/`](integration/ftp/)                                                                               |
+| **Function**                                   | `function`                      | Run custom function code which gets executed once and allows you to add, remove, change and replace  | ✅ None                    | [`integration/function/`](integration/function/)                                                                     |
+| **Function Item**                              | `functionItem`                  | Run custom function code which gets executed once per item                                           | ✅ None                    | [`integration/function-item/`](integration/function-item/)                                                           |
+| **GetResponse**                                | `getResponse`                   | Consume GetResponse API                                                                              | ⚠️ Authentication Required | [`integration/getresponse/`](integration/getresponse/)                                                               |
+| **Ghost**                                      | `ghost`                         | Consume Ghost API                                                                                    | ⚠️ Authentication Required | [`integration/ghost/`](integration/ghost/)                                                                           |
+| **Git**                                        | `git`                           | Control git.                                                                                         | ⚠️ Authentication Required | [`integration/git/`](integration/git/)                                                                               |
+| **GitHub**                                     | `github`                        | Consume GitHub API                                                                                   | ⚠️ Authentication Required | [`integration/github/`](integration/github/)                                                                         |
+| **GitLab**                                     | `gitlab`                        | Retrieve data from GitLab API                                                                        | ⚠️ Authentication Required | [`integration/gitlab/`](integration/gitlab/)                                                                         |
+| **Gong**                                       | `gong`                          | Interact with Gong API                                                                               | ⚠️ Authentication Required | [`integration/gong/`](integration/gong/)                                                                             |
+| **Gotify**                                     | `gotify`                        | Consume Gotify API                                                                                   | ✅ None                    | [`integration/gotify/`](integration/gotify/)                                                                         |
+| **GoToWebinar**                                | `goToWebinar`                   | Consume the GoToWebinar API                                                                          | ⚠️ Authentication Required | [`integration/gotowebinar/`](integration/gotowebinar/)                                                               |
+| **Grafana**                                    | `grafana`                       | Consume the Grafana API                                                                              | ⚠️ Authentication Required | [`integration/grafana/`](integration/grafana/)                                                                       |
+| **GraphQL**                                    | `graphql`                       | Makes a GraphQL request and returns the received data                                                | ⚠️ Authentication Required | [`integration/graphql/`](integration/graphql/)                                                                       |
+| **Grist**                                      | `grist`                         | Consume the Grist API                                                                                | ⚠️ Authentication Required | [`integration/grist/`](integration/grist/)                                                                           |
+| **Hacker News**                                | `hackerNews`                    | Consume Hacker News API                                                                              | ⚠️ Authentication Required | [`integration/hacker-news/`](integration/hacker-news/)                                                               |
+| **HaloPSA**                                    | `haloPSA`                       | Consume HaloPSA API                                                                                  | ⚠️ Authentication Required | [`integration/halopsa/`](integration/halopsa/)                                                                       |
+| **Harvest**                                    | `harvest`                       | Access data on Harvest                                                                               | ⚠️ Authentication Required | [`integration/harvest/`](integration/harvest/)                                                                       |
+| **Help Scout**                                 | `helpScout`                     | Consume Help Scout API                                                                               | ⚠️ Authentication Required | [`integration/help-scout/`](integration/help-scout/)                                                                 |
+| **HighLevel**                                  | `highLevel`                     | Consume HighLevel API                                                                                | ⚠️ Authentication Required | [`integration/highlevel/`](integration/highlevel/)                                                                   |
+| **Home Assistant**                             | `homeAssistant`                 | Consume Home Assistant API                                                                           | ⚠️ Authentication Required | [`integration/home-assistant/`](integration/home-assistant/)                                                         |
+| **HTML Extract**                               | `htmlExtract`                   | Extracts data from HTML                                                                              | ⚠️ Authentication Required | [`integration/html-extract/`](integration/html-extract/)                                                             |
+| **HTTP Request**                               | `httpRequest`                   | Makes an HTTP request and returns the response data                                                  | ⚠️ Authentication Required | [`integration/http-request/`](integration/http-request/)                                                             |
+| **HubSpot**                                    | `hubspot`                       | Consume HubSpot API                                                                                  | ⚠️ Authentication Required | [`integration/hubspot/`](integration/hubspot/)                                                                       |
+| **Humantic AI**                                | `humanticAi`                    | Consume Humantic AI API                                                                              | ⚠️ Authentication Required | [`integration/humantic-ai/`](integration/humantic-ai/)                                                               |
+| **Hunter**                                     | `hunter`                        | Consume Hunter API                                                                                   | ⚠️ Authentication Required | [`integration/hunter/`](integration/hunter/)                                                                         |
+| **iCalendar**                                  | `iCal`                          | Create iCalendar file                                                                                | ⚠️ Authentication Required | [`integration/icalendar/`](integration/icalendar/)                                                                   |
+| **Interact with Telegram using our pre-built** | `preBuiltAgentsCalloutTelegram` | Sends data to Telegram                                                                               | ⚠️ Authentication Required | [`integration/interact-with-telegram-using-our-pre-built/`](integration/interact-with-telegram-using-our-pre-built/) |
+| **Intercom**                                   | `intercom`                      | Consume Intercom API                                                                                 | ⚠️ Authentication Required | [`integration/intercom/`](integration/intercom/)                                                                     |
+| **Interval**                                   | `interval`                      | Triggers the workflow in a given interval                                                            | ⚠️ Authentication Required | [`integration/interval/`](integration/interval/)                                                                     |
+| **Invoice Ninja**                              | `invoiceNinja`                  | Consume Invoice Ninja API                                                                            | ⚠️ Authentication Required | [`integration/invoice-ninja/`](integration/invoice-ninja/)                                                           |
+| **Item Lists**                                 | `itemLists`                     | Helper for working with lists of items and transforming arrays                                       | ⚠️ Authentication Required | [`integration/item-lists/`](integration/item-lists/)                                                                 |
+| **Iterable**                                   | `iterable`                      | Consume Iterable API                                                                                 | ⚠️ Authentication Required | [`integration/iterable/`](integration/iterable/)                                                                     |
+| **Jenkins**                                    | `jenkins`                       | Consume Jenkins API                                                                                  | ⚠️ Authentication Required | [`integration/jenkins/`](integration/jenkins/)                                                                       |
+| **Jina AI**                                    | `jinaAi`                        | Interact with Jina AI API                                                                            | ⚠️ Authentication Required | [`integration/jina-ai/`](integration/jina-ai/)                                                                       |
+| **Jira Software**                              | `jira`                          | Consume Jira Software API                                                                            | ⚠️ Authentication Required | [`integration/jira-software/`](integration/jira-software/)                                                           |
+| **JWT**                                        | `jwt`                           | Be sure to add a valid JWT token to the                                                              | ⚠️ Authentication Required | [`integration/jwt/`](integration/jwt/)                                                                               |
+| **Kafka**                                      | `kafka`                         | Sends messages to a Kafka topic                                                                      | ⚠️ Authentication Required | [`integration/kafka/`](integration/kafka/)                                                                           |
+| **Keap**                                       | `keap`                          | Consume Keap API                                                                                     | ⚠️ Authentication Required | [`integration/keap/`](integration/keap/)                                                                             |
+| **Kitemaker**                                  | `kitemaker`                     | Consume the Kitemaker GraphQL API                                                                    | ⚠️ Authentication Required | [`integration/kitemaker/`](integration/kitemaker/)                                                                   |
+| **KoBoToolbox**                                | `koBoToolbox`                   | Work with KoBoToolbox forms and submissions                                                          | ⚠️ Authentication Required | [`integration/kobotoolbox/`](integration/kobotoolbox/)                                                               |
+| **Ldap**                                       | `ldap`                          | Interact with LDAP servers                                                                           | ⚠️ Authentication Required | [`integration/ldap/`](integration/ldap/)                                                                             |
+| **Lemlist**                                    | `lemlist`                       | Consume the Lemlist API                                                                              | ⚠️ Authentication Required | [`integration/lemlist/`](integration/lemlist/)                                                                       |
+| **Limit Wait Time**                            | `limitWaitTime`                 | Whether to limit the time this node should wait for a user response before execution resumes         | ✅ None                    | [`integration/limit-wait-time/`](integration/limit-wait-time/)                                                       |
+| **Line**                                       | `line`                          | Consume Line API                                                                                     | ⚠️ Authentication Required | [`integration/line/`](integration/line/)                                                                             |
+| **Linear**                                     | `linear`                        | Consume Linear API                                                                                   | ⚠️ Authentication Required | [`integration/linear/`](integration/linear/)                                                                         |
+| **LingvaNex**                                  | `lingvaNex`                     | Consume LingvaNex API                                                                                | ⚠️ Authentication Required | [`integration/lingvanex/`](integration/lingvanex/)                                                                   |
+| **LinkedIn**                                   | `linkedIn`                      | Consume LinkedIn API                                                                                 | ⚠️ Authentication Required | [`integration/linkedin/`](integration/linkedin/)                                                                     |
+| **LoneScale**                                  | `loneScale`                     | Create List, add / delete items                                                                      | ⚠️ Authentication Required | [`integration/lonescale/`](integration/lonescale/)                                                                   |
+| **Magento 2**                                  | `magento2`                      | Consume Magento API                                                                                  | ⚠️ Authentication Required | [`integration/magento-2/`](integration/magento-2/)                                                                   |
+| **Mailcheck**                                  | `mailcheck`                     | Consume Mailcheck API                                                                                | ⚠️ Authentication Required | [`integration/mailcheck/`](integration/mailcheck/)                                                                   |
+| **Mailchimp**                                  | `mailchimp`                     | Consume Mailchimp API                                                                                | ⚠️ Authentication Required | [`integration/mailchimp/`](integration/mailchimp/)                                                                   |
+| **MailerLite**                                 | `mailerLite`                    | Consume MailerLite API                                                                               | ⚠️ Authentication Required | [`integration/mailerlite/`](integration/mailerlite/)                                                                 |
+| **Mailgun**                                    | `mailgun`                       | Sends an email via Mailgun                                                                           | ⚠️ Authentication Required | [`integration/mailgun/`](integration/mailgun/)                                                                       |
+| **Mailjet**                                    | `mailjet`                       | Consume Mailjet API                                                                                  | ⚠️ Authentication Required | [`integration/mailjet/`](integration/mailjet/)                                                                       |
+| **Mandrill**                                   | `mandrill`                      | Consume Mandrill API                                                                                 | ⚠️ Authentication Required | [`integration/mandrill/`](integration/mandrill/)                                                                     |
+| **Markdown**                                   | `markdown`                      | Convert data between Markdown and HTML                                                               | ⚠️ Authentication Required | [`integration/markdown/`](integration/markdown/)                                                                     |
+| **Marketstack**                                | `marketstack`                   | Consume Marketstack API                                                                              | ⚠️ Authentication Required | [`integration/marketstack/`](integration/marketstack/)                                                               |
+| **Matrix**                                     | `matrix`                        | Consume Matrix API                                                                                   | ⚠️ Authentication Required | [`integration/matrix/`](integration/matrix/)                                                                         |
+| **Mattermost**                                 | `mattermost`                    | Sends data to Mattermost                                                                             | ⚠️ Authentication Required | [`integration/mattermost/`](integration/mattermost/)                                                                 |
+| **Mautic**                                     | `mautic`                        | Consume Mautic API                                                                                   | ⚠️ Authentication Required | [`integration/mautic/`](integration/mautic/)                                                                         |
+| **Medium**                                     | `medium`                        | Consume Medium API                                                                                   | ⚠️ Authentication Required | [`integration/medium/`](integration/medium/)                                                                         |
+| **MessageBird**                                | `messageBird`                   | Sends SMS via MessageBird                                                                            | ⚠️ Authentication Required | [`integration/messagebird/`](integration/messagebird/)                                                               |
+| **Metabase**                                   | `metabase`                      | Use the Metabase API                                                                                 | ⚠️ Authentication Required | [`integration/metabase/`](integration/metabase/)                                                                     |
+| **Mindee**                                     | `mindee`                        | Consume Mindee API                                                                                   | ⚠️ Authentication Required | [`integration/mindee/`](integration/mindee/)                                                                         |
+| **MISP**                                       | `misp`                          | Consume the MISP API                                                                                 | ⚠️ Authentication Required | [`integration/misp/`](integration/misp/)                                                                             |
+| **Mistral AI**                                 | `mistralAi`                     | Consume Mistral AI API                                                                               | ⚠️ Authentication Required | [`integration/mistral-ai/`](integration/mistral-ai/)                                                                 |
+| **Mocean**                                     | `mocean`                        | Send SMS and voice messages via Mocean                                                               | ⚠️ Authentication Required | [`integration/mocean/`](integration/mocean/)                                                                         |
+| **Monday.com**                                 | `mondayCom`                     | Consume Monday.com API                                                                               | ⚠️ Authentication Required | [`integration/monday-com/`](integration/monday-com/)                                                                 |
+| **MongoDB**                                    | `mongoDb`                       | Find, insert and update documents in MongoDB                                                         | ⚠️ Authentication Required | [`integration/mongodb/`](integration/mongodb/)                                                                       |
+| **Monica CRM**                                 | `monicaCrm`                     | Consume the Monica CRM API                                                                           | ⚠️ Authentication Required | [`integration/monica-crm/`](integration/monica-crm/)                                                                 |
+| **MQTT**                                       | `mqtt`                          | Push messages to MQTT                                                                                | ⚠️ Authentication Required | [`integration/mqtt/`](integration/mqtt/)                                                                             |
+| **MSG91**                                      | `msg91`                         | Sends transactional SMS via MSG91                                                                    | ⚠️ Authentication Required | [`integration/msg91/`](integration/msg91/)                                                                           |
+| **MySQL**                                      | `mySql`                         | Get, add and update data in MySQL                                                                    | ⚠️ Authentication Required | [`integration/mysql/`](integration/mysql/)                                                                           |
+| **n8n**                                        | `n8n`                           | Handle events and perform actions on your n8n instance                                               | ⚠️ Authentication Required | [`integration/n8n/`](integration/n8n/)                                                                               |
+| **NASA**                                       | `nasa`                          | Retrieve data from the NASA API                                                                      | ⚠️ Authentication Required | [`integration/nasa/`](integration/nasa/)                                                                             |
+| **Netlify**                                    | `netlify`                       | Consume Netlify API                                                                                  | ✅ None                    | [`integration/netlify/`](integration/netlify/)                                                                       |
+| **Nextcloud**                                  | `nextCloud`                     | Access data on Nextcloud                                                                             | ⚠️ Authentication Required | [`integration/nextcloud/`](integration/nextcloud/)                                                                   |
+| **No Operation, do nothing**                   | `noOp`                          | No Operation                                                                                         | ⚠️ Authentication Required | [`integration/no-operation-do-nothing/`](integration/no-operation-do-nothing/)                                       |
+| **NocoDB**                                     | `nocoDb`                        | Read, update, write and delete data from NocoDB                                                      | ⚠️ Authentication Required | [`integration/nocodb/`](integration/nocodb/)                                                                         |
+| **Notion**                                     | `notion`                        | Consume Notion API                                                                                   | ⚠️ Authentication Required | [`integration/notion/`](integration/notion/)                                                                         |
+| **Npm**                                        | `npm`                           | Consume NPM registry API                                                                             | ⚠️ Authentication Required | [`integration/npm/`](integration/npm/)                                                                               |
+| **Odoo**                                       | `odoo`                          | Consume Odoo API                                                                                     | ⚠️ Authentication Required | [`integration/odoo/`](integration/odoo/)                                                                             |
+| **Okta**                                       | `okta`                          | Use the Okta API                                                                                     | ⚠️ Authentication Required | [`integration/okta/`](integration/okta/)                                                                             |
+| **One Simple API**                             | `oneSimpleApi`                  | A toolbox of no-code utilities                                                                       | ⚠️ API Key                 | [`integration/one-simple-api/`](integration/one-simple-api/)                                                         |
+| **Onfleet**                                    | `onfleet`                       | Consume Onfleet API                                                                                  | ⚠️ Authentication Required | [`integration/onfleet/`](integration/onfleet/)                                                                       |
+| **OpenAI**                                     | `openAi`                        | Consume Open AI                                                                                      | ⚠️ Authentication Required | [`integration/openai/`](integration/openai/)                                                                         |
+| **OpenThesaurus**                              | `openThesaurus`                 | Get synonmns for German words using the OpenThesaurus API                                            | ⚠️ Authentication Required | [`integration/openthesaurus/`](integration/openthesaurus/)                                                           |
+| **OpenWeatherMap**                             | `openWeatherMap`                | Gets current and future weather information                                                          | ⚠️ Authentication Required | [`integration/openweathermap/`](integration/openweathermap/)                                                         |
+| **Orbit**                                      | `orbit`                         | Consume Orbit API                                                                                    | ⚠️ Authentication Required | [`integration/orbit/`](integration/orbit/)                                                                           |
+| **Oura**                                       | `oura`                          | Consume Oura API                                                                                     | ⚠️ Authentication Required | [`integration/oura/`](integration/oura/)                                                                             |
+| **Paddle**                                     | `paddle`                        | Consume Paddle API                                                                                   | ⚠️ Authentication Required | [`integration/paddle/`](integration/paddle/)                                                                         |
+| **PagerDuty**                                  | `pagerDuty`                     | Consume PagerDuty API                                                                                | ⚠️ Authentication Required | [`integration/pagerduty/`](integration/pagerduty/)                                                                   |
+| **PayPal**                                     | `payPal`                        | Consume PayPal API                                                                                   | ⚠️ Authentication Required | [`integration/paypal/`](integration/paypal/)                                                                         |
+| **Peekalink**                                  | `peekalink`                     | Consume the Peekalink API                                                                            | ⚠️ Authentication Required | [`integration/peekalink/`](integration/peekalink/)                                                                   |
+| **Perplexity**                                 | `perplexity`                    | Interact with the Perplexity API to generate AI responses with citations                             | ⚠️ Authentication Required | [`integration/perplexity/`](integration/perplexity/)                                                                 |
+| **Phantombuster**                              | `phantombuster`                 | Consume Phantombuster API                                                                            | ⚠️ Authentication Required | [`integration/phantombuster/`](integration/phantombuster/)                                                           |
+| **Philips Hue**                                | `philipsHue`                    | Consume Philips Hue API                                                                              | ⚠️ Authentication Required | [`integration/philips-hue/`](integration/philips-hue/)                                                               |
+| **Pipedrive**                                  | `pipedrive`                     | Create and edit data in Pipedrive                                                                    | ⚠️ Authentication Required | [`integration/pipedrive/`](integration/pipedrive/)                                                                   |
+| **Plivo**                                      | `plivo`                         | Send SMS/MMS messages or make phone calls                                                            | ⚠️ Authentication Required | [`integration/plivo/`](integration/plivo/)                                                                           |
+| **PostBin**                                    | `postBin`                       | Consume PostBin API                                                                                  | ⚠️ Authentication Required | [`integration/postbin/`](integration/postbin/)                                                                       |
+| **Postgres**                                   | `postgres`                      | Get, add and update data in Postgres                                                                 | ⚠️ Authentication Required | [`integration/postgres/`](integration/postgres/)                                                                     |
+| **PostHog**                                    | `postHog`                       | Consume PostHog API                                                                                  | ⚠️ Authentication Required | [`integration/posthog/`](integration/posthog/)                                                                       |
+| **ProfitWell**                                 | `profitWell`                    | Consume ProfitWell API                                                                               | ⚠️ Authentication Required | [`integration/profitwell/`](integration/profitwell/)                                                                 |
+| **Pushbullet**                                 | `pushbullet`                    | Consume Pushbullet API                                                                               | ⚠️ Authentication Required | [`integration/pushbullet/`](integration/pushbullet/)                                                                 |
+| **Pushcut**                                    | `pushcut`                       | Consume Pushcut API                                                                                  | ⚠️ Authentication Required | [`integration/pushcut/`](integration/pushcut/)                                                                       |
+| **Pushover**                                   | `pushover`                      | Consume Pushover API                                                                                 | ⚠️ Authentication Required | [`integration/pushover/`](integration/pushover/)                                                                     |
+| **QuestDB**                                    | `questDb`                       | Get, add and update data in QuestDB                                                                  | ⚠️ Authentication Required | [`integration/questdb/`](integration/questdb/)                                                                       |
+| **Quick Base**                                 | `quickbase`                     | Integrate with the Quick Base RESTful API                                                            | ⚠️ Authentication Required | [`integration/quick-base/`](integration/quick-base/)                                                                 |
+| **QuickBooks Online**                          | `quickbooks`                    | Consume the QuickBooks Online API                                                                    | ⚠️ Authentication Required | [`integration/quickbooks-online/`](integration/quickbooks-online/)                                                   |
+| **QuickChart**                                 | `quickChart`                    | Create a chart via QuickChart                                                                        | ⚠️ Authentication Required | [`integration/quickchart/`](integration/quickchart/)                                                                 |
+| **RabbitMQ**                                   | `rabbitmq`                      | Sends messages to a RabbitMQ topic                                                                   | ⚠️ Authentication Required | [`integration/rabbitmq/`](integration/rabbitmq/)                                                                     |
+| **Raindrop**                                   | `raindrop`                      | Consume the Raindrop API                                                                             | ⚠️ Authentication Required | [`integration/raindrop/`](integration/raindrop/)                                                                     |
+| **Read Binary File**                           | `readBinaryFile`                | Reads a binary file from disk                                                                        | ⚠️ Authentication Required | [`integration/read-binary-file/`](integration/read-binary-file/)                                                     |
+| **Read Binary Files**                          | `readBinaryFiles`               | Reads binary files from disk                                                                         | ⚠️ Authentication Required | [`integration/read-binary-files/`](integration/read-binary-files/)                                                   |
+| **Read PDF**                                   | `readPDF`                       | Reads a PDF and extracts its content                                                                 | ⚠️ Authentication Required | [`integration/read-pdf/`](integration/read-pdf/)                                                                     |
+| **Reddit**                                     | `reddit`                        | Consume the Reddit API                                                                               | ⚠️ Authentication Required | [`integration/reddit/`](integration/reddit/)                                                                         |
+| **Redis**                                      | `redis`                         | Get, send and update data in Redis                                                                   | ⚠️ Authentication Required | [`integration/redis/`](integration/redis/)                                                                           |
+| **Rename Keys**                                | `renameKeys`                    | Update item field names                                                                              | ⚠️ Authentication Required | [`integration/rename-keys/`](integration/rename-keys/)                                                               |
+| **Respond With**                               | `respondWith`                   | Respond with all input JSON items                                                                    | ⚠️ Authentication Required | [`integration/respond-with/`](integration/respond-with/)                                                             |
+| **RocketChat**                                 | `rocketchat`                    | Consume RocketChat API                                                                               | ⚠️ Authentication Required | [`integration/rocketchat/`](integration/rocketchat/)                                                                 |
+| **RSS Read**                                   | `rssFeedRead`                   | Reads data from an RSS Feed                                                                          | ⚠️ Authentication Required | [`integration/rss-read/`](integration/rss-read/)                                                                     |
+| **Rundeck**                                    | `rundeck`                       | Manage Rundeck API                                                                                   | ⚠️ Authentication Required | [`integration/rundeck/`](integration/rundeck/)                                                                       |
+| **S3**                                         | `s3`                            | Sends data to any S3-compatible service                                                              | ⚠️ Authentication Required | [`integration/s3/`](integration/s3/)                                                                                 |
+| **Salesforce**                                 | `salesforce`                    | Consume Salesforce API                                                                               | ⚠️ Authentication Required | [`integration/salesforce/`](integration/salesforce/)                                                                 |
+| **Salesmate**                                  | `salesmate`                     | Consume Salesmate API                                                                                | ⚠️ Authentication Required | [`integration/salesmate/`](integration/salesmate/)                                                                   |
+| **Schedule Trigger**                           | `scheduleTrigger`               | Triggers the workflow on a given schedule                                                            | ✅ None                    | [`integration/schedule-trigger/`](integration/schedule-trigger/)                                                     |
+| **SeaTable**                                   | `seaTable`                      | Read, update, write and delete data from SeaTable                                                    | ⚠️ Authentication Required | [`integration/seatable/`](integration/seatable/)                                                                     |
+| **SecurityScorecard**                          | `securityScorecard`             | Consume SecurityScorecard API                                                                        | ⚠️ Authentication Required | [`integration/securityscorecard/`](integration/securityscorecard/)                                                   |
+| **Segment**                                    | `segment`                       | Consume Segment API                                                                                  | ⚠️ Authentication Required | [`integration/segment/`](integration/segment/)                                                                       |
+| **Send Email**                                 | `emailSend`                     | Sends an email using SMTP protocol                                                                   | ⚠️ Authentication Required | [`integration/send-email/`](integration/send-email/)                                                                 |
+| **SendGrid**                                   | `sendGrid`                      | Consume SendGrid API                                                                                 | ⚠️ Authentication Required | [`integration/sendgrid/`](integration/sendgrid/)                                                                     |
+| **Sendy**                                      | `sendy`                         | Consume Sendy API                                                                                    | ⚠️ Authentication Required | [`integration/sendy/`](integration/sendy/)                                                                           |
+| **Sentry.io**                                  | `sentryIo`                      | Consume Sentry.io API                                                                                | ⚠️ Authentication Required | [`integration/sentry-io/`](integration/sentry-io/)                                                                   |
+| **ServiceNow**                                 | `serviceNow`                    | Consume ServiceNow API                                                                               | ⚠️ Authentication Required | [`integration/servicenow/`](integration/servicenow/)                                                                 |
+| **seven**                                      | `sms77`                         | Send SMS and make text-to-speech calls                                                               | ⚠️ Authentication Required | [`integration/seven/`](integration/seven/)                                                                           |
+| **Shopify**                                    | `shopify`                       | Consume Shopify API                                                                                  | ✅ None                    | [`integration/shopify/`](integration/shopify/)                                                                       |
+| **SIGNL4**                                     | `signl4`                        | Consume SIGNL4 API                                                                                   | ⚠️ Authentication Required | [`integration/signl4/`](integration/signl4/)                                                                         |
+| **Simulate**                                   | `simulate`                      | Simulate a node                                                                                      | ⚠️ Authentication Required | [`integration/simulate/`](integration/simulate/)                                                                     |
+| **Slack**                                      | `slack`                         | Consume Slack API                                                                                    | ⚠️ Authentication Required | [`integration/slack/`](integration/slack/)                                                                           |
+| **Snowflake**                                  | `snowflake`                     | Get, add and update data in Snowflake                                                                | ⚠️ Authentication Required | [`integration/snowflake/`](integration/snowflake/)                                                                   |
+| **Split In Batches**                           | `splitInBatches`                | Split data into batches and iterate over each batch                                                  | ✅ None                    | [`integration/split-in-batches/`](integration/split-in-batches/)                                                     |
+| **Splunk**                                     | `splunk`                        | Consume the Splunk Enterprise API                                                                    | ⚠️ Authentication Required | [`integration/splunk/`](integration/splunk/)                                                                         |
+| **Spontit**                                    | `spontit`                       | Consume Spontit API                                                                                  | ⚠️ Authentication Required | [`integration/spontit/`](integration/spontit/)                                                                       |
+| **Spotify**                                    | `spotify`                       | Access public song data via the Spotify API                                                          | ✅ None                    | [`integration/spotify/`](integration/spotify/)                                                                       |
+| **Spreadsheet File**                           | `spreadsheetFile`               | Reads and writes data from a spreadsheet file like CSV, XLS, ODS, etc                                | ⚠️ Authentication Required | [`integration/spreadsheet-file/`](integration/spreadsheet-file/)                                                     |
+| **SSH**                                        | `ssh`                           | Execute commands via SSH                                                                             | ⚠️ Authentication Required | [`integration/ssh/`](integration/ssh/)                                                                               |
+| **Stackby**                                    | `stackby`                       | Read, write, and delete data in Stackby                                                              | ⚠️ Authentication Required | [`integration/stackby/`](integration/stackby/)                                                                       |
+| **Start**                                      | `start`                         | Starts the workflow execution from this node                                                         | ⚠️ Authentication Required | [`integration/start/`](integration/start/)                                                                           |
+| **Sticky Note**                                | `stickyNote`                    | Make your workflow easier to understand                                                              | ⚠️ Authentication Required | [`integration/sticky-note/`](integration/sticky-note/)                                                               |
+| **Stop and Error**                             | `stopAndError`                  | Throw an error in the workflow                                                                       | ✅ None                    | [`integration/stop-and-error/`](integration/stop-and-error/)                                                         |
+| **Storyblok**                                  | `storyblok`                     | Consume Storyblok API                                                                                | ⚠️ Authentication Required | [`integration/storyblok/`](integration/storyblok/)                                                                   |
+| **Strapi**                                     | `strapi`                        | Consume Strapi API                                                                                   | ⚠️ API Key                 | [`integration/strapi/`](integration/strapi/)                                                                         |
+| **Strava**                                     | `strava`                        | Consume Strava API                                                                                   | ⚠️ Authentication Required | [`integration/strava/`](integration/strava/)                                                                         |
+| **Stripe**                                     | `stripe`                        | Consume the Stripe API                                                                               | ⚠️ Authentication Required | [`integration/stripe/`](integration/stripe/)                                                                         |
+| **Supabase**                                   | `supabase`                      | Add, get, delete and update data in a table                                                          | ⚠️ Authentication Required | [`integration/supabase/`](integration/supabase/)                                                                     |
+| **SyncroMSP**                                  | `syncroMsp`                     | Manage contacts, tickets and more from Syncro MSP                                                    | ⚠️ Authentication Required | [`integration/syncromsp/`](integration/syncromsp/)                                                                   |
+| **Taiga**                                      | `taiga`                         | Consume Taiga API                                                                                    | ⚠️ Authentication Required | [`integration/taiga/`](integration/taiga/)                                                                           |
+| **Tapfiliate**                                 | `tapfiliate`                    | Consume Tapfiliate API                                                                               | ⚠️ Authentication Required | [`integration/tapfiliate/`](integration/tapfiliate/)                                                                 |
+| **TheHive**                                    | `theHive`                       | Consume TheHive API                                                                                  | ⚠️ Authentication Required | [`integration/thehive/`](integration/thehive/)                                                                       |
+| **TheHiveProject**                             | `n8n-nodes-base.thehiveproject` | N/A                                                                                                  | ⚠️ Authentication Required | [`integration/thehiveproject/`](integration/thehiveproject/)                                                         |
+| **TimescaleDB**                                | `timescaleDb`                   | Add and update data in TimescaleDB                                                                   | ⚠️ Authentication Required | [`integration/timescaledb/`](integration/timescaledb/)                                                               |
+| **Todoist**                                    | `todoist`                       | Consume Todoist API                                                                                  | ⚠️ Authentication Required | [`integration/todoist/`](integration/todoist/)                                                                       |
+| **TOTP**                                       | `totp`                          | Generate a time-based one-time password                                                              | ⚠️ Authentication Required | [`integration/totp/`](integration/totp/)                                                                             |
+| **TravisCI**                                   | `travisCi`                      | Consume TravisCI API                                                                                 | ⚠️ Authentication Required | [`integration/travisci/`](integration/travisci/)                                                                     |
+| **Trello**                                     | `trello`                        | Create, change and delete boards and cards                                                           | ⚠️ Authentication Required | [`integration/trello/`](integration/trello/)                                                                         |
+| **Twake**                                      | `twake`                         | Consume Twake API                                                                                    | ⚠️ Authentication Required | [`integration/twake/`](integration/twake/)                                                                           |
+| **Twilio**                                     | `twilio`                        | Send SMS and WhatsApp messages or make phone calls                                                   | ⚠️ Authentication Required | [`integration/twilio/`](integration/twilio/)                                                                         |
+| **Twist**                                      | `twist`                         | Consume Twist API                                                                                    | ⚠️ Authentication Required | [`integration/twist/`](integration/twist/)                                                                           |
+| **Unleashed Software**                         | `unleashedSoftware`             | Consume Unleashed Software API                                                                       | ⚠️ Authentication Required | [`integration/unleashed-software/`](integration/unleashed-software/)                                                 |
+| **Uplead**                                     | `uplead`                        | Consume Uplead API                                                                                   | ⚠️ Authentication Required | [`integration/uplead/`](integration/uplead/)                                                                         |
+| **uProc**                                      | `uproc`                         | Consume uProc API                                                                                    | ⚠️ Authentication Required | [`integration/uproc/`](integration/uproc/)                                                                           |
+| **UptimeRobot**                                | `uptimeRobot`                   | Consume UptimeRobot API                                                                              | ⚠️ Authentication Required | [`integration/uptimerobot/`](integration/uptimerobot/)                                                               |
+| **urlscan.io**                                 | `urlScanIo`                     | Provides various utilities for monitoring websites like health checks or screenshots                 | ⚠️ Authentication Required | [`integration/urlscan-io/`](integration/urlscan-io/)                                                                 |
+| **Vero**                                       | `vero`                          | Consume Vero API                                                                                     | ⚠️ Authentication Required | [`integration/vero/`](integration/vero/)                                                                             |
+| **Vonage**                                     | `vonage`                        | Consume Vonage API                                                                                   | ⚠️ Authentication Required | [`integration/vonage/`](integration/vonage/)                                                                         |
+| **Wait Amount**                                | `amount`                        | The time to wait                                                                                     | ✅ None                    | [`integration/wait-amount/`](integration/wait-amount/)                                                               |
+| **Webflow**                                    | `webflow`                       | Consume the Webflow API                                                                              | ⚠️ Authentication Required | [`integration/webflow/`](integration/webflow/)                                                                       |
+| **Wekan**                                      | `wekan`                         | Consume Wekan API                                                                                    | ⚠️ Authentication Required | [`integration/wekan/`](integration/wekan/)                                                                           |
+| **WhatsApp Business Cloud**                    | `whatsApp`                      | Access WhatsApp API                                                                                  | ⚠️ Authentication Required | [`integration/whatsapp-business-cloud/`](integration/whatsapp-business-cloud/)                                       |
+| **Wise**                                       | `wise`                          | Consume the Wise API                                                                                 | ⚠️ Authentication Required | [`integration/wise/`](integration/wise/)                                                                             |
+| **WooCommerce**                                | `wooCommerce`                   | Consume WooCommerce API                                                                              | ⚠️ Authentication Required | [`integration/woocommerce/`](integration/woocommerce/)                                                               |
+| **Wordpress**                                  | `wordpress`                     | Consume Wordpress API                                                                                | ⚠️ Authentication Required | [`integration/wordpress/`](integration/wordpress/)                                                                   |
+| **Write Binary File**                          | `writeBinaryFile`               | Writes a binary file to disk                                                                         | ⚠️ Authentication Required | [`integration/write-binary-file/`](integration/write-binary-file/)                                                   |
+| **X (Formerly Twitter)**                       | `twitter`                       | Consume the X API                                                                                    | ⚠️ Authentication Required | [`integration/x-formerly-twitter/`](integration/x-formerly-twitter/)                                                 |
+| **Xero**                                       | `xero`                          | Consume Xero API                                                                                     | ⚠️ Authentication Required | [`integration/xero/`](integration/xero/)                                                                             |
+| **XML**                                        | `xml`                           | Convert data from and to XML                                                                         | ⚠️ Authentication Required | [`integration/xml/`](integration/xml/)                                                                               |
+| **Yourls**                                     | `yourls`                        | Consume Yourls API                                                                                   | ⚠️ Authentication Required | [`integration/yourls/`](integration/yourls/)                                                                         |
+| **Zammad**                                     | `zammad`                        | Consume the Zammad API                                                                               | ⚠️ Authentication Required | [`integration/zammad/`](integration/zammad/)                                                                         |
+| **Zendesk**                                    | `zendesk`                       | Consume Zendesk API                                                                                  | ⚠️ Authentication Required | [`integration/zendesk/`](integration/zendesk/)                                                                       |
+| **Zoho CRM**                                   | `zohoCrm`                       | Consume Zoho CRM API                                                                                 | ⚠️ Authentication Required | [`integration/zoho-crm/`](integration/zoho-crm/)                                                                     |
+| **Zoom**                                       | `zoom`                          | Consume Zoom API                                                                                     | ⚠️ Authentication Required | [`integration/zoom/`](integration/zoom/)                                                                             |
+| **Zulip**                                      | `zulip`                         | Consume Zulip API                                                                                    | ⚠️ Authentication Required | [`integration/zulip/`](integration/zulip/)                                                                           |
 
 ---
 
@@ -368,310 +368,310 @@ Some nodes require external service credentials (API keys, OAuth tokens, etc.).
 
 #### Authentication Required (248)
 
-- **Action Network** - [`actionNetwork`](examples/nodes/integration/action-network/)
-- **ActiveCampaign** - [`activeCampaign`](examples/nodes/integration/activecampaign/)
-- **Adalo** - [`adalo`](examples/nodes/integration/adalo/)
-- **Affinity** - [`affinity`](examples/nodes/integration/affinity/)
-- **Agile CRM** - [`agileCrm`](examples/nodes/integration/agile-crm/)
-- **AI Transform** - [`aiTransform`](examples/nodes/integration/ai-transform/)
-- **Airtable** - [`airtable`](examples/nodes/integration/airtable/)
-- **Airtop** - [`airtop`](examples/nodes/integration/airtop/)
-- **AMQP Sender** - [`amqp`](examples/nodes/integration/amqp-sender/)
-- **Asana** - [`asana`](examples/nodes/integration/asana/)
-- **Automizy** - [`automizy`](examples/nodes/integration/automizy/)
-- **Autopilot** - [`autopilot`](examples/nodes/integration/autopilot/)
-- **AWS Lambda** - [`awsLambda`](examples/nodes/integration/aws-lambda/)
-- **Background Color** - [`Blur`](examples/nodes/integration/background-color/)
-- **BambooHr** - [`n8n-nodes-base.bamboohr`](examples/nodes/integration/bamboohr/)
-- **Bannerbear** - [`bannerbear`](examples/nodes/integration/bannerbear/)
-- **Baserow** - [`baserow`](examples/nodes/integration/baserow/)
-- **Beeminder** - [`beeminder`](examples/nodes/integration/beeminder/)
-- **Bitly** - [`bitly`](examples/nodes/integration/bitly/)
-- **Bitwarden** - [`bitwarden`](examples/nodes/integration/bitwarden/)
-- **Box** - [`box`](examples/nodes/integration/box/)
-- **Brandfetch** - [`Brandfetch`](examples/nodes/integration/brandfetch/)
-- **Brevo** - [`sendInBlue`](examples/nodes/integration/brevo/)
-- **Bubble** - [`bubble`](examples/nodes/integration/bubble/)
-- **Chargebee** - [`chargebee`](examples/nodes/integration/chargebee/)
-- **CircleCI** - [`circleCi`](examples/nodes/integration/circleci/)
-- **Clearbit** - [`clearbit`](examples/nodes/integration/clearbit/)
-- **ClickUp** - [`clickUp`](examples/nodes/integration/clickup/)
-- **Cloudflare** - [`cloudflare`](examples/nodes/integration/cloudflare/)
-- **Cockpit** - [`cockpit`](examples/nodes/integration/cockpit/)
-- **Coda** - [`coda`](examples/nodes/integration/coda/)
-- **CoinGecko** - [`coinGecko`](examples/nodes/integration/coingecko/)
-- **Compression** - [`compression`](examples/nodes/integration/compression/)
-- **Contentful** - [`contentful`](examples/nodes/integration/contentful/)
-- **Convert to/from binary data** - [`moveBinaryData`](examples/nodes/integration/convert-to-from-binary-data/)
-- **ConvertKit** - [`convertKit`](examples/nodes/integration/convertkit/)
-- **Copper** - [`copper`](examples/nodes/integration/copper/)
-- **Cortex** - [`cortex`](examples/nodes/integration/cortex/)
-- **CrateDB** - [`crateDb`](examples/nodes/integration/cratedb/)
-- **crowd.dev** - [`crowdDev`](examples/nodes/integration/crowd-dev/)
-- **Crypto** - [`crypto`](examples/nodes/integration/crypto/)
-- **Customer Datastore (n8n training)** - [`Jay Gatsby`](examples/nodes/integration/customer-datastore-n8n-training/)
-- **Customer Messenger (n8n training)** - [`n8nTrainingCustomerMessenger`](examples/nodes/integration/customer-messenger-n8n-training/)
-- **Customer.io** - [`customerIo`](examples/nodes/integration/customer-io/)
-- **Data table** - [`dataTable`](examples/nodes/integration/data-table/)
-- **Date & Time** - [`dateTime`](examples/nodes/integration/date-time/)
-- **DebugHelper** - [`debugHelper`](examples/nodes/integration/debughelper/)
-- **DeepL** - [`deepL`](examples/nodes/integration/deepl/)
-- **Demio** - [`demio`](examples/nodes/integration/demio/)
-- **DHL** - [`dhl`](examples/nodes/integration/dhl/)
-- **Discord** - [`discord`](examples/nodes/integration/discord/)
-- **Discourse** - [`discourse`](examples/nodes/integration/discourse/)
-- **Disqus** - [`disqus`](examples/nodes/integration/disqus/)
-- **Dropbox** - [`dropbox`](examples/nodes/integration/dropbox/)
-- **Dropcontact** - [`dropcontact`](examples/nodes/integration/dropcontact/)
-- **E-goi** - [`egoi`](examples/nodes/integration/e-goi/)
-- **E2E Test** - [`e2eTest`](examples/nodes/integration/e2e-test/)
-- **Emelia** - [`emelia`](examples/nodes/integration/emelia/)
-- **ERPNext** - [`erpNext`](examples/nodes/integration/erpnext/)
-- **Execute Command** - [`executeCommand`](examples/nodes/integration/execute-command/)
-- **Execution Data** - [`executionData`](examples/nodes/integration/execution-data/)
-- **Extraction Values** - [`extractionValues`](examples/nodes/integration/extraction-values/)
-- **Facebook Lead Ads Trigger** - [`facebookLeadAdsTrigger`](examples/nodes/trigger/facebook-lead-ads-trigger/)
-- **FileMaker** - [`filemaker`](examples/nodes/integration/filemaker/)
-- **Flow** - [`flow`](examples/nodes/integration/flow/)
-- **Freshdesk** - [`freshdesk`](examples/nodes/integration/freshdesk/)
-- **Freshservice** - [`freshservice`](examples/nodes/integration/freshservice/)
-- **Freshworks CRM** - [`freshworksCrm`](examples/nodes/integration/freshworks-crm/)
-- **FTP** - [`ftp`](examples/nodes/integration/ftp/)
-- **GetResponse** - [`getResponse`](examples/nodes/integration/getresponse/)
-- **Ghost** - [`ghost`](examples/nodes/integration/ghost/)
-- **Git** - [`git`](examples/nodes/integration/git/)
-- **GitHub** - [`github`](examples/nodes/integration/github/)
-- **GitLab** - [`gitlab`](examples/nodes/integration/gitlab/)
-- **Gong** - [`gong`](examples/nodes/integration/gong/)
-- **GoToWebinar** - [`goToWebinar`](examples/nodes/integration/gotowebinar/)
-- **Grafana** - [`grafana`](examples/nodes/integration/grafana/)
-- **GraphQL** - [`graphql`](examples/nodes/integration/graphql/)
-- **Grist** - [`grist`](examples/nodes/integration/grist/)
-- **Hacker News** - [`hackerNews`](examples/nodes/integration/hacker-news/)
-- **HaloPSA** - [`haloPSA`](examples/nodes/integration/halopsa/)
-- **Harvest** - [`harvest`](examples/nodes/integration/harvest/)
-- **Help Scout** - [`helpScout`](examples/nodes/integration/help-scout/)
-- **HighLevel** - [`highLevel`](examples/nodes/integration/highlevel/)
-- **Home Assistant** - [`homeAssistant`](examples/nodes/integration/home-assistant/)
-- **HTML Extract** - [`htmlExtract`](examples/nodes/integration/html-extract/)
-- **HTTP Request** - [`httpRequest`](examples/nodes/integration/http-request/)
-- **HubSpot** - [`hubspot`](examples/nodes/integration/hubspot/)
-- **Humantic AI** - [`humanticAi`](examples/nodes/integration/humantic-ai/)
-- **Hunter** - [`hunter`](examples/nodes/integration/hunter/)
-- **iCalendar** - [`iCal`](examples/nodes/integration/icalendar/)
-- **Interact with Telegram using our pre-built** - [`preBuiltAgentsCalloutTelegram`](examples/nodes/integration/interact-with-telegram-using-our-pre-built/)
-- **Intercom** - [`intercom`](examples/nodes/integration/intercom/)
-- **Interval** - [`interval`](examples/nodes/integration/interval/)
-- **Invoice Ninja** - [`invoiceNinja`](examples/nodes/integration/invoice-ninja/)
-- **Item Lists** - [`itemLists`](examples/nodes/integration/item-lists/)
-- **Iterable** - [`iterable`](examples/nodes/integration/iterable/)
-- **Jenkins** - [`jenkins`](examples/nodes/integration/jenkins/)
-- **Jina AI** - [`jinaAi`](examples/nodes/integration/jina-ai/)
-- **Jira Software** - [`jira`](examples/nodes/integration/jira-software/)
-- **JWT** - [`jwt`](examples/nodes/integration/jwt/)
-- **Kafka** - [`kafka`](examples/nodes/integration/kafka/)
-- **Keap** - [`keap`](examples/nodes/integration/keap/)
-- **Kitemaker** - [`kitemaker`](examples/nodes/integration/kitemaker/)
-- **KoBoToolbox** - [`koBoToolbox`](examples/nodes/integration/kobotoolbox/)
-- **Ldap** - [`ldap`](examples/nodes/integration/ldap/)
-- **Lemlist** - [`lemlist`](examples/nodes/integration/lemlist/)
-- **Line** - [`line`](examples/nodes/integration/line/)
-- **Linear** - [`linear`](examples/nodes/integration/linear/)
-- **LingvaNex** - [`lingvaNex`](examples/nodes/integration/lingvanex/)
-- **LinkedIn** - [`linkedIn`](examples/nodes/integration/linkedin/)
-- **LoneScale** - [`loneScale`](examples/nodes/integration/lonescale/)
-- **Magento 2** - [`magento2`](examples/nodes/integration/magento-2/)
-- **Mailcheck** - [`mailcheck`](examples/nodes/integration/mailcheck/)
-- **Mailchimp** - [`mailchimp`](examples/nodes/integration/mailchimp/)
-- **MailerLite** - [`mailerLite`](examples/nodes/integration/mailerlite/)
-- **Mailgun** - [`mailgun`](examples/nodes/integration/mailgun/)
-- **Mailjet** - [`mailjet`](examples/nodes/integration/mailjet/)
-- **Mandrill** - [`mandrill`](examples/nodes/integration/mandrill/)
-- **Markdown** - [`markdown`](examples/nodes/integration/markdown/)
-- **Marketstack** - [`marketstack`](examples/nodes/integration/marketstack/)
-- **Matrix** - [`matrix`](examples/nodes/integration/matrix/)
-- **Mattermost** - [`mattermost`](examples/nodes/integration/mattermost/)
-- **Mautic** - [`mautic`](examples/nodes/integration/mautic/)
-- **Medium** - [`medium`](examples/nodes/integration/medium/)
-- **MessageBird** - [`messageBird`](examples/nodes/integration/messagebird/)
-- **Metabase** - [`metabase`](examples/nodes/integration/metabase/)
-- **Mindee** - [`mindee`](examples/nodes/integration/mindee/)
-- **MISP** - [`misp`](examples/nodes/integration/misp/)
-- **Mistral AI** - [`mistralAi`](examples/nodes/integration/mistral-ai/)
-- **Mocean** - [`mocean`](examples/nodes/integration/mocean/)
-- **Monday.com** - [`mondayCom`](examples/nodes/integration/monday-com/)
-- **MongoDB** - [`mongoDb`](examples/nodes/integration/mongodb/)
-- **Monica CRM** - [`monicaCrm`](examples/nodes/integration/monica-crm/)
-- **MQTT** - [`mqtt`](examples/nodes/integration/mqtt/)
-- **MSG91** - [`msg91`](examples/nodes/integration/msg91/)
-- **MySQL** - [`mySql`](examples/nodes/integration/mysql/)
-- **n8n** - [`n8n`](examples/nodes/integration/n8n/)
-- **NASA** - [`nasa`](examples/nodes/integration/nasa/)
-- **Nextcloud** - [`nextCloud`](examples/nodes/integration/nextcloud/)
-- **No Operation, do nothing** - [`noOp`](examples/nodes/integration/no-operation-do-nothing/)
-- **NocoDB** - [`nocoDb`](examples/nodes/integration/nocodb/)
-- **Notion** - [`notion`](examples/nodes/integration/notion/)
-- **Npm** - [`npm`](examples/nodes/integration/npm/)
-- **Odoo** - [`odoo`](examples/nodes/integration/odoo/)
-- **Okta** - [`okta`](examples/nodes/integration/okta/)
-- **Onfleet** - [`onfleet`](examples/nodes/integration/onfleet/)
-- **OpenAI** - [`openAi`](examples/nodes/integration/openai/)
-- **OpenThesaurus** - [`openThesaurus`](examples/nodes/integration/openthesaurus/)
-- **OpenWeatherMap** - [`openWeatherMap`](examples/nodes/integration/openweathermap/)
-- **Orbit** - [`orbit`](examples/nodes/integration/orbit/)
-- **Oura** - [`oura`](examples/nodes/integration/oura/)
-- **Paddle** - [`paddle`](examples/nodes/integration/paddle/)
-- **PagerDuty** - [`pagerDuty`](examples/nodes/integration/pagerduty/)
-- **PayPal** - [`payPal`](examples/nodes/integration/paypal/)
-- **Peekalink** - [`peekalink`](examples/nodes/integration/peekalink/)
-- **Perplexity** - [`perplexity`](examples/nodes/integration/perplexity/)
-- **Phantombuster** - [`phantombuster`](examples/nodes/integration/phantombuster/)
-- **Philips Hue** - [`philipsHue`](examples/nodes/integration/philips-hue/)
-- **Pipedrive** - [`pipedrive`](examples/nodes/integration/pipedrive/)
-- **Plivo** - [`plivo`](examples/nodes/integration/plivo/)
-- **PostBin** - [`postBin`](examples/nodes/integration/postbin/)
-- **Postgres** - [`postgres`](examples/nodes/integration/postgres/)
-- **PostHog** - [`postHog`](examples/nodes/integration/posthog/)
-- **ProfitWell** - [`profitWell`](examples/nodes/integration/profitwell/)
-- **Pushbullet** - [`pushbullet`](examples/nodes/integration/pushbullet/)
-- **Pushcut** - [`pushcut`](examples/nodes/integration/pushcut/)
-- **Pushover** - [`pushover`](examples/nodes/integration/pushover/)
-- **QuestDB** - [`questDb`](examples/nodes/integration/questdb/)
-- **Quick Base** - [`quickbase`](examples/nodes/integration/quick-base/)
-- **QuickBooks Online** - [`quickbooks`](examples/nodes/integration/quickbooks-online/)
-- **QuickChart** - [`quickChart`](examples/nodes/integration/quickchart/)
-- **RabbitMQ** - [`rabbitmq`](examples/nodes/integration/rabbitmq/)
-- **Raindrop** - [`raindrop`](examples/nodes/integration/raindrop/)
-- **Read Binary File** - [`readBinaryFile`](examples/nodes/integration/read-binary-file/)
-- **Read Binary Files** - [`readBinaryFiles`](examples/nodes/integration/read-binary-files/)
-- **Read PDF** - [`readPDF`](examples/nodes/integration/read-pdf/)
-- **Reddit** - [`reddit`](examples/nodes/integration/reddit/)
-- **Redis** - [`redis`](examples/nodes/integration/redis/)
-- **Rename Keys** - [`renameKeys`](examples/nodes/integration/rename-keys/)
-- **Respond With** - [`respondWith`](examples/nodes/integration/respond-with/)
-- **RocketChat** - [`rocketchat`](examples/nodes/integration/rocketchat/)
-- **RSS Read** - [`rssFeedRead`](examples/nodes/integration/rss-read/)
-- **Rundeck** - [`rundeck`](examples/nodes/integration/rundeck/)
-- **S3** - [`s3`](examples/nodes/integration/s3/)
-- **Salesforce** - [`salesforce`](examples/nodes/integration/salesforce/)
-- **Salesmate** - [`salesmate`](examples/nodes/integration/salesmate/)
-- **SeaTable** - [`seaTable`](examples/nodes/integration/seatable/)
-- **SecurityScorecard** - [`securityScorecard`](examples/nodes/integration/securityscorecard/)
-- **Segment** - [`segment`](examples/nodes/integration/segment/)
-- **Send Email** - [`emailSend`](examples/nodes/integration/send-email/)
-- **SendGrid** - [`sendGrid`](examples/nodes/integration/sendgrid/)
-- **Sendy** - [`sendy`](examples/nodes/integration/sendy/)
-- **Sentry.io** - [`sentryIo`](examples/nodes/integration/sentry-io/)
-- **ServiceNow** - [`serviceNow`](examples/nodes/integration/servicenow/)
-- **seven** - [`sms77`](examples/nodes/integration/seven/)
-- **SIGNL4** - [`signl4`](examples/nodes/integration/signl4/)
-- **Simulate** - [`simulate`](examples/nodes/integration/simulate/)
-- **Slack** - [`slack`](examples/nodes/integration/slack/)
-- **Snowflake** - [`snowflake`](examples/nodes/integration/snowflake/)
-- **Splunk** - [`splunk`](examples/nodes/integration/splunk/)
-- **Spontit** - [`spontit`](examples/nodes/integration/spontit/)
-- **Spreadsheet File** - [`spreadsheetFile`](examples/nodes/integration/spreadsheet-file/)
-- **SSH** - [`ssh`](examples/nodes/integration/ssh/)
-- **Stackby** - [`stackby`](examples/nodes/integration/stackby/)
-- **Start** - [`start`](examples/nodes/integration/start/)
-- **Sticky Note** - [`stickyNote`](examples/nodes/integration/sticky-note/)
-- **Storyblok** - [`storyblok`](examples/nodes/integration/storyblok/)
-- **Strava** - [`strava`](examples/nodes/integration/strava/)
-- **Stripe** - [`stripe`](examples/nodes/integration/stripe/)
-- **Supabase** - [`supabase`](examples/nodes/integration/supabase/)
-- **SurveyMonkey Trigger** - [`surveyMonkeyTrigger`](examples/nodes/trigger/surveymonkey-trigger/)
-- **SyncroMSP** - [`syncroMsp`](examples/nodes/integration/syncromsp/)
-- **Taiga** - [`taiga`](examples/nodes/integration/taiga/)
-- **Tapfiliate** - [`tapfiliate`](examples/nodes/integration/tapfiliate/)
-- **TheHive** - [`theHive`](examples/nodes/integration/thehive/)
-- **TheHiveProject** - [`n8n-nodes-base.thehiveproject`](examples/nodes/integration/thehiveproject/)
-- **TimescaleDB** - [`timescaleDb`](examples/nodes/integration/timescaledb/)
-- **Todoist** - [`todoist`](examples/nodes/integration/todoist/)
-- **TOTP** - [`totp`](examples/nodes/integration/totp/)
-- **TravisCI** - [`travisCi`](examples/nodes/integration/travisci/)
-- **Trello** - [`trello`](examples/nodes/integration/trello/)
-- **Twake** - [`twake`](examples/nodes/integration/twake/)
-- **Twilio** - [`twilio`](examples/nodes/integration/twilio/)
-- **Twist** - [`twist`](examples/nodes/integration/twist/)
-- **Unleashed Software** - [`unleashedSoftware`](examples/nodes/integration/unleashed-software/)
-- **Uplead** - [`uplead`](examples/nodes/integration/uplead/)
-- **uProc** - [`uproc`](examples/nodes/integration/uproc/)
-- **UptimeRobot** - [`uptimeRobot`](examples/nodes/integration/uptimerobot/)
-- **urlscan.io** - [`urlScanIo`](examples/nodes/integration/urlscan-io/)
-- **Vero** - [`vero`](examples/nodes/integration/vero/)
-- **Vonage** - [`vonage`](examples/nodes/integration/vonage/)
-- **Webflow** - [`webflow`](examples/nodes/integration/webflow/)
-- **Wekan** - [`wekan`](examples/nodes/integration/wekan/)
-- **WhatsApp Business Cloud** - [`whatsApp`](examples/nodes/integration/whatsapp-business-cloud/)
-- **Wise** - [`wise`](examples/nodes/integration/wise/)
-- **WooCommerce** - [`wooCommerce`](examples/nodes/integration/woocommerce/)
-- **Wordpress** - [`wordpress`](examples/nodes/integration/wordpress/)
-- **Write Binary File** - [`writeBinaryFile`](examples/nodes/integration/write-binary-file/)
-- **X (Formerly Twitter)** - [`twitter`](examples/nodes/integration/x-formerly-twitter/)
-- **Xero** - [`xero`](examples/nodes/integration/xero/)
-- **XML** - [`xml`](examples/nodes/integration/xml/)
-- **Yourls** - [`yourls`](examples/nodes/integration/yourls/)
-- **Zammad** - [`zammad`](examples/nodes/integration/zammad/)
-- **Zendesk** - [`zendesk`](examples/nodes/integration/zendesk/)
-- **Zoho CRM** - [`zohoCrm`](examples/nodes/integration/zoho-crm/)
-- **Zoom** - [`zoom`](examples/nodes/integration/zoom/)
-- **Zulip** - [`zulip`](examples/nodes/integration/zulip/)
+- **Action Network** - [`actionNetwork`](integration/action-network/)
+- **ActiveCampaign** - [`activeCampaign`](integration/activecampaign/)
+- **Adalo** - [`adalo`](integration/adalo/)
+- **Affinity** - [`affinity`](integration/affinity/)
+- **Agile CRM** - [`agileCrm`](integration/agile-crm/)
+- **AI Transform** - [`aiTransform`](integration/ai-transform/)
+- **Airtable** - [`airtable`](integration/airtable/)
+- **Airtop** - [`airtop`](integration/airtop/)
+- **AMQP Sender** - [`amqp`](integration/amqp-sender/)
+- **Asana** - [`asana`](integration/asana/)
+- **Automizy** - [`automizy`](integration/automizy/)
+- **Autopilot** - [`autopilot`](integration/autopilot/)
+- **AWS Lambda** - [`awsLambda`](integration/aws-lambda/)
+- **Background Color** - [`Blur`](integration/background-color/)
+- **BambooHr** - [`n8n-nodes-base.bamboohr`](integration/bamboohr/)
+- **Bannerbear** - [`bannerbear`](integration/bannerbear/)
+- **Baserow** - [`baserow`](integration/baserow/)
+- **Beeminder** - [`beeminder`](integration/beeminder/)
+- **Bitly** - [`bitly`](integration/bitly/)
+- **Bitwarden** - [`bitwarden`](integration/bitwarden/)
+- **Box** - [`box`](integration/box/)
+- **Brandfetch** - [`Brandfetch`](integration/brandfetch/)
+- **Brevo** - [`sendInBlue`](integration/brevo/)
+- **Bubble** - [`bubble`](integration/bubble/)
+- **Chargebee** - [`chargebee`](integration/chargebee/)
+- **CircleCI** - [`circleCi`](integration/circleci/)
+- **Clearbit** - [`clearbit`](integration/clearbit/)
+- **ClickUp** - [`clickUp`](integration/clickup/)
+- **Cloudflare** - [`cloudflare`](integration/cloudflare/)
+- **Cockpit** - [`cockpit`](integration/cockpit/)
+- **Coda** - [`coda`](integration/coda/)
+- **CoinGecko** - [`coinGecko`](integration/coingecko/)
+- **Compression** - [`compression`](integration/compression/)
+- **Contentful** - [`contentful`](integration/contentful/)
+- **Convert to/from binary data** - [`moveBinaryData`](integration/convert-to-from-binary-data/)
+- **ConvertKit** - [`convertKit`](integration/convertkit/)
+- **Copper** - [`copper`](integration/copper/)
+- **Cortex** - [`cortex`](integration/cortex/)
+- **CrateDB** - [`crateDb`](integration/cratedb/)
+- **crowd.dev** - [`crowdDev`](integration/crowd-dev/)
+- **Crypto** - [`crypto`](integration/crypto/)
+- **Customer Datastore (n8n training)** - [`Jay Gatsby`](integration/customer-datastore-n8n-training/)
+- **Customer Messenger (n8n training)** - [`n8nTrainingCustomerMessenger`](integration/customer-messenger-n8n-training/)
+- **Customer.io** - [`customerIo`](integration/customer-io/)
+- **Data table** - [`dataTable`](integration/data-table/)
+- **Date & Time** - [`dateTime`](integration/date-time/)
+- **DebugHelper** - [`debugHelper`](integration/debughelper/)
+- **DeepL** - [`deepL`](integration/deepl/)
+- **Demio** - [`demio`](integration/demio/)
+- **DHL** - [`dhl`](integration/dhl/)
+- **Discord** - [`discord`](integration/discord/)
+- **Discourse** - [`discourse`](integration/discourse/)
+- **Disqus** - [`disqus`](integration/disqus/)
+- **Dropbox** - [`dropbox`](integration/dropbox/)
+- **Dropcontact** - [`dropcontact`](integration/dropcontact/)
+- **E-goi** - [`egoi`](integration/e-goi/)
+- **E2E Test** - [`e2eTest`](integration/e2e-test/)
+- **Emelia** - [`emelia`](integration/emelia/)
+- **ERPNext** - [`erpNext`](integration/erpnext/)
+- **Execute Command** - [`executeCommand`](integration/execute-command/)
+- **Execution Data** - [`executionData`](integration/execution-data/)
+- **Extraction Values** - [`extractionValues`](integration/extraction-values/)
+- **Facebook Lead Ads Trigger** - [`facebookLeadAdsTrigger`](trigger/facebook-lead-ads-trigger/)
+- **FileMaker** - [`filemaker`](integration/filemaker/)
+- **Flow** - [`flow`](integration/flow/)
+- **Freshdesk** - [`freshdesk`](integration/freshdesk/)
+- **Freshservice** - [`freshservice`](integration/freshservice/)
+- **Freshworks CRM** - [`freshworksCrm`](integration/freshworks-crm/)
+- **FTP** - [`ftp`](integration/ftp/)
+- **GetResponse** - [`getResponse`](integration/getresponse/)
+- **Ghost** - [`ghost`](integration/ghost/)
+- **Git** - [`git`](integration/git/)
+- **GitHub** - [`github`](integration/github/)
+- **GitLab** - [`gitlab`](integration/gitlab/)
+- **Gong** - [`gong`](integration/gong/)
+- **GoToWebinar** - [`goToWebinar`](integration/gotowebinar/)
+- **Grafana** - [`grafana`](integration/grafana/)
+- **GraphQL** - [`graphql`](integration/graphql/)
+- **Grist** - [`grist`](integration/grist/)
+- **Hacker News** - [`hackerNews`](integration/hacker-news/)
+- **HaloPSA** - [`haloPSA`](integration/halopsa/)
+- **Harvest** - [`harvest`](integration/harvest/)
+- **Help Scout** - [`helpScout`](integration/help-scout/)
+- **HighLevel** - [`highLevel`](integration/highlevel/)
+- **Home Assistant** - [`homeAssistant`](integration/home-assistant/)
+- **HTML Extract** - [`htmlExtract`](integration/html-extract/)
+- **HTTP Request** - [`httpRequest`](integration/http-request/)
+- **HubSpot** - [`hubspot`](integration/hubspot/)
+- **Humantic AI** - [`humanticAi`](integration/humantic-ai/)
+- **Hunter** - [`hunter`](integration/hunter/)
+- **iCalendar** - [`iCal`](integration/icalendar/)
+- **Interact with Telegram using our pre-built** - [`preBuiltAgentsCalloutTelegram`](integration/interact-with-telegram-using-our-pre-built/)
+- **Intercom** - [`intercom`](integration/intercom/)
+- **Interval** - [`interval`](integration/interval/)
+- **Invoice Ninja** - [`invoiceNinja`](integration/invoice-ninja/)
+- **Item Lists** - [`itemLists`](integration/item-lists/)
+- **Iterable** - [`iterable`](integration/iterable/)
+- **Jenkins** - [`jenkins`](integration/jenkins/)
+- **Jina AI** - [`jinaAi`](integration/jina-ai/)
+- **Jira Software** - [`jira`](integration/jira-software/)
+- **JWT** - [`jwt`](integration/jwt/)
+- **Kafka** - [`kafka`](integration/kafka/)
+- **Keap** - [`keap`](integration/keap/)
+- **Kitemaker** - [`kitemaker`](integration/kitemaker/)
+- **KoBoToolbox** - [`koBoToolbox`](integration/kobotoolbox/)
+- **Ldap** - [`ldap`](integration/ldap/)
+- **Lemlist** - [`lemlist`](integration/lemlist/)
+- **Line** - [`line`](integration/line/)
+- **Linear** - [`linear`](integration/linear/)
+- **LingvaNex** - [`lingvaNex`](integration/lingvanex/)
+- **LinkedIn** - [`linkedIn`](integration/linkedin/)
+- **LoneScale** - [`loneScale`](integration/lonescale/)
+- **Magento 2** - [`magento2`](integration/magento-2/)
+- **Mailcheck** - [`mailcheck`](integration/mailcheck/)
+- **Mailchimp** - [`mailchimp`](integration/mailchimp/)
+- **MailerLite** - [`mailerLite`](integration/mailerlite/)
+- **Mailgun** - [`mailgun`](integration/mailgun/)
+- **Mailjet** - [`mailjet`](integration/mailjet/)
+- **Mandrill** - [`mandrill`](integration/mandrill/)
+- **Markdown** - [`markdown`](integration/markdown/)
+- **Marketstack** - [`marketstack`](integration/marketstack/)
+- **Matrix** - [`matrix`](integration/matrix/)
+- **Mattermost** - [`mattermost`](integration/mattermost/)
+- **Mautic** - [`mautic`](integration/mautic/)
+- **Medium** - [`medium`](integration/medium/)
+- **MessageBird** - [`messageBird`](integration/messagebird/)
+- **Metabase** - [`metabase`](integration/metabase/)
+- **Mindee** - [`mindee`](integration/mindee/)
+- **MISP** - [`misp`](integration/misp/)
+- **Mistral AI** - [`mistralAi`](integration/mistral-ai/)
+- **Mocean** - [`mocean`](integration/mocean/)
+- **Monday.com** - [`mondayCom`](integration/monday-com/)
+- **MongoDB** - [`mongoDb`](integration/mongodb/)
+- **Monica CRM** - [`monicaCrm`](integration/monica-crm/)
+- **MQTT** - [`mqtt`](integration/mqtt/)
+- **MSG91** - [`msg91`](integration/msg91/)
+- **MySQL** - [`mySql`](integration/mysql/)
+- **n8n** - [`n8n`](integration/n8n/)
+- **NASA** - [`nasa`](integration/nasa/)
+- **Nextcloud** - [`nextCloud`](integration/nextcloud/)
+- **No Operation, do nothing** - [`noOp`](integration/no-operation-do-nothing/)
+- **NocoDB** - [`nocoDb`](integration/nocodb/)
+- **Notion** - [`notion`](integration/notion/)
+- **Npm** - [`npm`](integration/npm/)
+- **Odoo** - [`odoo`](integration/odoo/)
+- **Okta** - [`okta`](integration/okta/)
+- **Onfleet** - [`onfleet`](integration/onfleet/)
+- **OpenAI** - [`openAi`](integration/openai/)
+- **OpenThesaurus** - [`openThesaurus`](integration/openthesaurus/)
+- **OpenWeatherMap** - [`openWeatherMap`](integration/openweathermap/)
+- **Orbit** - [`orbit`](integration/orbit/)
+- **Oura** - [`oura`](integration/oura/)
+- **Paddle** - [`paddle`](integration/paddle/)
+- **PagerDuty** - [`pagerDuty`](integration/pagerduty/)
+- **PayPal** - [`payPal`](integration/paypal/)
+- **Peekalink** - [`peekalink`](integration/peekalink/)
+- **Perplexity** - [`perplexity`](integration/perplexity/)
+- **Phantombuster** - [`phantombuster`](integration/phantombuster/)
+- **Philips Hue** - [`philipsHue`](integration/philips-hue/)
+- **Pipedrive** - [`pipedrive`](integration/pipedrive/)
+- **Plivo** - [`plivo`](integration/plivo/)
+- **PostBin** - [`postBin`](integration/postbin/)
+- **Postgres** - [`postgres`](integration/postgres/)
+- **PostHog** - [`postHog`](integration/posthog/)
+- **ProfitWell** - [`profitWell`](integration/profitwell/)
+- **Pushbullet** - [`pushbullet`](integration/pushbullet/)
+- **Pushcut** - [`pushcut`](integration/pushcut/)
+- **Pushover** - [`pushover`](integration/pushover/)
+- **QuestDB** - [`questDb`](integration/questdb/)
+- **Quick Base** - [`quickbase`](integration/quick-base/)
+- **QuickBooks Online** - [`quickbooks`](integration/quickbooks-online/)
+- **QuickChart** - [`quickChart`](integration/quickchart/)
+- **RabbitMQ** - [`rabbitmq`](integration/rabbitmq/)
+- **Raindrop** - [`raindrop`](integration/raindrop/)
+- **Read Binary File** - [`readBinaryFile`](integration/read-binary-file/)
+- **Read Binary Files** - [`readBinaryFiles`](integration/read-binary-files/)
+- **Read PDF** - [`readPDF`](integration/read-pdf/)
+- **Reddit** - [`reddit`](integration/reddit/)
+- **Redis** - [`redis`](integration/redis/)
+- **Rename Keys** - [`renameKeys`](integration/rename-keys/)
+- **Respond With** - [`respondWith`](integration/respond-with/)
+- **RocketChat** - [`rocketchat`](integration/rocketchat/)
+- **RSS Read** - [`rssFeedRead`](integration/rss-read/)
+- **Rundeck** - [`rundeck`](integration/rundeck/)
+- **S3** - [`s3`](integration/s3/)
+- **Salesforce** - [`salesforce`](integration/salesforce/)
+- **Salesmate** - [`salesmate`](integration/salesmate/)
+- **SeaTable** - [`seaTable`](integration/seatable/)
+- **SecurityScorecard** - [`securityScorecard`](integration/securityscorecard/)
+- **Segment** - [`segment`](integration/segment/)
+- **Send Email** - [`emailSend`](integration/send-email/)
+- **SendGrid** - [`sendGrid`](integration/sendgrid/)
+- **Sendy** - [`sendy`](integration/sendy/)
+- **Sentry.io** - [`sentryIo`](integration/sentry-io/)
+- **ServiceNow** - [`serviceNow`](integration/servicenow/)
+- **seven** - [`sms77`](integration/seven/)
+- **SIGNL4** - [`signl4`](integration/signl4/)
+- **Simulate** - [`simulate`](integration/simulate/)
+- **Slack** - [`slack`](integration/slack/)
+- **Snowflake** - [`snowflake`](integration/snowflake/)
+- **Splunk** - [`splunk`](integration/splunk/)
+- **Spontit** - [`spontit`](integration/spontit/)
+- **Spreadsheet File** - [`spreadsheetFile`](integration/spreadsheet-file/)
+- **SSH** - [`ssh`](integration/ssh/)
+- **Stackby** - [`stackby`](integration/stackby/)
+- **Start** - [`start`](integration/start/)
+- **Sticky Note** - [`stickyNote`](integration/sticky-note/)
+- **Storyblok** - [`storyblok`](integration/storyblok/)
+- **Strava** - [`strava`](integration/strava/)
+- **Stripe** - [`stripe`](integration/stripe/)
+- **Supabase** - [`supabase`](integration/supabase/)
+- **SurveyMonkey Trigger** - [`surveyMonkeyTrigger`](trigger/surveymonkey-trigger/)
+- **SyncroMSP** - [`syncroMsp`](integration/syncromsp/)
+- **Taiga** - [`taiga`](integration/taiga/)
+- **Tapfiliate** - [`tapfiliate`](integration/tapfiliate/)
+- **TheHive** - [`theHive`](integration/thehive/)
+- **TheHiveProject** - [`n8n-nodes-base.thehiveproject`](integration/thehiveproject/)
+- **TimescaleDB** - [`timescaleDb`](integration/timescaledb/)
+- **Todoist** - [`todoist`](integration/todoist/)
+- **TOTP** - [`totp`](integration/totp/)
+- **TravisCI** - [`travisCi`](integration/travisci/)
+- **Trello** - [`trello`](integration/trello/)
+- **Twake** - [`twake`](integration/twake/)
+- **Twilio** - [`twilio`](integration/twilio/)
+- **Twist** - [`twist`](integration/twist/)
+- **Unleashed Software** - [`unleashedSoftware`](integration/unleashed-software/)
+- **Uplead** - [`uplead`](integration/uplead/)
+- **uProc** - [`uproc`](integration/uproc/)
+- **UptimeRobot** - [`uptimeRobot`](integration/uptimerobot/)
+- **urlscan.io** - [`urlScanIo`](integration/urlscan-io/)
+- **Vero** - [`vero`](integration/vero/)
+- **Vonage** - [`vonage`](integration/vonage/)
+- **Webflow** - [`webflow`](integration/webflow/)
+- **Wekan** - [`wekan`](integration/wekan/)
+- **WhatsApp Business Cloud** - [`whatsApp`](integration/whatsapp-business-cloud/)
+- **Wise** - [`wise`](integration/wise/)
+- **WooCommerce** - [`wooCommerce`](integration/woocommerce/)
+- **Wordpress** - [`wordpress`](integration/wordpress/)
+- **Write Binary File** - [`writeBinaryFile`](integration/write-binary-file/)
+- **X (Formerly Twitter)** - [`twitter`](integration/x-formerly-twitter/)
+- **Xero** - [`xero`](integration/xero/)
+- **XML** - [`xml`](integration/xml/)
+- **Yourls** - [`yourls`](integration/yourls/)
+- **Zammad** - [`zammad`](integration/zammad/)
+- **Zendesk** - [`zendesk`](integration/zendesk/)
+- **Zoho CRM** - [`zohoCrm`](integration/zoho-crm/)
+- **Zoom** - [`zoom`](integration/zoom/)
+- **Zulip** - [`zulip`](integration/zulip/)
 
 #### API Key (4)
 
-- **APITemplate.io** - [`apiTemplateIo`](examples/nodes/integration/apitemplate-io/)
-- **Facebook Graph API** - [`facebookGraphApi`](examples/nodes/integration/facebook-graph-api/)
-- **One Simple API** - [`oneSimpleApi`](examples/nodes/integration/one-simple-api/)
-- **Strapi** - [`strapi`](examples/nodes/integration/strapi/)
+- **APITemplate.io** - [`apiTemplateIo`](integration/apitemplate-io/)
+- **Facebook Graph API** - [`facebookGraphApi`](integration/facebook-graph-api/)
+- **One Simple API** - [`oneSimpleApi`](integration/one-simple-api/)
+- **Strapi** - [`strapi`](integration/strapi/)
 
 ### Nodes Without Credentials (44)
 
 These nodes work out-of-the-box without external credentials:
 
-- **Acuity Scheduling Trigger** (`acuitySchedulingTrigger`) - [Example](examples/nodes/trigger/acuity-scheduling-trigger/)
-- **Bitbucket Trigger** (`bitbucketTrigger`) - [Example](examples/nodes/trigger/bitbucket-trigger/)
-- **Cal.com Trigger** (`calTrigger`) - [Example](examples/nodes/trigger/cal-com-trigger/)
-- **Calendly Trigger** (`calendlyTrigger`) - [Example](examples/nodes/trigger/calendly-trigger/)
-- **Clockify** (`clockify`) - [Example](examples/nodes/integration/clockify/)
-- **Code** (`code`) - [Example](examples/nodes/core/code/)
-- **Compare Datasets** (`compareDatasets`) - [Example](examples/nodes/integration/compare-datasets/)
-- **Cron** (`cron`) - [Example](examples/nodes/integration/cron/)
-- **Drift** (`drift`) - [Example](examples/nodes/integration/drift/)
-- **Email Trigger (IMAP)** (`emailReadImap`) - [Example](examples/nodes/trigger/email-trigger-imap/)
-- **Error Trigger** (`errorTrigger`) - [Example](examples/nodes/trigger/error-trigger/)
-- **Eventbrite Trigger** (`eventbriteTrigger`) - [Example](examples/nodes/trigger/eventbrite-trigger/)
-- **Figma Trigger (Beta)** (`figmaTrigger`) - [Example](examples/nodes/trigger/figma-trigger-beta/)
-- **Filter** (`filter`) - [Example](examples/nodes/integration/filter/)
-- **Form.io Trigger** (`formIoTrigger`) - [Example](examples/nodes/trigger/form-io-trigger/)
-- **Formstack Trigger** (`formstackTrigger`) - [Example](examples/nodes/trigger/formstack-trigger/)
-- **Function** (`function`) - [Example](examples/nodes/integration/function/)
-- **Function Item** (`functionItem`) - [Example](examples/nodes/integration/function-item/)
-- **Gotify** (`gotify`) - [Example](examples/nodes/integration/gotify/)
-- **Gumroad Trigger** (`gumroadTrigger`) - [Example](examples/nodes/trigger/gumroad-trigger/)
-- **If** (`if`) - [Example](examples/nodes/core/if/)
-- **Jotform Trigger** (`jotFormTrigger`) - [Example](examples/nodes/trigger/jotform-trigger/)
-- **Limit Wait Time** (`limitWaitTime`) - [Example](examples/nodes/integration/limit-wait-time/)
-- **Local File Trigger** (`localFileTrigger`) - [Example](examples/nodes/trigger/local-file-trigger/)
-- **Manual Trigger** (`manualTrigger`) - [Example](examples/nodes/trigger/manual-trigger/)
-- **Merge** (`merge`) - [Example](examples/nodes/core/merge/)
-- **n8n Trigger** (`n8nTrigger`) - [Example](examples/nodes/trigger/n8n-trigger/)
-- **Netlify** (`netlify`) - [Example](examples/nodes/integration/netlify/)
-- **Postmark Trigger** (`postmarkTrigger`) - [Example](examples/nodes/trigger/postmark-trigger/)
-- **Schedule Trigger** (`scheduleTrigger`) - [Example](examples/nodes/integration/schedule-trigger/)
-- **Set** (`set`) - [Example](examples/nodes/core/set/)
-- **Shopify** (`shopify`) - [Example](examples/nodes/integration/shopify/)
-- **Split In Batches** (`splitInBatches`) - [Example](examples/nodes/integration/split-in-batches/)
-- **Spotify** (`spotify`) - [Example](examples/nodes/integration/spotify/)
-- **SSE Trigger** (`sseTrigger`) - [Example](examples/nodes/trigger/sse-trigger/)
-- **Stop and Error** (`stopAndError`) - [Example](examples/nodes/integration/stop-and-error/)
-- **Switch** (`switch`) - [Example](examples/nodes/core/switch/)
-- **Toggl Trigger** (`togglTrigger`) - [Example](examples/nodes/trigger/toggl-trigger/)
-- **Typeform Trigger** (`typeformTrigger`) - [Example](examples/nodes/trigger/typeform-trigger/)
-- **Wait Amount** (`amount`) - [Example](examples/nodes/integration/wait-amount/)
-- **Webhook** (`webhook`) - [Example](examples/nodes/trigger/webhook/)
-- **Workable Trigger** (`workableTrigger`) - [Example](examples/nodes/trigger/workable-trigger/)
-- **Workflow Trigger** (`workflowTrigger`) - [Example](examples/nodes/trigger/workflow-trigger/)
-- **Wufoo Trigger** (`wufooTrigger`) - [Example](examples/nodes/trigger/wufoo-trigger/)
+- **Acuity Scheduling Trigger** (`acuitySchedulingTrigger`) - [Example](trigger/acuity-scheduling-trigger/)
+- **Bitbucket Trigger** (`bitbucketTrigger`) - [Example](trigger/bitbucket-trigger/)
+- **Cal.com Trigger** (`calTrigger`) - [Example](trigger/cal-com-trigger/)
+- **Calendly Trigger** (`calendlyTrigger`) - [Example](trigger/calendly-trigger/)
+- **Clockify** (`clockify`) - [Example](integration/clockify/)
+- **Code** (`code`) - [Example](core/code/)
+- **Compare Datasets** (`compareDatasets`) - [Example](integration/compare-datasets/)
+- **Cron** (`cron`) - [Example](integration/cron/)
+- **Drift** (`drift`) - [Example](integration/drift/)
+- **Email Trigger (IMAP)** (`emailReadImap`) - [Example](trigger/email-trigger-imap/)
+- **Error Trigger** (`errorTrigger`) - [Example](trigger/error-trigger/)
+- **Eventbrite Trigger** (`eventbriteTrigger`) - [Example](trigger/eventbrite-trigger/)
+- **Figma Trigger (Beta)** (`figmaTrigger`) - [Example](trigger/figma-trigger-beta/)
+- **Filter** (`filter`) - [Example](integration/filter/)
+- **Form.io Trigger** (`formIoTrigger`) - [Example](trigger/form-io-trigger/)
+- **Formstack Trigger** (`formstackTrigger`) - [Example](trigger/formstack-trigger/)
+- **Function** (`function`) - [Example](integration/function/)
+- **Function Item** (`functionItem`) - [Example](integration/function-item/)
+- **Gotify** (`gotify`) - [Example](integration/gotify/)
+- **Gumroad Trigger** (`gumroadTrigger`) - [Example](trigger/gumroad-trigger/)
+- **If** (`if`) - [Example](core/if/)
+- **Jotform Trigger** (`jotFormTrigger`) - [Example](trigger/jotform-trigger/)
+- **Limit Wait Time** (`limitWaitTime`) - [Example](integration/limit-wait-time/)
+- **Local File Trigger** (`localFileTrigger`) - [Example](trigger/local-file-trigger/)
+- **Manual Trigger** (`manualTrigger`) - [Example](trigger/manual-trigger/)
+- **Merge** (`merge`) - [Example](core/merge/)
+- **n8n Trigger** (`n8nTrigger`) - [Example](trigger/n8n-trigger/)
+- **Netlify** (`netlify`) - [Example](integration/netlify/)
+- **Postmark Trigger** (`postmarkTrigger`) - [Example](trigger/postmark-trigger/)
+- **Schedule Trigger** (`scheduleTrigger`) - [Example](integration/schedule-trigger/)
+- **Set** (`set`) - [Example](core/set/)
+- **Shopify** (`shopify`) - [Example](integration/shopify/)
+- **Split In Batches** (`splitInBatches`) - [Example](integration/split-in-batches/)
+- **Spotify** (`spotify`) - [Example](integration/spotify/)
+- **SSE Trigger** (`sseTrigger`) - [Example](trigger/sse-trigger/)
+- **Stop and Error** (`stopAndError`) - [Example](integration/stop-and-error/)
+- **Switch** (`switch`) - [Example](core/switch/)
+- **Toggl Trigger** (`togglTrigger`) - [Example](trigger/toggl-trigger/)
+- **Typeform Trigger** (`typeformTrigger`) - [Example](trigger/typeform-trigger/)
+- **Wait Amount** (`amount`) - [Example](integration/wait-amount/)
+- **Webhook** (`webhook`) - [Example](trigger/webhook/)
+- **Workable Trigger** (`workableTrigger`) - [Example](trigger/workable-trigger/)
+- **Workflow Trigger** (`workflowTrigger`) - [Example](trigger/workflow-trigger/)
+- **Wufoo Trigger** (`wufooTrigger`) - [Example](trigger/wufoo-trigger/)
 
 ---
 
@@ -700,16 +700,18 @@ resource "n8n_workflow_node" "my_code" {
 Every node has a complete, tested workflow example in:
 
 ```
-examples/nodes/{category}/{node-slug}/
+{category}/{node-slug}/
   ├── main.tf         # Complete workflow with the node
   ├── variables.tf    # Provider configuration
   └── README.md       # Node-specific documentation
 ```
 
+(All paths are relative to this README location: `examples/nodes/`)
+
 ### Testing Your Workflow
 
 ```bash
-cd examples/nodes/core/code
+cd core/code
 terraform init
 terraform validate
 terraform plan
@@ -777,4 +779,4 @@ This documentation is auto-generated from the node registry. To regenerate:
 make nodes/docs
 ```
 
-**Last Generated**: 2025-11-17T15:23:04.863Z
+**Last Generated**: 2025-11-17T23:50:52.540Z

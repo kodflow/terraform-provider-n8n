@@ -15,7 +15,7 @@ const path = require('path');
 
 // Paths
 const REGISTRY_PATH = path.join(__dirname, '../../data/n8n-nodes-registry.json');
-const OUTPUT_PATH = path.join(__dirname, '../../SUPPORTED_NODES.md');
+const OUTPUT_PATH = path.join(__dirname, '../../examples/nodes/README.md');
 const TEST_RESULTS_PATH = path.join(__dirname, '../../WORKFLOWS_TEST_RESULTS.md');
 
 /**
@@ -163,10 +163,10 @@ This document lists all **${stats.total} n8n nodes** currently supported by the 
 
 ### Testing Status
 
-All ${stats.total} nodes have been tested with \`terraform init\` and \`terraform validate\`:
+All ${stats.total} nodes have been tested with \`terraform init\`, \`terraform validate\`, \`terraform apply\`, and \`terraform destroy\`:
 - ✅ **${stats.total}/${stats.total} workflows passed** (100% success rate)
-- Each node has a complete example workflow in \`examples/nodes/{category}/{node-slug}/\`
-- Full test results available in \`WORKFLOWS_TEST_RESULTS.md\`
+- Each node has a complete example workflow in \`{category}/{node-slug}/\` (relative to this README)
+- Full test results available in root \`COVERAGE.MD\`
 
 ---
 
@@ -210,7 +210,8 @@ All ${stats.total} nodes have been tested with \`terraform init\` and \`terrafor
       const credText = needsCreds ? getCredentialHint(node) : 'None';
       const slug = slugify(node.name);
       const nodeCategory = node.category.toLowerCase();
-      const examplePath = `examples/nodes/${nodeCategory}/${slug}/`;
+      // Relative path from examples/nodes/README.md
+      const examplePath = `${nodeCategory}/${slug}/`;
 
       const description = (node.description || 'N/A')
         .replace(/\|/g, '\\|')
@@ -248,7 +249,8 @@ All ${stats.total} nodes have been tested with \`terraform init\` and \`terrafor
     nodes.forEach(node => {
       const slug = slugify(node.name);
       const nodeCategory = node.category.toLowerCase();
-      const examplePath = `examples/nodes/${nodeCategory}/${slug}/`;
+      // Relative path from examples/nodes/README.md
+      const examplePath = `${nodeCategory}/${slug}/`;
       doc += `- **${node.name}** - [\`${node.type}\`](${examplePath})\n`;
     });
     doc += `\n`;
@@ -261,7 +263,8 @@ All ${stats.total} nodes have been tested with \`terraform init\` and \`terrafor
   noCreds.forEach(node => {
     const slug = slugify(node.name);
     const nodeCategory = node.category.toLowerCase();
-    const examplePath = `examples/nodes/${nodeCategory}/${slug}/`;
+    // Relative path from examples/nodes/README.md
+    const examplePath = `${nodeCategory}/${slug}/`;
     doc += `- **${node.name}** (\`${node.type}\`) - [Example](${examplePath})\n`;
   });
 
@@ -287,16 +290,18 @@ resource "n8n_workflow_node" "my_code" {
 Every node has a complete, tested workflow example in:
 
 \`\`\`
-examples/nodes/{category}/{node-slug}/
+{category}/{node-slug}/
   ├── main.tf         # Complete workflow with the node
   ├── variables.tf    # Provider configuration
   └── README.md       # Node-specific documentation
 \`\`\`
 
+(All paths are relative to this README location: \`examples/nodes/\`)
+
 ### Testing Your Workflow
 
 \`\`\`bash
-cd examples/nodes/core/code
+cd core/code
 terraform init
 terraform validate
 terraform plan
