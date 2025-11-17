@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright (c) 2024 Florent (Kodflow). All rights reserved.
 # Licensed under the Sustainable Use License 1.0
-# See LICENSE.md in the project root for license information.
+# See LICENSE in the project root for license information.
 # Configure Git to use hooks from .github/hooks/ directory
 
 # Colors
