@@ -31,14 +31,14 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "conditions": {
-            "boolean": [
-                {
-                    "value1": "={{ $json.isValid }}",
-                    "value2": true
-                }
-            ]
-        }
+      "conditions" : {
+        "boolean" : [
+          {
+            "value1" : "={{ $json.isValid }}",
+            "value2" : true
+          }
+        ]
+      }
     }
   )
 }
@@ -56,7 +56,7 @@ resource "n8n_workflow_node" "output_0" {
         name  = "output_type"
         type  = "string"
         value = "True"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -78,7 +78,7 @@ resource "n8n_workflow_node" "output_1" {
         name  = "output_type"
         type  = "string"
         value = "False"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"

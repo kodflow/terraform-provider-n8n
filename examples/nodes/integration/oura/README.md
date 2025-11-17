@@ -1,8 +1,6 @@
 # Oura Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.oura`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.oura` **Latest Version**: 1
 
 ## Description
 

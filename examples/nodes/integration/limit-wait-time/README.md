@@ -1,8 +1,6 @@
 # Limit Wait Time Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.limitWaitTime`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.limitWaitTime` **Latest Version**: 1
 
 ## Description
 

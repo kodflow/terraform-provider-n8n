@@ -1,8 +1,6 @@
 # Brevo Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.sendInBlue`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.sendInBlue` **Latest Version**: 1
 
 ## Description
 

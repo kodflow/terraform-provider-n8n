@@ -1,8 +1,6 @@
 # Copper Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.copper`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.copper` **Latest Version**: 1
 
 ## Description
 

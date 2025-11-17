@@ -37,9 +37,9 @@ resource "n8n_workflow_node" "node_core_code" {
 
   parameters = jsonencode(
     {
-"mode" : "runOnceForAllItems",
-"jsCode" : "// Process data\nconst items = $input.all();\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    processed: true,\n    timestamp: new Date().toISOString()\n  }\n}));"
-}
+      "mode" : "runOnceForAllItems",
+      "jsCode" : "// Process data\nconst items = $input.all();\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    processed: true,\n    timestamp: new Date().toISOString()\n  }\n}));"
+    }
   )
 }
 
@@ -51,15 +51,15 @@ resource "n8n_workflow_node" "node_core_if" {
 
   parameters = jsonencode(
     {
-"conditions" : {
-"boolean" : [
-{
-"value1" : "={{ $json.isValid }}",
-"value2" : true
-}
-]
-}
-}
+      "conditions" : {
+        "boolean" : [
+          {
+            "value1" : "={{ $json.isValid }}",
+            "value2" : true
+          }
+        ]
+      }
+    }
   )
 }
 
@@ -71,16 +71,16 @@ resource "n8n_workflow_node" "node_core_merge" {
 
   parameters = jsonencode(
     {
-"mode" : "combine",
-"mergeByFields" : {
-"values" : [
-{
-"field1" : "id",
-"field2" : "id"
-}
-]
-}
-}
+      "mode" : "combine",
+      "mergeByFields" : {
+        "values" : [
+          {
+            "field1" : "id",
+            "field2" : "id"
+          }
+        ]
+      }
+    }
   )
 }
 
@@ -92,17 +92,17 @@ resource "n8n_workflow_node" "node_core_set" {
 
   parameters = jsonencode(
     {
-"mode" : "manual",
-"fields" : {
-"values" : [
-{
-"name" : "output",
-"type" : "string",
-"value" : "={{ $json }}"
-}
-]
-}
-}
+      "mode" : "manual",
+      "fields" : {
+        "values" : [
+          {
+            "name" : "output",
+            "type" : "string",
+            "value" : "={{ $json }}"
+          }
+        ]
+      }
+    }
   )
 }
 
@@ -114,18 +114,18 @@ resource "n8n_workflow_node" "node_core_switch" {
 
   parameters = jsonencode(
     {
-"mode" : "rules",
-"rules" : {
-"values" : [
-{
-"value" : "={{ $json.type === \"A\" }}"
-},
-{
-"value" : "={{ $json.type === \"B\" }}"
-}
-]
-}
-}
+      "mode" : "rules",
+      "rules" : {
+        "values" : [
+          {
+            "value" : "={{ $json.type === \"A\" }}"
+          },
+          {
+            "value" : "={{ $json.type === \"B\" }}"
+          }
+        ]
+      }
+    }
   )
 }
 
@@ -137,8 +137,8 @@ resource "n8n_workflow_node" "node_integration_action_network" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Action Network parameters here"
-}
+      "note" : "Configure Action Network parameters here"
+    }
   )
 }
 
@@ -150,8 +150,8 @@ resource "n8n_workflow_node" "node_integration_activecampaign" {
 
   parameters = jsonencode(
     {
-"note" : "Configure ActiveCampaign parameters here"
-}
+      "note" : "Configure ActiveCampaign parameters here"
+    }
   )
 }
 
@@ -163,8 +163,8 @@ resource "n8n_workflow_node" "node_integration_adalo" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Adalo parameters here"
-}
+      "note" : "Configure Adalo parameters here"
+    }
   )
 }
 
@@ -176,8 +176,8 @@ resource "n8n_workflow_node" "node_integration_affinity" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Affinity parameters here"
-}
+      "note" : "Configure Affinity parameters here"
+    }
   )
 }
 
@@ -189,8 +189,8 @@ resource "n8n_workflow_node" "node_integration_agile_crm" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Agile CRM parameters here"
-}
+      "note" : "Configure Agile CRM parameters here"
+    }
   )
 }
 
@@ -202,8 +202,8 @@ resource "n8n_workflow_node" "node_integration_ai_transform" {
 
   parameters = jsonencode(
     {
-"note" : "Configure AI Transform parameters here"
-}
+      "note" : "Configure AI Transform parameters here"
+    }
   )
 }
 
@@ -215,8 +215,8 @@ resource "n8n_workflow_node" "node_integration_airtable" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Airtable parameters here"
-}
+      "note" : "Configure Airtable parameters here"
+    }
   )
 }
 
@@ -228,8 +228,8 @@ resource "n8n_workflow_node" "node_integration_airtop" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Airtop parameters here"
-}
+      "note" : "Configure Airtop parameters here"
+    }
   )
 }
 
@@ -241,8 +241,8 @@ resource "n8n_workflow_node" "node_integration_amqp_sender" {
 
   parameters = jsonencode(
     {
-"note" : "Configure AMQP Sender parameters here"
-}
+      "note" : "Configure AMQP Sender parameters here"
+    }
   )
 }
 
@@ -254,8 +254,8 @@ resource "n8n_workflow_node" "node_integration_apitemplate_io" {
 
   parameters = jsonencode(
     {
-"note" : "Configure APITemplate.io parameters here"
-}
+      "note" : "Configure APITemplate.io parameters here"
+    }
   )
 }
 
@@ -267,8 +267,8 @@ resource "n8n_workflow_node" "node_integration_asana" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Asana parameters here"
-}
+      "note" : "Configure Asana parameters here"
+    }
   )
 }
 
@@ -280,8 +280,8 @@ resource "n8n_workflow_node" "node_integration_automizy" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Automizy parameters here"
-}
+      "note" : "Configure Automizy parameters here"
+    }
   )
 }
 
@@ -293,8 +293,8 @@ resource "n8n_workflow_node" "node_integration_autopilot" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Autopilot parameters here"
-}
+      "note" : "Configure Autopilot parameters here"
+    }
   )
 }
 
@@ -306,8 +306,8 @@ resource "n8n_workflow_node" "node_integration_aws_lambda" {
 
   parameters = jsonencode(
     {
-"note" : "Configure AWS Lambda parameters here"
-}
+      "note" : "Configure AWS Lambda parameters here"
+    }
   )
 }
 
@@ -319,8 +319,8 @@ resource "n8n_workflow_node" "node_integration_background_color" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Background Color parameters here"
-}
+      "note" : "Configure Background Color parameters here"
+    }
   )
 }
 
@@ -332,8 +332,8 @@ resource "n8n_workflow_node" "node_integration_bamboohr" {
 
   parameters = jsonencode(
     {
-"note" : "Configure BambooHr parameters here"
-}
+      "note" : "Configure BambooHr parameters here"
+    }
   )
 }
 
@@ -345,8 +345,8 @@ resource "n8n_workflow_node" "node_integration_bannerbear" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Bannerbear parameters here"
-}
+      "note" : "Configure Bannerbear parameters here"
+    }
   )
 }
 
@@ -358,8 +358,8 @@ resource "n8n_workflow_node" "node_integration_baserow" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Baserow parameters here"
-}
+      "note" : "Configure Baserow parameters here"
+    }
   )
 }
 
@@ -371,8 +371,8 @@ resource "n8n_workflow_node" "node_integration_beeminder" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Beeminder parameters here"
-}
+      "note" : "Configure Beeminder parameters here"
+    }
   )
 }
 
@@ -384,8 +384,8 @@ resource "n8n_workflow_node" "node_integration_bitly" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Bitly parameters here"
-}
+      "note" : "Configure Bitly parameters here"
+    }
   )
 }
 
@@ -397,8 +397,8 @@ resource "n8n_workflow_node" "node_integration_bitwarden" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Bitwarden parameters here"
-}
+      "note" : "Configure Bitwarden parameters here"
+    }
   )
 }
 
@@ -410,8 +410,8 @@ resource "n8n_workflow_node" "node_integration_box" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Box parameters here"
-}
+      "note" : "Configure Box parameters here"
+    }
   )
 }
 
@@ -423,8 +423,8 @@ resource "n8n_workflow_node" "node_integration_brandfetch" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Brandfetch parameters here"
-}
+      "note" : "Configure Brandfetch parameters here"
+    }
   )
 }
 
@@ -436,8 +436,8 @@ resource "n8n_workflow_node" "node_integration_brevo" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Brevo parameters here"
-}
+      "note" : "Configure Brevo parameters here"
+    }
   )
 }
 
@@ -449,8 +449,8 @@ resource "n8n_workflow_node" "node_integration_bubble" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Bubble parameters here"
-}
+      "note" : "Configure Bubble parameters here"
+    }
   )
 }
 
@@ -462,8 +462,8 @@ resource "n8n_workflow_node" "node_integration_chargebee" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Chargebee parameters here"
-}
+      "note" : "Configure Chargebee parameters here"
+    }
   )
 }
 
@@ -475,8 +475,8 @@ resource "n8n_workflow_node" "node_integration_circleci" {
 
   parameters = jsonencode(
     {
-"note" : "Configure CircleCI parameters here"
-}
+      "note" : "Configure CircleCI parameters here"
+    }
   )
 }
 
@@ -488,8 +488,8 @@ resource "n8n_workflow_node" "node_integration_clearbit" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Clearbit parameters here"
-}
+      "note" : "Configure Clearbit parameters here"
+    }
   )
 }
 
@@ -501,8 +501,8 @@ resource "n8n_workflow_node" "node_integration_clickup" {
 
   parameters = jsonencode(
     {
-"note" : "Configure ClickUp parameters here"
-}
+      "note" : "Configure ClickUp parameters here"
+    }
   )
 }
 
@@ -514,8 +514,8 @@ resource "n8n_workflow_node" "node_integration_clockify" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Clockify parameters here"
-}
+      "note" : "Configure Clockify parameters here"
+    }
   )
 }
 
@@ -527,8 +527,8 @@ resource "n8n_workflow_node" "node_integration_cloudflare" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Cloudflare parameters here"
-}
+      "note" : "Configure Cloudflare parameters here"
+    }
   )
 }
 
@@ -540,8 +540,8 @@ resource "n8n_workflow_node" "node_integration_cockpit" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Cockpit parameters here"
-}
+      "note" : "Configure Cockpit parameters here"
+    }
   )
 }
 
@@ -553,8 +553,8 @@ resource "n8n_workflow_node" "node_integration_coda" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Coda parameters here"
-}
+      "note" : "Configure Coda parameters here"
+    }
   )
 }
 
@@ -566,8 +566,8 @@ resource "n8n_workflow_node" "node_integration_coingecko" {
 
   parameters = jsonencode(
     {
-"note" : "Configure CoinGecko parameters here"
-}
+      "note" : "Configure CoinGecko parameters here"
+    }
   )
 }
 
@@ -579,8 +579,8 @@ resource "n8n_workflow_node" "node_integration_compare_datasets" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Compare Datasets parameters here"
-}
+      "note" : "Configure Compare Datasets parameters here"
+    }
   )
 }
 
@@ -592,8 +592,8 @@ resource "n8n_workflow_node" "node_integration_compression" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Compression parameters here"
-}
+      "note" : "Configure Compression parameters here"
+    }
   )
 }
 
@@ -605,8 +605,8 @@ resource "n8n_workflow_node" "node_integration_contentful" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Contentful parameters here"
-}
+      "note" : "Configure Contentful parameters here"
+    }
   )
 }
 
@@ -618,8 +618,8 @@ resource "n8n_workflow_node" "node_integration_convert_to_from_binary_data" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Convert to/from binary data parameters here"
-}
+      "note" : "Configure Convert to/from binary data parameters here"
+    }
   )
 }
 
@@ -631,8 +631,8 @@ resource "n8n_workflow_node" "node_integration_convertkit" {
 
   parameters = jsonencode(
     {
-"note" : "Configure ConvertKit parameters here"
-}
+      "note" : "Configure ConvertKit parameters here"
+    }
   )
 }
 
@@ -644,8 +644,8 @@ resource "n8n_workflow_node" "node_integration_copper" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Copper parameters here"
-}
+      "note" : "Configure Copper parameters here"
+    }
   )
 }
 
@@ -657,8 +657,8 @@ resource "n8n_workflow_node" "node_integration_cortex" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Cortex parameters here"
-}
+      "note" : "Configure Cortex parameters here"
+    }
   )
 }
 
@@ -670,8 +670,8 @@ resource "n8n_workflow_node" "node_integration_cratedb" {
 
   parameters = jsonencode(
     {
-"note" : "Configure CrateDB parameters here"
-}
+      "note" : "Configure CrateDB parameters here"
+    }
   )
 }
 
@@ -683,8 +683,8 @@ resource "n8n_workflow_node" "node_integration_cron" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Cron parameters here"
-}
+      "note" : "Configure Cron parameters here"
+    }
   )
 }
 
@@ -696,8 +696,8 @@ resource "n8n_workflow_node" "node_integration_crowd_dev" {
 
   parameters = jsonencode(
     {
-"note" : "Configure crowd.dev parameters here"
-}
+      "note" : "Configure crowd.dev parameters here"
+    }
   )
 }
 
@@ -709,8 +709,8 @@ resource "n8n_workflow_node" "node_integration_crypto" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Crypto parameters here"
-}
+      "note" : "Configure Crypto parameters here"
+    }
   )
 }
 
@@ -722,8 +722,8 @@ resource "n8n_workflow_node" "node_integration_customer_datastore_n8n_training" 
 
   parameters = jsonencode(
     {
-"note" : "Configure Customer Datastore (n8n training) parameters here"
-}
+      "note" : "Configure Customer Datastore (n8n training) parameters here"
+    }
   )
 }
 
@@ -735,8 +735,8 @@ resource "n8n_workflow_node" "node_integration_customer_io" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Customer.io parameters here"
-}
+      "note" : "Configure Customer.io parameters here"
+    }
   )
 }
 
@@ -748,8 +748,8 @@ resource "n8n_workflow_node" "node_integration_customer_messenger_n8n_training" 
 
   parameters = jsonencode(
     {
-"note" : "Configure Customer Messenger (n8n training) parameters here"
-}
+      "note" : "Configure Customer Messenger (n8n training) parameters here"
+    }
   )
 }
 
@@ -761,8 +761,8 @@ resource "n8n_workflow_node" "node_integration_data_table" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Data table parameters here"
-}
+      "note" : "Configure Data table parameters here"
+    }
   )
 }
 
@@ -774,8 +774,8 @@ resource "n8n_workflow_node" "node_integration_date_time" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Date & Time parameters here"
-}
+      "note" : "Configure Date & Time parameters here"
+    }
   )
 }
 
@@ -787,8 +787,8 @@ resource "n8n_workflow_node" "node_integration_debughelper" {
 
   parameters = jsonencode(
     {
-"note" : "Configure DebugHelper parameters here"
-}
+      "note" : "Configure DebugHelper parameters here"
+    }
   )
 }
 
@@ -800,8 +800,8 @@ resource "n8n_workflow_node" "node_integration_deepl" {
 
   parameters = jsonencode(
     {
-"note" : "Configure DeepL parameters here"
-}
+      "note" : "Configure DeepL parameters here"
+    }
   )
 }
 
@@ -813,8 +813,8 @@ resource "n8n_workflow_node" "node_integration_demio" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Demio parameters here"
-}
+      "note" : "Configure Demio parameters here"
+    }
   )
 }
 
@@ -826,8 +826,8 @@ resource "n8n_workflow_node" "node_integration_dhl" {
 
   parameters = jsonencode(
     {
-"note" : "Configure DHL parameters here"
-}
+      "note" : "Configure DHL parameters here"
+    }
   )
 }
 
@@ -839,8 +839,8 @@ resource "n8n_workflow_node" "node_integration_discord" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Discord parameters here"
-}
+      "note" : "Configure Discord parameters here"
+    }
   )
 }
 
@@ -852,8 +852,8 @@ resource "n8n_workflow_node" "node_integration_discourse" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Discourse parameters here"
-}
+      "note" : "Configure Discourse parameters here"
+    }
   )
 }
 
@@ -865,8 +865,8 @@ resource "n8n_workflow_node" "node_integration_disqus" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Disqus parameters here"
-}
+      "note" : "Configure Disqus parameters here"
+    }
   )
 }
 
@@ -878,8 +878,8 @@ resource "n8n_workflow_node" "node_integration_drift" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Drift parameters here"
-}
+      "note" : "Configure Drift parameters here"
+    }
   )
 }
 
@@ -891,8 +891,8 @@ resource "n8n_workflow_node" "node_integration_dropbox" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Dropbox parameters here"
-}
+      "note" : "Configure Dropbox parameters here"
+    }
   )
 }
 
@@ -904,8 +904,8 @@ resource "n8n_workflow_node" "node_integration_dropcontact" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Dropcontact parameters here"
-}
+      "note" : "Configure Dropcontact parameters here"
+    }
   )
 }
 
@@ -917,8 +917,8 @@ resource "n8n_workflow_node" "node_integration_e_goi" {
 
   parameters = jsonencode(
     {
-"note" : "Configure E-goi parameters here"
-}
+      "note" : "Configure E-goi parameters here"
+    }
   )
 }
 
@@ -930,8 +930,8 @@ resource "n8n_workflow_node" "node_integration_e2e_test" {
 
   parameters = jsonencode(
     {
-"note" : "Configure E2E Test parameters here"
-}
+      "note" : "Configure E2E Test parameters here"
+    }
   )
 }
 
@@ -943,8 +943,8 @@ resource "n8n_workflow_node" "node_integration_emelia" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Emelia parameters here"
-}
+      "note" : "Configure Emelia parameters here"
+    }
   )
 }
 
@@ -956,8 +956,8 @@ resource "n8n_workflow_node" "node_integration_erpnext" {
 
   parameters = jsonencode(
     {
-"note" : "Configure ERPNext parameters here"
-}
+      "note" : "Configure ERPNext parameters here"
+    }
   )
 }
 
@@ -969,8 +969,8 @@ resource "n8n_workflow_node" "node_integration_execute_command" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Execute Command parameters here"
-}
+      "note" : "Configure Execute Command parameters here"
+    }
   )
 }
 
@@ -982,8 +982,8 @@ resource "n8n_workflow_node" "node_integration_execution_data" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Execution Data parameters here"
-}
+      "note" : "Configure Execution Data parameters here"
+    }
   )
 }
 
@@ -995,8 +995,8 @@ resource "n8n_workflow_node" "node_integration_extraction_values" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Extraction Values parameters here"
-}
+      "note" : "Configure Extraction Values parameters here"
+    }
   )
 }
 
@@ -1008,8 +1008,8 @@ resource "n8n_workflow_node" "node_integration_facebook_graph_api" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Facebook Graph API parameters here"
-}
+      "note" : "Configure Facebook Graph API parameters here"
+    }
   )
 }
 
@@ -1021,8 +1021,8 @@ resource "n8n_workflow_node" "node_integration_filemaker" {
 
   parameters = jsonencode(
     {
-"note" : "Configure FileMaker parameters here"
-}
+      "note" : "Configure FileMaker parameters here"
+    }
   )
 }
 
@@ -1034,8 +1034,8 @@ resource "n8n_workflow_node" "node_integration_filter" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Filter parameters here"
-}
+      "note" : "Configure Filter parameters here"
+    }
   )
 }
 
@@ -1047,8 +1047,8 @@ resource "n8n_workflow_node" "node_integration_flow" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Flow parameters here"
-}
+      "note" : "Configure Flow parameters here"
+    }
   )
 }
 
@@ -1060,8 +1060,8 @@ resource "n8n_workflow_node" "node_integration_freshdesk" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Freshdesk parameters here"
-}
+      "note" : "Configure Freshdesk parameters here"
+    }
   )
 }
 
@@ -1073,8 +1073,8 @@ resource "n8n_workflow_node" "node_integration_freshservice" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Freshservice parameters here"
-}
+      "note" : "Configure Freshservice parameters here"
+    }
   )
 }
 
@@ -1086,8 +1086,8 @@ resource "n8n_workflow_node" "node_integration_freshworks_crm" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Freshworks CRM parameters here"
-}
+      "note" : "Configure Freshworks CRM parameters here"
+    }
   )
 }
 
@@ -1099,8 +1099,8 @@ resource "n8n_workflow_node" "node_integration_ftp" {
 
   parameters = jsonencode(
     {
-"note" : "Configure FTP parameters here"
-}
+      "note" : "Configure FTP parameters here"
+    }
   )
 }
 
@@ -1112,8 +1112,8 @@ resource "n8n_workflow_node" "node_integration_function" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Function parameters here"
-}
+      "note" : "Configure Function parameters here"
+    }
   )
 }
 
@@ -1125,8 +1125,8 @@ resource "n8n_workflow_node" "node_integration_function_item" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Function Item parameters here"
-}
+      "note" : "Configure Function Item parameters here"
+    }
   )
 }
 
@@ -1138,8 +1138,8 @@ resource "n8n_workflow_node" "node_integration_getresponse" {
 
   parameters = jsonencode(
     {
-"note" : "Configure GetResponse parameters here"
-}
+      "note" : "Configure GetResponse parameters here"
+    }
   )
 }
 
@@ -1151,8 +1151,8 @@ resource "n8n_workflow_node" "node_integration_ghost" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Ghost parameters here"
-}
+      "note" : "Configure Ghost parameters here"
+    }
   )
 }
 
@@ -1164,8 +1164,8 @@ resource "n8n_workflow_node" "node_integration_git" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Git parameters here"
-}
+      "note" : "Configure Git parameters here"
+    }
   )
 }
 
@@ -1177,8 +1177,8 @@ resource "n8n_workflow_node" "node_integration_github" {
 
   parameters = jsonencode(
     {
-"note" : "Configure GitHub parameters here"
-}
+      "note" : "Configure GitHub parameters here"
+    }
   )
 }
 
@@ -1190,8 +1190,8 @@ resource "n8n_workflow_node" "node_integration_gitlab" {
 
   parameters = jsonencode(
     {
-"note" : "Configure GitLab parameters here"
-}
+      "note" : "Configure GitLab parameters here"
+    }
   )
 }
 
@@ -1203,8 +1203,8 @@ resource "n8n_workflow_node" "node_integration_gong" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Gong parameters here"
-}
+      "note" : "Configure Gong parameters here"
+    }
   )
 }
 
@@ -1216,8 +1216,8 @@ resource "n8n_workflow_node" "node_integration_gotify" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Gotify parameters here"
-}
+      "note" : "Configure Gotify parameters here"
+    }
   )
 }
 
@@ -1229,8 +1229,8 @@ resource "n8n_workflow_node" "node_integration_gotowebinar" {
 
   parameters = jsonencode(
     {
-"note" : "Configure GoToWebinar parameters here"
-}
+      "note" : "Configure GoToWebinar parameters here"
+    }
   )
 }
 
@@ -1242,8 +1242,8 @@ resource "n8n_workflow_node" "node_integration_grafana" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Grafana parameters here"
-}
+      "note" : "Configure Grafana parameters here"
+    }
   )
 }
 
@@ -1255,8 +1255,8 @@ resource "n8n_workflow_node" "node_integration_graphql" {
 
   parameters = jsonencode(
     {
-"note" : "Configure GraphQL parameters here"
-}
+      "note" : "Configure GraphQL parameters here"
+    }
   )
 }
 
@@ -1268,8 +1268,8 @@ resource "n8n_workflow_node" "node_integration_grist" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Grist parameters here"
-}
+      "note" : "Configure Grist parameters here"
+    }
   )
 }
 
@@ -1281,8 +1281,8 @@ resource "n8n_workflow_node" "node_integration_hacker_news" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Hacker News parameters here"
-}
+      "note" : "Configure Hacker News parameters here"
+    }
   )
 }
 
@@ -1294,8 +1294,8 @@ resource "n8n_workflow_node" "node_integration_halopsa" {
 
   parameters = jsonencode(
     {
-"note" : "Configure HaloPSA parameters here"
-}
+      "note" : "Configure HaloPSA parameters here"
+    }
   )
 }
 
@@ -1307,8 +1307,8 @@ resource "n8n_workflow_node" "node_integration_harvest" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Harvest parameters here"
-}
+      "note" : "Configure Harvest parameters here"
+    }
   )
 }
 
@@ -1320,8 +1320,8 @@ resource "n8n_workflow_node" "node_integration_help_scout" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Help Scout parameters here"
-}
+      "note" : "Configure Help Scout parameters here"
+    }
   )
 }
 
@@ -1333,8 +1333,8 @@ resource "n8n_workflow_node" "node_integration_highlevel" {
 
   parameters = jsonencode(
     {
-"note" : "Configure HighLevel parameters here"
-}
+      "note" : "Configure HighLevel parameters here"
+    }
   )
 }
 
@@ -1346,8 +1346,8 @@ resource "n8n_workflow_node" "node_integration_home_assistant" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Home Assistant parameters here"
-}
+      "note" : "Configure Home Assistant parameters here"
+    }
   )
 }
 
@@ -1359,8 +1359,8 @@ resource "n8n_workflow_node" "node_integration_html_extract" {
 
   parameters = jsonencode(
     {
-"note" : "Configure HTML Extract parameters here"
-}
+      "note" : "Configure HTML Extract parameters here"
+    }
   )
 }
 
@@ -1372,11 +1372,11 @@ resource "n8n_workflow_node" "node_integration_http_request" {
 
   parameters = jsonencode(
     {
-"method" : "GET",
-"url" : "https://httpbin.org/get",
-"authentication" : "none",
-"options" : {}
-}
+      "method" : "GET",
+      "url" : "https://httpbin.org/get",
+      "authentication" : "none",
+      "options" : {}
+    }
   )
 }
 
@@ -1388,8 +1388,8 @@ resource "n8n_workflow_node" "node_integration_hubspot" {
 
   parameters = jsonencode(
     {
-"note" : "Configure HubSpot parameters here"
-}
+      "note" : "Configure HubSpot parameters here"
+    }
   )
 }
 
@@ -1401,8 +1401,8 @@ resource "n8n_workflow_node" "node_integration_humantic_ai" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Humantic AI parameters here"
-}
+      "note" : "Configure Humantic AI parameters here"
+    }
   )
 }
 
@@ -1414,8 +1414,8 @@ resource "n8n_workflow_node" "node_integration_hunter" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Hunter parameters here"
-}
+      "note" : "Configure Hunter parameters here"
+    }
   )
 }
 
@@ -1427,8 +1427,8 @@ resource "n8n_workflow_node" "node_integration_icalendar" {
 
   parameters = jsonencode(
     {
-"note" : "Configure iCalendar parameters here"
-}
+      "note" : "Configure iCalendar parameters here"
+    }
   )
 }
 
@@ -1440,8 +1440,8 @@ resource "n8n_workflow_node" "node_integration_interact_with_telegram_using_our_
 
   parameters = jsonencode(
     {
-"note" : "Configure Interact with Telegram using our pre-built parameters here"
-}
+      "note" : "Configure Interact with Telegram using our pre-built parameters here"
+    }
   )
 }
 
@@ -1453,8 +1453,8 @@ resource "n8n_workflow_node" "node_integration_intercom" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Intercom parameters here"
-}
+      "note" : "Configure Intercom parameters here"
+    }
   )
 }
 
@@ -1466,8 +1466,8 @@ resource "n8n_workflow_node" "node_integration_interval" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Interval parameters here"
-}
+      "note" : "Configure Interval parameters here"
+    }
   )
 }
 
@@ -1479,8 +1479,8 @@ resource "n8n_workflow_node" "node_integration_invoice_ninja" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Invoice Ninja parameters here"
-}
+      "note" : "Configure Invoice Ninja parameters here"
+    }
   )
 }
 
@@ -1492,8 +1492,8 @@ resource "n8n_workflow_node" "node_integration_item_lists" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Item Lists parameters here"
-}
+      "note" : "Configure Item Lists parameters here"
+    }
   )
 }
 
@@ -1505,8 +1505,8 @@ resource "n8n_workflow_node" "node_integration_iterable" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Iterable parameters here"
-}
+      "note" : "Configure Iterable parameters here"
+    }
   )
 }
 
@@ -1518,8 +1518,8 @@ resource "n8n_workflow_node" "node_integration_jenkins" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Jenkins parameters here"
-}
+      "note" : "Configure Jenkins parameters here"
+    }
   )
 }
 
@@ -1531,8 +1531,8 @@ resource "n8n_workflow_node" "node_integration_jina_ai" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Jina AI parameters here"
-}
+      "note" : "Configure Jina AI parameters here"
+    }
   )
 }
 
@@ -1544,8 +1544,8 @@ resource "n8n_workflow_node" "node_integration_jira_software" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Jira Software parameters here"
-}
+      "note" : "Configure Jira Software parameters here"
+    }
   )
 }
 
@@ -1557,8 +1557,8 @@ resource "n8n_workflow_node" "node_integration_jwt" {
 
   parameters = jsonencode(
     {
-"note" : "Configure JWT parameters here"
-}
+      "note" : "Configure JWT parameters here"
+    }
   )
 }
 
@@ -1570,8 +1570,8 @@ resource "n8n_workflow_node" "node_integration_kafka" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Kafka parameters here"
-}
+      "note" : "Configure Kafka parameters here"
+    }
   )
 }
 
@@ -1583,8 +1583,8 @@ resource "n8n_workflow_node" "node_integration_keap" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Keap parameters here"
-}
+      "note" : "Configure Keap parameters here"
+    }
   )
 }
 
@@ -1596,8 +1596,8 @@ resource "n8n_workflow_node" "node_integration_kitemaker" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Kitemaker parameters here"
-}
+      "note" : "Configure Kitemaker parameters here"
+    }
   )
 }
 
@@ -1609,8 +1609,8 @@ resource "n8n_workflow_node" "node_integration_kobotoolbox" {
 
   parameters = jsonencode(
     {
-"note" : "Configure KoBoToolbox parameters here"
-}
+      "note" : "Configure KoBoToolbox parameters here"
+    }
   )
 }
 
@@ -1622,8 +1622,8 @@ resource "n8n_workflow_node" "node_integration_ldap" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Ldap parameters here"
-}
+      "note" : "Configure Ldap parameters here"
+    }
   )
 }
 
@@ -1635,8 +1635,8 @@ resource "n8n_workflow_node" "node_integration_lemlist" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Lemlist parameters here"
-}
+      "note" : "Configure Lemlist parameters here"
+    }
   )
 }
 
@@ -1648,8 +1648,8 @@ resource "n8n_workflow_node" "node_integration_limit_wait_time" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Limit Wait Time parameters here"
-}
+      "note" : "Configure Limit Wait Time parameters here"
+    }
   )
 }
 
@@ -1661,8 +1661,8 @@ resource "n8n_workflow_node" "node_integration_line" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Line parameters here"
-}
+      "note" : "Configure Line parameters here"
+    }
   )
 }
 
@@ -1674,8 +1674,8 @@ resource "n8n_workflow_node" "node_integration_linear" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Linear parameters here"
-}
+      "note" : "Configure Linear parameters here"
+    }
   )
 }
 
@@ -1687,8 +1687,8 @@ resource "n8n_workflow_node" "node_integration_lingvanex" {
 
   parameters = jsonencode(
     {
-"note" : "Configure LingvaNex parameters here"
-}
+      "note" : "Configure LingvaNex parameters here"
+    }
   )
 }
 
@@ -1700,8 +1700,8 @@ resource "n8n_workflow_node" "node_integration_linkedin" {
 
   parameters = jsonencode(
     {
-"note" : "Configure LinkedIn parameters here"
-}
+      "note" : "Configure LinkedIn parameters here"
+    }
   )
 }
 
@@ -1713,8 +1713,8 @@ resource "n8n_workflow_node" "node_integration_lonescale" {
 
   parameters = jsonencode(
     {
-"note" : "Configure LoneScale parameters here"
-}
+      "note" : "Configure LoneScale parameters here"
+    }
   )
 }
 
@@ -1726,8 +1726,8 @@ resource "n8n_workflow_node" "node_integration_magento_2" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Magento 2 parameters here"
-}
+      "note" : "Configure Magento 2 parameters here"
+    }
   )
 }
 
@@ -1739,8 +1739,8 @@ resource "n8n_workflow_node" "node_integration_mailcheck" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mailcheck parameters here"
-}
+      "note" : "Configure Mailcheck parameters here"
+    }
   )
 }
 
@@ -1752,8 +1752,8 @@ resource "n8n_workflow_node" "node_integration_mailchimp" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mailchimp parameters here"
-}
+      "note" : "Configure Mailchimp parameters here"
+    }
   )
 }
 
@@ -1765,8 +1765,8 @@ resource "n8n_workflow_node" "node_integration_mailerlite" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MailerLite parameters here"
-}
+      "note" : "Configure MailerLite parameters here"
+    }
   )
 }
 
@@ -1778,8 +1778,8 @@ resource "n8n_workflow_node" "node_integration_mailgun" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mailgun parameters here"
-}
+      "note" : "Configure Mailgun parameters here"
+    }
   )
 }
 
@@ -1791,8 +1791,8 @@ resource "n8n_workflow_node" "node_integration_mailjet" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mailjet parameters here"
-}
+      "note" : "Configure Mailjet parameters here"
+    }
   )
 }
 
@@ -1804,8 +1804,8 @@ resource "n8n_workflow_node" "node_integration_mandrill" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mandrill parameters here"
-}
+      "note" : "Configure Mandrill parameters here"
+    }
   )
 }
 
@@ -1817,8 +1817,8 @@ resource "n8n_workflow_node" "node_integration_markdown" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Markdown parameters here"
-}
+      "note" : "Configure Markdown parameters here"
+    }
   )
 }
 
@@ -1830,8 +1830,8 @@ resource "n8n_workflow_node" "node_integration_marketstack" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Marketstack parameters here"
-}
+      "note" : "Configure Marketstack parameters here"
+    }
   )
 }
 
@@ -1843,8 +1843,8 @@ resource "n8n_workflow_node" "node_integration_matrix" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Matrix parameters here"
-}
+      "note" : "Configure Matrix parameters here"
+    }
   )
 }
 
@@ -1856,8 +1856,8 @@ resource "n8n_workflow_node" "node_integration_mattermost" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mattermost parameters here"
-}
+      "note" : "Configure Mattermost parameters here"
+    }
   )
 }
 
@@ -1869,8 +1869,8 @@ resource "n8n_workflow_node" "node_integration_mautic" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mautic parameters here"
-}
+      "note" : "Configure Mautic parameters here"
+    }
   )
 }
 
@@ -1882,8 +1882,8 @@ resource "n8n_workflow_node" "node_integration_medium" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Medium parameters here"
-}
+      "note" : "Configure Medium parameters here"
+    }
   )
 }
 
@@ -1895,8 +1895,8 @@ resource "n8n_workflow_node" "node_integration_messagebird" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MessageBird parameters here"
-}
+      "note" : "Configure MessageBird parameters here"
+    }
   )
 }
 
@@ -1908,8 +1908,8 @@ resource "n8n_workflow_node" "node_integration_metabase" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Metabase parameters here"
-}
+      "note" : "Configure Metabase parameters here"
+    }
   )
 }
 
@@ -1921,8 +1921,8 @@ resource "n8n_workflow_node" "node_integration_mindee" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mindee parameters here"
-}
+      "note" : "Configure Mindee parameters here"
+    }
   )
 }
 
@@ -1934,8 +1934,8 @@ resource "n8n_workflow_node" "node_integration_misp" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MISP parameters here"
-}
+      "note" : "Configure MISP parameters here"
+    }
   )
 }
 
@@ -1947,8 +1947,8 @@ resource "n8n_workflow_node" "node_integration_mistral_ai" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mistral AI parameters here"
-}
+      "note" : "Configure Mistral AI parameters here"
+    }
   )
 }
 
@@ -1960,8 +1960,8 @@ resource "n8n_workflow_node" "node_integration_mocean" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Mocean parameters here"
-}
+      "note" : "Configure Mocean parameters here"
+    }
   )
 }
 
@@ -1973,8 +1973,8 @@ resource "n8n_workflow_node" "node_integration_monday_com" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Monday.com parameters here"
-}
+      "note" : "Configure Monday.com parameters here"
+    }
   )
 }
 
@@ -1986,8 +1986,8 @@ resource "n8n_workflow_node" "node_integration_mongodb" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MongoDB parameters here"
-}
+      "note" : "Configure MongoDB parameters here"
+    }
   )
 }
 
@@ -1999,8 +1999,8 @@ resource "n8n_workflow_node" "node_integration_monica_crm" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Monica CRM parameters here"
-}
+      "note" : "Configure Monica CRM parameters here"
+    }
   )
 }
 
@@ -2012,8 +2012,8 @@ resource "n8n_workflow_node" "node_integration_mqtt" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MQTT parameters here"
-}
+      "note" : "Configure MQTT parameters here"
+    }
   )
 }
 
@@ -2025,8 +2025,8 @@ resource "n8n_workflow_node" "node_integration_msg91" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MSG91 parameters here"
-}
+      "note" : "Configure MSG91 parameters here"
+    }
   )
 }
 
@@ -2038,8 +2038,8 @@ resource "n8n_workflow_node" "node_integration_mysql" {
 
   parameters = jsonencode(
     {
-"note" : "Configure MySQL parameters here"
-}
+      "note" : "Configure MySQL parameters here"
+    }
   )
 }
 
@@ -2051,8 +2051,8 @@ resource "n8n_workflow_node" "node_integration_n8n" {
 
   parameters = jsonencode(
     {
-"note" : "Configure n8n parameters here"
-}
+      "note" : "Configure n8n parameters here"
+    }
   )
 }
 
@@ -2064,8 +2064,8 @@ resource "n8n_workflow_node" "node_integration_nasa" {
 
   parameters = jsonencode(
     {
-"note" : "Configure NASA parameters here"
-}
+      "note" : "Configure NASA parameters here"
+    }
   )
 }
 
@@ -2077,8 +2077,8 @@ resource "n8n_workflow_node" "node_integration_netlify" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Netlify parameters here"
-}
+      "note" : "Configure Netlify parameters here"
+    }
   )
 }
 
@@ -2090,8 +2090,8 @@ resource "n8n_workflow_node" "node_integration_nextcloud" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Nextcloud parameters here"
-}
+      "note" : "Configure Nextcloud parameters here"
+    }
   )
 }
 
@@ -2103,8 +2103,8 @@ resource "n8n_workflow_node" "node_integration_no_operation_do_nothing" {
 
   parameters = jsonencode(
     {
-"note" : "Configure No Operation, do nothing parameters here"
-}
+      "note" : "Configure No Operation, do nothing parameters here"
+    }
   )
 }
 
@@ -2116,8 +2116,8 @@ resource "n8n_workflow_node" "node_integration_nocodb" {
 
   parameters = jsonencode(
     {
-"note" : "Configure NocoDB parameters here"
-}
+      "note" : "Configure NocoDB parameters here"
+    }
   )
 }
 
@@ -2129,8 +2129,8 @@ resource "n8n_workflow_node" "node_integration_notion" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Notion parameters here"
-}
+      "note" : "Configure Notion parameters here"
+    }
   )
 }
 
@@ -2142,8 +2142,8 @@ resource "n8n_workflow_node" "node_integration_npm" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Npm parameters here"
-}
+      "note" : "Configure Npm parameters here"
+    }
   )
 }
 
@@ -2155,8 +2155,8 @@ resource "n8n_workflow_node" "node_integration_odoo" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Odoo parameters here"
-}
+      "note" : "Configure Odoo parameters here"
+    }
   )
 }
 
@@ -2168,8 +2168,8 @@ resource "n8n_workflow_node" "node_integration_okta" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Okta parameters here"
-}
+      "note" : "Configure Okta parameters here"
+    }
   )
 }
 
@@ -2181,8 +2181,8 @@ resource "n8n_workflow_node" "node_integration_one_simple_api" {
 
   parameters = jsonencode(
     {
-"note" : "Configure One Simple API parameters here"
-}
+      "note" : "Configure One Simple API parameters here"
+    }
   )
 }
 
@@ -2194,8 +2194,8 @@ resource "n8n_workflow_node" "node_integration_onfleet" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Onfleet parameters here"
-}
+      "note" : "Configure Onfleet parameters here"
+    }
   )
 }
 
@@ -2207,8 +2207,8 @@ resource "n8n_workflow_node" "node_integration_openai" {
 
   parameters = jsonencode(
     {
-"note" : "Configure OpenAI parameters here"
-}
+      "note" : "Configure OpenAI parameters here"
+    }
   )
 }
 
@@ -2220,8 +2220,8 @@ resource "n8n_workflow_node" "node_integration_openthesaurus" {
 
   parameters = jsonencode(
     {
-"note" : "Configure OpenThesaurus parameters here"
-}
+      "note" : "Configure OpenThesaurus parameters here"
+    }
   )
 }
 
@@ -2233,8 +2233,8 @@ resource "n8n_workflow_node" "node_integration_openweathermap" {
 
   parameters = jsonencode(
     {
-"note" : "Configure OpenWeatherMap parameters here"
-}
+      "note" : "Configure OpenWeatherMap parameters here"
+    }
   )
 }
 
@@ -2246,8 +2246,8 @@ resource "n8n_workflow_node" "node_integration_orbit" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Orbit parameters here"
-}
+      "note" : "Configure Orbit parameters here"
+    }
   )
 }
 
@@ -2259,8 +2259,8 @@ resource "n8n_workflow_node" "node_integration_oura" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Oura parameters here"
-}
+      "note" : "Configure Oura parameters here"
+    }
   )
 }
 
@@ -2272,8 +2272,8 @@ resource "n8n_workflow_node" "node_integration_paddle" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Paddle parameters here"
-}
+      "note" : "Configure Paddle parameters here"
+    }
   )
 }
 
@@ -2285,8 +2285,8 @@ resource "n8n_workflow_node" "node_integration_pagerduty" {
 
   parameters = jsonencode(
     {
-"note" : "Configure PagerDuty parameters here"
-}
+      "note" : "Configure PagerDuty parameters here"
+    }
   )
 }
 
@@ -2298,8 +2298,8 @@ resource "n8n_workflow_node" "node_integration_paypal" {
 
   parameters = jsonencode(
     {
-"note" : "Configure PayPal parameters here"
-}
+      "note" : "Configure PayPal parameters here"
+    }
   )
 }
 
@@ -2311,8 +2311,8 @@ resource "n8n_workflow_node" "node_integration_peekalink" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Peekalink parameters here"
-}
+      "note" : "Configure Peekalink parameters here"
+    }
   )
 }
 
@@ -2324,8 +2324,8 @@ resource "n8n_workflow_node" "node_integration_perplexity" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Perplexity parameters here"
-}
+      "note" : "Configure Perplexity parameters here"
+    }
   )
 }
 
@@ -2337,8 +2337,8 @@ resource "n8n_workflow_node" "node_integration_phantombuster" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Phantombuster parameters here"
-}
+      "note" : "Configure Phantombuster parameters here"
+    }
   )
 }
 
@@ -2350,8 +2350,8 @@ resource "n8n_workflow_node" "node_integration_philips_hue" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Philips Hue parameters here"
-}
+      "note" : "Configure Philips Hue parameters here"
+    }
   )
 }
 
@@ -2363,8 +2363,8 @@ resource "n8n_workflow_node" "node_integration_pipedrive" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Pipedrive parameters here"
-}
+      "note" : "Configure Pipedrive parameters here"
+    }
   )
 }
 
@@ -2376,8 +2376,8 @@ resource "n8n_workflow_node" "node_integration_plivo" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Plivo parameters here"
-}
+      "note" : "Configure Plivo parameters here"
+    }
   )
 }
 
@@ -2389,8 +2389,8 @@ resource "n8n_workflow_node" "node_integration_postbin" {
 
   parameters = jsonencode(
     {
-"note" : "Configure PostBin parameters here"
-}
+      "note" : "Configure PostBin parameters here"
+    }
   )
 }
 
@@ -2402,8 +2402,8 @@ resource "n8n_workflow_node" "node_integration_postgres" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Postgres parameters here"
-}
+      "note" : "Configure Postgres parameters here"
+    }
   )
 }
 
@@ -2415,8 +2415,8 @@ resource "n8n_workflow_node" "node_integration_posthog" {
 
   parameters = jsonencode(
     {
-"note" : "Configure PostHog parameters here"
-}
+      "note" : "Configure PostHog parameters here"
+    }
   )
 }
 
@@ -2428,8 +2428,8 @@ resource "n8n_workflow_node" "node_integration_profitwell" {
 
   parameters = jsonencode(
     {
-"note" : "Configure ProfitWell parameters here"
-}
+      "note" : "Configure ProfitWell parameters here"
+    }
   )
 }
 
@@ -2441,8 +2441,8 @@ resource "n8n_workflow_node" "node_integration_pushbullet" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Pushbullet parameters here"
-}
+      "note" : "Configure Pushbullet parameters here"
+    }
   )
 }
 
@@ -2454,8 +2454,8 @@ resource "n8n_workflow_node" "node_integration_pushcut" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Pushcut parameters here"
-}
+      "note" : "Configure Pushcut parameters here"
+    }
   )
 }
 
@@ -2467,8 +2467,8 @@ resource "n8n_workflow_node" "node_integration_pushover" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Pushover parameters here"
-}
+      "note" : "Configure Pushover parameters here"
+    }
   )
 }
 
@@ -2480,8 +2480,8 @@ resource "n8n_workflow_node" "node_integration_questdb" {
 
   parameters = jsonencode(
     {
-"note" : "Configure QuestDB parameters here"
-}
+      "note" : "Configure QuestDB parameters here"
+    }
   )
 }
 
@@ -2493,8 +2493,8 @@ resource "n8n_workflow_node" "node_integration_quick_base" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Quick Base parameters here"
-}
+      "note" : "Configure Quick Base parameters here"
+    }
   )
 }
 
@@ -2506,8 +2506,8 @@ resource "n8n_workflow_node" "node_integration_quickbooks_online" {
 
   parameters = jsonencode(
     {
-"note" : "Configure QuickBooks Online parameters here"
-}
+      "note" : "Configure QuickBooks Online parameters here"
+    }
   )
 }
 
@@ -2519,8 +2519,8 @@ resource "n8n_workflow_node" "node_integration_quickchart" {
 
   parameters = jsonencode(
     {
-"note" : "Configure QuickChart parameters here"
-}
+      "note" : "Configure QuickChart parameters here"
+    }
   )
 }
 
@@ -2532,8 +2532,8 @@ resource "n8n_workflow_node" "node_integration_rabbitmq" {
 
   parameters = jsonencode(
     {
-"note" : "Configure RabbitMQ parameters here"
-}
+      "note" : "Configure RabbitMQ parameters here"
+    }
   )
 }
 
@@ -2545,8 +2545,8 @@ resource "n8n_workflow_node" "node_integration_raindrop" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Raindrop parameters here"
-}
+      "note" : "Configure Raindrop parameters here"
+    }
   )
 }
 
@@ -2558,8 +2558,8 @@ resource "n8n_workflow_node" "node_integration_read_binary_file" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Read Binary File parameters here"
-}
+      "note" : "Configure Read Binary File parameters here"
+    }
   )
 }
 
@@ -2571,8 +2571,8 @@ resource "n8n_workflow_node" "node_integration_read_binary_files" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Read Binary Files parameters here"
-}
+      "note" : "Configure Read Binary Files parameters here"
+    }
   )
 }
 
@@ -2584,8 +2584,8 @@ resource "n8n_workflow_node" "node_integration_read_pdf" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Read PDF parameters here"
-}
+      "note" : "Configure Read PDF parameters here"
+    }
   )
 }
 
@@ -2597,8 +2597,8 @@ resource "n8n_workflow_node" "node_integration_reddit" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Reddit parameters here"
-}
+      "note" : "Configure Reddit parameters here"
+    }
   )
 }
 
@@ -2610,8 +2610,8 @@ resource "n8n_workflow_node" "node_integration_redis" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Redis parameters here"
-}
+      "note" : "Configure Redis parameters here"
+    }
   )
 }
 
@@ -2623,8 +2623,8 @@ resource "n8n_workflow_node" "node_integration_rename_keys" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Rename Keys parameters here"
-}
+      "note" : "Configure Rename Keys parameters here"
+    }
   )
 }
 
@@ -2636,8 +2636,8 @@ resource "n8n_workflow_node" "node_integration_respond_with" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Respond With parameters here"
-}
+      "note" : "Configure Respond With parameters here"
+    }
   )
 }
 
@@ -2649,8 +2649,8 @@ resource "n8n_workflow_node" "node_integration_rocketchat" {
 
   parameters = jsonencode(
     {
-"note" : "Configure RocketChat parameters here"
-}
+      "note" : "Configure RocketChat parameters here"
+    }
   )
 }
 
@@ -2662,8 +2662,8 @@ resource "n8n_workflow_node" "node_integration_rss_read" {
 
   parameters = jsonencode(
     {
-"note" : "Configure RSS Read parameters here"
-}
+      "note" : "Configure RSS Read parameters here"
+    }
   )
 }
 
@@ -2675,8 +2675,8 @@ resource "n8n_workflow_node" "node_integration_rundeck" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Rundeck parameters here"
-}
+      "note" : "Configure Rundeck parameters here"
+    }
   )
 }
 
@@ -2688,8 +2688,8 @@ resource "n8n_workflow_node" "node_integration_s3" {
 
   parameters = jsonencode(
     {
-"note" : "Configure S3 parameters here"
-}
+      "note" : "Configure S3 parameters here"
+    }
   )
 }
 
@@ -2701,8 +2701,8 @@ resource "n8n_workflow_node" "node_integration_salesforce" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Salesforce parameters here"
-}
+      "note" : "Configure Salesforce parameters here"
+    }
   )
 }
 
@@ -2714,8 +2714,8 @@ resource "n8n_workflow_node" "node_integration_salesmate" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Salesmate parameters here"
-}
+      "note" : "Configure Salesmate parameters here"
+    }
   )
 }
 
@@ -2727,8 +2727,8 @@ resource "n8n_workflow_node" "node_integration_schedule_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Schedule Trigger parameters here"
-}
+      "note" : "Configure Schedule Trigger parameters here"
+    }
   )
 }
 
@@ -2740,8 +2740,8 @@ resource "n8n_workflow_node" "node_integration_seatable" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SeaTable parameters here"
-}
+      "note" : "Configure SeaTable parameters here"
+    }
   )
 }
 
@@ -2753,8 +2753,8 @@ resource "n8n_workflow_node" "node_integration_securityscorecard" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SecurityScorecard parameters here"
-}
+      "note" : "Configure SecurityScorecard parameters here"
+    }
   )
 }
 
@@ -2766,8 +2766,8 @@ resource "n8n_workflow_node" "node_integration_segment" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Segment parameters here"
-}
+      "note" : "Configure Segment parameters here"
+    }
   )
 }
 
@@ -2779,8 +2779,8 @@ resource "n8n_workflow_node" "node_integration_send_email" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Send Email parameters here"
-}
+      "note" : "Configure Send Email parameters here"
+    }
   )
 }
 
@@ -2792,8 +2792,8 @@ resource "n8n_workflow_node" "node_integration_sendgrid" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SendGrid parameters here"
-}
+      "note" : "Configure SendGrid parameters here"
+    }
   )
 }
 
@@ -2805,8 +2805,8 @@ resource "n8n_workflow_node" "node_integration_sendy" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Sendy parameters here"
-}
+      "note" : "Configure Sendy parameters here"
+    }
   )
 }
 
@@ -2818,8 +2818,8 @@ resource "n8n_workflow_node" "node_integration_sentry_io" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Sentry.io parameters here"
-}
+      "note" : "Configure Sentry.io parameters here"
+    }
   )
 }
 
@@ -2831,8 +2831,8 @@ resource "n8n_workflow_node" "node_integration_servicenow" {
 
   parameters = jsonencode(
     {
-"note" : "Configure ServiceNow parameters here"
-}
+      "note" : "Configure ServiceNow parameters here"
+    }
   )
 }
 
@@ -2844,8 +2844,8 @@ resource "n8n_workflow_node" "node_integration_seven" {
 
   parameters = jsonencode(
     {
-"note" : "Configure seven parameters here"
-}
+      "note" : "Configure seven parameters here"
+    }
   )
 }
 
@@ -2857,8 +2857,8 @@ resource "n8n_workflow_node" "node_integration_shopify" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Shopify parameters here"
-}
+      "note" : "Configure Shopify parameters here"
+    }
   )
 }
 
@@ -2870,8 +2870,8 @@ resource "n8n_workflow_node" "node_integration_signl4" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SIGNL4 parameters here"
-}
+      "note" : "Configure SIGNL4 parameters here"
+    }
   )
 }
 
@@ -2883,8 +2883,8 @@ resource "n8n_workflow_node" "node_integration_simulate" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Simulate parameters here"
-}
+      "note" : "Configure Simulate parameters here"
+    }
   )
 }
 
@@ -2896,8 +2896,8 @@ resource "n8n_workflow_node" "node_integration_slack" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Slack parameters here"
-}
+      "note" : "Configure Slack parameters here"
+    }
   )
 }
 
@@ -2909,8 +2909,8 @@ resource "n8n_workflow_node" "node_integration_snowflake" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Snowflake parameters here"
-}
+      "note" : "Configure Snowflake parameters here"
+    }
   )
 }
 
@@ -2922,8 +2922,8 @@ resource "n8n_workflow_node" "node_integration_split_in_batches" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Split In Batches parameters here"
-}
+      "note" : "Configure Split In Batches parameters here"
+    }
   )
 }
 
@@ -2935,8 +2935,8 @@ resource "n8n_workflow_node" "node_integration_splunk" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Splunk parameters here"
-}
+      "note" : "Configure Splunk parameters here"
+    }
   )
 }
 
@@ -2948,8 +2948,8 @@ resource "n8n_workflow_node" "node_integration_spontit" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Spontit parameters here"
-}
+      "note" : "Configure Spontit parameters here"
+    }
   )
 }
 
@@ -2961,8 +2961,8 @@ resource "n8n_workflow_node" "node_integration_spotify" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Spotify parameters here"
-}
+      "note" : "Configure Spotify parameters here"
+    }
   )
 }
 
@@ -2974,8 +2974,8 @@ resource "n8n_workflow_node" "node_integration_spreadsheet_file" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Spreadsheet File parameters here"
-}
+      "note" : "Configure Spreadsheet File parameters here"
+    }
   )
 }
 
@@ -2987,8 +2987,8 @@ resource "n8n_workflow_node" "node_integration_ssh" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SSH parameters here"
-}
+      "note" : "Configure SSH parameters here"
+    }
   )
 }
 
@@ -3000,8 +3000,8 @@ resource "n8n_workflow_node" "node_integration_stackby" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Stackby parameters here"
-}
+      "note" : "Configure Stackby parameters here"
+    }
   )
 }
 
@@ -3013,8 +3013,8 @@ resource "n8n_workflow_node" "node_integration_start" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Start parameters here"
-}
+      "note" : "Configure Start parameters here"
+    }
   )
 }
 
@@ -3026,8 +3026,8 @@ resource "n8n_workflow_node" "node_integration_sticky_note" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Sticky Note parameters here"
-}
+      "note" : "Configure Sticky Note parameters here"
+    }
   )
 }
 
@@ -3039,8 +3039,8 @@ resource "n8n_workflow_node" "node_integration_stop_and_error" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Stop and Error parameters here"
-}
+      "note" : "Configure Stop and Error parameters here"
+    }
   )
 }
 
@@ -3052,8 +3052,8 @@ resource "n8n_workflow_node" "node_integration_storyblok" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Storyblok parameters here"
-}
+      "note" : "Configure Storyblok parameters here"
+    }
   )
 }
 
@@ -3065,8 +3065,8 @@ resource "n8n_workflow_node" "node_integration_strapi" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Strapi parameters here"
-}
+      "note" : "Configure Strapi parameters here"
+    }
   )
 }
 
@@ -3078,8 +3078,8 @@ resource "n8n_workflow_node" "node_integration_strava" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Strava parameters here"
-}
+      "note" : "Configure Strava parameters here"
+    }
   )
 }
 
@@ -3091,8 +3091,8 @@ resource "n8n_workflow_node" "node_integration_stripe" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Stripe parameters here"
-}
+      "note" : "Configure Stripe parameters here"
+    }
   )
 }
 
@@ -3104,8 +3104,8 @@ resource "n8n_workflow_node" "node_integration_supabase" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Supabase parameters here"
-}
+      "note" : "Configure Supabase parameters here"
+    }
   )
 }
 
@@ -3117,8 +3117,8 @@ resource "n8n_workflow_node" "node_integration_syncromsp" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SyncroMSP parameters here"
-}
+      "note" : "Configure SyncroMSP parameters here"
+    }
   )
 }
 
@@ -3130,8 +3130,8 @@ resource "n8n_workflow_node" "node_integration_taiga" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Taiga parameters here"
-}
+      "note" : "Configure Taiga parameters here"
+    }
   )
 }
 
@@ -3143,8 +3143,8 @@ resource "n8n_workflow_node" "node_integration_tapfiliate" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Tapfiliate parameters here"
-}
+      "note" : "Configure Tapfiliate parameters here"
+    }
   )
 }
 
@@ -3156,8 +3156,8 @@ resource "n8n_workflow_node" "node_integration_thehive" {
 
   parameters = jsonencode(
     {
-"note" : "Configure TheHive parameters here"
-}
+      "note" : "Configure TheHive parameters here"
+    }
   )
 }
 
@@ -3169,8 +3169,8 @@ resource "n8n_workflow_node" "node_integration_thehiveproject" {
 
   parameters = jsonencode(
     {
-"note" : "Configure TheHiveProject parameters here"
-}
+      "note" : "Configure TheHiveProject parameters here"
+    }
   )
 }
 
@@ -3182,8 +3182,8 @@ resource "n8n_workflow_node" "node_integration_timescaledb" {
 
   parameters = jsonencode(
     {
-"note" : "Configure TimescaleDB parameters here"
-}
+      "note" : "Configure TimescaleDB parameters here"
+    }
   )
 }
 
@@ -3195,8 +3195,8 @@ resource "n8n_workflow_node" "node_integration_todoist" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Todoist parameters here"
-}
+      "note" : "Configure Todoist parameters here"
+    }
   )
 }
 
@@ -3208,8 +3208,8 @@ resource "n8n_workflow_node" "node_integration_totp" {
 
   parameters = jsonencode(
     {
-"note" : "Configure TOTP parameters here"
-}
+      "note" : "Configure TOTP parameters here"
+    }
   )
 }
 
@@ -3221,8 +3221,8 @@ resource "n8n_workflow_node" "node_integration_travisci" {
 
   parameters = jsonencode(
     {
-"note" : "Configure TravisCI parameters here"
-}
+      "note" : "Configure TravisCI parameters here"
+    }
   )
 }
 
@@ -3234,8 +3234,8 @@ resource "n8n_workflow_node" "node_integration_trello" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Trello parameters here"
-}
+      "note" : "Configure Trello parameters here"
+    }
   )
 }
 
@@ -3247,8 +3247,8 @@ resource "n8n_workflow_node" "node_integration_twake" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Twake parameters here"
-}
+      "note" : "Configure Twake parameters here"
+    }
   )
 }
 
@@ -3260,8 +3260,8 @@ resource "n8n_workflow_node" "node_integration_twilio" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Twilio parameters here"
-}
+      "note" : "Configure Twilio parameters here"
+    }
   )
 }
 
@@ -3273,8 +3273,8 @@ resource "n8n_workflow_node" "node_integration_twist" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Twist parameters here"
-}
+      "note" : "Configure Twist parameters here"
+    }
   )
 }
 
@@ -3286,8 +3286,8 @@ resource "n8n_workflow_node" "node_integration_unleashed_software" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Unleashed Software parameters here"
-}
+      "note" : "Configure Unleashed Software parameters here"
+    }
   )
 }
 
@@ -3299,8 +3299,8 @@ resource "n8n_workflow_node" "node_integration_uplead" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Uplead parameters here"
-}
+      "note" : "Configure Uplead parameters here"
+    }
   )
 }
 
@@ -3312,8 +3312,8 @@ resource "n8n_workflow_node" "node_integration_uproc" {
 
   parameters = jsonencode(
     {
-"note" : "Configure uProc parameters here"
-}
+      "note" : "Configure uProc parameters here"
+    }
   )
 }
 
@@ -3325,8 +3325,8 @@ resource "n8n_workflow_node" "node_integration_uptimerobot" {
 
   parameters = jsonencode(
     {
-"note" : "Configure UptimeRobot parameters here"
-}
+      "note" : "Configure UptimeRobot parameters here"
+    }
   )
 }
 
@@ -3338,8 +3338,8 @@ resource "n8n_workflow_node" "node_integration_urlscan_io" {
 
   parameters = jsonencode(
     {
-"note" : "Configure urlscan.io parameters here"
-}
+      "note" : "Configure urlscan.io parameters here"
+    }
   )
 }
 
@@ -3351,8 +3351,8 @@ resource "n8n_workflow_node" "node_integration_vero" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Vero parameters here"
-}
+      "note" : "Configure Vero parameters here"
+    }
   )
 }
 
@@ -3364,8 +3364,8 @@ resource "n8n_workflow_node" "node_integration_vonage" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Vonage parameters here"
-}
+      "note" : "Configure Vonage parameters here"
+    }
   )
 }
 
@@ -3377,8 +3377,8 @@ resource "n8n_workflow_node" "node_integration_wait_amount" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Wait Amount parameters here"
-}
+      "note" : "Configure Wait Amount parameters here"
+    }
   )
 }
 
@@ -3390,8 +3390,8 @@ resource "n8n_workflow_node" "node_integration_webflow" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Webflow parameters here"
-}
+      "note" : "Configure Webflow parameters here"
+    }
   )
 }
 
@@ -3403,8 +3403,8 @@ resource "n8n_workflow_node" "node_integration_wekan" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Wekan parameters here"
-}
+      "note" : "Configure Wekan parameters here"
+    }
   )
 }
 
@@ -3416,8 +3416,8 @@ resource "n8n_workflow_node" "node_integration_whatsapp_business_cloud" {
 
   parameters = jsonencode(
     {
-"note" : "Configure WhatsApp Business Cloud parameters here"
-}
+      "note" : "Configure WhatsApp Business Cloud parameters here"
+    }
   )
 }
 
@@ -3429,8 +3429,8 @@ resource "n8n_workflow_node" "node_integration_wise" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Wise parameters here"
-}
+      "note" : "Configure Wise parameters here"
+    }
   )
 }
 
@@ -3442,8 +3442,8 @@ resource "n8n_workflow_node" "node_integration_woocommerce" {
 
   parameters = jsonencode(
     {
-"note" : "Configure WooCommerce parameters here"
-}
+      "note" : "Configure WooCommerce parameters here"
+    }
   )
 }
 
@@ -3455,8 +3455,8 @@ resource "n8n_workflow_node" "node_integration_wordpress" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Wordpress parameters here"
-}
+      "note" : "Configure Wordpress parameters here"
+    }
   )
 }
 
@@ -3468,8 +3468,8 @@ resource "n8n_workflow_node" "node_integration_write_binary_file" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Write Binary File parameters here"
-}
+      "note" : "Configure Write Binary File parameters here"
+    }
   )
 }
 
@@ -3481,8 +3481,8 @@ resource "n8n_workflow_node" "node_integration_x_formerly_twitter" {
 
   parameters = jsonencode(
     {
-"note" : "Configure X (Formerly Twitter) parameters here"
-}
+      "note" : "Configure X (Formerly Twitter) parameters here"
+    }
   )
 }
 
@@ -3494,8 +3494,8 @@ resource "n8n_workflow_node" "node_integration_xero" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Xero parameters here"
-}
+      "note" : "Configure Xero parameters here"
+    }
   )
 }
 
@@ -3507,8 +3507,8 @@ resource "n8n_workflow_node" "node_integration_xml" {
 
   parameters = jsonencode(
     {
-"note" : "Configure XML parameters here"
-}
+      "note" : "Configure XML parameters here"
+    }
   )
 }
 
@@ -3520,8 +3520,8 @@ resource "n8n_workflow_node" "node_integration_yourls" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Yourls parameters here"
-}
+      "note" : "Configure Yourls parameters here"
+    }
   )
 }
 
@@ -3533,8 +3533,8 @@ resource "n8n_workflow_node" "node_integration_zammad" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Zammad parameters here"
-}
+      "note" : "Configure Zammad parameters here"
+    }
   )
 }
 
@@ -3546,8 +3546,8 @@ resource "n8n_workflow_node" "node_integration_zendesk" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Zendesk parameters here"
-}
+      "note" : "Configure Zendesk parameters here"
+    }
   )
 }
 
@@ -3559,8 +3559,8 @@ resource "n8n_workflow_node" "node_integration_zoho_crm" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Zoho CRM parameters here"
-}
+      "note" : "Configure Zoho CRM parameters here"
+    }
   )
 }
 
@@ -3572,8 +3572,8 @@ resource "n8n_workflow_node" "node_integration_zoom" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Zoom parameters here"
-}
+      "note" : "Configure Zoom parameters here"
+    }
   )
 }
 
@@ -3585,8 +3585,8 @@ resource "n8n_workflow_node" "node_integration_zulip" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Zulip parameters here"
-}
+      "note" : "Configure Zulip parameters here"
+    }
   )
 }
 
@@ -3598,8 +3598,8 @@ resource "n8n_workflow_node" "node_trigger_acuity_scheduling_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Acuity Scheduling Trigger parameters here"
-}
+      "note" : "Configure Acuity Scheduling Trigger parameters here"
+    }
   )
 }
 
@@ -3611,8 +3611,8 @@ resource "n8n_workflow_node" "node_trigger_bitbucket_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Bitbucket Trigger parameters here"
-}
+      "note" : "Configure Bitbucket Trigger parameters here"
+    }
   )
 }
 
@@ -3624,8 +3624,8 @@ resource "n8n_workflow_node" "node_trigger_cal_com_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Cal.com Trigger parameters here"
-}
+      "note" : "Configure Cal.com Trigger parameters here"
+    }
   )
 }
 
@@ -3637,8 +3637,8 @@ resource "n8n_workflow_node" "node_trigger_calendly_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Calendly Trigger parameters here"
-}
+      "note" : "Configure Calendly Trigger parameters here"
+    }
   )
 }
 
@@ -3650,8 +3650,8 @@ resource "n8n_workflow_node" "node_trigger_email_trigger_imap" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Email Trigger (IMAP) parameters here"
-}
+      "note" : "Configure Email Trigger (IMAP) parameters here"
+    }
   )
 }
 
@@ -3663,8 +3663,8 @@ resource "n8n_workflow_node" "node_trigger_error_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Error Trigger parameters here"
-}
+      "note" : "Configure Error Trigger parameters here"
+    }
   )
 }
 
@@ -3676,8 +3676,8 @@ resource "n8n_workflow_node" "node_trigger_eventbrite_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Eventbrite Trigger parameters here"
-}
+      "note" : "Configure Eventbrite Trigger parameters here"
+    }
   )
 }
 
@@ -3689,8 +3689,8 @@ resource "n8n_workflow_node" "node_trigger_facebook_lead_ads_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Facebook Lead Ads Trigger parameters here"
-}
+      "note" : "Configure Facebook Lead Ads Trigger parameters here"
+    }
   )
 }
 
@@ -3702,8 +3702,8 @@ resource "n8n_workflow_node" "node_trigger_figma_trigger_beta" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Figma Trigger (Beta) parameters here"
-}
+      "note" : "Configure Figma Trigger (Beta) parameters here"
+    }
   )
 }
 
@@ -3715,8 +3715,8 @@ resource "n8n_workflow_node" "node_trigger_form_io_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Form.io Trigger parameters here"
-}
+      "note" : "Configure Form.io Trigger parameters here"
+    }
   )
 }
 
@@ -3728,8 +3728,8 @@ resource "n8n_workflow_node" "node_trigger_formstack_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Formstack Trigger parameters here"
-}
+      "note" : "Configure Formstack Trigger parameters here"
+    }
   )
 }
 
@@ -3741,8 +3741,8 @@ resource "n8n_workflow_node" "node_trigger_gumroad_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Gumroad Trigger parameters here"
-}
+      "note" : "Configure Gumroad Trigger parameters here"
+    }
   )
 }
 
@@ -3754,8 +3754,8 @@ resource "n8n_workflow_node" "node_trigger_jotform_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Jotform Trigger parameters here"
-}
+      "note" : "Configure Jotform Trigger parameters here"
+    }
   )
 }
 
@@ -3767,8 +3767,8 @@ resource "n8n_workflow_node" "node_trigger_local_file_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Local File Trigger parameters here"
-}
+      "note" : "Configure Local File Trigger parameters here"
+    }
   )
 }
 
@@ -3791,8 +3791,8 @@ resource "n8n_workflow_node" "node_trigger_n8n_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure n8n Trigger parameters here"
-}
+      "note" : "Configure n8n Trigger parameters here"
+    }
   )
 }
 
@@ -3804,8 +3804,8 @@ resource "n8n_workflow_node" "node_trigger_postmark_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Postmark Trigger parameters here"
-}
+      "note" : "Configure Postmark Trigger parameters here"
+    }
   )
 }
 
@@ -3817,8 +3817,8 @@ resource "n8n_workflow_node" "node_trigger_sse_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SSE Trigger parameters here"
-}
+      "note" : "Configure SSE Trigger parameters here"
+    }
   )
 }
 
@@ -3830,8 +3830,8 @@ resource "n8n_workflow_node" "node_trigger_surveymonkey_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure SurveyMonkey Trigger parameters here"
-}
+      "note" : "Configure SurveyMonkey Trigger parameters here"
+    }
   )
 }
 
@@ -3843,8 +3843,8 @@ resource "n8n_workflow_node" "node_trigger_toggl_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Toggl Trigger parameters here"
-}
+      "note" : "Configure Toggl Trigger parameters here"
+    }
   )
 }
 
@@ -3856,8 +3856,8 @@ resource "n8n_workflow_node" "node_trigger_typeform_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Typeform Trigger parameters here"
-}
+      "note" : "Configure Typeform Trigger parameters here"
+    }
   )
 }
 
@@ -3869,10 +3869,10 @@ resource "n8n_workflow_node" "node_trigger_webhook" {
 
   parameters = jsonencode(
     {
-"path" : "test-webhook",
-"httpMethod" : "POST",
-"responseMode" : "onReceived"
-}
+      "path" : "test-webhook",
+      "httpMethod" : "POST",
+      "responseMode" : "onReceived"
+    }
   )
 }
 
@@ -3884,8 +3884,8 @@ resource "n8n_workflow_node" "node_trigger_workable_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Workable Trigger parameters here"
-}
+      "note" : "Configure Workable Trigger parameters here"
+    }
   )
 }
 
@@ -3897,8 +3897,8 @@ resource "n8n_workflow_node" "node_trigger_workflow_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Workflow Trigger parameters here"
-}
+      "note" : "Configure Workflow Trigger parameters here"
+    }
   )
 }
 
@@ -3910,8 +3910,8 @@ resource "n8n_workflow_node" "node_trigger_wufoo_trigger" {
 
   parameters = jsonencode(
     {
-"note" : "Configure Wufoo Trigger parameters here"
-}
+      "note" : "Configure Wufoo Trigger parameters here"
+    }
   )
 }
 
@@ -3931,7 +3931,7 @@ resource "n8n_workflow_node" "end_result" {
         name  = "total_nodes_tested"
         type  = "number"
         value = 296
-      }, {
+        }, {
         name  = "completion_message"
         type  = "string"
         value = "Successfully tested all 296 nodes!"

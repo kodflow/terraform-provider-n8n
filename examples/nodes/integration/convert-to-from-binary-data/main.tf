@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "note": "Configure Convert to/from binary data parameters here"
+      "note" : "Configure Convert to/from binary data parameters here"
     }
   )
 }

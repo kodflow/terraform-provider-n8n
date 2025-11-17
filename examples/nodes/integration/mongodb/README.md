@@ -1,8 +1,6 @@
 # MongoDB Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.mongoDb`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.mongoDb` **Latest Version**: 1
 
 ## Description
 

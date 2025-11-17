@@ -1,8 +1,6 @@
 # Phantombuster Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.phantombuster`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.phantombuster` **Latest Version**: 1
 
 ## Description
 

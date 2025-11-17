@@ -1,8 +1,6 @@
 # Uplead Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.uplead`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.uplead` **Latest Version**: 1
 
 ## Description
 

@@ -1,8 +1,6 @@
 # Salesmate Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.salesmate`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.salesmate` **Latest Version**: 1
 
 ## Description
 

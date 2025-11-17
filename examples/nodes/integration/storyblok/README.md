@@ -1,8 +1,6 @@
 # Storyblok Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.storyblok`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.storyblok` **Latest Version**: 1
 
 ## Description
 

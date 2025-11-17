@@ -1,8 +1,6 @@
 # Cockpit Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.cockpit`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.cockpit` **Latest Version**: 1
 
 ## Description
 

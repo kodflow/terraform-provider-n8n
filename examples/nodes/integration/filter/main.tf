@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "note": "Configure Filter parameters here"
+      "note" : "Configure Filter parameters here"
     }
   )
 }
@@ -49,7 +49,7 @@ resource "n8n_workflow_node" "output_0" {
         name  = "output_type"
         type  = "string"
         value = "Pass"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -71,7 +71,7 @@ resource "n8n_workflow_node" "output_1" {
         name  = "output_type"
         type  = "string"
         value = "Fail"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"

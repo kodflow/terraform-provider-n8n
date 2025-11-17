@@ -1,8 +1,6 @@
 # Chargebee Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.chargebee`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.chargebee` **Latest Version**: 1
 
 ## Description
 

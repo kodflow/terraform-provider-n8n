@@ -1,8 +1,6 @@
 # Okta Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.okta`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.okta` **Latest Version**: 1
 
 ## Description
 

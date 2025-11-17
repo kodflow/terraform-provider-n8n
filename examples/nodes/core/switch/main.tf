@@ -31,17 +31,17 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "mode": "rules",
-        "rules": {
-            "values": [
-                {
-                    "value": "={{ $json.type === \"A\" }}"
-                },
-                {
-                    "value": "={{ $json.type === \"B\" }}"
-                }
-            ]
-        }
+      "mode" : "rules",
+      "rules" : {
+        "values" : [
+          {
+            "value" : "={{ $json.type === \"A\" }}"
+          },
+          {
+            "value" : "={{ $json.type === \"B\" }}"
+          }
+        ]
+      }
     }
   )
 }
@@ -59,7 +59,7 @@ resource "n8n_workflow_node" "output_0" {
         name  = "output_type"
         type  = "string"
         value = "Output 1"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -81,7 +81,7 @@ resource "n8n_workflow_node" "output_1" {
         name  = "output_type"
         type  = "string"
         value = "Output 2"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -103,7 +103,7 @@ resource "n8n_workflow_node" "output_2" {
         name  = "output_type"
         type  = "string"
         value = "Output 3"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -125,7 +125,7 @@ resource "n8n_workflow_node" "output_3" {
         name  = "output_type"
         type  = "string"
         value = "Fallback"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"

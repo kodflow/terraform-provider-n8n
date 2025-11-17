@@ -1,8 +1,6 @@
 # Sendy Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.sendy`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.sendy` **Latest Version**: 1
 
 ## Description
 

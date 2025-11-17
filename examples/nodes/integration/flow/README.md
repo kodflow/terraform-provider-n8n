@@ -1,8 +1,6 @@
 # Flow Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.flow`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.flow` **Latest Version**: 1
 
 ## Description
 

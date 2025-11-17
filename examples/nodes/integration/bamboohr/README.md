@@ -1,8 +1,6 @@
 # BambooHr Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.bamboohr`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.bamboohr` **Latest Version**: 1
 
 ## Description
 

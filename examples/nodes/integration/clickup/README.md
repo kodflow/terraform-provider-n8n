@@ -1,8 +1,6 @@
 # ClickUp Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.clickUp`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.clickUp` **Latest Version**: 1
 
 ## Description
 

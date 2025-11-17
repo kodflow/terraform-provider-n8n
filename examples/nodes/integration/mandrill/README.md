@@ -1,8 +1,6 @@
 # Mandrill Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.mandrill`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.mandrill` **Latest Version**: 1
 
 ## Description
 

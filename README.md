@@ -28,9 +28,12 @@ The provider supports **all 296 n8n nodes** with complete workflow composition c
 Each node has:
 
 - ✅ Complete Terraform workflow example
-- ✅ Tested with `terraform init` and `validate` (100% pass rate)
+- ✅ Fully tested with complete Terraform lifecycle (init/plan/apply/destroy)
+- ✅ 100% test pass rate with real n8n instance validation
 - ✅ Documentation with credential requirements
 - ✅ Ready-to-use templates in `examples/nodes/`
+
+**📊 [View detailed test coverage →](COVERAGE.MD)**
 
 ### Community Edition Support
 
@@ -140,7 +143,20 @@ Each example includes:
 - `variables.tf` - Provider configuration
 - `README.md` - Node-specific documentation
 
-**Testing status:** ✅ All 296 workflows tested and passing
+**Testing status:** ✅ All 296 workflows tested and passing (init/plan/apply/destroy)
+
+### MEGA Workflow Example
+
+**Single workflow with all 296 nodes** for comprehensive testing:
+
+📂 **[`examples/mega-workflow/`](examples/mega-workflow/)** - Contains:
+
+- All 296 n8n nodes in one workflow
+- 298 total nodes (start trigger + 296 nodes + end node)
+- 297 sequential connections
+- Complete test coverage validation
+
+Perfect for testing provider capabilities and n8n performance at scale.
 
 ### Community Edition Examples
 
@@ -179,14 +195,17 @@ make openapi       # Regenerate SDK from n8n OpenAPI spec
 ### Node Management Commands
 
 ```bash
-make nodes                # Synchronize n8n nodes from official repository
-make nodes/fetch          # Fetch latest n8n repository
-make nodes/parse          # Parse nodes and generate registry
-make nodes/workflows      # Generate 296 per-node workflow examples
-make nodes/docs           # Generate SUPPORTED_NODES.md documentation
-make nodes/test-workflows # Test all 296 workflow examples
-make nodes/sync-report    # Generate sync report for changes
-make nodes/clean          # Clean nodes cache
+make nodes                   # Synchronize n8n nodes from official repository
+make nodes/fetch             # Fetch latest n8n repository
+make nodes/parse             # Parse nodes and generate registry
+make nodes/workflows         # Generate 296 per-node workflow examples
+make nodes/mega-workflow     # Generate MEGA workflow with all 296 nodes
+make nodes/mega-workflow/test # Test MEGA workflow (plan/apply/verify/destroy)
+make nodes/validate-coverage # Validate test coverage completeness
+make nodes/docs              # Generate SUPPORTED_NODES.md documentation
+make nodes/sync-report       # Generate sync report for changes
+make nodes/stats             # Display node statistics
+make nodes/clean             # Clean nodes cache
 ```
 
 ### Quality Standards

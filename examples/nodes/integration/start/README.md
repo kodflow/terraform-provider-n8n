@@ -1,8 +1,6 @@
 # Start Node Test
 
-**Category**: Integration
-**Type**: `n8n-nodes-base.start`
-**Latest Version**: 1
+**Category**: Integration **Type**: `n8n-nodes-base.start` **Latest Version**: 1
 
 ## Description
 

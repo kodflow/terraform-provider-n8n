@@ -31,7 +31,7 @@ resource "n8n_workflow_node" "test_node" {
 
   parameters = jsonencode(
     {
-        "note": "Configure Split In Batches parameters here"
+      "note" : "Configure Split In Batches parameters here"
     }
   )
 }
@@ -49,7 +49,7 @@ resource "n8n_workflow_node" "output_0" {
         name  = "output_type"
         type  = "string"
         value = "Batch"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
@@ -71,7 +71,7 @@ resource "n8n_workflow_node" "output_1" {
         name  = "output_type"
         type  = "string"
         value = "Done"
-      }, {
+        }, {
         name  = "result"
         type  = "string"
         value = "={{ $json }}"
