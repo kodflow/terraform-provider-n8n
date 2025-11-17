@@ -219,12 +219,23 @@ tf/list: ## List all available Terraform examples
 	@printf "  $(CYAN)ℹ$(RESET)  Use: make tf/plan examples/basic-sample\n"
 	@echo ""
 
-# Aliases for convenience
+# ============================================================================
+# Convenience Aliases (same as tf/plan, tf/apply, tf/destroy)
+# ============================================================================
+# These are shortcuts for the most common Terraform operations.
+# They work exactly the same as their tf/* counterparts.
+#
+# Examples:
+#   make plan examples/basic-sample   →  same as: make tf/plan examples/basic-sample
+#   make apply                        →  same as: make tf/apply (uses saved context)
+#   make destroy                      →  same as: make tf/destroy (uses saved context)
+# ============================================================================
+
 .PHONY: plan
-plan: tf/plan ## Alias for tf/plan
+plan: tf/plan ## Terraform plan (alias for tf/plan) [EXAMPLE]
 
 .PHONY: apply
-apply: tf/apply ## Alias for tf/apply
+apply: tf/apply ## Terraform apply (alias for tf/apply) [EXAMPLE]
 
 .PHONY: destroy
-destroy: tf/destroy ## Alias for tf/destroy
+destroy: tf/destroy ## Terraform destroy (alias for tf/destroy) [EXAMPLE]
