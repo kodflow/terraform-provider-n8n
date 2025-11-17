@@ -40,11 +40,15 @@ if [ ! -f "$PROVIDER_BIN" ]; then
     exit 1
 fi
 
-# Install provider to plugin directory
-printf "  ${CYAN}→${RESET} Installing provider to plugin directory\n"
-mkdir -p "$PROVIDER_DIR"
-cp "$PROVIDER_BIN" "$PROVIDER_DIR/"
-chmod +x "$PROVIDER_DIR/terraform-provider-n8n"
+# Install provider to plugin directory (skip if already exists to avoid permission issues)
+if [ ! -f "$PROVIDER_DIR/terraform-provider-n8n" ]; then
+    printf "  ${CYAN}→${RESET} Installing provider to plugin directory\n"
+    mkdir -p "$PROVIDER_DIR"
+    cp "$PROVIDER_BIN" "$PROVIDER_DIR/"
+    chmod +x "$PROVIDER_DIR/terraform-provider-n8n"
+else
+    printf "  ${CYAN}→${RESET} Using existing provider from plugin directory\n"
+fi
 
 # Setup dev overrides config
 TF_CLI_CONFIG_FILE=$(mktemp)
@@ -78,14 +82,17 @@ for example_dir in $EXAMPLES; do
     # Clean terraform artifacts
     rm -rf "$example_dir/.terraform" "$example_dir/.terraform.lock.hcl" 2>/dev/null || true
 
-    # Try to validate (skip init with dev_overrides as per Terraform documentation)
+    # Create minimal .terraform directory (required by terraform validate)
+    mkdir -p "$example_dir/.terraform"
+
+    # Validate with dev_overrides (no init needed, validates against local provider schema)
     if (cd "$example_dir" && terraform validate -no-color > /dev/null 2>&1); then
         printf "    ${GREEN}✓${RESET} Valid\n"
         PASSED_COUNT=$((PASSED_COUNT + 1))
     else
         printf "    ${RED}✗${RESET} Invalid\n"
-        # Show error details
-        (cd "$example_dir" && terraform validate -no-color 2>&1) | sed 's/^/      /'
+        # Show error details (filter out dev_overrides warning)
+        (cd "$example_dir" && terraform validate -no-color 2>&1) | grep -v "Warning: Provider development overrides" | grep -v "The following provider development" | grep -v "kodflow/n8n in" | grep -v "The behavior may therefore" | grep -v "applying changes may cause" | grep -v "releases." | grep -v "^$" | sed 's/^/      /'
         FAILED_EXAMPLES+=("$EXAMPLE_NAME")
     fi
 
