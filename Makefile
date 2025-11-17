@@ -54,6 +54,9 @@ help: ## Display available commands
 	@echo "$(BOLD)Terraform Operations:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/terraform.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
+	@echo "$(BOLD)Nodes Operations:$(RESET)"
+	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/nodes.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
 	@echo "$(BOLD)Code Quality:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/quality.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
