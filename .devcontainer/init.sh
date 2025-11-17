@@ -94,7 +94,7 @@ fi
 echo "🔑 Checking GPG configuration..."
 
 # Check if gpg is available on host
-if ! command -v gpg &> /dev/null; then
+if ! command -v gpg &>/dev/null; then
   echo "⚠️  GPG not found on host machine"
   echo "ℹ️  Install GPG: apt install gnupg (Linux) or brew install gnupg (macOS)"
   echo "ℹ️  Skipping GPG key creation - commits will not be signed"
@@ -203,17 +203,17 @@ EOF
     # Export keys and configuration
     if [ -n "$KEYID" ]; then
       # Export private key
-      gpg --export-secret-keys --armor "$KEYID" > "$GPG_DIR/private.key"
+      gpg --export-secret-keys --armor "$KEYID" >"$GPG_DIR/private.key"
       chmod 600 "$GPG_DIR/private.key"
       echo "✅ Private key exported to $GPG_DIR/private.key"
 
       # Export public key
-      gpg --armor --export "$KEYID" > "$GPG_DIR/public.key"
+      gpg --armor --export "$KEYID" >"$GPG_DIR/public.key"
       chmod 644 "$GPG_DIR/public.key"
       echo "✅ Public key exported to $GPG_DIR/public.key"
 
       # Create config file with Git identity (quote values for safety)
-      cat > "$GPG_DIR/gpg-config.env" <<EOF
+      cat >"$GPG_DIR/gpg-config.env" <<EOF
 KEYID="$KEYID"
 GIT_NAME="$GIT_NAME"
 GIT_EMAIL="$GIT_EMAIL"
