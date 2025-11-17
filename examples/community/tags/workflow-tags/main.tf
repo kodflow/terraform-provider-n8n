@@ -3,36 +3,37 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 0.1.0"
+      version = "~> 1.0"
     }
   }
 }
 
 provider "n8n" {
-  api_url = var.n8n_api_url
-  api_key = var.n8n_api_key
+  base_url = var.n8n_base_url
+  api_key  = var.n8n_api_key
 }
 
-# Create tags for organization
+# Create tags for organization with unique CI-prefixed names
+# Using run_id (GitHub run number) + timestamp for guaranteed uniqueness
 resource "n8n_tag" "production" {
-  name = "production"
+  name = "ci-${var.run_id}-${var.timestamp}-prod"
 }
 
 resource "n8n_tag" "automated" {
-  name = "automated"
+  name = "ci-${var.run_id}-${var.timestamp}-auto"
 }
 
 resource "n8n_tag" "api" {
-  name = "api"
+  name = "ci-${var.run_id}-${var.timestamp}-api"
 }
 
 # Create a workflow with tags
 resource "n8n_workflow" "tagged_workflow" {
-  name   = "Tagged Workflow Example"
+  name   = "ci-${var.run_id}-Tagged Workflow Example"
   active = false
   tags   = [n8n_tag.production.id, n8n_tag.automated.id, n8n_tag.api.id]
 
-  nodes = jsonencode([
+  nodes_json = jsonencode([
     {
       id         = "manual-trigger"
       name       = "Manual Trigger"
@@ -56,7 +57,7 @@ resource "n8n_workflow" "tagged_workflow" {
     }
   ])
 
-  connections = jsonencode({
+  connections_json = jsonencode({
     "Manual Trigger" = {
       main = [[{
         node  = "Set Values"
@@ -70,10 +71,8 @@ resource "n8n_workflow" "tagged_workflow" {
 # Query all tags
 data "n8n_tags" "all" {}
 
-# Query workflows by tag
-data "n8n_workflows" "production_workflows" {
-  tags = [n8n_tag.production.id]
-}
+# Query all workflows
+data "n8n_workflows" "all_workflows" {}
 
 output "all_tags" {
   value       = data.n8n_tags.all.tags
@@ -85,7 +84,7 @@ output "tagged_workflow_id" {
   description = "The ID of the tagged workflow"
 }
 
-output "production_workflows" {
-  value       = data.n8n_workflows.production_workflows.workflows
-  description = "All workflows with production tag"
+output "all_workflows" {
+  value       = data.n8n_workflows.all_workflows.workflows
+  description = "All workflows in the system"
 }
