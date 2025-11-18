@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE in the project root for license information.
 
 # Test all node examples with Terraform plan/apply/destroy
 # This script finds all node examples and runs Terraform lifecycle on each
