@@ -40,14 +40,19 @@ lint: build ## Run code linters + validate Terraform examples
 	@echo ""
 
 .PHONY: docs
-docs: ## Generate documentation (Terraform docs + coverage report)
+docs: ## Generate ALL documentation (Terraform docs + COVERAGE.MD + nodes README.md)
 	@echo ""
 	@echo "$(BOLD)$(CYAN)📝 Generating documentation...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Cleaning previous documentation\n"
 	@rm -rf docs
 	@printf "  $(CYAN)→$(RESET) Generating Terraform provider documentation\n"
 	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-dir src --provider-name n8n --rendered-website-dir ../docs
-	@printf "  $(CYAN)→$(RESET) Generating COVERAGE.md\n"
+	@printf "  $(CYAN)→$(RESET) Generating examples/nodes/README.md\n"
+	@chmod +x scripts/nodes/generate-nodes-documentation.js
+	@node scripts/nodes/generate-nodes-documentation.js
+	@printf "  $(CYAN)→$(RESET) Generating COVERAGE.MD\n"
 	@./scripts/generate-coverage.sh
+	@printf "  $(CYAN)→$(RESET) Formatting generated documentation\n"
+	@prettier --write "**/*.md" --ignore-path .prettierignore --log-level silent 2>/dev/null || true
 	@echo "$(BOLD)$(GREEN)✅ Documentation generated$(RESET)"
 	@echo ""
