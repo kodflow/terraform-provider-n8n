@@ -88,13 +88,13 @@ Before completing tasks, Claude must verify:
 ## Make Commands
 
 - `make help` - Display all available commands
+- `make update` - Update ALL dependencies (n8n SDK + ktn-linter + README badge)
 - `make build` - Build and install the provider
 - `make test` - Run the full test suite
 - `make fmt` - Format all source files (Go, Bazel, Shell, Markdown, etc.)
 - `make lint` - Run code linters (golangci-lint + ktn-linter)
 - `make docs` - Generate ALL documentation (Terraform docs + COVERAGE.MD + examples/nodes/README.md)
 - `make openapi` - Regenerate SDK from n8n OpenAPI spec (includes fmt)
-- `make update` - Update ktn-linter to latest version
 
 ## SDK Generation
 
