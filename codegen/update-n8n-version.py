@@ -65,13 +65,13 @@ def main():
         content = f.read()
 
     # Find current version
-    current_match = re.search(r'N8N_COMMIT = "([a-f0-9]+)".*?# Frozen commit.*?\(n8n@([\d.]+)\)', content)
+    current_match = re.search(r'# Frozen commit.*?\(n8n@([\d.]+)\).*?n8n_commit = "([a-f0-9]+)"', content, re.DOTALL)
     if not current_match:
-        print("❌ Could not find N8N_COMMIT in download-only.py")
+        print("❌ Could not find n8n_commit in download-only.py")
         sys.exit(1)
 
-    current_commit = current_match.group(1)
-    current_version = current_match.group(2)
+    current_version = current_match.group(1)
+    current_commit = current_match.group(2)
 
     print(f"📌 Current version: {current_version} (commit {current_commit[:8]})")
     print(f"🆕 Latest version:  {latest_version} (commit {latest_commit[:8]})\n")
@@ -80,9 +80,9 @@ def main():
         print("✅ Already up to date!")
         sys.exit(0)
 
-    # Replace N8N_COMMIT line
-    pattern = r'N8N_COMMIT = "[a-f0-9]+".*?# Frozen commit[^\n]*'
-    replacement = f'N8N_COMMIT = "{latest_commit}"  # Frozen commit for API stability (n8n@{latest_version})'
+    # Replace n8n_commit line (comment is on previous line)
+    pattern = r'# Frozen commit for API stability \(n8n@[\d.]+\)\s+n8n_commit = "[a-f0-9]+"'
+    replacement = f'# Frozen commit for API stability (n8n@{latest_version})\n    n8n_commit = "{latest_commit}"'
 
     new_content = re.sub(pattern, replacement, content)
 
