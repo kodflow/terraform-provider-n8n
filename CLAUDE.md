@@ -8,8 +8,9 @@ This document provides development guidelines for the n8n terraform provider pro
 
 The configuration establishes three critical prohibitions:
 
-- No markdown files outside `/workspace/README.md`, `/workspace/CHANGELOG.md`, `/workspace/COVERAGE.MD`, and `/workspace/CLAUDE.md`
-- No generated reports or documentation in folders (except CHANGELOG.md and COVERAGE.MD at root)
+- No markdown files outside `/workspace/README.md`, `/workspace/COVERAGE.MD`, and `/workspace/CLAUDE.md`
+- No generated reports or documentation in folders (except COVERAGE.MD at root)
+- Generated documentation files: `docs/` (Terraform docs), `examples/nodes/README.md` (nodes catalog)
 - Documentation updates must follow Conventional Commits format
 
 ## Mandatory Workflow
@@ -21,7 +22,7 @@ Each development iteration requires:
 3. Run `make test` to execute all tests - ALL tests must pass
 4. Run `make lint` and fix ALL errors, warnings, and info messages - NO exceptions
 5. Verify test coverage is maintained or improved
-6. Update CHANGELOG.md using `make docs` if adding features
+6. Run `make docs` to regenerate all documentation (COVERAGE.MD, Terraform docs, nodes README)
 7. Remove temporary files (bazel-\*, \*.out, \*.html)
 8. **Repeat until EVERYTHING is perfect** - zero errors, zero warnings
 
@@ -87,13 +88,13 @@ Before completing tasks, Claude must verify:
 ## Make Commands
 
 - `make help` - Display all available commands
+- `make update` - Update ALL dependencies (n8n SDK + ktn-linter + README badge)
 - `make build` - Build and install the provider
 - `make test` - Run the full test suite
 - `make fmt` - Format all source files (Go, Bazel, Shell, Markdown, etc.)
 - `make lint` - Run code linters (golangci-lint + ktn-linter)
-- `make docs` - Generate CHANGELOG.md and COVERAGE.MD
+- `make docs` - Generate ALL documentation (Terraform docs + COVERAGE.MD + examples/nodes/README.md)
 - `make openapi` - Regenerate SDK from n8n OpenAPI spec (includes fmt)
-- `make update` - Update ktn-linter to latest version
 
 ## SDK Generation
 
@@ -162,5 +163,8 @@ Run `make openapi` to regenerate the SDK after n8n API changes.
 ### Updating documentation
 
 1. Make code changes with proper commit messages
-2. Run `make docs` to regenerate CHANGELOG.md and COVERAGE.MD
+2. Run `make docs` to regenerate ALL documentation:
+   - `COVERAGE.MD` - Test coverage report
+   - `docs/**/*.md` - Terraform provider documentation (20 files)
+   - `examples/nodes/README.md` - Complete nodes catalog (296 nodes)
 3. Commit documentation updates
