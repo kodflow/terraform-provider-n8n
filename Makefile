@@ -35,6 +35,36 @@ include makefiles/tools.mk
 include makefiles/terraform.mk
 
 # ============================================================================
+# Global Update Target
+# ============================================================================
+
+.PHONY: update
+update: ## Update ALL dependencies (n8n SDK + ktn-linter + README badge)
+	@echo ""
+	@echo "$(BOLD)$(CYAN)🔄 Updating all dependencies...$(RESET)"
+	@echo ""
+	@printf "$(BOLD)1/4 Updating n8n commit to latest version...$(RESET)\n"
+	@$(MAKE) sdk/openapi/update
+	@echo ""
+	@printf "$(BOLD)2/4 Updating ktn-linter to latest version...$(RESET)\n"
+	@$(MAKE) tools/update
+	@echo ""
+	@printf "$(BOLD)3/4 Updating n8n version badge in README...$(RESET)\n"
+	@./scripts/update-n8n-badge.sh
+	@echo ""
+	@printf "$(BOLD)4/4 Regenerating SDK and documentation...$(RESET)\n"
+	@$(MAKE) sdk
+	@$(MAKE) docs
+	@echo ""
+	@echo "$(BOLD)$(GREEN)✅ All updates completed$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)ℹ$(RESET)  Next steps:"
+	@echo "  1. Review changes: git diff"
+	@echo "  2. Test changes:   make test"
+	@echo "  3. Commit changes: git add . && git commit"
+	@echo ""
+
+# ============================================================================
 # Help Target
 # ============================================================================
 
@@ -44,6 +74,9 @@ help: ## Display available commands
 	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
 	@echo "$(BOLD)  N8N Terraform Provider - Development Commands$(RESET)"
 	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
+	@echo ""
+	@echo "$(BOLD)Main Commands:$(RESET)"
+	@printf "  $(CYAN)%-28s$(RESET) %s\n" "update" "Update ALL dependencies (n8n SDK + ktn-linter + README badge)"
 	@echo ""
 	@echo "$(BOLD)Build & Clean:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/build.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
