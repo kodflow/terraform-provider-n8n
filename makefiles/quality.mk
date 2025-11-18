@@ -45,6 +45,8 @@ docs: ## Generate ALL documentation (Terraform docs + COVERAGE.MD + nodes README
 	@echo "$(BOLD)$(CYAN)📝 Generating documentation...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Cleaning previous documentation\n"
 	@rm -rf docs
+	@printf "  $(CYAN)→$(RESET) Ensuring go.mod is up to date\n"
+	@cd src && go mod tidy
 	@printf "  $(CYAN)→$(RESET) Generating Terraform provider documentation\n"
 	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-dir src --provider-name n8n --rendered-website-dir ../docs
 	@printf "  $(CYAN)→$(RESET) Generating examples/nodes/README.md\n"
