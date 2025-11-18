@@ -49,6 +49,12 @@ docs: ## Generate ALL documentation (Terraform docs + COVERAGE.MD + nodes README
 	@cd src && go mod tidy
 	@printf "  $(CYAN)→$(RESET) Generating Terraform provider documentation\n"
 	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-dir src --provider-name n8n --rendered-website-dir ../docs
+	@printf "  $(CYAN)→$(RESET) Ensuring n8n nodes registry exists\n"
+	@if [ ! -f data/n8n-nodes-registry.json ]; then \
+		echo "  $(YELLOW)⚠$(RESET) Registry not found, generating..."; \
+		bash scripts/nodes/sync-n8n-nodes.sh fetch; \
+		bash scripts/nodes/sync-n8n-nodes.sh parse; \
+	fi
 	@printf "  $(CYAN)→$(RESET) Generating examples/nodes/README.md\n"
 	@chmod +x scripts/nodes/generate-nodes-documentation.js
 	@node scripts/nodes/generate-nodes-documentation.js
