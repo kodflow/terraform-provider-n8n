@@ -80,6 +80,22 @@ else
   echo -e "  ${YELLOW}⚠${RESET}  .devcontainer/devcontainer.json not found"
 fi
 
+# Run go mod tidy on all modules
+echo ""
+echo -e "  ${CYAN}→${RESET} Running go mod tidy on root module..."
+if go mod tidy 2>&1; then
+  echo -e "  ${GREEN}✓${RESET} Root module dependencies cleaned"
+else
+  echo -e "  ${YELLOW}⚠${RESET}  Failed to tidy root module"
+fi
+
+echo -e "  ${CYAN}→${RESET} Running go mod tidy on SDK module..."
+if (cd sdk/n8nsdk && go mod tidy 2>&1); then
+  echo -e "  ${GREEN}✓${RESET} SDK module dependencies cleaned"
+else
+  echo -e "  ${YELLOW}⚠${RESET}  Failed to tidy SDK module"
+fi
+
 echo ""
 echo -e "${GREEN}✓${RESET} Go version update completed"
 echo ""
