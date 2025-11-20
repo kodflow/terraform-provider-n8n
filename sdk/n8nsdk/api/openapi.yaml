@@ -10,9 +10,9 @@ info:
     url: https://github.com/n8n-io/n8n/blob/master/LICENSE.md
   version: 1.1.1
   x-n8n-version-info:
-    frozenVersion: 1.119.2
-    frozenCommit: 4bf741ae67124724eb94e582de94daf0d70f9bd0
-    latestVersion: 1.119.2
+    frozenVersion: 1.120.4
+    frozenCommit: 6c484fd4e85bd12025ff13eb88c37e701b468bbe
+    latestVersion: 1.120.4
     inSync: true
     note: This OpenAPI spec is generated from a frozen commit for API stability. Check latestVersion to see if updates are available.
 servers:
@@ -211,7 +211,7 @@ paths:
               - destinationProjectId
         required: true
       responses:
-        '200':
+        '204':
           description: Operation successful.
         '400':
           $ref: '#/components/responses/badRequest'
@@ -689,7 +689,7 @@ paths:
               - destinationProjectId
         required: true
       responses:
-        '200':
+        '204':
           description: Operation successful.
         '400':
           $ref: '#/components/responses/badRequest'
@@ -804,7 +804,7 @@ paths:
                 required:
                 - email
       responses:
-        '200':
+        '201':
           description: Operation successful.
           content:
             application/json:
@@ -890,7 +890,7 @@ paths:
               required:
               - newRoleName
       responses:
-        '200':
+        '204':
           description: Operation successful.
         '401':
           $ref: '#/components/responses/unauthorized'
@@ -1324,6 +1324,7 @@ components:
       - type
       - data
       type: object
+      additionalProperties: true
       properties:
         id:
           type: string
@@ -1340,6 +1341,11 @@ components:
           writeOnly: true
           example:
             token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+        isManaged:
+          type: boolean
+          default: false
+          readOnly: true
+          description: Whether the credential is managed by n8n
         createdAt:
           type: string
           format: date-time
@@ -1369,6 +1375,11 @@ components:
         type:
           type: string
           example: github
+        isManaged:
+          type: boolean
+          default: false
+          readOnly: true
+          description: Whether the credential is managed by n8n
         createdAt:
           type: string
           format: date-time
@@ -1389,6 +1400,7 @@ components:
           type: object
         finished:
           type: boolean
+          description: Deprecated - use status instead
           example: true
         mode:
           type: string
@@ -1403,13 +1415,20 @@ components:
           - webhook
         retryOf:
           type: number
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+          description: The time at which the execution was created
           nullable: true
         retrySuccessId:
           type: number
           nullable: true
           example: '2'
         startedAt:
+          nullable: true
           type: string
+          description: The time at which the execution started
           format: date-time
         stoppedAt:
           type: string
@@ -1461,6 +1480,8 @@ components:
         name:
           type: string
           example: Production
+          maxLength: 24
+          description: Tag name (1-24 characters, must be unique)
         createdAt:
           type: string
           format: date-time
@@ -1631,15 +1652,27 @@ components:
           example: false
     sharedWorkflow:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       properties:
+        id:
+          type: string
+          description: Shared workflow ID
+        projectId:
+          type: string
+          description: Project ID
+          example: 2tUt1wbLX592XDdX
+        userId:
+          type: string
+          description: User ID
         role:
           type: string
+          description: User role
           example: workflow:owner
+          enum:
+            - workflow:owner
+            - workflow:editor
+            - workflow:viewer
         workflowId:
-          type: string
-          example: 2tUt1wbLX592XDdX
-        projectId:
           type: string
           example: 2tUt1wbLX592XDdX
         project:
@@ -1720,6 +1753,30 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/sharedWorkflow'
+        versionId:
+          type: string
+          description: Version identifier (36 characters)
+          maxLength: 36
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        isArchived:
+          type: boolean
+          description: Whether the workflow is archived (soft-deleted)
+          example: false
+        triggerCount:
+          type: number
+          description: Number of triggers in the workflow
+          example: 1
+        meta:
+          type: object
+          additionalProperties: true
+          description: Frontend metadata
+          example:
+            instanceId: "abc123"
+        pinData:
+          type: object
+          additionalProperties: true
+          description: Pinned data for workflow nodes
+          example: {}
     workflowList:
       type: object
       properties:
@@ -1788,7 +1845,7 @@ components:
           readOnly: true
         role:
           type: string
-          example: owner
+          example: global:owner
           readOnly: true
     userList:
       type: object
@@ -1882,6 +1939,60 @@ components:
         type:
           type: string
           readOnly: true
+          enum:
+            - personal
+            - team
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Project creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Project last update timestamp
+        icon:
+          type: object
+          nullable: true
+          description: Project icon (emoji or icon with value)
+          additionalProperties: true
+          properties:
+            type:
+              type: string
+              enum:
+                - emoji
+                - icon
+            value:
+              type: string
+        description:
+          type: string
+          nullable: true
+          maxLength: 512
+          description: Project description
+        projectRelations:
+          type: array
+          readOnly: true
+          description: Project relations
+          items:
+            type: object
+            additionalProperties: true
+    sharedWorkflow_project:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          description: Project ID
+        name:
+          type: string
+          description: Project name
+        type:
+          type: string
+          description: Project type
+          enum:
+            - personal
+            - team
     variable:
       type: object
       additionalProperties: false
@@ -2051,6 +2162,7 @@ components:
           type: object
         finished:
           type: boolean
+          description: Deprecated - use status instead
           example: true
         mode:
           type: string
@@ -2065,13 +2177,20 @@ components:
           - webhook
         retryOf:
           type: number
+        createdAt:
+          format: date-time
+          readOnly: true
+          type: string
+          description: The time at which the execution was created
           nullable: true
         retrySuccessId:
           type: number
           nullable: true
           example: '2'
         startedAt:
+          nullable: true
           type: string
+          description: The time at which the execution started
           format: date-time
         stoppedAt:
           type: string
@@ -2182,6 +2301,8 @@ components:
         name:
           type: string
           example: Production
+          maxLength: 24
+          description: Tag name (1-24 characters, must be unique)
         createdAt:
           type: string
           format: date-time
@@ -2372,6 +2493,11 @@ components:
           writeOnly: true
           example:
             token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
+        isManaged:
+          type: boolean
+          default: false
+          readOnly: true
+          description: Whether the credential is managed by n8n
         createdAt:
           type: string
           format: date-time
@@ -2593,7 +2719,7 @@ components:
           readOnly: true
         role:
           type: string
-          example: owner
+          example: global:owner
           readOnly: true
   responses:
     unauthorized:

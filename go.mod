@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
-	github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk v0.0.0-00010101000000-000000000000
+	github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk v0.0.0-20251118015643-a23f7d9ccef5
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 )
