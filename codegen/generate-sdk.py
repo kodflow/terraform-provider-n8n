@@ -146,8 +146,8 @@ def main():
     else:
         print("   ⚠️  model_workflow.go not found\n")
 
-    # 3. Fix module paths
-    print("   → Fixing module paths...")
+    # 3. Fix module paths in .go files
+    print("   → Fixing module paths in .go files...")
     for go_file in sdk_dir.rglob("*.go"):
         content = go_file.read_text(encoding='utf-8')
         content = content.replace(
@@ -157,7 +157,21 @@ def main():
         go_file.write_text(content, encoding='utf-8')
     print("   ✓ Fixed\n")
 
-    # 3. Run go mod tidy
+    # 4. Fix go.mod module declaration
+    print("   → Fixing go.mod module path...")
+    go_mod = sdk_dir / "go.mod"
+    if go_mod.exists():
+        content = go_mod.read_text(encoding='utf-8')
+        content = content.replace(
+            "module github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk",
+            "module github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+        )
+        go_mod.write_text(content, encoding='utf-8')
+        print("   ✓ Fixed\n")
+    else:
+        print("   ⚠️  go.mod not found\n")
+
+    # 5. Run go mod tidy
     print("   → Running go mod tidy...")
     # nosec B603 B607 nosemgrep
     subprocess.run(
@@ -169,13 +183,13 @@ def main():
     )
     print("   ✓ Done\n")
 
-    # 4. Restore original openapi.yaml (generator may have reformatted it)
+    # 6. Restore original openapi.yaml (generator may have reformatted it)
     print("   → Restoring original openapi.yaml...")
     shutil.copy(openapi_backup, openapi_source)
     openapi_backup.unlink()
     print("   ✓ Restored\n")
 
-    # 5. Generate Bazel files
+    # 7. Generate Bazel files
     print("🏗️  Generating BUILD files...")
     run("bazel run //:gazelle")
     print("   ✓ Done\n")
