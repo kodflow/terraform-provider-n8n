@@ -9,10 +9,12 @@ quality: fmt lint docs ## Run ALL quality checks (format + lint + docs) - Top le
 fmt: ## Format all source files
 	@echo ""
 	@echo "$(BOLD)Formatting source files...$(RESET)"
-	@printf "  $(CYAN)→$(RESET) Go imports\n"
-	@goimports -w $$(find . -type f -name "*.go" ! -path "./bazel-*" ! -path "./vendor/*") 2>/dev/null || true
+	@printf "  $(CYAN)→$(RESET) Go imports (installing if needed)\n"
+	@command -v goimports >/dev/null 2>&1 || go install golang.org/x/tools/cmd/goimports@latest
+	@find src sdk -type f -name "*.go" -exec goimports -w {} \;
 	@printf "  $(CYAN)→$(RESET) Go files\n"
-	@go fmt ./... > /dev/null
+	@cd src && go fmt ./... > /dev/null
+	@cd sdk/n8nsdk && go fmt ./... > /dev/null
 	@printf "  $(CYAN)→$(RESET) Bazel BUILD files (gazelle)\n"
 	@bazel run //:gazelle 2>&1 | grep -E "^(ERROR|WARNING|INFO)" || true
 	@printf "  $(CYAN)→$(RESET) Bazel files (buildifier)\n"
