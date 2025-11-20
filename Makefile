@@ -39,26 +39,23 @@ include makefiles/terraform.mk
 # ============================================================================
 
 .PHONY: update
-update: ## Update ALL dependencies (Go version + Go deps + n8n SDK + ktn-linter + README badge)
+update: ## Update ALL dependencies (Go deps + n8n SDK + ktn-linter + README badge)
 	@echo ""
 	@echo "$(BOLD)$(CYAN)🔄 Updating all dependencies...$(RESET)"
 	@echo ""
-	@printf "$(BOLD)1/6 Updating Go version to latest stable...$(RESET)\n"
-	@./scripts/update-go-version.sh
-	@echo ""
-	@printf "$(BOLD)2/6 Updating Go dependencies to latest versions...$(RESET)\n"
+	@printf "$(BOLD)1/5 Updating Go dependencies to latest versions...$(RESET)\n"
 	@./scripts/update-go-dependencies.sh
 	@echo ""
-	@printf "$(BOLD)3/6 Updating n8n commit to latest version...$(RESET)\n"
+	@printf "$(BOLD)2/5 Updating n8n commit to latest version...$(RESET)\n"
 	@$(MAKE) sdk/openapi/update
 	@echo ""
-	@printf "$(BOLD)4/6 Updating ktn-linter to latest version...$(RESET)\n"
+	@printf "$(BOLD)3/5 Updating ktn-linter to latest version...$(RESET)\n"
 	@$(MAKE) tools/update
 	@echo ""
-	@printf "$(BOLD)5/6 Updating n8n version badge in README...$(RESET)\n"
+	@printf "$(BOLD)4/5 Updating n8n version badge in README...$(RESET)\n"
 	@./scripts/update-n8n-badge.sh
 	@echo ""
-	@printf "$(BOLD)6/6 Regenerating SDK and documentation...$(RESET)\n"
+	@printf "$(BOLD)5/5 Regenerating SDK and documentation...$(RESET)\n"
 	@$(MAKE) sdk
 	@$(MAKE) docs
 	@echo ""
