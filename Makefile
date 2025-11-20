@@ -62,6 +62,9 @@ update: ## Update ALL dependencies (Go version + Go deps + n8n SDK + ktn-linter 
 	@$(MAKE) sdk
 	@$(MAKE) docs
 	@echo ""
+	@printf "$(BOLD)Formatting all source files...$(RESET)\n"
+	@$(MAKE) fmt
+	@echo ""
 	@echo "$(BOLD)$(GREEN)✅ All updates completed$(RESET)"
 	@echo ""
 	@echo "$(YELLOW)ℹ$(RESET)  Next steps:"
