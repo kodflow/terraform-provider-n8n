@@ -1,6 +1,6 @@
 module github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk
 
-go 1.18
+go 1.25.4
 
 require github.com/stretchr/testify v1.11.1
 
