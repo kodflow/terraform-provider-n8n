@@ -132,10 +132,30 @@
          project:
            type: object
            properties:
-@@ -1720,6 +1753,30 @@ components:
-           type: array
+@@ -1663,7 +1696,7 @@ components:
+           readOnly: true
+     workflow:
+       type: object
+-      additionalProperties: false
++      additionalProperties: true
+       required:
+       - name
+       - nodes
+@@ -1677,6 +1710,10 @@ components:
+         name:
+           type: string
+           example: Workflow 1
++        description:
++          type: string
++          nullable: true
++          description: Workflow description
+         active:
+           type: boolean
+           readOnly: true
+@@ -1716,10 +1753,38 @@ components:
            items:
-             $ref: '#/components/schemas/sharedWorkflow'
+             $ref: '#/components/schemas/tag'
+           readOnly: true
 +        versionId:
 +          type: string
 +          description: Version identifier (36 characters)
@@ -160,10 +180,18 @@
 +          additionalProperties: true
 +          description: Pinned data for workflow nodes
 +          example: {}
+         shared:
+           type: array
+           items:
+             $ref: '#/components/schemas/sharedWorkflow'
++        versionCounter:
++          type: integer
++          description: Workflow version counter
++          example: 1
      workflowList:
        type: object
        properties:
-@@ -1882,6 +1939,60 @@ components:
+@@ -1882,6 +1947,60 @@ components:
          type:
            type: string
            readOnly: true
@@ -224,7 +252,7 @@
      variable:
        type: object
        additionalProperties: false
-@@ -2051,6 +2162,7 @@ components:
+@@ -2051,6 +2170,7 @@ components:
            type: object
          finished:
            type: boolean
@@ -232,7 +260,7 @@
            example: true
          mode:
            type: string
-@@ -2065,13 +2177,20 @@ components:
+@@ -2065,13 +2185,20 @@ components:
            - webhook
          retryOf:
            type: number
@@ -253,7 +281,7 @@
            format: date-time
          stoppedAt:
            type: string
-@@ -2182,6 +2301,8 @@ components:
+@@ -2182,6 +2309,8 @@ components:
          name:
            type: string
            example: Production
@@ -262,7 +290,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -2372,6 +2493,11 @@ components:
+@@ -2372,6 +2501,11 @@ components:
            writeOnly: true
            example:
              token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
