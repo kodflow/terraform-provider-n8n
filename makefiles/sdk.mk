@@ -7,6 +7,7 @@ sdk: sdk/openapi ## Generate complete Go SDK (download + patch + generate)
 	@echo ""
 	@python3 codegen/generate-sdk.py
 	@echo ""
+	@$(MAKE) fmt
 
 .PHONY: sdk/openapi
 sdk/openapi: sdk/openapi/download sdk/openapi/patch ## Download & patch OpenAPI spec
