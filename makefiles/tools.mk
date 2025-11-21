@@ -30,7 +30,12 @@ tools/lint: ## Install linting tools
 	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin
 	@printf "  $(CYAN)→$(RESET) ktn-linter (latest version)\n"
 	@KTN_ARCH=$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
-	KTN_VERSION=$$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	if [ -n "$$GITHUB_TOKEN" ]; then \
+		KTN_VERSION=$$(curl -s -H "Authorization: token $$GITHUB_TOKEN" https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	else \
+		KTN_VERSION=$$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	fi; \
+	if [ -z "$$KTN_VERSION" ]; then echo "  $(RED)✗$(RESET) Failed to get ktn-linter version from GitHub API"; exit 1; fi; \
 	printf "  $(CYAN)  →$(RESET) Downloading version v$$KTN_VERSION for $$KTN_ARCH\n"; \
 	mkdir -p $$HOME/.local/bin; \
 	curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v$${KTN_VERSION}/ktn-linter-linux-$${KTN_ARCH}" -o "$$HOME/.local/bin/ktn-linter" && \
@@ -60,7 +65,12 @@ tools/update: ## Update ktn-linter to latest version
 	@echo ""
 	@echo "$(BOLD)Updating ktn-linter...$(RESET)"
 	@KTN_ARCH=$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
-	KTN_VERSION=$$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	if [ -n "$$GITHUB_TOKEN" ]; then \
+		KTN_VERSION=$$(curl -s -H "Authorization: token $$GITHUB_TOKEN" https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	else \
+		KTN_VERSION=$$(curl -s https://api.github.com/repos/kodflow/ktn-linter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/'); \
+	fi; \
+	if [ -z "$$KTN_VERSION" ]; then echo "  $(RED)✗$(RESET) Failed to get ktn-linter version from GitHub API"; exit 1; fi; \
 	printf "  $(CYAN)→$(RESET) Downloading version v$$KTN_VERSION for $$KTN_ARCH\n"; \
 	mkdir -p $$HOME/.local/bin; \
 	curl -fsSL "https://github.com/kodflow/ktn-linter/releases/download/v$${KTN_VERSION}/ktn-linter-linux-$${KTN_ARCH}" -o "$$HOME/.local/bin/ktn-linter" && \
