@@ -32,10 +32,9 @@ func Test_getEnvAPIKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Helper()
-			// Set environment variable only if not empty
-			if tt.envAPIKey != "" {
-				t.Setenv("N8N_API_KEY", tt.envAPIKey)
-			}
+			// Always use t.Setenv to ensure clean environment
+			// This properly clears any existing value when testing empty case
+			t.Setenv("N8N_API_KEY", tt.envAPIKey)
 
 			result := getEnvAPIKey()
 
@@ -66,10 +65,9 @@ func Test_getEnvBaseURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Helper()
-			// Set environment variable only if not empty
-			if tt.envAPIURL != "" {
-				t.Setenv("N8N_API_URL", tt.envAPIURL)
-			}
+			// Always use t.Setenv to ensure clean environment
+			// This properly clears any existing value when testing empty case
+			t.Setenv("N8N_API_URL", tt.envAPIURL)
 
 			result := getEnvBaseURL()
 
