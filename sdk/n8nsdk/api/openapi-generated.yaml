@@ -1696,7 +1696,7 @@ components:
           readOnly: true
     workflow:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       - nodes
@@ -1710,6 +1710,10 @@ components:
         name:
           type: string
           example: Workflow 1
+        description:
+          type: string
+          nullable: true
+          description: Workflow description
         active:
           type: boolean
           readOnly: true
@@ -1762,6 +1766,10 @@ components:
           type: boolean
           description: Whether the workflow is archived (soft-deleted)
           example: false
+        versionCounter:
+          type: integer
+          description: Workflow version counter
+          example: 1
         triggerCount:
           type: number
           description: Number of triggers in the workflow
