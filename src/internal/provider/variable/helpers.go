@@ -128,14 +128,20 @@ func mapVariableToResourceModel(variable *n8nsdk.Variable, data *models.Resource
 	}
 	data.Key = types.StringValue(variable.Key)
 	data.Value = types.StringValue(variable.Value)
-	// Check for non-nil value.
+	// Set Type - use null if not present to ensure known value after apply.
 	if variable.Type != nil {
 		data.Type = types.StringPointerValue(variable.Type)
+	} else {
+		// Type not present in API response, set to null.
+		data.Type = types.StringNull()
 	}
-	// Project is a nested object, extract ID if present
-	// Check for non-nil value.
+	// Project is a nested object, extract ID if present.
+	// Set ProjectID - use null if not present to ensure known value after apply.
 	if variable.Project != nil && variable.Project.Id != nil {
 		data.ProjectID = types.StringPointerValue(variable.Project.Id)
+	} else {
+		// Project not present in API response, set to null.
+		data.ProjectID = types.StringNull()
 	}
 }
 
