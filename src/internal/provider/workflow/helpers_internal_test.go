@@ -1423,7 +1423,7 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "removes default callerPolicy value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := "workflowsFromSameOwner"
+				callerPolicy := CALLER_POLICY_DEFAULT
 				settings := n8nsdk.WorkflowSettings{
 					CallerPolicy: &callerPolicy,
 				}
@@ -1493,7 +1493,7 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "removes both defaults at once",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := "workflowsFromSameOwner"
+				callerPolicy := CALLER_POLICY_DEFAULT
 				availableInMCP := false
 				settings := n8nsdk.WorkflowSettings{
 					CallerPolicy:   &callerPolicy,
@@ -1510,7 +1510,7 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "keeps mixed non-default and default values",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := "workflowsFromSameOwner"
+				callerPolicy := CALLER_POLICY_DEFAULT
 				availableInMCP := true
 				settings := n8nsdk.WorkflowSettings{
 					CallerPolicy:   &callerPolicy,
