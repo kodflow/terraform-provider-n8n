@@ -147,6 +147,15 @@ jobs:
           path: bazel-bin/src/terraform-provider-n8n_/terraform-provider-n8n
           retention-days: 1
 
+      # Test n8n API connection before running acceptance tests
+      - name: Test n8n API connection
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          chmod +x scripts/test-n8n-connection.sh
+          ./scripts/test-n8n-connection.sh
+
       # Run acceptance tests (Go E2E tests)
       - name: Run Go acceptance tests
         env:
