@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -22,9 +21,10 @@ var _ MappedNullable = &ModelError{}
 
 // ModelError struct for ModelError
 type ModelError struct {
-	Code        *string `json:"code,omitempty"`
-	Message     string  `json:"message"`
-	Description *string `json:"description,omitempty"`
+	Code                 *string `json:"code,omitempty"`
+	Message              string  `json:"message"`
+	Description          *string `json:"description,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _ModelError ModelError
@@ -152,6 +152,11 @@ func (o ModelError) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Description) {
 		toSerialize["description"] = o.Description
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -179,15 +184,22 @@ func (o *ModelError) UnmarshalJSON(data []byte) (err error) {
 
 	varModelError := _ModelError{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varModelError)
+	err = json.Unmarshal(data, &varModelError)
 
 	if err != nil {
 		return err
 	}
 
 	*o = ModelError(varModelError)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "code")
+		delete(additionalProperties, "message")
+		delete(additionalProperties, "description")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

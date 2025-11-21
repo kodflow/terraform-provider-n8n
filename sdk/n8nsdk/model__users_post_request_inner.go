@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -22,8 +21,9 @@ var _ MappedNullable = &UsersPostRequestInner{}
 
 // UsersPostRequestInner struct for UsersPostRequestInner
 type UsersPostRequestInner struct {
-	Email string  `json:"email"`
-	Role  *string `json:"role,omitempty"`
+	Email                string  `json:"email"`
+	Role                 *string `json:"role,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _UsersPostRequestInner UsersPostRequestInner
@@ -116,6 +116,11 @@ func (o UsersPostRequestInner) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Role) {
 		toSerialize["role"] = o.Role
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -143,15 +148,21 @@ func (o *UsersPostRequestInner) UnmarshalJSON(data []byte) (err error) {
 
 	varUsersPostRequestInner := _UsersPostRequestInner{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varUsersPostRequestInner)
+	err = json.Unmarshal(data, &varUsersPostRequestInner)
 
 	if err != nil {
 		return err
 	}
 
 	*o = UsersPostRequestInner(varUsersPostRequestInner)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "email")
+		delete(additionalProperties, "role")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

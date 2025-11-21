@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -27,9 +26,10 @@ type CreateCredentialResponse struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 	// Whether the credential is managed by n8n
-	IsManaged *bool     `json:"isManaged,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	IsManaged            *bool     `json:"isManaged,omitempty"`
+	CreatedAt            time.Time `json:"createdAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _CreateCredentialResponse CreateCredentialResponse
@@ -226,6 +226,11 @@ func (o CreateCredentialResponse) ToMap() (map[string]interface{}, error) {
 	}
 	toSerialize["createdAt"] = o.CreatedAt
 	toSerialize["updatedAt"] = o.UpdatedAt
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -257,15 +262,25 @@ func (o *CreateCredentialResponse) UnmarshalJSON(data []byte) (err error) {
 
 	varCreateCredentialResponse := _CreateCredentialResponse{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varCreateCredentialResponse)
+	err = json.Unmarshal(data, &varCreateCredentialResponse)
 
 	if err != nil {
 		return err
 	}
 
 	*o = CreateCredentialResponse(varCreateCredentialResponse)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "type")
+		delete(additionalProperties, "isManaged")
+		delete(additionalProperties, "createdAt")
+		delete(additionalProperties, "updatedAt")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

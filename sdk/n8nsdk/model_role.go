@@ -27,8 +27,11 @@ type Role struct {
 	// Time the role was created.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Last time the role was updated.
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	UpdatedAt            *time.Time `json:"updatedAt,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _Role Role
 
 // NewRole instantiates a new Role object
 // This constructor will assign default values to properties that have it defined,
@@ -232,7 +235,37 @@ func (o Role) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.UpdatedAt) {
 		toSerialize["updatedAt"] = o.UpdatedAt
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *Role) UnmarshalJSON(data []byte) (err error) {
+	varRole := _Role{}
+
+	err = json.Unmarshal(data, &varRole)
+
+	if err != nil {
+		return err
+	}
+
+	*o = Role(varRole)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "scope")
+		delete(additionalProperties, "createdAt")
+		delete(additionalProperties, "updatedAt")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableRole struct {

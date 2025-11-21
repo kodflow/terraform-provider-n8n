@@ -20,11 +20,14 @@ var _ MappedNullable = &CredentialType{}
 
 // CredentialType struct for CredentialType
 type CredentialType struct {
-	DisplayName *string `json:"displayName,omitempty"`
-	Name        *string `json:"name,omitempty"`
-	Type        *string `json:"type,omitempty"`
-	Default     *string `json:"default,omitempty"`
+	DisplayName          *string `json:"displayName,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	Type                 *string `json:"type,omitempty"`
+	Default              *string `json:"default,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _CredentialType CredentialType
 
 // NewCredentialType instantiates a new CredentialType object
 // This constructor will assign default values to properties that have it defined,
@@ -193,7 +196,36 @@ func (o CredentialType) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Default) {
 		toSerialize["default"] = o.Default
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *CredentialType) UnmarshalJSON(data []byte) (err error) {
+	varCredentialType := _CredentialType{}
+
+	err = json.Unmarshal(data, &varCredentialType)
+
+	if err != nil {
+		return err
+	}
+
+	*o = CredentialType(varCredentialType)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "displayName")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "type")
+		delete(additionalProperties, "default")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableCredentialType struct {

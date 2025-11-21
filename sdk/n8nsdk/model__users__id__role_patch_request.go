@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -22,7 +21,8 @@ var _ MappedNullable = &UsersIdRolePatchRequest{}
 
 // UsersIdRolePatchRequest struct for UsersIdRolePatchRequest
 type UsersIdRolePatchRequest struct {
-	NewRoleName string `json:"newRoleName"`
+	NewRoleName          string `json:"newRoleName"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _UsersIdRolePatchRequest UsersIdRolePatchRequest
@@ -80,6 +80,11 @@ func (o UsersIdRolePatchRequest) MarshalJSON() ([]byte, error) {
 func (o UsersIdRolePatchRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["newRoleName"] = o.NewRoleName
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -107,15 +112,20 @@ func (o *UsersIdRolePatchRequest) UnmarshalJSON(data []byte) (err error) {
 
 	varUsersIdRolePatchRequest := _UsersIdRolePatchRequest{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varUsersIdRolePatchRequest)
+	err = json.Unmarshal(data, &varUsersIdRolePatchRequest)
 
 	if err != nil {
 		return err
 	}
 
 	*o = UsersIdRolePatchRequest(varUsersIdRolePatchRequest)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "newRoleName")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

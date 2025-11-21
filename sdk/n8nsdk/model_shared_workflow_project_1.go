@@ -20,10 +20,13 @@ var _ MappedNullable = &SharedWorkflowProject1{}
 
 // SharedWorkflowProject1 struct for SharedWorkflowProject1
 type SharedWorkflowProject1 struct {
-	Id   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
-	Type *string `json:"type,omitempty"`
+	Id                   *string `json:"id,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	Type                 *string `json:"type,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _SharedWorkflowProject1 SharedWorkflowProject1
 
 // NewSharedWorkflowProject1 instantiates a new SharedWorkflowProject1 object
 // This constructor will assign default values to properties that have it defined,
@@ -157,7 +160,35 @@ func (o SharedWorkflowProject1) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Type) {
 		toSerialize["type"] = o.Type
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *SharedWorkflowProject1) UnmarshalJSON(data []byte) (err error) {
+	varSharedWorkflowProject1 := _SharedWorkflowProject1{}
+
+	err = json.Unmarshal(data, &varSharedWorkflowProject1)
+
+	if err != nil {
+		return err
+	}
+
+	*o = SharedWorkflowProject1(varSharedWorkflowProject1)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "type")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableSharedWorkflowProject1 struct {

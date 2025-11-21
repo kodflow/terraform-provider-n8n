@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -22,11 +21,12 @@ var _ MappedNullable = &Variable{}
 
 // Variable struct for Variable
 type Variable struct {
-	Id      *string  `json:"id,omitempty"`
-	Key     string   `json:"key"`
-	Value   string   `json:"value"`
-	Type    *string  `json:"type,omitempty"`
-	Project *Project `json:"project,omitempty"`
+	Id                   *string  `json:"id,omitempty"`
+	Key                  string   `json:"key"`
+	Value                string   `json:"value"`
+	Type                 *string  `json:"type,omitempty"`
+	Project              *Project `json:"project,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _Variable Variable
@@ -215,6 +215,11 @@ func (o Variable) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Project) {
 		toSerialize["project"] = o.Project
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -243,15 +248,24 @@ func (o *Variable) UnmarshalJSON(data []byte) (err error) {
 
 	varVariable := _Variable{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varVariable)
+	err = json.Unmarshal(data, &varVariable)
 
 	if err != nil {
 		return err
 	}
 
 	*o = Variable(varVariable)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "key")
+		delete(additionalProperties, "value")
+		delete(additionalProperties, "type")
+		delete(additionalProperties, "project")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

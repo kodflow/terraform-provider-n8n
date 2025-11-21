@@ -36,14 +36,17 @@ type Node struct {
 	WaitBetweenTries *float32 `json:"waitBetweenTries,omitempty"`
 	// use onError instead
 	// Deprecated
-	ContinueOnFail *bool                  `json:"continueOnFail,omitempty"`
-	OnError        *string                `json:"onError,omitempty"`
-	Position       []float32              `json:"position,omitempty"`
-	Parameters     map[string]interface{} `json:"parameters,omitempty"`
-	Credentials    map[string]interface{} `json:"credentials,omitempty"`
-	CreatedAt      *time.Time             `json:"createdAt,omitempty"`
-	UpdatedAt      *time.Time             `json:"updatedAt,omitempty"`
+	ContinueOnFail       *bool                  `json:"continueOnFail,omitempty"`
+	OnError              *string                `json:"onError,omitempty"`
+	Position             []float32              `json:"position,omitempty"`
+	Parameters           map[string]interface{} `json:"parameters,omitempty"`
+	Credentials          map[string]interface{} `json:"credentials,omitempty"`
+	CreatedAt            *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt            *time.Time             `json:"updatedAt,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _Node Node
 
 // NewNode instantiates a new Node object
 // This constructor will assign default values to properties that have it defined,
@@ -775,7 +778,52 @@ func (o Node) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.UpdatedAt) {
 		toSerialize["updatedAt"] = o.UpdatedAt
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *Node) UnmarshalJSON(data []byte) (err error) {
+	varNode := _Node{}
+
+	err = json.Unmarshal(data, &varNode)
+
+	if err != nil {
+		return err
+	}
+
+	*o = Node(varNode)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "webhookId")
+		delete(additionalProperties, "disabled")
+		delete(additionalProperties, "notesInFlow")
+		delete(additionalProperties, "notes")
+		delete(additionalProperties, "type")
+		delete(additionalProperties, "typeVersion")
+		delete(additionalProperties, "executeOnce")
+		delete(additionalProperties, "alwaysOutputData")
+		delete(additionalProperties, "retryOnFail")
+		delete(additionalProperties, "maxTries")
+		delete(additionalProperties, "waitBetweenTries")
+		delete(additionalProperties, "continueOnFail")
+		delete(additionalProperties, "onError")
+		delete(additionalProperties, "position")
+		delete(additionalProperties, "parameters")
+		delete(additionalProperties, "credentials")
+		delete(additionalProperties, "createdAt")
+		delete(additionalProperties, "updatedAt")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableNode struct {

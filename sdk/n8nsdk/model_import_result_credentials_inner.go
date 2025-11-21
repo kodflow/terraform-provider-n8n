@@ -20,10 +20,13 @@ var _ MappedNullable = &ImportResultCredentialsInner{}
 
 // ImportResultCredentialsInner struct for ImportResultCredentialsInner
 type ImportResultCredentialsInner struct {
-	Id   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
-	Type *string `json:"type,omitempty"`
+	Id                   *string `json:"id,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	Type                 *string `json:"type,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _ImportResultCredentialsInner ImportResultCredentialsInner
 
 // NewImportResultCredentialsInner instantiates a new ImportResultCredentialsInner object
 // This constructor will assign default values to properties that have it defined,
@@ -157,7 +160,35 @@ func (o ImportResultCredentialsInner) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Type) {
 		toSerialize["type"] = o.Type
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *ImportResultCredentialsInner) UnmarshalJSON(data []byte) (err error) {
+	varImportResultCredentialsInner := _ImportResultCredentialsInner{}
+
+	err = json.Unmarshal(data, &varImportResultCredentialsInner)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ImportResultCredentialsInner(varImportResultCredentialsInner)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "type")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableImportResultCredentialsInner struct {
