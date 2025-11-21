@@ -143,6 +143,15 @@ def main():
             print("   ✓ Added missing workflow fields\n")
         else:
             print("   ✓ Fields already present\n")
+
+        # Remove DisallowUnknownFields() to allow API to return extra fields
+        content = workflow_model.read_text(encoding='utf-8')
+        if 'decoder.DisallowUnknownFields()' in content:
+            lines = content.split('\n')
+            filtered_lines = [line for line in lines if 'DisallowUnknownFields()' not in line]
+            content = '\n'.join(filtered_lines)
+            workflow_model.write_text(content, encoding='utf-8')
+            print("   ✓ Removed DisallowUnknownFields() to allow extra API fields\n")
     else:
         print("   ⚠️  model_workflow.go not found\n")
 
