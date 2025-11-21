@@ -66,13 +66,13 @@ jobs:
           if [ -z "$CURRENT_VERSION" ]; then
             # No previous tag exists, so this is the first release
             echo "No previous tag found, treating as first release"
-            echo "has_src_changes=true" >> $GITHUB_OUTPUT
+            echo "has_code_changes=true" >> $GITHUB_OUTPUT
           elif git diff --quiet "$CURRENT_VERSION" HEAD -- src/ sdk/; then
             echo "No changes in src/ or sdk/ since $CURRENT_VERSION"
-            echo "has_src_changes=false" >> $GITHUB_OUTPUT
+            echo "has_code_changes=false" >> $GITHUB_OUTPUT
           else
             echo "Changes detected in src/ or sdk/ since $CURRENT_VERSION"
-            echo "has_src_changes=true" >> $GITHUB_OUTPUT
+            echo "has_code_changes=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Calculate next version
@@ -82,7 +82,7 @@ jobs:
           NEXT_VERSION=$(svu next || echo "")
 
           # Skip release if no source code changes
-          if [ "${{ steps.check_changes.outputs.has_src_changes }}" != "true" ]; then
+          if [ "${{ steps.check_changes.outputs.has_code_changes }}" != "true" ]; then
             echo "⏭️  Skipping release: no changes in src/ or sdk/ directories"
             echo "should_release=false" >> $GITHUB_OUTPUT
             exit 0
