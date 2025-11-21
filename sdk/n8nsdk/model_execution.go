@@ -33,12 +33,15 @@ type Execution struct {
 	// The time at which the execution started
 	StartedAt NullableTime `json:"startedAt,omitempty"`
 	// The time at which the execution stopped. Will only be null for executions that still have the status 'running'.
-	StoppedAt  NullableTime           `json:"stoppedAt,omitempty"`
-	WorkflowId *float32               `json:"workflowId,omitempty"`
-	WaitTill   NullableTime           `json:"waitTill,omitempty"`
-	CustomData map[string]interface{} `json:"customData,omitempty"`
-	Status     *string                `json:"status,omitempty"`
+	StoppedAt            NullableTime           `json:"stoppedAt,omitempty"`
+	WorkflowId           *float32               `json:"workflowId,omitempty"`
+	WaitTill             NullableTime           `json:"waitTill,omitempty"`
+	CustomData           map[string]interface{} `json:"customData,omitempty"`
+	Status               *string                `json:"status,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _Execution Execution
 
 // NewExecution instantiates a new Execution object
 // This constructor will assign default values to properties that have it defined,
@@ -577,7 +580,45 @@ func (o Execution) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Status) {
 		toSerialize["status"] = o.Status
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *Execution) UnmarshalJSON(data []byte) (err error) {
+	varExecution := _Execution{}
+
+	err = json.Unmarshal(data, &varExecution)
+
+	if err != nil {
+		return err
+	}
+
+	*o = Execution(varExecution)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "data")
+		delete(additionalProperties, "finished")
+		delete(additionalProperties, "mode")
+		delete(additionalProperties, "retryOf")
+		delete(additionalProperties, "createdAt")
+		delete(additionalProperties, "retrySuccessId")
+		delete(additionalProperties, "startedAt")
+		delete(additionalProperties, "stoppedAt")
+		delete(additionalProperties, "workflowId")
+		delete(additionalProperties, "waitTill")
+		delete(additionalProperties, "customData")
+		delete(additionalProperties, "status")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableExecution struct {

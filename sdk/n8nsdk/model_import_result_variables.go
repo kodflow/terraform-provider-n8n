@@ -20,9 +20,12 @@ var _ MappedNullable = &ImportResultVariables{}
 
 // ImportResultVariables struct for ImportResultVariables
 type ImportResultVariables struct {
-	Added   []string `json:"added,omitempty"`
-	Changed []string `json:"changed,omitempty"`
+	Added                []string `json:"added,omitempty"`
+	Changed              []string `json:"changed,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _ImportResultVariables ImportResultVariables
 
 // NewImportResultVariables instantiates a new ImportResultVariables object
 // This constructor will assign default values to properties that have it defined,
@@ -121,7 +124,34 @@ func (o ImportResultVariables) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Changed) {
 		toSerialize["changed"] = o.Changed
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *ImportResultVariables) UnmarshalJSON(data []byte) (err error) {
+	varImportResultVariables := _ImportResultVariables{}
+
+	err = json.Unmarshal(data, &varImportResultVariables)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ImportResultVariables(varImportResultVariables)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "added")
+		delete(additionalProperties, "changed")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableImportResultVariables struct {

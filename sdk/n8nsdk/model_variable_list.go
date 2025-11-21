@@ -22,8 +22,11 @@ var _ MappedNullable = &VariableList{}
 type VariableList struct {
 	Data []Variable `json:"data,omitempty"`
 	// Paginate through variables by setting the cursor parameter to a nextCursor attribute returned by a previous request. Default value fetches the first \"page\" of the collection.
-	NextCursor NullableString `json:"nextCursor,omitempty"`
+	NextCursor           NullableString `json:"nextCursor,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _VariableList VariableList
 
 // NewVariableList instantiates a new VariableList object
 // This constructor will assign default values to properties that have it defined,
@@ -133,7 +136,34 @@ func (o VariableList) ToMap() (map[string]interface{}, error) {
 	if o.NextCursor.IsSet() {
 		toSerialize["nextCursor"] = o.NextCursor.Get()
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *VariableList) UnmarshalJSON(data []byte) (err error) {
+	varVariableList := _VariableList{}
+
+	err = json.Unmarshal(data, &varVariableList)
+
+	if err != nil {
+		return err
+	}
+
+	*o = VariableList(varVariableList)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "data")
+		delete(additionalProperties, "nextCursor")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableVariableList struct {

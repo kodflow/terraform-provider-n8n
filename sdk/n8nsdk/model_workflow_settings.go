@@ -36,8 +36,11 @@ type WorkflowSettings struct {
 	// Estimated time saved per execution in minutes
 	TimeSavedPerExecution *float32 `json:"timeSavedPerExecution,omitempty"`
 	// Controls whether this workflow is accessible via the Model Context Protocol (MCP).  When enabled, this workflow can be called by MCP clients (AI assistants and other tools that support MCP). This allows external AI tools to discover and execute this workflow as part of their capabilities.  Requirements for enabling MCP access: - The workflow must be active (not deactivated) - The workflow must contain at least one active Webhook node - Only webhook-triggered workflows can be exposed via MCP  Security note: When a workflow is available in MCP, it can be discovered and executed by any MCP client that has the appropriate API credentials for your n8n instance.
-	AvailableInMCP *bool `json:"availableInMCP,omitempty"`
+	AvailableInMCP       *bool `json:"availableInMCP,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _WorkflowSettings WorkflowSettings
 
 // NewWorkflowSettings instantiates a new WorkflowSettings object
 // This constructor will assign default values to properties that have it defined,
@@ -494,7 +497,44 @@ func (o WorkflowSettings) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.AvailableInMCP) {
 		toSerialize["availableInMCP"] = o.AvailableInMCP
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *WorkflowSettings) UnmarshalJSON(data []byte) (err error) {
+	varWorkflowSettings := _WorkflowSettings{}
+
+	err = json.Unmarshal(data, &varWorkflowSettings)
+
+	if err != nil {
+		return err
+	}
+
+	*o = WorkflowSettings(varWorkflowSettings)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "saveExecutionProgress")
+		delete(additionalProperties, "saveManualExecutions")
+		delete(additionalProperties, "saveDataErrorExecution")
+		delete(additionalProperties, "saveDataSuccessExecution")
+		delete(additionalProperties, "executionTimeout")
+		delete(additionalProperties, "errorWorkflow")
+		delete(additionalProperties, "timezone")
+		delete(additionalProperties, "executionOrder")
+		delete(additionalProperties, "callerPolicy")
+		delete(additionalProperties, "callerIds")
+		delete(additionalProperties, "timeSavedPerExecution")
+		delete(additionalProperties, "availableInMCP")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableWorkflowSettings struct {

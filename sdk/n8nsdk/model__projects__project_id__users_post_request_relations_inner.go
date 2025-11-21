@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -25,7 +24,8 @@ type ProjectsProjectIdUsersPostRequestRelationsInner struct {
 	// The unique identifier of the user.
 	UserId string `json:"userId"`
 	// The role assigned to the user in the project.
-	Role string `json:"role"`
+	Role                 string `json:"role"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _ProjectsProjectIdUsersPostRequestRelationsInner ProjectsProjectIdUsersPostRequestRelationsInner
@@ -109,6 +109,11 @@ func (o ProjectsProjectIdUsersPostRequestRelationsInner) ToMap() (map[string]int
 	toSerialize := map[string]interface{}{}
 	toSerialize["userId"] = o.UserId
 	toSerialize["role"] = o.Role
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -137,15 +142,21 @@ func (o *ProjectsProjectIdUsersPostRequestRelationsInner) UnmarshalJSON(data []b
 
 	varProjectsProjectIdUsersPostRequestRelationsInner := _ProjectsProjectIdUsersPostRequestRelationsInner{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varProjectsProjectIdUsersPostRequestRelationsInner)
+	err = json.Unmarshal(data, &varProjectsProjectIdUsersPostRequestRelationsInner)
 
 	if err != nil {
 		return err
 	}
 
 	*o = ProjectsProjectIdUsersPostRequestRelationsInner(varProjectsProjectIdUsersPostRequestRelationsInner)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "userId")
+		delete(additionalProperties, "role")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

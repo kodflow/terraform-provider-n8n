@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -22,7 +21,8 @@ var _ MappedNullable = &TagIdsInner{}
 
 // TagIdsInner struct for TagIdsInner
 type TagIdsInner struct {
-	Id string `json:"id"`
+	Id                   string `json:"id"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _TagIdsInner TagIdsInner
@@ -80,6 +80,11 @@ func (o TagIdsInner) MarshalJSON() ([]byte, error) {
 func (o TagIdsInner) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["id"] = o.Id
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -107,15 +112,20 @@ func (o *TagIdsInner) UnmarshalJSON(data []byte) (err error) {
 
 	varTagIdsInner := _TagIdsInner{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varTagIdsInner)
+	err = json.Unmarshal(data, &varTagIdsInner)
 
 	if err != nil {
 		return err
 	}
 
 	*o = TagIdsInner(varTagIdsInner)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

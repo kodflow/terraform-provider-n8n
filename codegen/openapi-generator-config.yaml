@@ -26,3 +26,7 @@ enumNameSuffix: ""
 # Additional properties for better Terraform integration
 withAWSV4Signature: false
 generateInterfaces: true
+
+# Fix for additionalProperties handling
+# When false, properly generates all explicit properties even when additionalProperties is set
+disallowAdditionalPropertiesIfNotPresent: false

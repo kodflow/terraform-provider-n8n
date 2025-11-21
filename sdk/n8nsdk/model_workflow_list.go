@@ -22,8 +22,11 @@ var _ MappedNullable = &WorkflowList{}
 type WorkflowList struct {
 	Data []Workflow `json:"data,omitempty"`
 	// Paginate through workflows by setting the cursor parameter to a nextCursor attribute returned by a previous request. Default value fetches the first \"page\" of the collection.
-	NextCursor NullableString `json:"nextCursor,omitempty"`
+	NextCursor           NullableString `json:"nextCursor,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _WorkflowList WorkflowList
 
 // NewWorkflowList instantiates a new WorkflowList object
 // This constructor will assign default values to properties that have it defined,
@@ -133,7 +136,34 @@ func (o WorkflowList) ToMap() (map[string]interface{}, error) {
 	if o.NextCursor.IsSet() {
 		toSerialize["nextCursor"] = o.NextCursor.Get()
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *WorkflowList) UnmarshalJSON(data []byte) (err error) {
+	varWorkflowList := _WorkflowList{}
+
+	err = json.Unmarshal(data, &varWorkflowList)
+
+	if err != nil {
+		return err
+	}
+
+	*o = WorkflowList(varWorkflowList)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "data")
+		delete(additionalProperties, "nextCursor")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableWorkflowList struct {
