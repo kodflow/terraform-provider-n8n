@@ -17,6 +17,10 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 )
 
+// CALLER_POLICY_DEFAULT is the default value for the CallerPolicy workflow setting.
+// The n8n API returns this value even when not explicitly set by the user.
+const CALLER_POLICY_DEFAULT string = "workflowsFromSameOwner"
+
 // parseWorkflowJSON parses the JSON fields from a workflow model.
 //
 // Params:
@@ -242,7 +246,7 @@ func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.Workflow
 	normalized := settings
 
 	// Remove callerPolicy if it's the default value.
-	if normalized.CallerPolicy != nil && *normalized.CallerPolicy == "workflowsFromSameOwner" {
+	if normalized.CallerPolicy != nil && *normalized.CallerPolicy == CALLER_POLICY_DEFAULT {
 		normalized.CallerPolicy = nil
 	}
 
