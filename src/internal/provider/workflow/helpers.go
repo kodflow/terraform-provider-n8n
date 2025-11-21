@@ -220,7 +220,7 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
 		}
 	}
-	// Normalize settings before serialization (remove default values to avoid unnecessary diffs)
+	// Normalize settings before serialization to avoid unnecessary diffs.
 	normalizedSettings := normalizeWorkflowSettings(workflow.Settings)
 	// Check for error.
 	if settingsJSON, err := json.Marshal(normalizedSettings); err == nil {
@@ -228,14 +228,9 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	}
 }
 
-// normalizeWorkflowSettings removes default values from settings to avoid unnecessary diffs.
-//
+// normalizeWorkflowSettings removes default values from settings.
 // The n8n API returns default values for certain settings even when not explicitly set.
-// This function removes those defaults to match what the user specified in their config.
-//
-// Default values removed:
-//   - callerPolicy: "workflowsFromSameOwner" (default)
-//   - availableInMCP: false (default)
+// This function removes callerPolicy and availableInMCP defaults to match user config.
 //
 // Params:
 //   - settings: Original workflow settings from API

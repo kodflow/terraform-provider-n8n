@@ -18,17 +18,17 @@ Manage your n8n workflows, credentials, and resources as code with Terraform.
 
 Full support for n8n resources with standard Terraform workflows:
 
-| Resource                  | Description                                       |
-| ------------------------- | ------------------------------------------------- |
-| `n8n_workflow`            | Create and manage workflows                       |
-| `n8n_workflow_node`       | Modular node composition                          |
-| `n8n_workflow_connection` | Connect nodes in workflows                        |
-| `n8n_credential`          | Store API credentials securely                    |
-| `n8n_tag`                 | Organize resources with tags                      |
-| `n8n_variable`            | Manage environment variables (Enterprise)         |
-| `n8n_project` 🚧          | Project management (Enterprise - limited testing) |
-| `n8n_user` 🚧             | User management (Enterprise - limited testing)    |
-| `n8n_source_control` 🚧   | Git integration (Enterprise - limited testing)    |
+| Resource                  | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| `n8n_workflow`            | Create and manage workflows                    |
+| `n8n_workflow_node`       | Modular node composition                       |
+| `n8n_workflow_connection` | Connect nodes in workflows                     |
+| `n8n_credential`          | Store API credentials securely                 |
+| `n8n_tag`                 | Organize resources with tags                   |
+| `n8n_variable`            | Manage environment variables (Enterprise)      |
+| `n8n_project`             | Project management (Enterprise)                |
+| `n8n_user`                | User management (Enterprise)                   |
+| `n8n_source_control` 🚧   | Git integration (Enterprise - not implemented) |
 
 ### 🚀 Advanced Node Composition
 
