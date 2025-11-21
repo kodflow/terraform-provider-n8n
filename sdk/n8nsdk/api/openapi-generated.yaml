@@ -1753,10 +1753,6 @@ components:
           items:
             $ref: '#/components/schemas/tag'
           readOnly: true
-        shared:
-          type: array
-          items:
-            $ref: '#/components/schemas/sharedWorkflow'
         versionId:
           type: string
           description: Version identifier (36 characters)
@@ -1766,10 +1762,6 @@ components:
           type: boolean
           description: Whether the workflow is archived (soft-deleted)
           example: false
-        versionCounter:
-          type: integer
-          description: Workflow version counter
-          example: 1
         triggerCount:
           type: number
           description: Number of triggers in the workflow
@@ -1785,6 +1777,14 @@ components:
           additionalProperties: true
           description: Pinned data for workflow nodes
           example: {}
+        shared:
+          type: array
+          items:
+            $ref: '#/components/schemas/sharedWorkflow'
+        versionCounter:
+          type: integer
+          description: Workflow version counter
+          example: 1
     workflowList:
       type: object
       properties:
