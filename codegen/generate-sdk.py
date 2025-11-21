@@ -111,6 +111,14 @@ def main():
         content = workflow_model.read_text(encoding='utf-8')
 
         # Check if fields are already there
+        if 'Description' not in content:
+            # Add description field after name
+            content = content.replace(
+                '\tName         string                 `json:"name"`\n\t',
+                '\tName         string                 `json:"name"`\n' +
+                '\tDescription  *string                `json:"description,omitempty"`\n\t'
+            )
+
         if 'VersionId' not in content:
             # Add fields to struct
             content = content.replace(
@@ -124,7 +132,25 @@ def main():
                 '}'
             )
 
-            # Add ToMap serialization
+        if 'VersionCounter' not in content:
+            # Add versionCounter field after pinData
+            content = content.replace(
+                '\tPinData      map[string]interface{} `json:"pinData,omitempty"`\n}',
+                '\tPinData      map[string]interface{} `json:"pinData,omitempty"`\n' +
+                '\tVersionCounter *int32 `json:"versionCounter,omitempty"`\n' +
+                '}'
+            )
+
+        # Add ToMap serialization
+        if 'toSerialize["description"]' not in content:
+            content = content.replace(
+                '\ttoSerialize["name"] = o.Name\n\tif',
+                '\ttoSerialize["name"] = o.Name\n' +
+                '\tif !IsNil(o.Description) {\n\t\ttoSerialize["description"] = o.Description\n\t}\n' +
+                '\tif'
+            )
+
+        if 'toSerialize["versionId"]' not in content:
             content = content.replace(
                 '\tif !IsNil(o.Shared) {\n\t\ttoSerialize["shared"] = o.Shared\n\t}\n\treturn toSerialize, nil\n}',
                 '\tif !IsNil(o.Shared) {\n\t\ttoSerialize["shared"] = o.Shared\n\t}\n' +
@@ -133,6 +159,7 @@ def main():
                 '\tif !IsNil(o.TriggerCount) {\n\t\ttoSerialize["triggerCount"] = o.TriggerCount\n\t}\n' +
                 '\tif !IsNil(o.Meta) {\n\t\ttoSerialize["meta"] = o.Meta\n\t}\n' +
                 '\tif !IsNil(o.PinData) {\n\t\ttoSerialize["pinData"] = o.PinData\n\t}\n' +
+                '\tif !IsNil(o.VersionCounter) {\n\t\ttoSerialize["versionCounter"] = o.VersionCounter\n\t}\n' +
                 '\treturn toSerialize, nil\n}'
             )
 

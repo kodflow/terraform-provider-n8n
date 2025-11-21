@@ -23,22 +23,24 @@ var _ MappedNullable = &Workflow{}
 
 // Workflow struct for Workflow
 type Workflow struct {
-	Id           *string                `json:"id,omitempty"`
-	Name         string                 `json:"name"`
-	Active       *bool                  `json:"active,omitempty"`
-	CreatedAt    *time.Time             `json:"createdAt,omitempty"`
-	UpdatedAt    *time.Time             `json:"updatedAt,omitempty"`
-	Nodes        []Node                 `json:"nodes"`
-	Connections  map[string]interface{} `json:"connections"`
-	Settings     WorkflowSettings       `json:"settings"`
-	StaticData   *WorkflowStaticData    `json:"staticData,omitempty"`
-	Tags         []Tag                  `json:"tags,omitempty"`
-	Shared       []SharedWorkflow       `json:"shared,omitempty"`
-	VersionId    *string                `json:"versionId,omitempty"`
-	IsArchived   *bool                  `json:"isArchived,omitempty"`
-	TriggerCount *float32               `json:"triggerCount,omitempty"`
-	Meta         map[string]interface{} `json:"meta,omitempty"`
-	PinData      map[string]interface{} `json:"pinData,omitempty"`
+	Id             *string                `json:"id,omitempty"`
+	Name           string                 `json:"name"`
+	Description    *string                `json:"description,omitempty"`
+	Active         *bool                  `json:"active,omitempty"`
+	CreatedAt      *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt      *time.Time             `json:"updatedAt,omitempty"`
+	Nodes          []Node                 `json:"nodes"`
+	Connections    map[string]interface{} `json:"connections"`
+	Settings       WorkflowSettings       `json:"settings"`
+	StaticData     *WorkflowStaticData    `json:"staticData,omitempty"`
+	Tags           []Tag                  `json:"tags,omitempty"`
+	Shared         []SharedWorkflow       `json:"shared,omitempty"`
+	VersionId      *string                `json:"versionId,omitempty"`
+	IsArchived     *bool                  `json:"isArchived,omitempty"`
+	TriggerCount   *float32               `json:"triggerCount,omitempty"`
+	Meta           map[string]interface{} `json:"meta,omitempty"`
+	PinData        map[string]interface{} `json:"pinData,omitempty"`
+	VersionCounter *int32                 `json:"versionCounter,omitempty"`
 }
 
 type _Workflow Workflow
@@ -398,6 +400,9 @@ func (o Workflow) ToMap() (map[string]interface{}, error) {
 		toSerialize["id"] = o.Id
 	}
 	toSerialize["name"] = o.Name
+	if !IsNil(o.Description) {
+		toSerialize["description"] = o.Description
+	}
 	if !IsNil(o.Active) {
 		toSerialize["active"] = o.Active
 	}
@@ -433,6 +438,9 @@ func (o Workflow) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.PinData) {
 		toSerialize["pinData"] = o.PinData
+	}
+	if !IsNil(o.VersionCounter) {
+		toSerialize["versionCounter"] = o.VersionCounter
 	}
 	return toSerialize, nil
 }
