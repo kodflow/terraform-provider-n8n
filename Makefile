@@ -39,12 +39,12 @@ include makefiles/terraform.mk
 # ============================================================================
 
 .PHONY: update
-update: ## Update ALL dependencies (Go version + n8n SDK + ktn-linter + README badge)
+update: ## Update ALL dependencies (Go deps + n8n SDK + ktn-linter + README badge)
 	@echo ""
 	@echo "$(BOLD)$(CYAN)🔄 Updating all dependencies...$(RESET)"
 	@echo ""
-	@printf "$(BOLD)1/5 Updating Go version to latest stable...$(RESET)\n"
-	@./scripts/update-go-version.sh
+	@printf "$(BOLD)1/5 Updating Go dependencies to latest versions...$(RESET)\n"
+	@./scripts/update-go-dependencies.sh
 	@echo ""
 	@printf "$(BOLD)2/5 Updating n8n commit to latest version...$(RESET)\n"
 	@$(MAKE) sdk/openapi/update
@@ -58,6 +58,9 @@ update: ## Update ALL dependencies (Go version + n8n SDK + ktn-linter + README b
 	@printf "$(BOLD)5/5 Regenerating SDK and documentation...$(RESET)\n"
 	@$(MAKE) sdk
 	@$(MAKE) docs
+	@echo ""
+	@printf "$(BOLD)Formatting all source files...$(RESET)\n"
+	@$(MAKE) fmt
 	@echo ""
 	@echo "$(BOLD)$(GREEN)✅ All updates completed$(RESET)"
 	@echo ""
