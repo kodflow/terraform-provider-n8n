@@ -4,6 +4,7 @@ package variable_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,9 +14,7 @@ import (
 
 func TestAccVariableResource(t *testing.T) {
 	// NOTE: Variables require n8n enterprise license with feat:variables enabled.
-	// This test will be skipped if the license does not support variables.
-	t.Skip("Skipping variable acceptance test - requires n8n enterprise license with feat:variables")
-
+	// This test requires an enterprise n8n instance with variables feature.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -66,6 +65,10 @@ func testAccPreCheck(t *testing.T) {
 
 	// Verify required environment variables
 	provider.TestAccPreCheckEnv(t)
+
+	// Log test environment info
+	t.Logf("🔍 Running acceptance tests against n8n instance: %s", os.Getenv("N8N_API_URL"))
+	t.Logf("📋 Testing variables feature (requires enterprise license with feat:variables)")
 }
 
 var testAccProtoV6ProviderFactories = provider.TestAccProtoV6ProviderFactories
