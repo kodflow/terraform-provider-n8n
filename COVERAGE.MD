@@ -14,7 +14,7 @@ Automatically generated coverage report.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **96.4%** |
+| **Total Coverage** | **96.3%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -65,7 +65,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 100.0% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 98.1% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 97.7% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 90.2% |
 
 ---
@@ -88,7 +88,7 @@ Complete lifecycle management of n8n resources (Create, Read, Update, Delete).
 | `Metadata` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
 | `Schema` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Update` | 🟡 87.5% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Update` | 🟡 87.5% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 91.7% | 🟢 100.0% |
 
 ---
 
