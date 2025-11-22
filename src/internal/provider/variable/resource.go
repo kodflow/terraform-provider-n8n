@@ -404,13 +404,19 @@ func (r *VariableResource) findVariableByID(variableList *n8nsdk.VariableList, i
 func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variable, state *models.Resource) {
 	state.Key = types.StringValue(foundVariable.Key)
 	state.Value = types.StringValue(foundVariable.Value)
-	// Check for non-nil value.
+	// Set Type - use null if not present to ensure known value after apply.
 	if foundVariable.Type != nil {
 		state.Type = types.StringPointerValue(foundVariable.Type)
+	} else {
+		// Type not present in API response, set to null.
+		state.Type = types.StringNull()
 	}
-	// Check for non-nil value.
+	// Set ProjectID - use null if not present to ensure known value after apply.
 	if foundVariable.Project != nil && foundVariable.Project.Id != nil {
 		state.ProjectID = types.StringPointerValue(foundVariable.Project.Id)
+	} else {
+		// Project not present in API response, set to null.
+		state.ProjectID = types.StringNull()
 	}
 }
 
@@ -427,6 +433,7 @@ func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variabl
 //	(none, modifies resp parameter in place)
 func (r *VariableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan *models.Resource
+	var state *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// Check for error.
@@ -434,6 +441,16 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 		// Return with error.
 		return
 	}
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Check for error.
+	if resp.Diagnostics.HasError() {
+		// Return with error.
+		return
+	}
+
+	// Copy ID from state since it's computed and not in the plan.
+	plan.ID = state.ID
 
 	// Execute update logic
 	if !r.executeUpdateLogic(ctx, plan, resp) {

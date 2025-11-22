@@ -20,9 +20,12 @@ var _ MappedNullable = &UsersPost201Response{}
 
 // UsersPost201Response struct for UsersPost201Response
 type UsersPost201Response struct {
-	User  *UsersPost201ResponseUser `json:"user,omitempty"`
-	Error *string                   `json:"error,omitempty"`
+	User                 *UsersPost201ResponseUser `json:"user,omitempty"`
+	Error                *string                   `json:"error,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _UsersPost201Response UsersPost201Response
 
 // NewUsersPost201Response instantiates a new UsersPost201Response object
 // This constructor will assign default values to properties that have it defined,
@@ -121,7 +124,34 @@ func (o UsersPost201Response) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Error) {
 		toSerialize["error"] = o.Error
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *UsersPost201Response) UnmarshalJSON(data []byte) (err error) {
+	varUsersPost201Response := _UsersPost201Response{}
+
+	err = json.Unmarshal(data, &varUsersPost201Response)
+
+	if err != nil {
+		return err
+	}
+
+	*o = UsersPost201Response(varUsersPost201Response)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "user")
+		delete(additionalProperties, "error")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableUsersPost201Response struct {

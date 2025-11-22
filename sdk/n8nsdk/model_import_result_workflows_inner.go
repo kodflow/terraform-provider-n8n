@@ -20,9 +20,12 @@ var _ MappedNullable = &ImportResultWorkflowsInner{}
 
 // ImportResultWorkflowsInner struct for ImportResultWorkflowsInner
 type ImportResultWorkflowsInner struct {
-	Id   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
+	Id                   *string `json:"id,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _ImportResultWorkflowsInner ImportResultWorkflowsInner
 
 // NewImportResultWorkflowsInner instantiates a new ImportResultWorkflowsInner object
 // This constructor will assign default values to properties that have it defined,
@@ -121,7 +124,34 @@ func (o ImportResultWorkflowsInner) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *ImportResultWorkflowsInner) UnmarshalJSON(data []byte) (err error) {
+	varImportResultWorkflowsInner := _ImportResultWorkflowsInner{}
+
+	err = json.Unmarshal(data, &varImportResultWorkflowsInner)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ImportResultWorkflowsInner(varImportResultWorkflowsInner)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableImportResultWorkflowsInner struct {

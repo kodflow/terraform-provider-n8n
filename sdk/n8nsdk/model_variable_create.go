@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -22,11 +21,12 @@ var _ MappedNullable = &VariableCreate{}
 
 // VariableCreate struct for VariableCreate
 type VariableCreate struct {
-	Id        *string        `json:"id,omitempty"`
-	Key       string         `json:"key"`
-	Value     string         `json:"value"`
-	Type      *string        `json:"type,omitempty"`
-	ProjectId NullableString `json:"projectId,omitempty"`
+	Id                   *string        `json:"id,omitempty"`
+	Key                  string         `json:"key"`
+	Value                string         `json:"value"`
+	Type                 *string        `json:"type,omitempty"`
+	ProjectId            NullableString `json:"projectId,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _VariableCreate VariableCreate
@@ -226,6 +226,11 @@ func (o VariableCreate) ToMap() (map[string]interface{}, error) {
 	if o.ProjectId.IsSet() {
 		toSerialize["projectId"] = o.ProjectId.Get()
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -254,15 +259,24 @@ func (o *VariableCreate) UnmarshalJSON(data []byte) (err error) {
 
 	varVariableCreate := _VariableCreate{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varVariableCreate)
+	err = json.Unmarshal(data, &varVariableCreate)
 
 	if err != nil {
 		return err
 	}
 
 	*o = VariableCreate(varVariableCreate)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "key")
+		delete(additionalProperties, "value")
+		delete(additionalProperties, "type")
+		delete(additionalProperties, "projectId")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

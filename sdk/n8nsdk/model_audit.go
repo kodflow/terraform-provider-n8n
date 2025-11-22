@@ -25,7 +25,10 @@ type Audit struct {
 	FilesystemRiskReport  map[string]interface{} `json:"Filesystem Risk Report,omitempty"`
 	NodesRiskReport       map[string]interface{} `json:"Nodes Risk Report,omitempty"`
 	InstanceRiskReport    map[string]interface{} `json:"Instance Risk Report,omitempty"`
+	AdditionalProperties  map[string]interface{}
 }
+
+type _Audit Audit
 
 // NewAudit instantiates a new Audit object
 // This constructor will assign default values to properties that have it defined,
@@ -229,7 +232,37 @@ func (o Audit) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.InstanceRiskReport) {
 		toSerialize["Instance Risk Report"] = o.InstanceRiskReport
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *Audit) UnmarshalJSON(data []byte) (err error) {
+	varAudit := _Audit{}
+
+	err = json.Unmarshal(data, &varAudit)
+
+	if err != nil {
+		return err
+	}
+
+	*o = Audit(varAudit)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "Credentials Risk Report")
+		delete(additionalProperties, "Database Risk Report")
+		delete(additionalProperties, "Filesystem Risk Report")
+		delete(additionalProperties, "Nodes Risk Report")
+		delete(additionalProperties, "Instance Risk Report")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableAudit struct {

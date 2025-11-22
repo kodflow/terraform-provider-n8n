@@ -1696,7 +1696,7 @@ components:
           readOnly: true
     workflow:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       - nodes
@@ -1710,6 +1710,10 @@ components:
         name:
           type: string
           example: Workflow 1
+        description:
+          type: string
+          nullable: true
+          description: Workflow description
         active:
           type: boolean
           readOnly: true
@@ -1749,10 +1753,6 @@ components:
           items:
             $ref: '#/components/schemas/tag'
           readOnly: true
-        shared:
-          type: array
-          items:
-            $ref: '#/components/schemas/sharedWorkflow'
         versionId:
           type: string
           description: Version identifier (36 characters)
@@ -1777,6 +1777,14 @@ components:
           additionalProperties: true
           description: Pinned data for workflow nodes
           example: {}
+        shared:
+          type: array
+          items:
+            $ref: '#/components/schemas/sharedWorkflow'
+        versionCounter:
+          type: integer
+          description: Workflow version counter
+          example: 1
     workflowList:
       type: object
       properties:

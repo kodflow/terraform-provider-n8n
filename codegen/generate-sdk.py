@@ -10,6 +10,7 @@ import shutil
 import shlex
 import tempfile
 import os
+import re
 from pathlib import Path
 
 def run(cmd, cwd=None):
@@ -51,7 +52,20 @@ def main():
     openapi_backup = Path(openapi_source + ".backup")
     shutil.copy(openapi_source, openapi_backup)
 
-    # 1. Generate SDK
+    # 1. Enable additionalProperties: true on ALL object schemas
+    # This allows the SDK to accept any unknown fields from the API
+    print("🔧 Enabling additionalProperties: true on all schemas...")
+    spec_content = Path(openapi_spec).read_text(encoding='utf-8')
+    # Replace additionalProperties: false with additionalProperties: true
+    spec_content = spec_content.replace(
+        'additionalProperties: false',
+        'additionalProperties: true'
+    )
+    Path(openapi_spec).write_text(spec_content, encoding='utf-8')
+    count_changes = spec_content.count('additionalProperties: true')
+    print(f"   ✓ Enabled additionalProperties: true ({count_changes} schemas)\n")
+
+    # 2. Generate SDK from modified spec
     print("🔨 Generating SDK...\n")
 
     # Check Java
@@ -104,49 +118,47 @@ def main():
         sys.exit(1)
     print("   ✓ Generated\n")
 
-    # 2. Fix model_workflow.go (add missing fields that OpenAPI Generator ignores)
-    print("   → Fixing model_workflow.go...")
+    # 3. Add typed fields to Workflow struct for known API fields
+    # These fields are returned by the n8n API but not in the official spec
+    # Adding them as typed fields provides better IDE support and type safety
+    print("   → Adding typed fields to Workflow struct...")
     workflow_model = sdk_dir / "model_workflow.go"
     if workflow_model.exists():
         content = workflow_model.read_text(encoding='utf-8')
-
-        # Check if fields are already there
-        if 'VersionId' not in content:
-            # Add fields to struct
-            content = content.replace(
-                '\tShared []SharedWorkflow `json:"shared,omitempty"`\n}',
-                '\tShared []SharedWorkflow `json:"shared,omitempty"`\n' +
-                '\tVersionId *string `json:"versionId,omitempty"`\n' +
-                '\tIsArchived *bool `json:"isArchived,omitempty"`\n' +
-                '\tTriggerCount *float32 `json:"triggerCount,omitempty"`\n' +
-                '\tMeta map[string]interface{} `json:"meta,omitempty"`\n' +
-                '\tPinData map[string]interface{} `json:"pinData,omitempty"`\n' +
-                '}'
-            )
-
-            # Add ToMap serialization
-            content = content.replace(
-                '\tif !IsNil(o.Shared) {\n\t\ttoSerialize["shared"] = o.Shared\n\t}\n\treturn toSerialize, nil\n}',
-                '\tif !IsNil(o.Shared) {\n\t\ttoSerialize["shared"] = o.Shared\n\t}\n' +
-                '\tif !IsNil(o.VersionId) {\n\t\ttoSerialize["versionId"] = o.VersionId\n\t}\n' +
-                '\tif !IsNil(o.IsArchived) {\n\t\ttoSerialize["isArchived"] = o.IsArchived\n\t}\n' +
-                '\tif !IsNil(o.TriggerCount) {\n\t\ttoSerialize["triggerCount"] = o.TriggerCount\n\t}\n' +
-                '\tif !IsNil(o.Meta) {\n\t\ttoSerialize["meta"] = o.Meta\n\t}\n' +
-                '\tif !IsNil(o.PinData) {\n\t\ttoSerialize["pinData"] = o.PinData\n\t}\n' +
-                '\treturn toSerialize, nil\n}'
-            )
-
-            # Add getter/setter methods (simplified - just the struct is enough for now)
-            # Full methods can be added later if needed
-
-            workflow_model.write_text(content, encoding='utf-8')
-            print("   ✓ Added missing workflow fields\n")
-        else:
-            print("   ✓ Fields already present\n")
+        # Add typed fields before AdditionalProperties
+        workflow_fields = '''	Description *string `json:"description,omitempty"`
+	VersionId *string `json:"versionId,omitempty"`
+	IsArchived *bool `json:"isArchived,omitempty"`
+	TriggerCount *float32 `json:"triggerCount,omitempty"`
+	Meta map[string]interface{} `json:"meta,omitempty"`
+	PinData map[string]interface{} `json:"pinData,omitempty"`
+	VersionCounter *int32 `json:"versionCounter,omitempty"`
+	AdditionalProperties map[string]interface{}'''
+        content = content.replace(
+            '\tAdditionalProperties map[string]interface{}',
+            workflow_fields
+        )
+        workflow_model.write_text(content, encoding='utf-8')
+        print("   ✓ Added typed fields to Workflow\n")
     else:
         print("   ⚠️  model_workflow.go not found\n")
 
-    # 3. Fix module paths in .go files
+    # 4. Remove DisallowUnknownFields() from all model files (if present)
+    # This allows the API to return unknown fields without causing unmarshaling errors
+    print("   → Removing DisallowUnknownFields() from model files...")
+    count = 0
+    for model_file in sdk_dir.glob("model_*.go"):
+        content = model_file.read_text(encoding='utf-8')
+        if 'DisallowUnknownFields()' in content:
+            content = content.replace(
+                '\tdecoder.DisallowUnknownFields()\n',
+                ''
+            )
+            model_file.write_text(content, encoding='utf-8')
+            count += 1
+    print(f"   ✓ Fixed {count} model files\n")
+
+    # 5. Fix module paths in .go files (OpenAPI Generator uses placeholder paths)
     print("   → Fixing module paths in .go files...")
     for go_file in sdk_dir.rglob("*.go"):
         content = go_file.read_text(encoding='utf-8')
@@ -157,7 +169,7 @@ def main():
         go_file.write_text(content, encoding='utf-8')
     print("   ✓ Fixed\n")
 
-    # 4. Fix go.mod module declaration
+    # 6. Fix go.mod module declaration
     print("   → Fixing go.mod module path...")
     go_mod = sdk_dir / "go.mod"
     if go_mod.exists():
@@ -171,7 +183,7 @@ def main():
     else:
         print("   ⚠️  go.mod not found\n")
 
-    # 5. Run go mod tidy
+    # 7. Run go mod tidy
     print("   → Running go mod tidy...")
     # nosec B603 B607 nosemgrep
     subprocess.run(
@@ -183,13 +195,13 @@ def main():
     )
     print("   ✓ Done\n")
 
-    # 6. Restore original openapi.yaml (generator may have reformatted it)
+    # 8. Restore original openapi.yaml (generator may have reformatted it)
     print("   → Restoring original openapi.yaml...")
     shutil.copy(openapi_backup, openapi_source)
     openapi_backup.unlink()
     print("   ✓ Restored\n")
 
-    # 7. Generate Bazel files
+    # 9. Generate Bazel files
     print("🏗️  Generating BUILD files...")
     run("bazel run //:gazelle")
     print("   ✓ Done\n")

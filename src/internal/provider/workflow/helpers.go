@@ -17,6 +17,10 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 )
 
+// CALLER_POLICY_DEFAULT is the default value for the CallerPolicy workflow setting.
+// The n8n API returns this value even when not explicitly set by the user.
+const CALLER_POLICY_DEFAULT string = "workflowsFromSameOwner"
+
 // parseWorkflowJSON parses the JSON fields from a workflow model.
 //
 // Params:
@@ -220,10 +224,39 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
 		}
 	}
+	// Normalize settings before serialization to avoid unnecessary diffs.
+	normalizedSettings := normalizeWorkflowSettings(workflow.Settings)
 	// Check for error.
-	if settingsJSON, err := json.Marshal(workflow.Settings); err == nil {
+	if settingsJSON, err := json.Marshal(normalizedSettings); err == nil {
 		plan.SettingsJSON = types.StringValue(string(settingsJSON))
 	}
+}
+
+// normalizeWorkflowSettings removes default values from settings.
+// The n8n API returns default values for certain settings even when not explicitly set.
+// This function removes callerPolicy and availableInMCP defaults to match user config.
+//
+// Params:
+//   - settings: Original workflow settings from API
+//
+// Returns:
+//   - n8nsdk.WorkflowSettings: Normalized settings without default values
+func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.WorkflowSettings {
+	// Create a copy to avoid modifying the original.
+	normalized := settings
+
+	// Remove callerPolicy if it's the default value.
+	if normalized.CallerPolicy != nil && *normalized.CallerPolicy == CALLER_POLICY_DEFAULT {
+		normalized.CallerPolicy = nil
+	}
+
+	// Remove availableInMCP if it's the default value (false).
+	if normalized.AvailableInMCP != nil && !*normalized.AvailableInMCP {
+		normalized.AvailableInMCP = nil
+	}
+
+	// Return result.
+	return normalized
 }
 
 // convertTagIDsToTagIdsInner converts string tag IDs to SDK TagIdsInner format.

@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -34,7 +33,8 @@ type Project struct {
 	// Project description
 	Description NullableString `json:"description,omitempty"`
 	// Project relations
-	ProjectRelations []map[string]interface{} `json:"projectRelations,omitempty"`
+	ProjectRelations     []map[string]interface{} `json:"projectRelations,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _Project Project
@@ -359,6 +359,11 @@ func (o Project) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.ProjectRelations) {
 		toSerialize["projectRelations"] = o.ProjectRelations
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -386,15 +391,27 @@ func (o *Project) UnmarshalJSON(data []byte) (err error) {
 
 	varProject := _Project{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varProject)
+	err = json.Unmarshal(data, &varProject)
 
 	if err != nil {
 		return err
 	}
 
 	*o = Project(varProject)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "type")
+		delete(additionalProperties, "createdAt")
+		delete(additionalProperties, "updatedAt")
+		delete(additionalProperties, "icon")
+		delete(additionalProperties, "description")
+		delete(additionalProperties, "projectRelations")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }
