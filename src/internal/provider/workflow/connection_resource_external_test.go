@@ -148,37 +148,89 @@ func TestWorkflowConnectionResource_Metadata(t *testing.T) {
 func TestWorkflowConnectionResource_Schema(t *testing.T) {
 	t.Parallel()
 
-	// Create resource.
-	res := workflow.NewWorkflowConnectionResource()
-
-	// Prepare request and response.
-	req := resource.SchemaRequest{}
-	resp := &resource.SchemaResponse{}
-
-	// Execute schema.
-	res.Schema(context.Background(), req, resp)
-
-	// Verify schema is not empty.
-	if len(resp.Schema.Attributes) == 0 {
-		t.Fatal("schema has no attributes")
+	tests := []struct {
+		name          string
+		checkAttr     string
+		expectExists  bool
+		checkNonEmpty bool
+	}{
+		{
+			name:          "schema has attributes",
+			checkNonEmpty: true,
+		},
+		{
+			name:         "has id attribute",
+			checkAttr:    "id",
+			expectExists: true,
+		},
+		{
+			name:         "has source_node attribute",
+			checkAttr:    "source_node",
+			expectExists: true,
+		},
+		{
+			name:         "has source_output attribute",
+			checkAttr:    "source_output",
+			expectExists: true,
+		},
+		{
+			name:         "has source_output_index attribute",
+			checkAttr:    "source_output_index",
+			expectExists: true,
+		},
+		{
+			name:         "has target_node attribute",
+			checkAttr:    "target_node",
+			expectExists: true,
+		},
+		{
+			name:         "has target_input attribute",
+			checkAttr:    "target_input",
+			expectExists: true,
+		},
+		{
+			name:         "has target_input_index attribute",
+			checkAttr:    "target_input_index",
+			expectExists: true,
+		},
+		{
+			name:         "has connection_json attribute",
+			checkAttr:    "connection_json",
+			expectExists: true,
+		},
 	}
 
-	// Verify required attributes exist.
-	requiredAttrs := []string{
-		"id",
-		"source_node",
-		"source_output",
-		"source_output_index",
-		"target_node",
-		"target_input",
-		"target_input_index",
-		"connection_json",
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	for _, attr := range requiredAttrs {
-		if _, ok := resp.Schema.Attributes[attr]; !ok {
-			t.Errorf("missing required attribute: %s", attr)
-		}
+			// Create resource.
+			res := workflow.NewWorkflowConnectionResource()
+
+			// Prepare request and response.
+			req := resource.SchemaRequest{}
+			resp := &resource.SchemaResponse{}
+
+			// Execute schema.
+			res.Schema(context.Background(), req, resp)
+
+			if tt.checkNonEmpty {
+				if len(resp.Schema.Attributes) == 0 {
+					t.Fatal("schema has no attributes")
+				}
+				return
+			}
+
+			if tt.checkAttr != "" {
+				if _, ok := resp.Schema.Attributes[tt.checkAttr]; ok != tt.expectExists {
+					if tt.expectExists {
+						t.Errorf("missing required attribute: %s", tt.checkAttr)
+					} else {
+						t.Errorf("unexpected attribute exists: %s", tt.checkAttr)
+					}
+				}
+			}
+		})
 	}
 }
 
@@ -186,19 +238,47 @@ func TestWorkflowConnectionResource_Schema(t *testing.T) {
 func TestWorkflowConnectionResource_Configure(t *testing.T) {
 	t.Parallel()
 
-	// Create resource.
-	res := workflow.NewWorkflowConnectionResource()
+	tests := []struct {
+		name         string
+		providerData interface{}
+		expectError  bool
+	}{
+		{
+			name:         "nil provider data",
+			providerData: nil,
+			expectError:  false,
+		},
+		{
+			name:         "empty request",
+			providerData: nil,
+			expectError:  false,
+		},
+	}
 
-	// Prepare request and response.
-	req := resource.ConfigureRequest{}
-	resp := &resource.ConfigureResponse{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	// Execute configure (should be no-op).
-	res.Configure(context.Background(), req, resp)
+			// Create resource.
+			res := workflow.NewWorkflowConnectionResource()
 
-	// Verify no diagnostics.
-	if resp.Diagnostics.HasError() {
-		t.Errorf("unexpected error: %v", resp.Diagnostics)
+			// Prepare request and response.
+			req := resource.ConfigureRequest{
+				ProviderData: tt.providerData,
+			}
+			resp := &resource.ConfigureResponse{}
+
+			// Execute configure (should be no-op).
+			res.Configure(context.Background(), req, resp)
+
+			// Verify diagnostics match expectation.
+			if tt.expectError && !resp.Diagnostics.HasError() {
+				t.Error("expected error, got none")
+			}
+			if !tt.expectError && resp.Diagnostics.HasError() {
+				t.Errorf("unexpected error: %v", resp.Diagnostics)
+			}
+		})
 	}
 }
 
@@ -240,19 +320,42 @@ func TestWorkflowConnectionResource_Create(t *testing.T) {
 func TestWorkflowConnectionResource_Read(t *testing.T) {
 	t.Parallel()
 
-	// Create resource.
-	res := workflow.NewWorkflowConnectionResource()
+	tests := []struct {
+		name        string
+		expectError bool
+	}{
+		{
+			name:        "read is no-op",
+			expectError: false,
+		},
+		{
+			name:        "read with empty request",
+			expectError: false,
+		},
+	}
 
-	// Prepare request and response.
-	req := resource.ReadRequest{}
-	resp := &resource.ReadResponse{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	// Execute read (should be no-op).
-	res.Read(context.Background(), req, resp)
+			// Create resource.
+			res := workflow.NewWorkflowConnectionResource()
 
-	// Verify no diagnostics.
-	if resp.Diagnostics.HasError() {
-		t.Errorf("unexpected error: %v", resp.Diagnostics)
+			// Prepare request and response.
+			req := resource.ReadRequest{}
+			resp := &resource.ReadResponse{}
+
+			// Execute read (should be no-op).
+			res.Read(context.Background(), req, resp)
+
+			// Verify diagnostics match expectation.
+			if tt.expectError && !resp.Diagnostics.HasError() {
+				t.Error("expected error, got none")
+			}
+			if !tt.expectError && resp.Diagnostics.HasError() {
+				t.Errorf("unexpected error: %v", resp.Diagnostics)
+			}
+		})
 	}
 }
 
@@ -294,19 +397,42 @@ func TestWorkflowConnectionResource_Update(t *testing.T) {
 func TestWorkflowConnectionResource_Delete(t *testing.T) {
 	t.Parallel()
 
-	// Create resource.
-	res := workflow.NewWorkflowConnectionResource()
+	tests := []struct {
+		name        string
+		expectError bool
+	}{
+		{
+			name:        "delete is no-op",
+			expectError: false,
+		},
+		{
+			name:        "delete with empty request",
+			expectError: false,
+		},
+	}
 
-	// Prepare request and response.
-	req := resource.DeleteRequest{}
-	resp := &resource.DeleteResponse{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	// Execute delete (should be no-op).
-	res.Delete(context.Background(), req, resp)
+			// Create resource.
+			res := workflow.NewWorkflowConnectionResource()
 
-	// Verify no diagnostics.
-	if resp.Diagnostics.HasError() {
-		t.Errorf("unexpected error: %v", resp.Diagnostics)
+			// Prepare request and response.
+			req := resource.DeleteRequest{}
+			resp := &resource.DeleteResponse{}
+
+			// Execute delete (should be no-op).
+			res.Delete(context.Background(), req, resp)
+
+			// Verify diagnostics match expectation.
+			if tt.expectError && !resp.Diagnostics.HasError() {
+				t.Error("expected error, got none")
+			}
+			if !tt.expectError && resp.Diagnostics.HasError() {
+				t.Errorf("unexpected error: %v", resp.Diagnostics)
+			}
+		})
 	}
 }
 

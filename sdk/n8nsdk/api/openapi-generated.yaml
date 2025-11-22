@@ -161,7 +161,7 @@ paths:
               examples:
                 freshdeskApi:
                   value:
-                    additionalProperties: false
+                    additionalProperties: true
                     type: object
                     properties:
                       apiKey:
@@ -173,7 +173,7 @@ paths:
                     - domain
                 slackOAuth2Api:
                   value:
-                    additionalProperties: false
+                    additionalProperties: true
                     type: object
                     properties:
                       clientId:
@@ -1469,7 +1469,7 @@ components:
           example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
     tag:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       properties:
@@ -1504,7 +1504,7 @@ components:
           example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
     node:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       properties:
         id:
           type: string
@@ -1575,7 +1575,7 @@ components:
           readOnly: true
     workflowSettings:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       properties:
         saveExecutionProgress:
           type: boolean
@@ -1696,7 +1696,7 @@ components:
           readOnly: true
     workflow:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       - nodes
@@ -1710,6 +1710,10 @@ components:
         name:
           type: string
           example: Workflow 1
+        description:
+          type: string
+          nullable: true
+          description: Workflow description
         active:
           type: boolean
           readOnly: true
@@ -1749,10 +1753,6 @@ components:
           items:
             $ref: '#/components/schemas/tag'
           readOnly: true
-        shared:
-          type: array
-          items:
-            $ref: '#/components/schemas/sharedWorkflow'
         versionId:
           type: string
           description: Version identifier (36 characters)
@@ -1777,6 +1777,14 @@ components:
           additionalProperties: true
           description: Pinned data for workflow nodes
           example: {}
+        shared:
+          type: array
+          items:
+            $ref: '#/components/schemas/sharedWorkflow'
+        versionCounter:
+          type: integer
+          description: Workflow version counter
+          example: 1
     workflowList:
       type: object
       properties:
@@ -1797,7 +1805,7 @@ components:
       type: array
       items:
         type: object
-        additionalProperties: false
+        additionalProperties: true
         required:
         - id
         properties:
@@ -1927,7 +1935,7 @@ components:
                     type: string
     project:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       properties:
@@ -1995,7 +2003,7 @@ components:
             - team
     variable:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - key
       - value
@@ -2027,7 +2035,7 @@ components:
           example: MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDA
     variable.create:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - key
       - value
@@ -2219,7 +2227,7 @@ components:
           - waiting
     Node:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       properties:
         id:
           type: string
@@ -2290,7 +2298,7 @@ components:
           readOnly: true
     Tag:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       properties:
@@ -2313,7 +2321,7 @@ components:
           readOnly: true
     Workflow:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
       - name
       - nodes
@@ -2372,7 +2380,7 @@ components:
             $ref: '#/components/schemas/sharedWorkflow'
     WorkflowSettings:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       properties:
         saveExecutionProgress:
           type: boolean

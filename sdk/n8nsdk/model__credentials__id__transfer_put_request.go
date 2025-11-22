@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -24,6 +23,7 @@ var _ MappedNullable = &CredentialsIdTransferPutRequest{}
 type CredentialsIdTransferPutRequest struct {
 	// The ID of the project to transfer the credential to.
 	DestinationProjectId string `json:"destinationProjectId"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _CredentialsIdTransferPutRequest CredentialsIdTransferPutRequest
@@ -81,6 +81,11 @@ func (o CredentialsIdTransferPutRequest) MarshalJSON() ([]byte, error) {
 func (o CredentialsIdTransferPutRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["destinationProjectId"] = o.DestinationProjectId
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -108,15 +113,20 @@ func (o *CredentialsIdTransferPutRequest) UnmarshalJSON(data []byte) (err error)
 
 	varCredentialsIdTransferPutRequest := _CredentialsIdTransferPutRequest{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varCredentialsIdTransferPutRequest)
+	err = json.Unmarshal(data, &varCredentialsIdTransferPutRequest)
 
 	if err != nil {
 		return err
 	}
 
 	*o = CredentialsIdTransferPutRequest(varCredentialsIdTransferPutRequest)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "destinationProjectId")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

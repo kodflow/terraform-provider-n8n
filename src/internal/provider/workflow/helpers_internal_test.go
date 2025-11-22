@@ -1410,3 +1410,159 @@ func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
 		})
 	}
 }
+
+// Test_normalizeWorkflowSettings tests the normalizeWorkflowSettings function.
+func Test_normalizeWorkflowSettings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "removes default callerPolicy value",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				callerPolicy := CALLER_POLICY_DEFAULT
+				settings := n8nsdk.WorkflowSettings{
+					CallerPolicy: &callerPolicy,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.CallerPolicy)
+			},
+		},
+		{
+			name: "keeps non-default callerPolicy value",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				callerPolicy := "any"
+				settings := n8nsdk.WorkflowSettings{
+					CallerPolicy: &callerPolicy,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.NotNil(t, result.CallerPolicy)
+				assert.Equal(t, "any", *result.CallerPolicy)
+			},
+		},
+		{
+			name: "removes default availableInMCP value",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				availableInMCP := false
+				settings := n8nsdk.WorkflowSettings{
+					AvailableInMCP: &availableInMCP,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.AvailableInMCP)
+			},
+		},
+		{
+			name: "keeps non-default availableInMCP value",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				availableInMCP := true
+				settings := n8nsdk.WorkflowSettings{
+					AvailableInMCP: &availableInMCP,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.NotNil(t, result.AvailableInMCP)
+				assert.True(t, *result.AvailableInMCP)
+			},
+		},
+		{
+			name: "handles empty settings",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				settings := n8nsdk.WorkflowSettings{}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.CallerPolicy)
+				assert.Nil(t, result.AvailableInMCP)
+			},
+		},
+		{
+			name: "removes both defaults at once",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				callerPolicy := CALLER_POLICY_DEFAULT
+				availableInMCP := false
+				settings := n8nsdk.WorkflowSettings{
+					CallerPolicy:   &callerPolicy,
+					AvailableInMCP: &availableInMCP,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.CallerPolicy)
+				assert.Nil(t, result.AvailableInMCP)
+			},
+		},
+		{
+			name: "keeps mixed non-default and default values",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				callerPolicy := CALLER_POLICY_DEFAULT
+				availableInMCP := true
+				settings := n8nsdk.WorkflowSettings{
+					CallerPolicy:   &callerPolicy,
+					AvailableInMCP: &availableInMCP,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.CallerPolicy)
+				assert.NotNil(t, result.AvailableInMCP)
+				assert.True(t, *result.AvailableInMCP)
+			},
+		},
+		{
+			name: "error case - preserves other settings fields untouched",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				// Test that other fields are preserved.
+				settings := n8nsdk.WorkflowSettings{
+					AdditionalProperties: map[string]interface{}{
+						"customField": "value",
+					},
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				// Other fields should remain intact.
+				assert.NotNil(t, result.AdditionalProperties)
+				assert.Equal(t, "value", result.AdditionalProperties["customField"])
+			},
+		},
+		{
+			name: "error case - empty string callerPolicy is not removed",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				callerPolicy := ""
+				settings := n8nsdk.WorkflowSettings{
+					CallerPolicy: &callerPolicy,
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				// Empty string is not the default, so it should be preserved.
+				assert.NotNil(t, result.CallerPolicy)
+				assert.Equal(t, "", *result.CallerPolicy)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.testFunc(t)
+		})
+	}
+}

@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -23,7 +22,8 @@ var _ MappedNullable = &ProjectsProjectIdUsersPostRequest{}
 // ProjectsProjectIdUsersPostRequest struct for ProjectsProjectIdUsersPostRequest
 type ProjectsProjectIdUsersPostRequest struct {
 	// A list of userIds and roles to add to the project.
-	Relations []ProjectsProjectIdUsersPostRequestRelationsInner `json:"relations"`
+	Relations            []ProjectsProjectIdUsersPostRequestRelationsInner `json:"relations"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _ProjectsProjectIdUsersPostRequest ProjectsProjectIdUsersPostRequest
@@ -81,6 +81,11 @@ func (o ProjectsProjectIdUsersPostRequest) MarshalJSON() ([]byte, error) {
 func (o ProjectsProjectIdUsersPostRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["relations"] = o.Relations
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -108,15 +113,20 @@ func (o *ProjectsProjectIdUsersPostRequest) UnmarshalJSON(data []byte) (err erro
 
 	varProjectsProjectIdUsersPostRequest := _ProjectsProjectIdUsersPostRequest{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varProjectsProjectIdUsersPostRequest)
+	err = json.Unmarshal(data, &varProjectsProjectIdUsersPostRequest)
 
 	if err != nil {
 		return err
 	}
 
 	*o = ProjectsProjectIdUsersPostRequest(varProjectsProjectIdUsersPostRequest)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "relations")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

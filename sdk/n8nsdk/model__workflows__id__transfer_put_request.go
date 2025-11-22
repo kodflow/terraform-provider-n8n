@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -24,6 +23,7 @@ var _ MappedNullable = &WorkflowsIdTransferPutRequest{}
 type WorkflowsIdTransferPutRequest struct {
 	// The ID of the project to transfer the workflow to.
 	DestinationProjectId string `json:"destinationProjectId"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _WorkflowsIdTransferPutRequest WorkflowsIdTransferPutRequest
@@ -81,6 +81,11 @@ func (o WorkflowsIdTransferPutRequest) MarshalJSON() ([]byte, error) {
 func (o WorkflowsIdTransferPutRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["destinationProjectId"] = o.DestinationProjectId
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
 }
 
@@ -108,15 +113,20 @@ func (o *WorkflowsIdTransferPutRequest) UnmarshalJSON(data []byte) (err error) {
 
 	varWorkflowsIdTransferPutRequest := _WorkflowsIdTransferPutRequest{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varWorkflowsIdTransferPutRequest)
+	err = json.Unmarshal(data, &varWorkflowsIdTransferPutRequest)
 
 	if err != nil {
 		return err
 	}
 
 	*o = WorkflowsIdTransferPutRequest(varWorkflowsIdTransferPutRequest)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "destinationProjectId")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

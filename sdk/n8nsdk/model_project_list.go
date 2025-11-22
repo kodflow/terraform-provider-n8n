@@ -22,8 +22,11 @@ var _ MappedNullable = &ProjectList{}
 type ProjectList struct {
 	Data []Project `json:"data,omitempty"`
 	// Paginate through projects by setting the cursor parameter to a nextCursor attribute returned by a previous request. Default value fetches the first \"page\" of the collection.
-	NextCursor NullableString `json:"nextCursor,omitempty"`
+	NextCursor           NullableString `json:"nextCursor,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _ProjectList ProjectList
 
 // NewProjectList instantiates a new ProjectList object
 // This constructor will assign default values to properties that have it defined,
@@ -133,7 +136,34 @@ func (o ProjectList) ToMap() (map[string]interface{}, error) {
 	if o.NextCursor.IsSet() {
 		toSerialize["nextCursor"] = o.NextCursor.Get()
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *ProjectList) UnmarshalJSON(data []byte) (err error) {
+	varProjectList := _ProjectList{}
+
+	err = json.Unmarshal(data, &varProjectList)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ProjectList(varProjectList)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "data")
+		delete(additionalProperties, "nextCursor")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableProjectList struct {

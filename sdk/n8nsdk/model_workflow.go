@@ -12,7 +12,6 @@ Contact: hello@n8n.io
 package n8nsdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -23,22 +22,25 @@ var _ MappedNullable = &Workflow{}
 
 // Workflow struct for Workflow
 type Workflow struct {
-	Id           *string                `json:"id,omitempty"`
-	Name         string                 `json:"name"`
-	Active       *bool                  `json:"active,omitempty"`
-	CreatedAt    *time.Time             `json:"createdAt,omitempty"`
-	UpdatedAt    *time.Time             `json:"updatedAt,omitempty"`
-	Nodes        []Node                 `json:"nodes"`
-	Connections  map[string]interface{} `json:"connections"`
-	Settings     WorkflowSettings       `json:"settings"`
-	StaticData   *WorkflowStaticData    `json:"staticData,omitempty"`
-	Tags         []Tag                  `json:"tags,omitempty"`
-	Shared       []SharedWorkflow       `json:"shared,omitempty"`
-	VersionId    *string                `json:"versionId,omitempty"`
-	IsArchived   *bool                  `json:"isArchived,omitempty"`
-	TriggerCount *float32               `json:"triggerCount,omitempty"`
-	Meta         map[string]interface{} `json:"meta,omitempty"`
-	PinData      map[string]interface{} `json:"pinData,omitempty"`
+	Id                   *string                `json:"id,omitempty"`
+	Name                 string                 `json:"name"`
+	Active               *bool                  `json:"active,omitempty"`
+	CreatedAt            *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt            *time.Time             `json:"updatedAt,omitempty"`
+	Nodes                []Node                 `json:"nodes"`
+	Connections          map[string]interface{} `json:"connections"`
+	Settings             WorkflowSettings       `json:"settings"`
+	StaticData           *WorkflowStaticData    `json:"staticData,omitempty"`
+	Tags                 []Tag                  `json:"tags,omitempty"`
+	Shared               []SharedWorkflow       `json:"shared,omitempty"`
+	Description          *string                `json:"description,omitempty"`
+	VersionId            *string                `json:"versionId,omitempty"`
+	IsArchived           *bool                  `json:"isArchived,omitempty"`
+	TriggerCount         *float32               `json:"triggerCount,omitempty"`
+	Meta                 map[string]interface{} `json:"meta,omitempty"`
+	PinData              map[string]interface{} `json:"pinData,omitempty"`
+	VersionCounter       *int32                 `json:"versionCounter,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
 
 type _Workflow Workflow
@@ -419,21 +421,11 @@ func (o Workflow) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Shared) {
 		toSerialize["shared"] = o.Shared
 	}
-	if !IsNil(o.VersionId) {
-		toSerialize["versionId"] = o.VersionId
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
 	}
-	if !IsNil(o.IsArchived) {
-		toSerialize["isArchived"] = o.IsArchived
-	}
-	if !IsNil(o.TriggerCount) {
-		toSerialize["triggerCount"] = o.TriggerCount
-	}
-	if !IsNil(o.Meta) {
-		toSerialize["meta"] = o.Meta
-	}
-	if !IsNil(o.PinData) {
-		toSerialize["pinData"] = o.PinData
-	}
+
 	return toSerialize, nil
 }
 
@@ -464,15 +456,30 @@ func (o *Workflow) UnmarshalJSON(data []byte) (err error) {
 
 	varWorkflow := _Workflow{}
 
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varWorkflow)
+	err = json.Unmarshal(data, &varWorkflow)
 
 	if err != nil {
 		return err
 	}
 
 	*o = Workflow(varWorkflow)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "id")
+		delete(additionalProperties, "name")
+		delete(additionalProperties, "active")
+		delete(additionalProperties, "createdAt")
+		delete(additionalProperties, "updatedAt")
+		delete(additionalProperties, "nodes")
+		delete(additionalProperties, "connections")
+		delete(additionalProperties, "settings")
+		delete(additionalProperties, "staticData")
+		delete(additionalProperties, "tags")
+		delete(additionalProperties, "shared")
+		o.AdditionalProperties = additionalProperties
+	}
 
 	return err
 }

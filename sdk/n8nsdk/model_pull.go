@@ -20,9 +20,12 @@ var _ MappedNullable = &Pull{}
 
 // Pull struct for Pull
 type Pull struct {
-	Force     *bool                  `json:"force,omitempty"`
-	Variables map[string]interface{} `json:"variables,omitempty"`
+	Force                *bool                  `json:"force,omitempty"`
+	Variables            map[string]interface{} `json:"variables,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _Pull Pull
 
 // NewPull instantiates a new Pull object
 // This constructor will assign default values to properties that have it defined,
@@ -121,7 +124,34 @@ func (o Pull) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Variables) {
 		toSerialize["variables"] = o.Variables
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *Pull) UnmarshalJSON(data []byte) (err error) {
+	varPull := _Pull{}
+
+	err = json.Unmarshal(data, &varPull)
+
+	if err != nil {
+		return err
+	}
+
+	*o = Pull(varPull)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "force")
+		delete(additionalProperties, "variables")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullablePull struct {

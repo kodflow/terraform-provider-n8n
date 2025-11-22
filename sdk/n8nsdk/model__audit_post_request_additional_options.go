@@ -23,7 +23,10 @@ type AuditPostRequestAdditionalOptions struct {
 	// Days for a workflow to be considered abandoned if not executed
 	DaysAbandonedWorkflow *int32   `json:"daysAbandonedWorkflow,omitempty"`
 	Categories            []string `json:"categories,omitempty"`
+	AdditionalProperties  map[string]interface{}
 }
+
+type _AuditPostRequestAdditionalOptions AuditPostRequestAdditionalOptions
 
 // NewAuditPostRequestAdditionalOptions instantiates a new AuditPostRequestAdditionalOptions object
 // This constructor will assign default values to properties that have it defined,
@@ -122,7 +125,34 @@ func (o AuditPostRequestAdditionalOptions) ToMap() (map[string]interface{}, erro
 	if !IsNil(o.Categories) {
 		toSerialize["categories"] = o.Categories
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *AuditPostRequestAdditionalOptions) UnmarshalJSON(data []byte) (err error) {
+	varAuditPostRequestAdditionalOptions := _AuditPostRequestAdditionalOptions{}
+
+	err = json.Unmarshal(data, &varAuditPostRequestAdditionalOptions)
+
+	if err != nil {
+		return err
+	}
+
+	*o = AuditPostRequestAdditionalOptions(varAuditPostRequestAdditionalOptions)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "daysAbandonedWorkflow")
+		delete(additionalProperties, "categories")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableAuditPostRequestAdditionalOptions struct {

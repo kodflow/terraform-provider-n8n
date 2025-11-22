@@ -22,8 +22,11 @@ var _ MappedNullable = &ExecutionList{}
 type ExecutionList struct {
 	Data []Execution `json:"data,omitempty"`
 	// Paginate through executions by setting the cursor parameter to a nextCursor attribute returned by a previous request. Default value fetches the first \"page\" of the collection.
-	NextCursor NullableString `json:"nextCursor,omitempty"`
+	NextCursor           NullableString `json:"nextCursor,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _ExecutionList ExecutionList
 
 // NewExecutionList instantiates a new ExecutionList object
 // This constructor will assign default values to properties that have it defined,
@@ -133,7 +136,34 @@ func (o ExecutionList) ToMap() (map[string]interface{}, error) {
 	if o.NextCursor.IsSet() {
 		toSerialize["nextCursor"] = o.NextCursor.Get()
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *ExecutionList) UnmarshalJSON(data []byte) (err error) {
+	varExecutionList := _ExecutionList{}
+
+	err = json.Unmarshal(data, &varExecutionList)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ExecutionList(varExecutionList)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "data")
+		delete(additionalProperties, "nextCursor")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableExecutionList struct {

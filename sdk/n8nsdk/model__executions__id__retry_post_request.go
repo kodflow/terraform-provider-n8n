@@ -21,8 +21,11 @@ var _ MappedNullable = &ExecutionsIdRetryPostRequest{}
 // ExecutionsIdRetryPostRequest struct for ExecutionsIdRetryPostRequest
 type ExecutionsIdRetryPostRequest struct {
 	// Whether to load the currently saved workflow to execute instead of the one saved at the time of the execution. If set to true, it will retry with the latest version of the workflow.
-	LoadWorkflow *bool `json:"loadWorkflow,omitempty"`
+	LoadWorkflow         *bool `json:"loadWorkflow,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _ExecutionsIdRetryPostRequest ExecutionsIdRetryPostRequest
 
 // NewExecutionsIdRetryPostRequest instantiates a new ExecutionsIdRetryPostRequest object
 // This constructor will assign default values to properties that have it defined,
@@ -86,7 +89,33 @@ func (o ExecutionsIdRetryPostRequest) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.LoadWorkflow) {
 		toSerialize["loadWorkflow"] = o.LoadWorkflow
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *ExecutionsIdRetryPostRequest) UnmarshalJSON(data []byte) (err error) {
+	varExecutionsIdRetryPostRequest := _ExecutionsIdRetryPostRequest{}
+
+	err = json.Unmarshal(data, &varExecutionsIdRetryPostRequest)
+
+	if err != nil {
+		return err
+	}
+
+	*o = ExecutionsIdRetryPostRequest(varExecutionsIdRetryPostRequest)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "loadWorkflow")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableExecutionsIdRetryPostRequest struct {

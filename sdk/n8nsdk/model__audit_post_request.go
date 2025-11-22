@@ -20,8 +20,11 @@ var _ MappedNullable = &AuditPostRequest{}
 
 // AuditPostRequest struct for AuditPostRequest
 type AuditPostRequest struct {
-	AdditionalOptions *AuditPostRequestAdditionalOptions `json:"additionalOptions,omitempty"`
+	AdditionalOptions    *AuditPostRequestAdditionalOptions `json:"additionalOptions,omitempty"`
+	AdditionalProperties map[string]interface{}
 }
+
+type _AuditPostRequest AuditPostRequest
 
 // NewAuditPostRequest instantiates a new AuditPostRequest object
 // This constructor will assign default values to properties that have it defined,
@@ -85,7 +88,33 @@ func (o AuditPostRequest) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.AdditionalOptions) {
 		toSerialize["additionalOptions"] = o.AdditionalOptions
 	}
+
+	for key, value := range o.AdditionalProperties {
+		toSerialize[key] = value
+	}
+
 	return toSerialize, nil
+}
+
+func (o *AuditPostRequest) UnmarshalJSON(data []byte) (err error) {
+	varAuditPostRequest := _AuditPostRequest{}
+
+	err = json.Unmarshal(data, &varAuditPostRequest)
+
+	if err != nil {
+		return err
+	}
+
+	*o = AuditPostRequest(varAuditPostRequest)
+
+	additionalProperties := make(map[string]interface{})
+
+	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "additionalOptions")
+		o.AdditionalProperties = additionalProperties
+	}
+
+	return err
 }
 
 type NullableAuditPostRequest struct {
