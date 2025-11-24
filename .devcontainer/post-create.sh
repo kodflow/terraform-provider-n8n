@@ -13,6 +13,19 @@ safe_run() {
 
 echo "🔧 Installing development tools..."
 
+# Ensure Oh My Zsh is installed (handles empty volume on first run)
+if [ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
+  echo "📦 Installing Oh My Zsh..."
+  rm -rf "$HOME/.oh-my-zsh"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc
+  # Install themes
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+    "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" 2>/dev/null || true
+  git clone --depth=1 https://github.com/dracula/zsh.git \
+    "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/dracula" 2>/dev/null || true
+  echo "✅ Oh My Zsh installed"
+fi
+
 # Configure git identity
 echo "👤 Configuring git identity..."
 
