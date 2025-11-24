@@ -439,6 +439,7 @@ func TestWorkflowResource_ImportState(t *testing.T) {
 		"name":             tftypes.NewValue(tftypes.String, nil),
 		"active":           tftypes.NewValue(tftypes.Bool, nil),
 		"tags":             tftypes.NewValue(tftypes.Set{ElementType: tftypes.String}, nil),
+		"project_id":       tftypes.NewValue(tftypes.String, nil),
 		"nodes_json":       tftypes.NewValue(tftypes.String, nil),
 		"connections_json": tftypes.NewValue(tftypes.String, nil),
 		"settings_json":    tftypes.NewValue(tftypes.String, nil),
