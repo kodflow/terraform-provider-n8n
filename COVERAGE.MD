@@ -14,7 +14,7 @@ Automatically generated coverage report.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **96.3%** |
+| **Total Coverage** | **94.6%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -66,7 +66,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 97.7% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 90.2% |
+| 🟡 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 84.1% |
 
 ---
 
@@ -211,5 +211,5 @@ Reading n8n resources without managing their lifecycle.
 
 ---
 
-*Report generated on: 2025-11-22*
+*Report generated on: 2025-11-25*
 *Threshold: 70.0%*
