@@ -333,6 +333,7 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 	// Transfer workflow to project if project_id is specified.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() && workflow.Id != nil {
 		updatedWorkflow := r.handleProjectAssignment(ctx, *workflow.Id, plan.ProjectID.ValueString(), &resp.Diagnostics)
+		// Check if project assignment succeeded
 		if resp.Diagnostics.HasError() {
 			// Return failure.
 			return false
@@ -569,8 +570,10 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 
 	// Handle project transfer if project_id changed.
 	if !plan.ProjectID.Equal(state.ProjectID) {
+		// Transfer to new project if project_id is set
 		if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 			updatedWorkflow := r.handleProjectAssignment(ctx, plan.ID.ValueString(), plan.ProjectID.ValueString(), &resp.Diagnostics)
+			// Check if project assignment succeeded
 			if resp.Diagnostics.HasError() {
 				// Return failure.
 				return false

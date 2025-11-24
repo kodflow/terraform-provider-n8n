@@ -141,13 +141,17 @@ func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *models.Resource) {
 //   - plan: The resource model to update
 func mapWorkflowProjectID(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	// Extract projectId from workflow.Shared[0].ProjectId
+	// Check if workflow has shared projects
 	if len(workflow.Shared) > 0 {
+		// Check if the first shared project has a project ID
 		if workflow.Shared[0].ProjectId != nil {
 			plan.ProjectID = types.StringPointerValue(workflow.Shared[0].ProjectId)
 		} else {
+			// Project ID is nil, set to null in state
 			plan.ProjectID = types.StringNull()
 		}
 	} else {
+		// No shared projects, workflow is in default location
 		plan.ProjectID = types.StringNull()
 	}
 }
@@ -496,5 +500,6 @@ func (r *WorkflowResource) handleProjectAssignment(ctx context.Context, workflow
 		return nil
 	}
 
+	// Return the updated workflow with project information
 	return workflow
 }
