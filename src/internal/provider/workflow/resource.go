@@ -147,7 +147,7 @@ func (r *WorkflowResource) addCoreAttributes(attrs map[string]schema.Attribute) 
 		Optional:            true,
 	}
 	attrs["project_id"] = schema.StringAttribute{
-		MarkdownDescription: "Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. Changing this value will force recreation of the workflow.",
+		MarkdownDescription: "Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. The workflow can be transferred to a different project by updating this value.",
 		Optional:            true,
 		Computed:            true,
 	}
@@ -519,6 +519,9 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 	// Handle project transfer if project_id changed.
 	if !plan.ProjectID.Equal(state.ProjectID) {
 		// Transfer to new project if project_id is set
+		// Note: Removing a workflow from a project (changing from a
+		// value to null) is not supported by the n8n API. The workflow
+		// will remain in its current project if project_id changes to null.
 		if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 			updatedWorkflow := r.handleProjectAssignment(ctx, plan.ID.ValueString(), plan.ProjectID.ValueString(), &resp.Diagnostics)
 			// Check if project assignment succeeded
