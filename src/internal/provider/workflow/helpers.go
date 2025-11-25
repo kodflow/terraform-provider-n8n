@@ -628,8 +628,13 @@ func (r *WorkflowResource) handleProjectAssignment(ctx context.Context, workflow
 		defer httpResp.Body.Close()
 	}
 
-	// Return workflow even if re-fetch fails since transfer succeeded
+	// Return nil on re-fetch failure; add diagnostic since transfer
+	// succeeded but workflow couldn't be re-fetched
 	if err != nil {
+		diags.AddError(
+			"Error re-fetching workflow after project transfer",
+			fmt.Sprintf("Workflow was transferred to project successfully, but failed to re-fetch workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
+		)
 		return nil
 	}
 

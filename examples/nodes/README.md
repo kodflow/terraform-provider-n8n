@@ -1,6 +1,6 @@
 # N8N Terraform Provider - Supported Nodes
 
-**Generated**: 2025-11-25T00:41:06.347Z **Provider Version**: Latest **N8N Version**: unknown **Last Sync**: 2025-11-18T01:36:46.907Z
+**Generated**: 2025-11-25T12:59:33.936Z **Provider Version**: Latest **N8N Version**: unknown **Last Sync**: 2025-11-18T01:36:46.907Z
 
 ## Overview
 
@@ -779,4 +779,4 @@ This documentation is auto-generated from the node registry. To regenerate:
 make nodes/docs
 ```
 
-**Last Generated**: 2025-11-25T00:41:06.347Z
+**Last Generated**: 2025-11-25T12:59:33.936Z
