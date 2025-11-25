@@ -59,7 +59,7 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider` | 100.0% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential` | 93.2% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential` | 93.1% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/project` | 99.1% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client` | 100.0% |

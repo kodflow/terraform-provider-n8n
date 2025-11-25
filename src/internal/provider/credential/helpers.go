@@ -421,27 +421,6 @@ func (r *CredentialResource) transferCredentialToProject(ctx context.Context, cr
 	return true
 }
 
-// handleCredentialProjectAssignment handles transferring a credential to a project after creation.
-//
-// Params:
-//   - ctx: Context for the API call
-//   - credentialID: The credential ID to transfer
-//   - projectID: The destination project ID
-//   - diags: Diagnostics for error reporting
-//
-// Returns:
-//   - bool: True if transfer succeeded or not needed, false otherwise
-func (r *CredentialResource) handleCredentialProjectAssignment(ctx context.Context, credentialID, projectID string, diags *diag.Diagnostics) bool {
-	// Transfer credential to project.
-	if !r.transferCredentialToProject(ctx, credentialID, projectID, diags) {
-		// Return failure.
-		return false
-	}
-
-	// Return success.
-	return true
-}
-
 // mapCredentialProjectID maps the project_id to the model.
 // Since n8n API doesn't return project info in credential responses,
 // we keep the value from the plan.

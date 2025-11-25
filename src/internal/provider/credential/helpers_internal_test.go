@@ -977,63 +977,6 @@ func TestCredentialResource_transferCredentialToProject(t *testing.T) {
 	}
 }
 
-// TestCredentialResource_handleCredentialProjectAssignment tests handleCredentialProjectAssignment.
-func TestCredentialResource_handleCredentialProjectAssignment(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name         string
-		credentialID string
-		projectID    string
-		setupHandler func(w http.ResponseWriter, r *http.Request)
-		expectOK     bool
-	}{
-		{
-			name:         "successful assignment",
-			credentialID: "cred-123",
-			projectID:    "proj-456",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				// Handle transfer request.
-				if r.Method == http.MethodPut && r.URL.Path == "/credentials/cred-123/transfer" {
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectOK: true,
-		},
-		{
-			name:         "assignment fails",
-			credentialID: "cred-fail",
-			projectID:    "proj-456",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{"message": "Not authorized"}`))
-			},
-			expectOK: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			handler := http.HandlerFunc(tt.setupHandler)
-			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
-
-			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
-			diags := diag.Diagnostics{}
-
-			result := r.handleCredentialProjectAssignment(ctx, tt.credentialID, tt.projectID, &diags)
-
-			assert.Equal(t, tt.expectOK, result, "Assignment result should match expected")
-		})
-	}
-}
-
 // Test_mapCredentialProjectID tests mapCredentialProjectID.
 func Test_mapCredentialProjectID(t *testing.T) {
 	t.Parallel()

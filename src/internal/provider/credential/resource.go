@@ -270,7 +270,7 @@ func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, pla
 	// Handle project assignment if project_id is specified.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 		// Transfer credential to the specified project.
-		if !r.handleCredentialProjectAssignment(ctx, createResp.Id, plan.ProjectID.ValueString(), &resp.Diagnostics) {
+		if !r.transferCredentialToProject(ctx, createResp.Id, plan.ProjectID.ValueString(), &resp.Diagnostics) {
 			// Return failure - project assignment failed.
 			return false
 		}
@@ -463,7 +463,7 @@ func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, pla
 	// to the target project since it was created in personal space.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 		// Transfer the new credential to the specified project.
-		if !r.handleCredentialProjectAssignment(ctx, newCredID, plan.ProjectID.ValueString(), &resp.Diagnostics) {
+		if !r.transferCredentialToProject(ctx, newCredID, plan.ProjectID.ValueString(), &resp.Diagnostics) {
 			// Return failure - project assignment failed.
 			return false
 		}
