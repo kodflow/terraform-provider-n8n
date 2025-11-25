@@ -28,9 +28,13 @@ n8n credential resource with automatic rotation on update.
 
 ### Required
 
-- `data` (Map of String, Sensitive) Credential data (secrets, passwords, API keys, etc.)
+- `data` (Map of String, Sensitive) Credential data (secrets, passwords, API keys, etc.). String values are automatically converted to the correct type (number, boolean) based on the credential schema.
 - `name` (String) Credential name
-- `type` (String) Credential type (e.g., httpHeaderAuth, httpBasicAuth)
+- `type` (String) Credential type (e.g., httpHeaderAuth)
+
+### Optional
+
+- `project_id` (String) Project ID to assign the credential to. If not set, credential is created in personal space (General).
 
 ### Read-Only
 
