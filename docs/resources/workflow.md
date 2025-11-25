@@ -24,6 +24,7 @@ n8n workflow resource using generated SDK
 - `active` (Boolean) Whether the workflow is active
 - `connections_json` (String) Workflow connections as JSON string. Must be valid JSON object mapping node connections.
 - `nodes_json` (String) Workflow nodes as JSON string. Must be valid JSON array of node objects.
+- `project_id` (String) Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. The workflow can be transferred to a different project by updating this value.
 - `settings_json` (String) Workflow settings as JSON string. Must be valid JSON object.
 - `tags` (Set of String) Set of tag IDs associated with this workflow
 

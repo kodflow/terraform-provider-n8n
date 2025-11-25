@@ -35,6 +35,9 @@ services:
       - op-config:/home/vscode/.config/op
       - op-cache:/home/vscode/.op
 
+      # Oh My Zsh persistence (survives rebuilds)
+      - oh-my-zsh:/home/vscode/.oh-my-zsh
+
     # Network configuration
     networks:
       - default
@@ -98,6 +101,8 @@ volumes:
   # 1Password CLI volumes (persist sessions across rebuilds)
   op-config:
   op-cache:
+  # Oh My Zsh volume (persist across rebuilds)
+  oh-my-zsh:
 
 networks:
   default:

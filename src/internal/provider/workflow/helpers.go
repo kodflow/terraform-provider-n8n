@@ -134,6 +134,28 @@ func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	}
 }
 
+// mapWorkflowProjectID maps the workflow project ID from shared info to the model.
+//
+// Params:
+//   - workflow: The n8n workflow to map from
+//   - plan: The resource model to update
+func mapWorkflowProjectID(workflow *n8nsdk.Workflow, plan *models.Resource) {
+	// Extract projectId from workflow.Shared[0].ProjectId
+	// Check if workflow has shared projects
+	if len(workflow.Shared) > 0 {
+		// Check if the first shared project has a project ID
+		if workflow.Shared[0].ProjectId != nil {
+			plan.ProjectID = types.StringPointerValue(workflow.Shared[0].ProjectId)
+		} else {
+			// Project ID is nil, set to null in state
+			plan.ProjectID = types.StringNull()
+		}
+	} else {
+		// No shared projects, workflow is in default location
+		plan.ProjectID = types.StringNull()
+	}
+}
+
 // mapWorkflowTimestamps maps workflow timestamps to the model.
 //
 // Params:
@@ -167,6 +189,9 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *mo
 
 	// Tags
 	plan.Tags = mapTagsFromWorkflow(ctx, workflow, diags)
+
+	// Project ID from shared workflow info
+	mapWorkflowProjectID(workflow, plan)
 
 	// Map timestamps
 	mapWorkflowTimestamps(workflow, plan)
@@ -402,4 +427,217 @@ func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID st
 	}
 
 	workflow.Tags = tags
+}
+
+// createWorkflowViaAPI creates a new workflow via the n8n API.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflowRequest: The workflow to create
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Created workflow if successful, nil otherwise
+func (r *WorkflowResource) createWorkflowViaAPI(ctx context.Context, workflowRequest n8nsdk.Workflow, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
+		Workflow(workflowRequest).
+		Execute()
+
+	// Check for non-nil HTTP response
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+
+	// Check for API error
+	if err != nil {
+		diags.AddError(
+			"Error creating workflow",
+			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
+		)
+		return nil
+	}
+
+	// Return the created workflow
+	return workflow
+}
+
+// updateWorkflowViaAPI updates an existing workflow via the n8n API.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflowID: The ID of the workflow to update
+//   - workflowRequest: The workflow updates to apply
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) updateWorkflowViaAPI(ctx context.Context, workflowID string, workflowRequest n8nsdk.Workflow, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, workflowID).
+		Workflow(workflowRequest).
+		Execute()
+
+	// Check for non-nil HTTP response
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+
+	// Check for API error
+	if err != nil {
+		diags.AddError(
+			"Error updating workflow",
+			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
+		)
+		return nil
+	}
+
+	// Return the updated workflow
+	return workflow
+}
+
+// transferWorkflowToProject transfers a workflow to a specified project.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflowID: The workflow ID to transfer
+//   - projectID: The destination project ID
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - bool: True if transfer succeeded, false otherwise
+func (r *WorkflowResource) transferWorkflowToProject(ctx context.Context, workflowID, projectID string, diags *diag.Diagnostics) bool {
+	transferRequest := n8nsdk.WorkflowsIdTransferPutRequest{
+		DestinationProjectId: projectID,
+	}
+
+	httpResp, err := r.client.APIClient.WorkflowAPI.
+		WorkflowsIdTransferPut(ctx, workflowID).
+		WorkflowsIdTransferPutRequest(transferRequest).
+		Execute()
+
+	// Check for non-nil HTTP response.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+
+	// Check for error.
+	if err != nil {
+		diags.AddError(
+			"Error transferring workflow to project",
+			fmt.Sprintf("Could not transfer workflow ID %s to project %s: %s\nHTTP Response: %v", workflowID, projectID, err.Error(), httpResp),
+		)
+		// Return failure.
+		return false
+	}
+
+	// Return success.
+	return true
+}
+
+// handlePostCreation handles post-creation workflow operations (ID, tags, project, activation).
+// This helper reduces complexity in the create operation by consolidating post-creation steps.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflow: The created workflow
+//   - plan: The resource model
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) handlePostCreation(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	// Set ID from created workflow
+	plan.ID = types.StringPointerValue(workflow.Id)
+
+	// Update tags if provided
+	workflow = r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
+	// Check for tag/project errors
+	if workflow == nil {
+		return nil
+	}
+
+	// Handle workflow activation after creation if requested
+	if !r.handlePostCreationActivation(ctx, plan, workflow, diags) {
+		return nil
+	}
+
+	// Return the processed workflow with all post-creation operations applied
+	return workflow
+}
+
+// applyPostCreationTagsAndProject applies tags and project assignment to a newly created workflow.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflow: The created workflow
+//   - plan: The resource model
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) applyPostCreationTagsAndProject(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	// Update tags if provided
+	if !plan.Tags.IsNull() && !plan.Tags.IsUnknown() && workflow.Id != nil {
+		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, diags)
+		// Check for tag update errors
+		if diags.HasError() {
+			return nil
+		}
+	}
+
+	// Transfer workflow to project if project_id is specified
+	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() && workflow.Id != nil {
+		updatedWorkflow := r.handleProjectAssignment(ctx, *workflow.Id, plan.ProjectID.ValueString(), diags)
+		// Check if project assignment succeeded
+		if diags.HasError() {
+			return nil
+		}
+		// Use updated workflow if available
+		if updatedWorkflow != nil {
+			workflow = updatedWorkflow
+		}
+	}
+
+	// Return the workflow with tags and project applied
+	return workflow
+}
+
+// handleProjectAssignment handles transferring a workflow to a project and re-fetching the workflow.
+// This helper reduces complexity in create and update operations.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflowID: The workflow ID to transfer
+//   - projectID: The destination project ID
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) handleProjectAssignment(ctx context.Context, workflowID, projectID string, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	// Transfer workflow to project
+	if !r.transferWorkflowToProject(ctx, workflowID, projectID, diags) {
+		return nil
+	}
+
+	// Re-fetch workflow to get updated project info
+	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.
+		WorkflowsIdGet(ctx, workflowID).
+		Execute()
+
+	// Check for non-nil HTTP response.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+
+	// Return nil on re-fetch failure; add diagnostic since transfer
+	// succeeded but workflow couldn't be re-fetched
+	if err != nil {
+		diags.AddError(
+			"Error re-fetching workflow after project transfer",
+			fmt.Sprintf("Workflow was transferred to project successfully, but failed to re-fetch workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
+		)
+		return nil
+	}
+
+	// Return the updated workflow with project information
+	return workflow
 }
