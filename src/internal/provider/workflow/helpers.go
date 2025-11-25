@@ -429,6 +429,71 @@ func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID st
 	workflow.Tags = tags
 }
 
+// createWorkflowViaAPI creates a new workflow via the n8n API.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflowRequest: The workflow to create
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Created workflow if successful, nil otherwise
+func (r *WorkflowResource) createWorkflowViaAPI(ctx context.Context, workflowRequest n8nsdk.Workflow, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
+		Workflow(workflowRequest).
+		Execute()
+
+	// Check for non-nil HTTP response
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+
+	// Check for API error
+	if err != nil {
+		diags.AddError(
+			"Error creating workflow",
+			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
+		)
+		return nil
+	}
+
+	// Return the created workflow
+	return workflow
+}
+
+// updateWorkflowViaAPI updates an existing workflow via the n8n API.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflowID: The ID of the workflow to update
+//   - workflowRequest: The workflow updates to apply
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) updateWorkflowViaAPI(ctx context.Context, workflowID string, workflowRequest n8nsdk.Workflow, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, workflowID).
+		Workflow(workflowRequest).
+		Execute()
+
+	// Check for non-nil HTTP response
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+
+	// Check for API error
+	if err != nil {
+		diags.AddError(
+			"Error updating workflow",
+			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
+		)
+		return nil
+	}
+
+	// Return the updated workflow
+	return workflow
+}
+
 // transferWorkflowToProject transfers a workflow to a specified project.
 //
 // Params:
@@ -466,6 +531,74 @@ func (r *WorkflowResource) transferWorkflowToProject(ctx context.Context, workfl
 
 	// Return success.
 	return true
+}
+
+// handlePostCreation handles post-creation workflow operations (ID, tags, project, activation).
+// This helper reduces complexity in the create operation by consolidating post-creation steps.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflow: The created workflow
+//   - plan: The resource model
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) handlePostCreation(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	// Set ID from created workflow
+	plan.ID = types.StringPointerValue(workflow.Id)
+
+	// Update tags if provided
+	workflow = r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
+	// Check for tag/project errors
+	if workflow == nil {
+		return nil
+	}
+
+	// Handle workflow activation after creation if requested
+	if !r.handlePostCreationActivation(ctx, plan, workflow, diags) {
+		return nil
+	}
+
+	// Return the processed workflow with all post-creation operations applied
+	return workflow
+}
+
+// applyPostCreationTagsAndProject applies tags and project assignment to a newly created workflow.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflow: The created workflow
+//   - plan: The resource model
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
+func (r *WorkflowResource) applyPostCreationTagsAndProject(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	// Update tags if provided
+	if !plan.Tags.IsNull() && !plan.Tags.IsUnknown() && workflow.Id != nil {
+		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, diags)
+		// Check for tag update errors
+		if diags.HasError() {
+			return nil
+		}
+	}
+
+	// Transfer workflow to project if project_id is specified
+	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() && workflow.Id != nil {
+		updatedWorkflow := r.handleProjectAssignment(ctx, *workflow.Id, plan.ProjectID.ValueString(), diags)
+		// Check if project assignment succeeded
+		if diags.HasError() {
+			return nil
+		}
+		// Use updated workflow if available
+		if updatedWorkflow != nil {
+			workflow = updatedWorkflow
+		}
+	}
+
+	// Return the workflow with tags and project applied
+	return workflow
 }
 
 // handleProjectAssignment handles transferring a workflow to a project and re-fetching the workflow.

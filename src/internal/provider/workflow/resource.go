@@ -298,55 +298,16 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 		Settings:    settings,
 	}
 
-	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
-		Workflow(workflowRequest).
-		Execute()
-
-	// Check for non-nil HTTP response.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-
-	// Check for API error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating workflow",
-			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
-		)
-		// Return failure.
+	workflow := r.createWorkflowViaAPI(ctx, workflowRequest, &resp.Diagnostics)
+	// Check for API error
+	if resp.Diagnostics.HasError() {
 		return false
 	}
 
-	// Update tags if provided.
-	if !plan.Tags.IsNull() && !plan.Tags.IsUnknown() && workflow.Id != nil {
-		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, &resp.Diagnostics)
-		// Check for tag update errors.
-		if resp.Diagnostics.HasError() {
-			// Return failure.
-			return false
-		}
-	}
-
-	// Set ID.
-	plan.ID = types.StringPointerValue(workflow.Id)
-
-	// Transfer workflow to project if project_id is specified.
-	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() && workflow.Id != nil {
-		updatedWorkflow := r.handleProjectAssignment(ctx, *workflow.Id, plan.ProjectID.ValueString(), &resp.Diagnostics)
-		// Check if project assignment succeeded
-		if resp.Diagnostics.HasError() {
-			// Return failure.
-			return false
-		}
-		// Use updated workflow if available.
-		if updatedWorkflow != nil {
-			workflow = updatedWorkflow
-		}
-	}
-
-	// Handle workflow activation after creation if requested
-	// Must be done BEFORE mapping to preserve plan.Active value
-	if !r.handlePostCreationActivation(ctx, plan, workflow, &resp.Diagnostics) {
+	// Handle post-creation operations (ID, tags, project, activation)
+	workflow = r.handlePostCreation(ctx, workflow, plan, &resp.Diagnostics)
+	// Check for post-creation errors
+	if resp.Diagnostics.HasError() || workflow == nil {
 		return false
 	}
 
@@ -541,22 +502,9 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		Settings:    settings,
 	}
 
-	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, plan.ID.ValueString()).
-		Workflow(workflowRequest).
-		Execute()
-
-	// Check for non-nil HTTP response.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-
-	// Check for API error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating workflow",
-			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
-		)
-		// Return failure.
+	workflow := r.updateWorkflowViaAPI(ctx, plan.ID.ValueString(), workflowRequest, &resp.Diagnostics)
+	// Check for API error
+	if resp.Diagnostics.HasError() {
 		return false
 	}
 
