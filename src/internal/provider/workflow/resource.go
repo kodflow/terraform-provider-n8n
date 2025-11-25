@@ -20,7 +20,7 @@ import (
 )
 
 // WORKFLOW_ATTRIBUTES_SIZE defines the initial capacity for workflow attributes map.
-const WORKFLOW_ATTRIBUTES_SIZE int = 14
+const WORKFLOW_ATTRIBUTES_SIZE int = 15
 
 // Ensure WorkflowResource implements required interfaces.
 var (
@@ -145,6 +145,11 @@ func (r *WorkflowResource) addCoreAttributes(attrs map[string]schema.Attribute) 
 		MarkdownDescription: "Set of tag IDs associated with this workflow",
 		ElementType:         types.StringType,
 		Optional:            true,
+	}
+	attrs["project_id"] = schema.StringAttribute{
+		MarkdownDescription: "Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. The workflow can be transferred to a different project by updating this value.",
+		Optional:            true,
+		Computed:            true,
 	}
 }
 
@@ -293,41 +298,16 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 		Settings:    settings,
 	}
 
-	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
-		Workflow(workflowRequest).
-		Execute()
-
-	// Check for non-nil HTTP response.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-
-	// Check for API error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating workflow",
-			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
-		)
-		// Return failure.
+	workflow := r.createWorkflowViaAPI(ctx, workflowRequest, &resp.Diagnostics)
+	// Check for API error
+	if resp.Diagnostics.HasError() {
 		return false
 	}
 
-	// Update tags if provided.
-	if !plan.Tags.IsNull() && !plan.Tags.IsUnknown() && workflow.Id != nil {
-		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, &resp.Diagnostics)
-		// Check for tag update errors.
-		if resp.Diagnostics.HasError() {
-			// Return failure.
-			return false
-		}
-	}
-
-	// Set ID.
-	plan.ID = types.StringPointerValue(workflow.Id)
-
-	// Handle workflow activation after creation if requested
-	// Must be done BEFORE mapping to preserve plan.Active value
-	if !r.handlePostCreationActivation(ctx, plan, workflow, &resp.Diagnostics) {
+	// Handle post-creation operations (ID, tags, project, activation)
+	workflow = r.handlePostCreation(ctx, workflow, plan, &resp.Diagnostics)
+	// Check for post-creation errors
+	if resp.Diagnostics.HasError() || workflow == nil {
 		return false
 	}
 
@@ -522,22 +502,9 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		Settings:    settings,
 	}
 
-	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, plan.ID.ValueString()).
-		Workflow(workflowRequest).
-		Execute()
-
-	// Check for non-nil HTTP response.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-
-	// Check for API error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating workflow",
-			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
-		)
-		// Return failure.
+	workflow := r.updateWorkflowViaAPI(ctx, plan.ID.ValueString(), workflowRequest, &resp.Diagnostics)
+	// Check for API error
+	if resp.Diagnostics.HasError() {
 		return false
 	}
 
@@ -547,6 +514,26 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 	if resp.Diagnostics.HasError() {
 		// Return failure.
 		return false
+	}
+
+	// Handle project transfer if project_id changed.
+	if !plan.ProjectID.Equal(state.ProjectID) {
+		// Transfer to new project if project_id is set
+		// Note: Removing a workflow from a project (changing from a
+		// value to null) is not supported by the n8n API. The workflow
+		// will remain in its current project if project_id changes to null.
+		if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
+			updatedWorkflow := r.handleProjectAssignment(ctx, plan.ID.ValueString(), plan.ProjectID.ValueString(), &resp.Diagnostics)
+			// Check if project assignment succeeded
+			if resp.Diagnostics.HasError() {
+				// Return failure.
+				return false
+			}
+			// Use updated workflow if available.
+			if updatedWorkflow != nil {
+				workflow = updatedWorkflow
+			}
+		}
 	}
 
 	// Map workflow response to state.
