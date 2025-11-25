@@ -38,6 +38,8 @@ func TestAccWorkflowResource(t *testing.T) {
 				ResourceName:      "n8n_workflow.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				// Ignore project_id because it's computed and may be populated from API
+				ImportStateVerifyIgnore: []string{"project_id"},
 			},
 			// NOTE: Update testing skipped - n8n API does not support PUT /workflows/{id} (405 Method Not Allowed)
 			// NOTE: Activation testing skipped - n8n API does not support PATCH /workflows/{id} (405 Method Not Allowed)
