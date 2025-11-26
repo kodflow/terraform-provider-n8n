@@ -171,27 +171,25 @@ jobs:
         run: make docs
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 2: E2E TESTS - STANDARD EXAMPLES
+  # JOB 2: E2E TESTS - COMMUNITY EXAMPLES
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  test-e2e-standard:
-    name: E2E Standard - ${{ matrix.example-name }}
+  test-e2e-community:
+    name: E2E Community - ${{ matrix.example-name }}
     runs-on: ubuntu-latest
     needs: build-and-test
     strategy:
       fail-fast: false
       matrix:
         include:
-          - example-name: basic-sample
-            example-path: examples/basic-sample
-          - example-name: community-full
+          - example-name: full
             example-path: examples/community
-          - example-name: community-credentials
+          - example-name: credentials
             example-path: examples/community/credentials/basic-auth
-          - example-name: community-tags
+          - example-name: tags
             example-path: examples/community/tags/workflow-tags
-          - example-name: community-workflow-basic
+          - example-name: workflow-basic
             example-path: examples/community/workflows/basic-workflow
-          - example-name: community-workflow-scheduled
+          - example-name: workflow-scheduled
             example-path: examples/community/workflows/scheduled-workflow
     steps:
       # Checkout repository
@@ -253,15 +251,15 @@ jobs:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
         working-directory: ${{ matrix.example-path }}
         run: |
-          echo "🔍 Verifying resources via n8n API..."
+          echo "Verifying resources via n8n API..."
           terraform output -json > outputs.json
 
           # Basic API health check
           RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows")
           if echo "$RESPONSE" | jq -e '.data' >/dev/null 2>&1; then
-            echo "✅ API accessible and resources verified"
+            echo "API accessible and resources verified"
           else
-            echo "⚠️  API response: $RESPONSE"
+            echo "API response: $RESPONSE"
           fi
 
       # Terraform Destroy
@@ -276,7 +274,226 @@ jobs:
         run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 3: E2E TESTS - CUSTOM NODES (CORE)
+  # JOB 3: E2E TESTS - SCENARIO (RENAME OPERATIONS)
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  test-e2e-scenario:
+    name: E2E Scenario - Rename Operations
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.13.5"
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Install provider
+      - name: Install provider
+        run: |
+          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
+          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+
+      # Terraform Init
+      - name: Terraform Init
+        working-directory: examples/scenario
+        run: terraform init -no-color
+
+      # Step 1: Plan with initial suffix (v1)
+      - name: "Step 1: Plan (v1 - Initial)"
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v1
+        working-directory: examples/scenario
+        run: terraform plan -no-color -input=false -out=tfplan-v1
+
+      # Step 2: Apply initial suffix (v1)
+      - name: "Step 2: Apply (v1 - Initial)"
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v1
+        working-directory: examples/scenario
+        run: |
+          terraform apply -no-color -auto-approve tfplan-v1
+          echo "Resources created with v1 names:"
+          terraform output -no-color summary || true
+
+      # Step 3: Plan with renamed suffix (v2)
+      - name: "Step 3: Plan (v2 - Rename)"
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+        working-directory: examples/scenario
+        run: |
+          echo "Planning rename from v1 to v2..."
+          terraform plan -no-color -input=false -out=tfplan-v2
+
+      # Step 4: Apply renamed suffix (v2)
+      - name: "Step 4: Apply (v2 - Rename)"
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+        working-directory: examples/scenario
+        run: |
+          echo "Applying rename from v1 to v2..."
+          terraform apply -no-color -auto-approve tfplan-v2
+          echo "Resources renamed to v2 names:"
+          terraform output -no-color summary || true
+
+      # Step 5: Verify resources were renamed correctly
+      - name: "Step 5: Verify Rename Success"
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+        working-directory: examples/scenario
+        run: |
+          echo "Verifying rename was successful..."
+
+          # Get workflow ID from terraform state
+          WORKFLOW_ID=$(terraform output -raw workflow_id 2>/dev/null || echo "")
+          if [ -n "$WORKFLOW_ID" ]; then
+            RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows/$WORKFLOW_ID")
+            NAME=$(echo "$RESPONSE" | jq -r '.name // empty')
+            if echo "$NAME" | grep -q "v2"; then
+              echo "Workflow renamed successfully: $NAME"
+            else
+              echo "ERROR: Workflow name does not contain v2: $NAME"
+              exit 1
+            fi
+          fi
+
+          # Verify tags via API
+          TAG_ID=$(terraform output -raw tag_scenario_id 2>/dev/null || echo "")
+          if [ -n "$TAG_ID" ]; then
+            TAG_NAME=$(terraform output -raw tag_scenario_name 2>/dev/null || echo "")
+            if echo "$TAG_NAME" | grep -q "v2"; then
+              echo "Tag renamed successfully: $TAG_NAME"
+            else
+              echo "ERROR: Tag name does not contain v2: $TAG_NAME"
+              exit 1
+            fi
+          fi
+
+          echo "All rename verifications passed!"
+
+      # Step 6: Destroy all resources
+      - name: "Step 6: Destroy"
+        if: always()
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+        working-directory: examples/scenario
+        run: terraform destroy -no-color -input=false -auto-approve
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 4: E2E TESTS - ENTERPRISE EXAMPLES
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  test-e2e-enterprise:
+    name: E2E Enterprise - ${{ matrix.example-name }}
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    # Enterprise tests may fail on Community Edition - this is expected
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example-name: projects
+            example-path: examples/enterprise/projects
+          - example-name: users
+            example-path: examples/enterprise/users
+          - example-name: project-users
+            example-path: examples/enterprise/project-users
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Setup Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.13.5"
+
+      # Download provider binary
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      # Install provider
+      - name: Install provider
+        run: |
+          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
+          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+
+      # Terraform Init
+      - name: Terraform Init
+        working-directory: ${{ matrix.example-path }}
+        run: terraform init -no-color
+
+      # Terraform Plan
+      - name: Terraform Plan
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+        working-directory: ${{ matrix.example-path }}
+        run: |
+          echo "Note: Enterprise features require n8n Enterprise license"
+          echo "This test may fail on Community Edition - that's expected"
+          terraform plan -no-color -input=false -out=tfplan
+
+      # Terraform Apply
+      - name: Terraform Apply
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+        working-directory: ${{ matrix.example-path }}
+        run: |
+          terraform apply -no-color -auto-approve tfplan
+          terraform output -no-color || true
+
+      # Terraform Destroy
+      - name: Terraform Destroy
+        if: always()
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+        working-directory: ${{ matrix.example-path }}
+        run: terraform destroy -no-color -input=false -auto-approve
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 5: E2E TESTS - CUSTOM NODES (CORE)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-nodes-core:
     name: E2E Nodes Core (5 nodes)
@@ -325,7 +542,7 @@ jobs:
           ./scripts/test-nodes.sh
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 4: E2E TESTS - CUSTOM NODES (INTEGRATION)
+  # JOB 6: E2E TESTS - CUSTOM NODES (INTEGRATION)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-nodes-integration:
     name: E2E Nodes Integration (266 nodes)
@@ -374,7 +591,7 @@ jobs:
           ./scripts/test-nodes.sh
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 5: E2E TESTS - CUSTOM NODES (TRIGGER)
+  # JOB 7: E2E TESTS - CUSTOM NODES (TRIGGER)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-nodes-trigger:
     name: E2E Nodes Trigger (25 nodes)
