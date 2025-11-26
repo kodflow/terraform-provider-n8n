@@ -12,6 +12,32 @@
 
 Manage your n8n workflows, credentials, and resources as code with Terraform.
 
+---
+
+## ⚠️ Work in Progress
+
+> **This provider is currently under active development.**
+>
+> I use it for my personal needs and continuously improve it. **Every issue you create helps me fix bugs and improve the quality of the product** — please don't
+> hesitate to report problems!
+>
+> The **nodes** management approach is still being refined to find the best solution.
+
+### 🚨 Important Limitation: Credentials
+
+> **The official n8n API does not support GET/PUT/PATCH operations on credentials.**
+>
+> As a result, the `n8n_credential` resource has **degraded behavior**:
+>
+> - ✅ Create (`POST`): works normally
+> - ❌ Read (`GET`): not possible — state cannot be retrieved from n8n
+> - ❌ Update (`PUT/PATCH`): not possible — changes require resource recreation
+> - ✅ Delete (`DELETE`): works normally
+>
+> **Impact**: Terraform cannot detect drift on existing credentials. Any modification forces a resource recreation.
+
+---
+
 ## Why This Provider?
 
 ### 🎯 Standard Terraform Provider
@@ -23,7 +49,7 @@ Full support for n8n resources with standard Terraform workflows:
 | `n8n_workflow`            | Create and manage workflows                    |
 | `n8n_workflow_node`       | Modular node composition                       |
 | `n8n_workflow_connection` | Connect nodes in workflows                     |
-| `n8n_credential`          | Store API credentials securely                 |
+| `n8n_credential` ⚠️       | Store API credentials securely (limited API)   |
 | `n8n_tag`                 | Organize resources with tags                   |
 | `n8n_variable`            | Manage environment variables (Enterprise)      |
 | `n8n_project`             | Project management (Enterprise)                |
