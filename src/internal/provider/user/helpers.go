@@ -58,26 +58,29 @@ func mapUserToItem(user *n8nsdk.User) models.Item {
 }
 
 // mapUserToResourceModel maps an SDK user to the user resource model.
+// For pending users, firstName and lastName may be nil - we set them to Null
+// to satisfy Terraform's requirement that all computed values be known after apply.
 //
 // Params:
 //   - user: The SDK user to map
 //   - data: The resource model to populate
-//
-// Returns:
-//   - error: Error if operation fails
 func mapUserToResourceModel(user *n8nsdk.User, data *models.Resource) {
 	// Check for non-nil value.
 	if user.Id != nil {
 		data.ID = types.StringValue(*user.Id)
 	}
 	data.Email = types.StringValue(user.Email)
-	// Check for non-nil value.
+	// FirstName may be nil for pending users - set explicit Null instead of leaving unknown.
 	if user.FirstName != nil {
 		data.FirstName = types.StringPointerValue(user.FirstName)
+	} else {
+		data.FirstName = types.StringNull()
 	}
-	// Check for non-nil value.
+	// LastName may be nil for pending users - set explicit Null instead of leaving unknown.
 	if user.LastName != nil {
 		data.LastName = types.StringPointerValue(user.LastName)
+	} else {
+		data.LastName = types.StringNull()
 	}
 	// Check for non-nil value.
 	if user.Role != nil {
