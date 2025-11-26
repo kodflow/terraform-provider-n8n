@@ -190,9 +190,7 @@ jobs:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: |
           chmod +x scripts/e2e-project-setup.sh
-          PROJECT_ID=$(./scripts/e2e-project-setup.sh create)
-          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
-          echo "Created project: $PROJECT_ID"
+          ./scripts/e2e-project-setup.sh setup
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # JOB 3: E2E TESTS - COMMUNITY EXAMPLES
@@ -266,9 +264,7 @@ jobs:
           TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
           TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         working-directory: ${{ matrix.example-path }}
-        run: |
-          terraform apply -no-color -auto-approve tfplan
-          terraform output -no-color || true
+        run: terraform apply -no-color -auto-approve tfplan
 
       # Verify via n8n API
       - name: Verify resources via n8n API
@@ -278,14 +274,13 @@ jobs:
         working-directory: ${{ matrix.example-path }}
         run: |
           echo "Verifying resources via n8n API..."
-          terraform output -json > outputs.json
-
-          # Basic API health check
-          RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows")
-          if echo "$RESPONSE" | jq -e '.data' >/dev/null 2>&1; then
-            echo "API accessible and resources verified"
+          # Basic API health check (no sensitive output)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✓ API accessible (HTTP 200)"
           else
-            echo "API response: $RESPONSE"
+            echo "✗ API returned HTTP $HTTP_CODE"
+            exit 1
           fi
 
       # Terraform Destroy
@@ -359,8 +354,7 @@ jobs:
         working-directory: examples/scenario
         run: |
           terraform apply -no-color -auto-approve tfplan-v1
-          echo "Resources created with v1 names:"
-          terraform output -no-color summary || true
+          echo "✓ Resources created with v1 names"
 
       # Step 3: Plan with renamed suffix (v2)
       - name: "Step 3: Plan (v2 - Rename)"
@@ -385,10 +379,8 @@ jobs:
           TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         working-directory: examples/scenario
         run: |
-          echo "Applying rename from v1 to v2..."
           terraform apply -no-color -auto-approve tfplan-v2
-          echo "Resources renamed to v2 names:"
-          terraform output -no-color summary || true
+          echo "✓ Resources renamed to v2"
 
       # Step 5: Verify resources were renamed correctly
       - name: "Step 5: Verify Rename Success"
@@ -404,27 +396,25 @@ jobs:
         run: |
           echo "Verifying rename was successful..."
 
-          # Get workflow ID from terraform state
+          # Get workflow ID from terraform state and verify name contains v2
           WORKFLOW_ID=$(terraform output -raw workflow_id 2>/dev/null || echo "")
           if [ -n "$WORKFLOW_ID" ]; then
-            RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows/$WORKFLOW_ID")
-            NAME=$(echo "$RESPONSE" | jq -r '.name // empty')
+            NAME=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows/$WORKFLOW_ID" | jq -r '.name // empty')
             if echo "$NAME" | grep -q "v2"; then
-              echo "Workflow renamed successfully: $NAME"
+              echo "✓ Workflow renamed successfully"
             else
-              echo "ERROR: Workflow name does not contain v2: $NAME"
+              echo "✗ Workflow name does not contain v2"
               exit 1
             fi
           fi
 
-          # Verify tags via API
-          TAG_ID=$(terraform output -raw tag_scenario_id 2>/dev/null || echo "")
-          if [ -n "$TAG_ID" ]; then
-            TAG_NAME=$(terraform output -raw tag_scenario_name 2>/dev/null || echo "")
+          # Verify tags contain v2
+          TAG_NAME=$(terraform output -raw tag_scenario_name 2>/dev/null || echo "")
+          if [ -n "$TAG_NAME" ]; then
             if echo "$TAG_NAME" | grep -q "v2"; then
-              echo "Tag renamed successfully: $TAG_NAME"
+              echo "✓ Tag renamed successfully"
             else
-              echo "ERROR: Tag name does not contain v2: $TAG_NAME"
+              echo "✗ Tag name does not contain v2"
               exit 1
             fi
           fi
@@ -513,9 +503,7 @@ jobs:
           TF_VAR_run_id: ${{ github.run_number }}
           TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         working-directory: ${{ matrix.example-path }}
-        run: |
-          terraform apply -no-color -auto-approve tfplan
-          terraform output -no-color || true
+        run: terraform apply -no-color -auto-approve tfplan
 
       # Terraform Destroy
       - name: Terraform Destroy
