@@ -24,20 +24,21 @@ provider "n8n" {
 # ============================================================================
 
 resource "n8n_variable" "api_url" {
-  key   = "ci-${var.run_id}-API_URL"
+  key   = "ci_${var.run_id}_API_URL"
   value = "https://api.example.com"
   # Note: type is computed by n8n, not settable via API
+  # Key can only contain A-Za-z0-9_ (no hyphens)
 }
 
 resource "n8n_variable" "api_timeout" {
-  key   = "ci-${var.run_id}-API_TIMEOUT"
+  key   = "ci_${var.run_id}_API_TIMEOUT"
   value = "30"
   # Sequential creation to avoid n8n database concurrency issues
   depends_on = [n8n_variable.api_url]
 }
 
 resource "n8n_variable" "debug_enabled" {
-  key   = "ci-${var.run_id}-DEBUG_ENABLED"
+  key   = "ci_${var.run_id}_DEBUG_ENABLED"
   value = "true"
   # Sequential creation to avoid n8n database concurrency issues
   depends_on = [n8n_variable.api_timeout]
