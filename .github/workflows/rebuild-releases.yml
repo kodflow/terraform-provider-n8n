@@ -1,0 +1,155 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE in the project root for license information.
+
+name: Rebuild All Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (list tags without rebuilding)"
+        required: false
+        default: "false"
+        type: boolean
+      specific_tag:
+        description: "Rebuild specific tag only (leave empty for all)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  list-tags:
+    name: List Release Tags
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.get-tags.outputs.tags }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Get tags to rebuild
+        id: get-tags
+        run: |
+          if [ -n "${{ inputs.specific_tag }}" ]; then
+            # Rebuild specific tag
+            TAGS='["${{ inputs.specific_tag }}"]'
+          else
+            # Get all version tags (v*)
+            TAGS=$(git tag -l 'v*' | sort -V | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+          echo "Tags to rebuild: $TAGS"
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Display tags
+        run: |
+          echo "## Tags to rebuild" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.get-tags.outputs.tags }}' | jq -r '.[]'  >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  rebuild:
+    name: Rebuild ${{ matrix.tag }}
+    runs-on: ubuntu-latest
+    needs: list-tags
+    if: ${{ inputs.dry_run != true && needs.list-tags.outputs.tags != '[]' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        tag: ${{ fromJson(needs.list-tags.outputs.tags) }}
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ matrix.tag }}
+          fetch-depth: 0
+
+      - name: Fetch latest goreleaser config
+        run: |
+          # Fetch the latest .goreleaser.yml from main branch
+          git fetch origin main
+          git checkout origin/main -- .goreleaser.yml
+          echo "Using latest .goreleaser.yml with ZIP format"
+          cat .goreleaser.yml
+
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE || '' }}
+        timeout-minutes: 2
+        continue-on-error: true
+
+      - name: Delete old release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Deleting old tar.gz assets from release ${{ matrix.tag }}..."
+          # List and delete tar.gz files
+          gh release view ${{ matrix.tag }} --json assets -q '.assets[].name' | grep '\.tar\.gz$' | while read asset; do
+            echo "Deleting: $asset"
+            gh release delete-asset ${{ matrix.tag }} "$asset" --yes || true
+          done
+          # Also delete old zip files to ensure fresh rebuild
+          gh release view ${{ matrix.tag }} --json assets -q '.assets[].name' | grep '\.zip$' | while read asset; do
+            echo "Deleting: $asset"
+            gh release delete-asset ${{ matrix.tag }} "$asset" --yes || true
+          done
+          # Delete checksums (will be regenerated)
+          gh release view ${{ matrix.tag }} --json assets -q '.assets[].name' | grep -E '(SHA256SUMS|manifest\.json)' | while read asset; do
+            echo "Deleting: $asset"
+            gh release delete-asset ${{ matrix.tag }} "$asset" --yes || true
+          done
+          echo "Old assets deleted"
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --skip=validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          GORELEASER_CURRENT_TAG: ${{ matrix.tag }}
+
+      - name: Download release assets for attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/attestation
+          echo "Downloading ZIP assets for tag: ${{ matrix.tag }}"
+          gh release download "${{ matrix.tag }}" --pattern 'terraform-provider-n8n_*.zip' --dir /tmp/attestation || true
+          ls -lh /tmp/attestation/ || echo "No assets downloaded"
+
+      - name: Generate build provenance attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "/tmp/attestation/terraform-provider-n8n_*"
+        continue-on-error: true
+
+      - name: Build summary
+        run: |
+          echo "## Rebuilt ${{ matrix.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Release rebuilt with ZIP format" >> $GITHUB_STEP_SUMMARY
+          echo "🔐 GPG signed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Assets:" >> $GITHUB_STEP_SUMMARY
+          gh release view ${{ matrix.tag }} --json assets -q '.assets[].name' >> $GITHUB_STEP_SUMMARY
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
