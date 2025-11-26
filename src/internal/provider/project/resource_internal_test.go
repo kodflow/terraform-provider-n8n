@@ -336,14 +336,17 @@ func TestProjectResource_executeUpdateLogic(t *testing.T) {
 			r := &ProjectResource{client: n8nClient}
 			ctx := context.Background()
 			plan := &models.Resource{
-				ID:   types.StringValue(tt.projectID),
 				Name: types.StringValue(tt.newName),
+			}
+			state := &models.Resource{
+				ID:   types.StringValue(tt.projectID),
+				Name: types.StringValue("Old Name"),
 			}
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
 
-			result := r.executeUpdateLogic(ctx, plan, resp)
+			result := r.executeUpdateLogic(ctx, plan, state, resp)
 
 			if tt.expectError {
 				assert.False(t, result, "Should return false on error")
@@ -1252,14 +1255,13 @@ func TestProjectResource_executeProjectUpdate(t *testing.T) {
 			r := &ProjectResource{client: n8nClient}
 			ctx := context.Background()
 			plan := &models.Resource{
-				ID:   types.StringValue(tt.projectID),
 				Name: types.StringValue(tt.projectName),
 			}
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
 
-			result := r.executeProjectUpdate(ctx, plan, resp)
+			result := r.executeProjectUpdate(ctx, tt.projectID, plan, resp)
 
 			if tt.expectError {
 				assert.False(t, result, "Should return false on error")
@@ -1344,14 +1346,11 @@ func TestProjectResource_findProjectAfterUpdate(t *testing.T) {
 
 			r := &ProjectResource{client: n8nClient}
 			ctx := context.Background()
-			plan := &models.Resource{
-				ID: types.StringValue(tt.projectID),
-			}
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
 
-			result := r.findProjectAfterUpdate(ctx, plan, resp)
+			result := r.findProjectAfterUpdate(ctx, tt.projectID, resp)
 
 			if tt.expectNil {
 				assert.Nil(t, result, "Should return nil")

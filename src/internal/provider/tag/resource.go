@@ -297,9 +297,10 @@ func (r *TagResource) executeReadLogic(ctx context.Context, state *models.Resour
 // Returns:
 //   - none
 func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *models.Resource
+	var plan, state *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
 		// Return with error.
@@ -307,7 +308,7 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	// Execute update logic
-	if !r.executeUpdateLogic(ctx, plan, resp) {
+	if !r.executeUpdateLogic(ctx, plan, state, resp) {
 		// Return with error.
 		return
 	}
@@ -321,16 +322,24 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 // Params:
 //   - ctx: Context for the request
 //   - plan: The planned resource data
+//   - state: The current resource state
 //   - resp: Update response
 //
 // Returns:
 //   - bool: True if update succeeded, false otherwise
-func (r *TagResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
+func (r *TagResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
+	// Use state.ID for the tag ID since plan.ID may be Unknown
+	// for Computed attributes.
+	tagID := state.ID.ValueString()
+
+	// Copy ID from state to plan for consistency.
+	plan.ID = state.ID
+
 	tagRequest := n8nsdk.Tag{
 		Name: plan.Name.ValueString(),
 	}
 
-	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdPut(ctx, plan.ID.ValueString()).
+	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdPut(ctx, tagID).
 		Tag(tagRequest).
 		Execute()
 	// Check for non-nil value.
@@ -342,7 +351,7 @@ func (r *TagResource) executeUpdateLogic(ctx context.Context, plan *models.Resou
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating tag",
-			fmt.Sprintf("Could not update tag ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
+			fmt.Sprintf("Could not update tag ID %s: %s\nHTTP Response: %v", tagID, err.Error(), httpResp),
 		)
 		// Return failure.
 		return false
