@@ -171,7 +171,7 @@ create_project() {
   project_id=$(echo "$response" | jq -r '.id' 2>/dev/null || echo "")
 
   if [ -z "$project_id" ] || [ "$project_id" = "null" ]; then
-    log "ERROR: Failed to create project: $response"
+    log "ERROR: Failed to create project (check API response)"
     exit 1
   fi
 
