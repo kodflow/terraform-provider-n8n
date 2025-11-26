@@ -493,38 +493,33 @@ jobs:
         run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 5: E2E TESTS - CUSTOM NODES (CORE)
+  # JOB 5: E2E TESTS - NODES CORE (5 nodes)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-nodes-core:
-    name: E2E Nodes Core (5 nodes)
+    name: E2E Nodes - Core (5)
     runs-on: ubuntu-latest
     needs: build-and-test
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.13.5"
 
-      # Download provider binary
       - name: Download provider binary
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: terraform-provider-n8n
           path: /tmp/terraform-provider
 
-      # Install provider
       - name: Install provider
         run: |
           mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
           cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
           chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
 
-      # Create .env file
       - name: Create .env file
         run: |
           cat > .env <<EOF
@@ -532,97 +527,39 @@ jobs:
           N8N_API_KEY=${{ secrets.N8N_API_KEY }}
           EOF
 
-      # Test all core nodes
-      - name: Test all core nodes (Plan/Apply/Verify/Destroy)
-        env:
-          CATEGORY: core
+      - name: Test core nodes
         run: |
           chmod +x scripts/test-nodes.sh
-          export NODES_CATEGORY=core
-          ./scripts/test-nodes.sh
+          NODES_CATEGORY=core ./scripts/test-nodes.sh
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 6: E2E TESTS - CUSTOM NODES (INTEGRATION)
-  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  test-e2e-nodes-integration:
-    name: E2E Nodes Integration (266 nodes)
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    steps:
-      # Checkout repository
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      # Setup Terraform
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          terraform_version: "1.13.5"
-
-      # Download provider binary
-      - name: Download provider binary
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
-        with:
-          name: terraform-provider-n8n
-          path: /tmp/terraform-provider
-
-      # Install provider
-      - name: Install provider
-        run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-
-      # Create .env file
-      - name: Create .env file
-        run: |
-          cat > .env <<EOF
-          N8N_API_URL=${{ secrets.N8N_API_URL }}
-          N8N_API_KEY=${{ secrets.N8N_API_KEY }}
-          EOF
-
-      # Test all integration nodes
-      - name: Test all integration nodes (Plan/Apply/Verify/Destroy)
-        env:
-          CATEGORY: integration
-        run: |
-          chmod +x scripts/test-nodes.sh
-          export NODES_CATEGORY=integration
-          ./scripts/test-nodes.sh
-
-  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 7: E2E TESTS - CUSTOM NODES (TRIGGER)
+  # JOB 6: E2E TESTS - NODES TRIGGER (25 nodes)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-nodes-trigger:
-    name: E2E Nodes Trigger (25 nodes)
+    name: E2E Nodes - Trigger (25)
     runs-on: ubuntu-latest
     needs: build-and-test
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.13.5"
 
-      # Download provider binary
       - name: Download provider binary
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: terraform-provider-n8n
           path: /tmp/terraform-provider
 
-      # Install provider
       - name: Install provider
         run: |
           mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
           cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
           chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
 
-      # Create .env file
       - name: Create .env file
         run: |
           cat > .env <<EOF
@@ -630,11 +567,99 @@ jobs:
           N8N_API_KEY=${{ secrets.N8N_API_KEY }}
           EOF
 
-      # Test all trigger nodes
-      - name: Test all trigger nodes (Plan/Apply/Verify/Destroy)
-        env:
-          CATEGORY: trigger
+      - name: Test trigger nodes
         run: |
           chmod +x scripts/test-nodes.sh
-          export NODES_CATEGORY=trigger
-          ./scripts/test-nodes.sh
+          NODES_CATEGORY=trigger ./scripts/test-nodes.sh
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 7: E2E TESTS - NODES INTEGRATION (266 nodes in 12 groups)
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  test-e2e-nodes-integration:
+    name: E2E Nodes - ${{ matrix.group-name }} (${{ matrix.count }})
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # CRM, Sales & Email Marketing (42 nodes)
+          - group-name: CRM & Marketing
+            group-id: crm-marketing
+            count: 42
+          # Chat, Messaging & Notifications (25 nodes)
+          - group-name: Communication
+            group-id: communication
+            count: 25
+          # Project Management & Collaboration (19 nodes)
+          - group-name: Project & Collab
+            group-id: project-collab
+            count: 19
+          # Social Media & Content Management (20 nodes)
+          - group-name: Social & Content
+            group-id: social-content
+            count: 20
+          # E-commerce & Financial Services (18 nodes)
+          - group-name: E-commerce & Finance
+            group-id: ecommerce-finance
+            count: 18
+          # Developer Tools & DevOps (22 nodes)
+          - group-name: Dev & DevOps
+            group-id: dev-devops
+            count: 22
+          # Databases, Storage & Message Queues (27 nodes)
+          - group-name: Database & Storage
+            group-id: database-storage
+            count: 27
+          # Data Processing & Transformation (23 nodes)
+          - group-name: Data Transform
+            group-id: data-transform
+            count: 23
+          # AI, Language & Automation (18 nodes)
+          - group-name: AI & Automation
+            group-id: ai-automation
+            count: 18
+          # Support, HR & Business Operations (24 nodes)
+          - group-name: Support & Business
+            group-id: support-business
+            count: 24
+          # Security, Identity & Analytics (10 nodes)
+          - group-name: Security & Identity
+            group-id: security-identity
+            count: 10
+          # Utilities, Testing & Misc (18 nodes)
+          - group-name: Utilities & Testing
+            group-id: utilities-testing
+            count: 18
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.13.5"
+
+      - name: Download provider binary
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: terraform-provider-n8n
+          path: /tmp/terraform-provider
+
+      - name: Install provider
+        run: |
+          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
+          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          N8N_API_URL=${{ secrets.N8N_API_URL }}
+          N8N_API_KEY=${{ secrets.N8N_API_KEY }}
+          EOF
+
+      - name: Test ${{ matrix.group-name }} nodes
+        run: |
+          chmod +x scripts/test-nodes.sh
+          NODES_GROUP=${{ matrix.group-id }} ./scripts/test-nodes.sh

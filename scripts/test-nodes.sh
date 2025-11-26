@@ -5,6 +5,12 @@
 
 # Test all node examples with Terraform plan/apply/destroy
 # This script finds all node examples and runs Terraform lifecycle on each
+#
+# Environment variables:
+#   NODES_CATEGORY    - Category within examples/nodes/ (core, trigger, integration)
+#   NODES_GROUP       - Specific group from CATEGORIES.json (crm-marketing, dev-devops, etc.)
+#   NODES_LIST        - Space-separated list of specific node names to test
+#   TEST_NODES_LIMIT  - Limit number of nodes to test (for debugging)
 
 set -euo pipefail
 
@@ -60,17 +66,71 @@ if [ ! -f "${HOME}/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/
 fi
 
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}  Testing All Node Examples${NC}"
+echo -e "${BOLD}  Testing Node Examples${NC}"
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${BLUE}🌐 N8N Instance:${NC} ${N8N_API_URL}"
 echo -e "${BLUE}📦 Testing from:${NC} ${NODES_DIR}"
 echo ""
 
-# Find all directories with main.tf
-if [ -n "${NODES_CATEGORY:-}" ]; then
+# Determine which nodes to test
+declare -a NODE_DIRS=()
+
+# Option 1: Specific list of nodes provided via NODES_LIST
+if [ -n "${NODES_LIST:-}" ]; then
+  echo -e "${BLUE}📂 Testing specific nodes from NODES_LIST${NC}"
+  CATEGORY="${NODES_CATEGORY:-integration}"
+  for node in ${NODES_LIST}; do
+    NODE_PATH="${NODES_DIR}/${CATEGORY}/${node}"
+    if [ -d "${NODE_PATH}" ] && [ -f "${NODE_PATH}/main.tf" ]; then
+      NODE_DIRS+=("${NODE_PATH}")
+    else
+      echo -e "${YELLOW}⚠️  Node not found: ${node}${NC}"
+    fi
+  done
+
+# Option 2: Group from CATEGORIES.json
+elif [ -n "${NODES_GROUP:-}" ]; then
+  CATEGORIES_FILE="${NODES_DIR}/integration/CATEGORIES.json"
+  if [ ! -f "${CATEGORIES_FILE}" ]; then
+    echo -e "${RED}❌ CATEGORIES.json not found at ${CATEGORIES_FILE}${NC}"
+    exit 1
+  fi
+
+  echo -e "${BLUE}📂 Testing group: ${NODES_GROUP}${NC}"
+
+  # Extract nodes for this group using jq
+  if ! command -v jq &> /dev/null; then
+    echo -e "${RED}❌ jq is required for NODES_GROUP feature${NC}"
+    exit 1
+  fi
+
+  GROUP_NODES=$(jq -r ".categories[\"${NODES_GROUP}\"].nodes[]" "${CATEGORIES_FILE}" 2>/dev/null || echo "")
+  if [ -z "${GROUP_NODES}" ]; then
+    echo -e "${RED}❌ Group '${NODES_GROUP}' not found in CATEGORIES.json${NC}"
+    echo "Available groups:"
+    jq -r '.categories | keys[]' "${CATEGORIES_FILE}"
+    exit 1
+  fi
+
+  GROUP_DESC=$(jq -r ".categories[\"${NODES_GROUP}\"].description // \"\"" "${CATEGORIES_FILE}")
+  echo -e "${BLUE}📝 Description: ${GROUP_DESC}${NC}"
+
+  for node in ${GROUP_NODES}; do
+    NODE_PATH="${NODES_DIR}/integration/${node}"
+    if [ -d "${NODE_PATH}" ] && [ -f "${NODE_PATH}/main.tf" ]; then
+      NODE_DIRS+=("${NODE_PATH}")
+    else
+      echo -e "${YELLOW}⚠️  Node not found: ${node}${NC}"
+    fi
+  done
+
+# Option 3: Category directory (original behavior)
+elif [ -n "${NODES_CATEGORY:-}" ]; then
   echo -e "${BLUE}📂 Filtering nodes by category: ${NODES_CATEGORY}${NC}"
   mapfile -t NODE_DIRS < <(find "${NODES_DIR}/${NODES_CATEGORY}" -type f -name "main.tf" -exec dirname {} \; | sort)
+
+# Option 4: All nodes
 else
   mapfile -t NODE_DIRS < <(find "${NODES_DIR}" -type f -name "main.tf" -exec dirname {} \; | sort)
 fi
