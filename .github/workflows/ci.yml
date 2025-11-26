@@ -427,8 +427,8 @@ jobs:
             example-path: examples/enterprise/projects
           - example-name: users
             example-path: examples/enterprise/users
-          - example-name: project-users
-            example-path: examples/enterprise/project-users
+          - example-name: variables
+            example-path: examples/enterprise/variables
     steps:
       # Checkout repository
       - name: Checkout
