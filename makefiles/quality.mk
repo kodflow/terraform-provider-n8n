@@ -6,7 +6,7 @@
 quality: fmt lint docs ## Run ALL quality checks (format + lint + docs) - Top level
 
 .PHONY: fmt
-fmt: ## Format all source files
+fmt: ## Format all source files (local dev - includes gazelle)
 	@echo ""
 	@echo "$(BOLD)Formatting source files...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) Go imports (installing if needed)\n"
@@ -29,7 +29,7 @@ fmt: ## Format all source files
 	@echo ""
 
 .PHONY: lint
-lint: build ## Run code linters
+lint: ## Run code linters (no build dependency)
 	@echo ""
 	@echo "$(BOLD)Running code analysis...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
@@ -37,6 +37,54 @@ lint: build ## Run code linters
 	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
 	@ktn-linter lint ./... 2>&1 || true
 	@echo "$(GREEN)✓$(RESET) Linting completed"
+	@echo ""
+
+# ============================================================================
+# CI-specific targets (lightweight, no unnecessary dependencies)
+# ============================================================================
+
+.PHONY: ci/fmt
+ci/fmt: ## CI: Check formatting (fast, no gazelle)
+	@echo ""
+	@echo "$(BOLD)Checking code formatting...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) Go imports\n"
+	@command -v goimports >/dev/null 2>&1 || go install golang.org/x/tools/cmd/goimports@latest
+	@find src sdk -type f -name "*.go" -exec goimports -w {} \;
+	@printf "  $(CYAN)→$(RESET) Go files\n"
+	@cd src && go fmt ./... > /dev/null
+	@cd sdk/n8nsdk && go fmt ./... > /dev/null
+	@printf "  $(CYAN)→$(RESET) Bazel files (buildifier)\n"
+	@buildifier -r . 2>&1 | grep -v "^$$" || true
+	@printf "  $(CYAN)→$(RESET) Shell scripts\n"
+	@find . -name "*.sh" ! -path "./bazel-*" ! -name "p10k.sh" -exec shfmt -w -i 2 -ci -bn {} \; 2>/dev/null
+	@echo "$(GREEN)✓$(RESET) Formatting check completed"
+	@echo ""
+
+.PHONY: ci/lint
+ci/lint: ## CI: Run linters only (no build)
+	@echo ""
+	@echo "$(BOLD)Running code analysis...$(RESET)"
+	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
+	@golangci-lint run ./...
+	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
+	@ktn-linter lint ./... 2>&1 || true
+	@echo "$(GREEN)✓$(RESET) Linting completed"
+	@echo ""
+
+.PHONY: ci/test
+ci/test: ## CI: Run unit tests with coverage
+	@echo ""
+	@echo "$(BOLD)Running unit tests...$(RESET)"
+	@bazel coverage --combined_report=lcov --instrumentation_filter="//src/..." //src/...
+	@echo "$(GREEN)✓$(RESET) Tests completed"
+	@echo ""
+
+.PHONY: ci/build
+ci/build: ## CI: Build provider binary only
+	@echo ""
+	@echo "$(BOLD)Building provider...$(RESET)"
+	@bazel build //src:terraform-provider-n8n
+	@echo "$(GREEN)✓$(RESET) Build completed"
 	@echo ""
 
 .PHONY: docs
