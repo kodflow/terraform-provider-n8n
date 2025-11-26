@@ -1,6 +1,0 @@
-# n8n Configuration
-n8n_api_key  = "your-n8n-api-token-here"
-n8n_base_url = "https://n8n.example.com"
-
-# Mocky.io API Key (can be any value for testing)
-api_key = "test-api-key-12345"
