@@ -15,8 +15,9 @@ provider "n8n" {
 
 # Create HTTP Basic Auth credential
 resource "n8n_credential" "http_basic_auth" {
-  name = "ci-${var.run_id}-Example Basic Auth"
-  type = "httpBasicAuth"
+  name       = "ci-${var.run_id}-Example Basic Auth"
+  type       = "httpBasicAuth"
+  project_id = var.project_id != "" ? var.project_id : null
 
   data = {
     user     = var.basic_auth_user

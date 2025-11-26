@@ -29,9 +29,10 @@ resource "n8n_tag" "api" {
 
 # Create a workflow with tags
 resource "n8n_workflow" "tagged_workflow" {
-  name   = "ci-${var.run_id}-Tagged Workflow Example"
-  active = false
-  tags   = [n8n_tag.production.id, n8n_tag.automated.id, n8n_tag.api.id]
+  name       = "ci-${var.run_id}-Tagged Workflow Example"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
+  tags       = [n8n_tag.production.id, n8n_tag.automated.id, n8n_tag.api.id]
 
   nodes_json = jsonencode([
     {

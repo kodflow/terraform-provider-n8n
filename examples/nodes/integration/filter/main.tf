@@ -112,8 +112,9 @@ resource "n8n_workflow_connection" "test_to_output_1" {
 
 # WORKFLOW
 resource "n8n_workflow" "test_filter" {
-  name   = "Test: Filter"
-  active = false
+  name       = "Test: Filter"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
 
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.manual_trigger.node_json),

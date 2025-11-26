@@ -38,9 +38,10 @@ resource "n8n_tag" "environment_tag" {
 # ============================================================================
 
 resource "n8n_workflow" "scenario_workflow" {
-  name   = "ci-${var.run_id}-Scenario Workflow ${var.name_suffix}"
-  active = false
-  tags   = [n8n_tag.scenario_tag.id, n8n_tag.environment_tag.id]
+  name       = "ci-${var.run_id}-Scenario Workflow ${var.name_suffix}"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
+  tags       = [n8n_tag.scenario_tag.id, n8n_tag.environment_tag.id]
 
   nodes_json = jsonencode([
     {

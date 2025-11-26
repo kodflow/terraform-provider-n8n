@@ -15,8 +15,9 @@ provider "n8n" {
 
 # Create a scheduled workflow that runs every hour
 resource "n8n_workflow" "scheduled_example" {
-  name   = "ci-${var.run_id}-Hourly Scheduled Workflow"
-  active = true
+  name       = "ci-${var.run_id}-Hourly Scheduled Workflow"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = true
 
   nodes_json = jsonencode([
     {

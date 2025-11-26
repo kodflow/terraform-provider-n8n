@@ -178,11 +178,14 @@ test_node() {
   fi
   echo -e "  ${GREEN}✓${NC} Init"
 
+  # Build terraform var args (project_id is optional)
+  local tf_vars="-var=n8n_base_url=${N8N_API_URL} -var=n8n_api_key=${N8N_API_KEY}"
+  if [ -n "${TF_VAR_project_id:-}" ]; then
+    tf_vars="${tf_vars} -var=project_id=${TF_VAR_project_id}"
+  fi
+
   # Plan
-  if ! terraform plan -no-color \
-    -var="n8n_base_url=${N8N_API_URL}" \
-    -var="n8n_api_key=${N8N_API_KEY}" \
-    -out=tfplan >/dev/null 2>&1; then
+  if ! terraform plan -no-color ${tf_vars} -out=tfplan >/dev/null 2>&1; then
     echo -e "  ${RED}✗ Plan failed${NC}"
     FAILED=$((FAILED + 1))
     FAILED_NODES+=("${full_name} (plan)")
@@ -198,9 +201,7 @@ test_node() {
     FAILED=$((FAILED + 1))
     FAILED_NODES+=("${full_name} (apply)")
     # Try to cleanup anyway
-    terraform destroy -no-color -auto-approve \
-      -var="n8n_base_url=${N8N_API_URL}" \
-      -var="n8n_api_key=${N8N_API_KEY}" >/dev/null 2>&1 || true
+    terraform destroy -no-color -auto-approve ${tf_vars} >/dev/null 2>&1 || true
     cd "${PROJECT_ROOT}"
     rm -rf "${tmp_dir}"
     return 1
@@ -208,9 +209,7 @@ test_node() {
   echo -e "  ${GREEN}✓${NC} Apply"
 
   # Destroy
-  if ! terraform destroy -no-color -auto-approve \
-    -var="n8n_base_url=${N8N_API_URL}" \
-    -var="n8n_api_key=${N8N_API_KEY}" >/dev/null 2>&1; then
+  if ! terraform destroy -no-color -auto-approve ${tf_vars} >/dev/null 2>&1; then
     echo -e "  ${RED}✗ Destroy failed${NC}"
     FAILED=$((FAILED + 1))
     FAILED_NODES+=("${full_name} (destroy)")

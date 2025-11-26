@@ -15,8 +15,9 @@ provider "n8n" {
 
 # Create a simple webhook workflow
 resource "n8n_workflow" "webhook_example" {
-  name   = "ci-${var.run_id}-Simple Webhook Workflow"
-  active = true
+  name       = "ci-${var.run_id}-Simple Webhook Workflow"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = true
 
   nodes_json = jsonencode([
     {
