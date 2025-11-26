@@ -58,9 +58,13 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 				if r.Method == http.MethodPost && r.URL.Path == "/users" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{
-							"id": "user-123",
+					// n8n API returns an array response
+					json.NewEncoder(w).Encode([]map[string]any{
+						{
+							"user": map[string]any{
+								"id": "user-123",
+							},
+							"error": "",
 						},
 					})
 					return
@@ -103,8 +107,12 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 				if r.Method == http.MethodPost && r.URL.Path == "/users" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{},
+					// n8n API returns an array response with empty user
+					json.NewEncoder(w).Encode([]map[string]any{
+						{
+							"user":  map[string]any{},
+							"error": "",
+						},
 					})
 					return
 				}
@@ -120,9 +128,13 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 				if r.Method == http.MethodPost && r.URL.Path == "/users" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{
-							"id": "user-456",
+					// n8n API returns an array response
+					json.NewEncoder(w).Encode([]map[string]any{
+						{
+							"user": map[string]any{
+								"id": "user-456",
+							},
+							"error": "",
 						},
 					})
 					return
@@ -561,9 +573,13 @@ func TestUserResource_createUser(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{
-					"user": map[string]any{
-						"id": "user-123",
+				// n8n API returns an array response
+				json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user": map[string]any{
+							"id": "user-123",
+						},
+						"error": "",
 					},
 				})
 			},
@@ -577,9 +593,13 @@ func TestUserResource_createUser(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{
-					"user": map[string]any{
-						"id": "user-456",
+				// n8n API returns an array response
+				json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user": map[string]any{
+							"id": "user-456",
+						},
+						"error": "",
 					},
 				})
 			},
@@ -604,21 +624,26 @@ func TestUserResource_createUser(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{
-					"user": map[string]any{},
+				// n8n API returns an array response with empty user
+				json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user":  map[string]any{},
+						"error": "",
+					},
 				})
 			},
 			expectUserID: "",
 			expectError:  true,
 		},
 		{
-			name:  "nil user in response",
+			name:  "empty array response",
 			email: "niluser@example.com",
 			role:  "global:member",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{})
+				// n8n API returns empty array
+				json.NewEncoder(w).Encode([]map[string]any{})
 			},
 			expectUserID: "",
 			expectError:  true,

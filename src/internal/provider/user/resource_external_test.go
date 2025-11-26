@@ -146,7 +146,8 @@ func TestUserResource_Create(t *testing.T) {
 					switch r.Method {
 					case "POST":
 						w.WriteHeader(http.StatusCreated)
-						w.Write([]byte(`{"user":{"id":"user-123"}}`))
+						// n8n API returns an array response
+						w.Write([]byte(`[{"user":{"id":"user-123"},"error":""}]`))
 					case "GET":
 						w.WriteHeader(http.StatusOK)
 						w.Write([]byte(`{"id":"user-123","email":"test@example.com","firstName":"John","lastName":"Doe","role":"global:member","isPending":false,"createdAt":"2024-01-01T00:00:00Z","updatedAt":"2024-01-01T00:00:00Z"}`))
