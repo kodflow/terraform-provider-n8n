@@ -147,7 +147,7 @@ func (r *WorkflowResource) addCoreAttributes(attrs map[string]schema.Attribute) 
 		Optional:            true,
 	}
 	attrs["project_id"] = schema.StringAttribute{
-		MarkdownDescription: "Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. The workflow can be transferred to a different project by updating this value.",
+		MarkdownDescription: "Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. The workflow can be transferred to a different project by updating this value. Note: Once assigned to a project, a workflow cannot be moved back to the Overview location due to n8n API limitations.",
 		Optional:            true,
 		Computed:            true,
 	}

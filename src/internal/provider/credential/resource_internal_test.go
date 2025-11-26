@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -1886,6 +1887,7 @@ func TestCredentialResource_Read_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -1987,6 +1989,7 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2038,6 +2041,7 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2129,6 +2133,7 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2415,6 +2420,11 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// Handle schema request (type conversion feature)
+					if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/credentials/schema/") {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
 					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
 						w.WriteHeader(http.StatusInternalServerError)
 						w.Write([]byte(`{"message":"Internal server error"}`))
@@ -2442,6 +2452,7 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "Test Credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
 				})
@@ -2509,6 +2520,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "old-cred"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2562,6 +2574,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "updated-cred"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2595,6 +2608,11 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// Handle schema request (type conversion feature)
+					if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/credentials/schema/") {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
 					// POST /credentials - fail
 					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
 						w.WriteHeader(http.StatusInternalServerError)
@@ -2623,6 +2641,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "updated-cred"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2632,6 +2651,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "old-cred"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2666,6 +2686,12 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					callCount++
 					w.Header().Set("Content-Type", "application/json")
+
+					// Handle schema request (type conversion feature)
+					if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/credentials/schema/") {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
 
 					// Step 1: POST /credentials - create new credential successfully
 					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
@@ -2709,6 +2735,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "updated-cred"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -2718,6 +2745,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "old-cred"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
