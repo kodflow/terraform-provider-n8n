@@ -432,9 +432,10 @@ func (r *ProjectResource) updateStateFromProject(
 //   - req: update request
 //   - resp: update response
 func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan models.Resource
+	var plan, state models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Check condition.
 	if resp.Diagnostics.HasError() {
 		// Return with error.
@@ -442,7 +443,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Execute update logic
-	if !r.executeUpdateLogic(ctx, &plan, resp) {
+	if !r.executeUpdateLogic(ctx, &plan, &state, resp) {
 		// Return with error.
 		return
 	}
@@ -456,19 +457,27 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 // Params:
 //   - ctx: Context for the request
 //   - plan: The planned resource data
+//   - state: The current resource state
 //   - resp: Update response
 //
 // Returns:
 //   - bool: True if update succeeded, false otherwise
-func (r *ProjectResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
+func (r *ProjectResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
+	// Use state.ID for the project ID since plan.ID may be Unknown
+	// for Computed attributes.
+	projectID := state.ID.ValueString()
+
+	// Copy ID from state to plan for consistency.
+	plan.ID = state.ID
+
 	// Execute the update API call
-	if !r.executeProjectUpdate(ctx, plan, resp) {
+	if !r.executeProjectUpdate(ctx, projectID, plan, resp) {
 		// Return failure.
 		return false
 	}
 
 	// Verify the update by listing projects
-	foundProject := r.findProjectAfterUpdate(ctx, plan, resp)
+	foundProject := r.findProjectAfterUpdate(ctx, projectID, resp)
 	// Check for nil value.
 	if foundProject == nil {
 		// Return failure.
@@ -486,17 +495,18 @@ func (r *ProjectResource) executeUpdateLogic(ctx context.Context, plan *models.R
 //
 // Params:
 //   - ctx: context for request cancellation
+//   - projectID: the project ID to update
 //   - plan: planned project model
 //   - resp: update response
 //
 // Returns:
 //   - bool: true if successful, false if error occurred
-func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
+func (r *ProjectResource) executeProjectUpdate(ctx context.Context, projectID string, plan *models.Resource, resp *resource.UpdateResponse) bool {
 	projectRequest := n8nsdk.Project{
 		Name: plan.Name.ValueString(),
 	}
 
-	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdPut(ctx, plan.ID.ValueString()).
+	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdPut(ctx, projectID).
 		Project(projectRequest).
 		Execute()
 	// Check for non-nil value.
@@ -508,7 +518,7 @@ func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *models
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating project",
-			fmt.Sprintf("Could not update project ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
+			fmt.Sprintf("Could not update project ID %s: %s\nHTTP Response: %v", projectID, err.Error(), httpResp),
 		)
 		return false
 	}
@@ -520,12 +530,12 @@ func (r *ProjectResource) executeProjectUpdate(ctx context.Context, plan *models
 //
 // Params:
 //   - ctx: context for request cancellation
-//   - plan: planned project model
+//   - projectID: the project ID to find
 //   - resp: update response
 //
 // Returns:
 //   - *n8nsdk.Project: found project or nil if not found
-func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) *n8nsdk.Project {
+func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, projectID string, resp *resource.UpdateResponse) *n8nsdk.Project {
 	projectList, httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
 	// Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
@@ -549,7 +559,7 @@ func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *mode
 		// Iterate over items.
 		for _, p := range projectList.Data {
 			// Check for non-nil value.
-			if p.Id != nil && *p.Id == plan.ID.ValueString() {
+			if p.Id != nil && *p.Id == projectID {
 				foundProject = &p
 				break
 			}
@@ -560,7 +570,7 @@ func (r *ProjectResource) findProjectAfterUpdate(ctx context.Context, plan *mode
 	if foundProject == nil {
 		resp.Diagnostics.AddError(
 			"Error verifying updated project",
-			fmt.Sprintf("Project with ID '%s' was updated but not found in list", plan.ID.ValueString()),
+			fmt.Sprintf("Project with ID '%s' was updated but not found in list", projectID),
 		)
 		// Return with error.
 		return nil
