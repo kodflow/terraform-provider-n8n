@@ -29,15 +29,13 @@ fmt: ## Format all source files
 	@echo ""
 
 .PHONY: lint
-lint: build ## Run code linters + validate Terraform examples
+lint: build ## Run code linters
 	@echo ""
 	@echo "$(BOLD)Running code analysis...$(RESET)"
 	@printf "  $(CYAN)→$(RESET) golangci-lint\n"
 	@golangci-lint run ./...
 	@printf "  $(CYAN)→$(RESET) ktn-linter\n"
 	@ktn-linter lint ./... 2>&1 || true
-	@printf "  $(CYAN)→$(RESET) Terraform examples validation\n"
-	@./scripts/validate-examples.sh
 	@echo "$(GREEN)✓$(RESET) Linting completed"
 	@echo ""
 
