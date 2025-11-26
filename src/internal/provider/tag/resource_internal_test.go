@@ -269,14 +269,17 @@ func TestTagResource_executeUpdateLogic(t *testing.T) {
 			r := &TagResource{client: n8nClient}
 			ctx := context.Background()
 			plan := &models.Resource{
-				ID:   types.StringValue(tt.tagID),
 				Name: types.StringValue(tt.newName),
+			}
+			state := &models.Resource{
+				ID:   types.StringValue(tt.tagID),
+				Name: types.StringValue("Old Name"),
 			}
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
 
-			result := r.executeUpdateLogic(ctx, plan, resp)
+			result := r.executeUpdateLogic(ctx, plan, state, resp)
 
 			if tt.expectError {
 				assert.False(t, result, "Should return false on error")
