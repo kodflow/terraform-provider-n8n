@@ -6,8 +6,12 @@
 package user
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -229,7 +233,22 @@ func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Reso
 	return true
 }
 
+// userCreateResponseUser represents the user object in the create response.
+type userCreateResponseUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
+// userCreateResponse represents a single item in the array response from n8n user creation API.
+type userCreateResponse struct {
+	User  userCreateResponseUser `json:"user"`
+	Error string                 `json:"error"`
+}
+
 // createUser creates a user and returns the user ID.
+// Note: The n8n API returns an array response, but the SDK expects a single object.
+// We use a custom HTTP call to handle this correctly.
 //
 // Params:
 //   - ctx: context for operation
@@ -239,34 +258,123 @@ func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Reso
 // Returns:
 //   - string: user ID or empty string if error occurred
 func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) string {
-	// Build create request (API accepts array of users, we're creating one)
-	userReq := n8nsdk.NewUsersPostRequestInner(plan.Email.ValueString())
+	// Build request body
+	reqBody := []map[string]string{
+		{
+			"email": plan.Email.ValueString(),
+		},
+	}
 	// Check condition.
 	if !plan.Role.IsNull() && !plan.Role.IsUnknown() {
-		role := plan.Role.ValueString()
-		userReq.SetRole(role)
+		reqBody[0]["role"] = plan.Role.ValueString()
 	}
 
-	usersArray := []n8nsdk.UsersPostRequestInner{*userReq}
-
-	// Create user
-	result, httpResp, err := r.client.APIClient.UserAPI.UsersPost(ctx).UsersPostRequestInner(usersArray).Execute()
-	// Check for non-nil value.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
+	jsonBody, err := json.Marshal(reqBody)
 	// Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
-			fmt.Sprintf("Could not create user %s: %s\nHTTP Response: %v", plan.Email.ValueString(), err.Error(), httpResp),
+			fmt.Sprintf("Could not marshal request: %s", err.Error()),
+		)
+		// Return empty string on error.
+		return ""
+	}
+
+	// Build HTTP request
+	cfg := r.client.APIClient.GetConfig()
+	url := fmt.Sprintf("%s/users", cfg.Servers[0].URL)
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			fmt.Sprintf("Could not create HTTP request: %s", err.Error()),
+		)
+		// Return empty string on error.
+		return ""
+	}
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "application/json")
+	httpReq.Header.Set("X-N8N-API-KEY", cfg.DefaultHeader["X-N8N-API-KEY"])
+
+	// Execute request
+	httpClient := cfg.HTTPClient
+	// Check for nil value.
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+	httpResp, err := httpClient.Do(httpReq)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			fmt.Sprintf("Could not execute HTTP request: %s", err.Error()),
+		)
+		// Return empty string on error.
+		return ""
+	}
+	defer httpResp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(httpResp.Body)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			fmt.Sprintf("Could not read response body: %s", err.Error()),
+		)
+		// Return empty string on error.
+		return ""
+	}
+
+	// Check HTTP status
+	if httpResp.StatusCode < 200 || httpResp.StatusCode >= 300 {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			fmt.Sprintf("API returned status %d: %s", httpResp.StatusCode, string(body)),
+		)
+		// Return empty string on error.
+		return ""
+	}
+
+	// Parse array response (n8n API returns array, not single object)
+	var results []userCreateResponse
+	err = json.Unmarshal(body, &results)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			fmt.Sprintf("Could not parse response: %s\nBody: %s", err.Error(), string(body)),
 		)
 		// Return empty string on error.
 		return ""
 	}
 
 	// Validate response
-	if result.User == nil || result.User.Id == nil {
+	if len(results) == 0 {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			"API returned empty response",
+		)
+		// Return empty string on error.
+		return ""
+	}
+
+	// Check for API error in response
+	if results[0].Error != "" {
+		resp.Diagnostics.AddError(
+			"Error creating user",
+			fmt.Sprintf("API error: %s", results[0].Error),
+		)
+		// Return empty string on error.
+		return ""
+	}
+
+	// Validate user ID
+	if results[0].User.ID == "" {
 		resp.Diagnostics.AddError(
 			"Error creating user",
 			"API did not return user ID",
@@ -276,7 +384,7 @@ func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, re
 	}
 
 	// Return the user ID.
-	return *result.User.Id
+	return results[0].User.ID
 }
 
 // fetchFullUserDetails retrieves full user details by ID.
