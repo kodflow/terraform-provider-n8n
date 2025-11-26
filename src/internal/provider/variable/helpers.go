@@ -159,10 +159,7 @@ func buildVariableRequest(plan *models.Resource) n8nsdk.VariableCreate {
 	}
 
 	// Add optional fields
-	// Check condition.
-	if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
-		variableRequest.Type = shared.String(plan.Type.ValueString())
-	}
+	// Note: type is computed by n8n API, not settable in request
 	// Check condition.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 		variableRequest.ProjectId = *n8nsdk.NewNullableString(shared.String(plan.ProjectID.ValueString()))
