@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -172,6 +173,7 @@ func TestCredentialResource_ImportState(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, nil),
 					"type":       tftypes.NewValue(tftypes.String, nil),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
 				})
@@ -206,6 +208,7 @@ func TestCredentialResource_ImportState(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, nil),
 					"type":       tftypes.NewValue(tftypes.String, nil),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
 				})
@@ -395,6 +398,11 @@ func TestCredentialResource_Create(t *testing.T) {
 
 			case "error - API create fails":
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// Handle schema request (type conversion feature).
+					if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/credentials/schema/") {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
 					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusInternalServerError)
@@ -425,6 +433,7 @@ func TestCredentialResource_Create(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
 				})
@@ -479,6 +488,7 @@ func TestCredentialResource_Read(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -555,6 +565,7 @@ func TestCredentialResource_Update(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -591,6 +602,7 @@ func TestCredentialResource_Update(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential-updated"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})
@@ -681,6 +693,7 @@ func TestCredentialResource_Delete(t *testing.T) {
 					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
 					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
 					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 				})

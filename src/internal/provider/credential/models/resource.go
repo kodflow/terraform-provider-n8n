@@ -16,6 +16,7 @@ type Resource struct {
 	Name      types.String `tfsdk:"name"`
 	Type      types.String `tfsdk:"type"`
 	Data      types.Map    `tfsdk:"data"`
+	ProjectID types.String `tfsdk:"project_id"`
 	CreatedAt types.String `tfsdk:"created_at"`
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }

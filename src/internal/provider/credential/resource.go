@@ -105,34 +105,22 @@ func (r *CredentialResource) Schema(_ctx context.Context, _req resource.SchemaRe
 // Returns:
 //   - map[string]schema.Attribute: the resource attribute definitions
 func (r *CredentialResource) schemaAttributes() map[string]schema.Attribute {
+	// Data attribute description with type conversion info.
+	dataDesc := "Credential data (secrets, passwords, API keys, etc.). " +
+		"String values are automatically converted to the correct type (number, boolean) " +
+		"based on the credential schema."
+	// Project ID attribute description.
+	projectDesc := "Project ID to assign the credential to. " +
+		"If not set, credential is created in personal space (General)."
 	// Return credential schema attributes.
 	return map[string]schema.Attribute{
-		"id": schema.StringAttribute{
-			MarkdownDescription: "Credential identifier",
-			Computed:            true,
-		},
-		"name": schema.StringAttribute{
-			MarkdownDescription: "Credential name",
-			Required:            true,
-		},
-		"type": schema.StringAttribute{
-			MarkdownDescription: "Credential type (e.g., httpHeaderAuth, httpBasicAuth)",
-			Required:            true,
-		},
-		"data": schema.MapAttribute{
-			MarkdownDescription: "Credential data (secrets, passwords, API keys, etc.)",
-			ElementType:         types.StringType,
-			Required:            true,
-			Sensitive:           true,
-		},
-		"created_at": schema.StringAttribute{
-			MarkdownDescription: "Timestamp when the credential was created",
-			Computed:            true,
-		},
-		"updated_at": schema.StringAttribute{
-			MarkdownDescription: "Timestamp when the credential was last updated",
-			Computed:            true,
-		},
+		"id":         schema.StringAttribute{MarkdownDescription: "Credential identifier", Computed: true},
+		"name":       schema.StringAttribute{MarkdownDescription: "Credential name", Required: true},
+		"type":       schema.StringAttribute{MarkdownDescription: "Credential type (e.g., httpHeaderAuth)", Required: true},
+		"data":       schema.MapAttribute{MarkdownDescription: dataDesc, ElementType: types.StringType, Required: true, Sensitive: true},
+		"project_id": schema.StringAttribute{MarkdownDescription: projectDesc, Optional: true, Computed: true},
+		"created_at": schema.StringAttribute{MarkdownDescription: "Timestamp when the credential was created", Computed: true},
+		"updated_at": schema.StringAttribute{MarkdownDescription: "Timestamp when the credential was last updated", Computed: true},
 	}
 }
 
@@ -256,8 +244,11 @@ func (r *CredentialResource) executeCreateLogic(ctx context.Context, plan *model
 // Returns:
 //   - bool: True if creation succeeded, false otherwise
 func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, plan *models.Resource, credData map[string]any, resp *resource.CreateResponse) bool {
+	// Convert string values to proper types based on credential schema.
+	convertedData := r.convertDataToSchemaTypes(ctx, plan.Type.ValueString(), credData)
+
 	// Create credential via API
-	createResp, httpResp, err := r.executeCreate(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData)
+	createResp, httpResp, err := r.executeCreate(ctx, plan.Name.ValueString(), plan.Type.ValueString(), convertedData)
 	// Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {
 		defer httpResp.Body.Close()
@@ -275,6 +266,18 @@ func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, pla
 
 	// Map response to plan
 	r.mapCreateResponseToPlan(plan, createResp)
+
+	// Handle project assignment if project_id is specified.
+	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
+		// Transfer credential to the specified project.
+		if !r.transferCredentialToProject(ctx, createResp.Id, plan.ProjectID.ValueString(), &resp.Diagnostics) {
+			// Return failure - project assignment failed.
+			return false
+		}
+	}
+
+	// Map project_id to plan (keep the requested value).
+	mapCredentialProjectID(plan, plan.ProjectID)
 
 	// Return success.
 	return true
@@ -422,8 +425,11 @@ func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, pla
 	oldCredID := state.ID.ValueString()
 	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
 
+	// Convert string values to proper types based on credential schema.
+	convertedData := r.convertDataToSchemaTypes(ctx, plan.Type.ValueString(), credData)
+
 	// STEP 1: Create new credential
-	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), credData, &resp.Diagnostics)
+	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), convertedData, &resp.Diagnostics)
 	// Check if new credential creation succeeded.
 	if resp.Diagnostics.HasError() {
 		// Return failure.
@@ -452,12 +458,26 @@ func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, pla
 	// STEP 4: Delete old credential
 	r.deleteOldCredential(ctx, oldCredID, newCredID)
 
-	// STEP 5: Update plan with new values
+	// STEP 5: Handle project assignment if project_id changed or is set.
+	// Note: On update with rotation, the new credential needs to be transferred
+	// to the target project since it was created in personal space.
+	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
+		// Transfer the new credential to the specified project.
+		if !r.transferCredentialToProject(ctx, newCredID, plan.ProjectID.ValueString(), &resp.Diagnostics) {
+			// Return failure - project assignment failed.
+			return false
+		}
+	}
+
+	// STEP 6: Update plan with new values
 	plan.ID = types.StringValue(newCredID)
 	plan.Name = types.StringValue(newCred.Name)
 	plan.Type = types.StringValue(newCred.Type)
 	plan.CreatedAt = types.StringValue(newCred.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	plan.UpdatedAt = types.StringValue(newCred.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
+
+	// Map project_id to plan (keep the requested value).
+	mapCredentialProjectID(plan, plan.ProjectID)
 
 	tflog.Info(ctx, fmt.Sprintf(
 		"Credential rotated successfully: %s → %s (%d workflows updated)",
