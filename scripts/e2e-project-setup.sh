@@ -19,14 +19,6 @@
 
 set -euo pipefail
 
-# Color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-BOLD='\033[1m'
-
 # Project name
 PROJECT_NAME="Provider Terraform"
 
@@ -42,15 +34,20 @@ if [ -f "${PROJECT_ROOT}/.env" ]; then
   set +a
 fi
 
+# Log function - always goes to stderr
+log() {
+  echo "[e2e-setup] $*" >&2
+}
+
 # Check required environment variables
 check_env() {
   if [ -z "${N8N_BASE_URL:-}" ]; then
-    echo -e "${RED}N8N_BASE_URL is not set${NC}"
+    log "ERROR: N8N_BASE_URL is not set"
     exit 1
   fi
 
   if [ -z "${N8N_API_KEY:-}" ]; then
-    echo -e "${RED}N8N_API_KEY is not set${NC}"
+    log "ERROR: N8N_API_KEY is not set"
     exit 1
   fi
 }
@@ -85,14 +82,13 @@ find_project() {
 # Delete all workflows in a project
 delete_project_workflows() {
   local project_id="$1"
-  echo -e "${BLUE}  Deleting workflows in project...${NC}"
+  log "Deleting workflows in project..."
 
-  # Get all workflows
   local workflows
   workflows=$(api_call GET "/workflows?limit=250" | jq -r ".data[] | select(.shared[]?.projectId == \"$project_id\") | .id" 2>/dev/null || echo "")
 
   if [ -z "$workflows" ]; then
-    echo -e "${GREEN}    No workflows to delete${NC}"
+    log "No workflows to delete"
     return
   fi
 
@@ -101,20 +97,19 @@ delete_project_workflows() {
     api_call DELETE "/workflows/${wf_id}" >/dev/null 2>&1 || true
     count=$((count + 1))
   done
-  echo -e "${GREEN}    Deleted $count workflow(s)${NC}"
+  log "Deleted $count workflow(s)"
 }
 
 # Delete all credentials in a project
 delete_project_credentials() {
   local project_id="$1"
-  echo -e "${BLUE}  Deleting credentials in project...${NC}"
+  log "Deleting credentials in project..."
 
-  # Get all credentials
   local credentials
   credentials=$(api_call GET "/credentials" | jq -r ".data[] | select(.sharedWithProjects[]?.id == \"$project_id\") | .id" 2>/dev/null || echo "")
 
   if [ -z "$credentials" ]; then
-    echo -e "${GREEN}    No credentials to delete${NC}"
+    log "No credentials to delete"
     return
   fi
 
@@ -123,20 +118,19 @@ delete_project_credentials() {
     api_call DELETE "/credentials/${cred_id}" >/dev/null 2>&1 || true
     count=$((count + 1))
   done
-  echo -e "${GREEN}    Deleted $count credential(s)${NC}"
+  log "Deleted $count credential(s)"
 }
 
 # Delete all variables in a project (Enterprise only)
 delete_project_variables() {
   local project_id="$1"
-  echo -e "${BLUE}  Deleting variables in project...${NC}"
+  log "Deleting variables in project..."
 
-  # Get all variables
   local variables
   variables=$(api_call GET "/variables" | jq -r ".data[] | select(.project?.id == \"$project_id\") | .id" 2>/dev/null || echo "")
 
   if [ -z "$variables" ]; then
-    echo -e "${GREEN}    No variables to delete${NC}"
+    log "No variables to delete"
     return
   fi
 
@@ -145,7 +139,7 @@ delete_project_variables() {
     api_call DELETE "/variables/${var_id}" >/dev/null 2>&1 || true
     count=$((count + 1))
   done
-  echo -e "${GREEN}    Deleted $count variable(s)${NC}"
+  log "Deleted $count variable(s)"
 }
 
 # Delete a project and all its contents
@@ -153,24 +147,22 @@ delete_project() {
   local project_id="$1"
   local project_name="$2"
 
-  echo -e "${YELLOW}Cleaning up project: $project_name ($project_id)${NC}"
+  log "Cleaning up project: $project_name ($project_id)"
 
-  # Delete all resources in the project
   delete_project_workflows "$project_id"
   delete_project_credentials "$project_id"
   delete_project_variables "$project_id"
 
-  # Delete the project itself
-  echo -e "${BLUE}  Deleting project...${NC}"
+  log "Deleting project..."
   api_call DELETE "/projects/${project_id}" >/dev/null 2>&1 || true
-  echo -e "${GREEN}    Project deleted${NC}"
+  log "Project deleted"
 }
 
-# Create a new project
+# Create a new project - returns project_id on stdout
 create_project() {
   local name="$1"
 
-  echo -e "${BLUE}Creating project: $name${NC}"
+  log "Creating project: $name"
 
   local response
   response=$(api_call POST "/projects" "{\"name\": \"$name\"}")
@@ -179,85 +171,72 @@ create_project() {
   project_id=$(echo "$response" | jq -r '.id' 2>/dev/null || echo "")
 
   if [ -z "$project_id" ] || [ "$project_id" = "null" ]; then
-    echo -e "${RED}Failed to create project: $response${NC}" >&2
+    log "ERROR: Failed to create project: $response"
     exit 1
   fi
 
-  # Output informational message to stderr (so it doesn't get captured)
-  echo -e "${GREEN}  Project created: $project_id${NC}" >&2
-  # Output just the project_id to stdout (for capture)
+  log "Project created: $project_id"
+  # Return project_id on stdout
   echo "$project_id"
 }
 
 # Setup action: cleanup existing + create new
 setup() {
-  echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${BOLD}  E2E Project Setup${NC}"
-  echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo ""
+  log "=========================================="
+  log "E2E Project Setup"
+  log "=========================================="
 
   check_env
 
-  # Check for existing project
-  echo -e "${BLUE}Checking for existing '$PROJECT_NAME' project...${NC}"
+  log "Checking for existing '$PROJECT_NAME' project..."
   local existing_id
   existing_id=$(find_project "$PROJECT_NAME")
 
   if [ -n "$existing_id" ]; then
-    echo -e "${YELLOW}Found existing project: $existing_id${NC}"
+    log "Found existing project: $existing_id"
     delete_project "$existing_id" "$PROJECT_NAME"
   else
-    echo -e "${GREEN}No existing project found${NC}"
+    log "No existing project found"
   fi
 
-  echo ""
-
-  # Create new project
   local project_id
   project_id=$(create_project "$PROJECT_NAME")
 
-  echo ""
-  echo -e "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${BOLD}${GREEN}  Setup Complete!${NC}"
-  echo -e "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo ""
-  echo -e "${BLUE}Project ID:${NC} $project_id"
-  echo ""
+  log "=========================================="
+  log "Setup Complete! Project ID: $project_id"
+  log "=========================================="
 
   # Output for GitHub Actions
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "project_id=$project_id" >>"$GITHUB_OUTPUT"
   fi
 
-  # Also output to stdout for capture
+  # Plain text output for logging (goes to stdout)
   echo "E2E_PROJECT_ID=$project_id"
 }
 
 # Cleanup action: delete project and all contents
 cleanup() {
-  echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${BOLD}  E2E Project Cleanup${NC}"
-  echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo ""
+  log "=========================================="
+  log "E2E Project Cleanup"
+  log "=========================================="
 
   check_env
 
-  # Find project
-  echo -e "${BLUE}Looking for '$PROJECT_NAME' project...${NC}"
+  log "Looking for '$PROJECT_NAME' project..."
   local project_id
   project_id=$(find_project "$PROJECT_NAME")
 
   if [ -z "$project_id" ]; then
-    echo -e "${GREEN}No project found to cleanup${NC}"
+    log "No project found to cleanup"
     return 0
   fi
 
   delete_project "$project_id" "$PROJECT_NAME"
 
-  echo ""
-  echo -e "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${BOLD}${GREEN}  Cleanup Complete!${NC}"
-  echo -e "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  log "=========================================="
+  log "Cleanup Complete!"
+  log "=========================================="
 }
 
 # Main entry point
@@ -272,7 +251,7 @@ main() {
       cleanup
       ;;
     *)
-      echo "Usage: $0 {setup|cleanup}"
+      echo "Usage: $0 {setup|cleanup}" >&2
       exit 1
       ;;
   esac
