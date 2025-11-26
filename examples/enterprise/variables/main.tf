@@ -33,12 +33,16 @@ resource "n8n_variable" "api_timeout" {
   key   = "ci-${var.run_id}-API_TIMEOUT"
   value = "30"
   type  = "number"
+  # Sequential creation to avoid n8n database concurrency issues
+  depends_on = [n8n_variable.api_url]
 }
 
 resource "n8n_variable" "debug_enabled" {
   key   = "ci-${var.run_id}-DEBUG_ENABLED"
   value = "true"
   type  = "boolean"
+  # Sequential creation to avoid n8n database concurrency issues
+  depends_on = [n8n_variable.api_timeout]
 }
 
 # ============================================================================

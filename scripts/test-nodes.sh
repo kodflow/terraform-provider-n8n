@@ -100,7 +100,7 @@ elif [ -n "${NODES_GROUP:-}" ]; then
   echo -e "${BLUE}📂 Testing group: ${NODES_GROUP}${NC}"
 
   # Extract nodes for this group using jq
-  if ! command -v jq &> /dev/null; then
+  if ! command -v jq &>/dev/null; then
     echo -e "${RED}❌ jq is required for NODES_GROUP feature${NC}"
     exit 1
   fi
