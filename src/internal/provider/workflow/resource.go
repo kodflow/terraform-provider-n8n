@@ -486,6 +486,13 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		return false
 	}
 
+	// Use state.ID for the workflow ID since plan.ID may be Unknown for Computed attributes.
+	// The ID cannot change during an update, so state.ID is always the correct value.
+	workflowID := state.ID.ValueString()
+
+	// Copy ID from state to plan for consistency.
+	plan.ID = state.ID
+
 	// Handle activation change.
 	r.handleWorkflowActivation(ctx, plan, state, &resp.Diagnostics)
 	// Check for activation change errors.
@@ -502,14 +509,14 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		Settings:    settings,
 	}
 
-	workflow := r.updateWorkflowViaAPI(ctx, plan.ID.ValueString(), workflowRequest, &resp.Diagnostics)
+	workflow := r.updateWorkflowViaAPI(ctx, workflowID, workflowRequest, &resp.Diagnostics)
 	// Check for API error
 	if resp.Diagnostics.HasError() {
 		return false
 	}
 
 	// Update tags.
-	r.updateWorkflowTags(ctx, plan.ID.ValueString(), plan, workflow, &resp.Diagnostics)
+	r.updateWorkflowTags(ctx, workflowID, plan, workflow, &resp.Diagnostics)
 	// Check for tag update errors.
 	if resp.Diagnostics.HasError() {
 		// Return failure.
@@ -523,7 +530,7 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		// value to null) is not supported by the n8n API. The workflow
 		// will remain in its current project if project_id changes to null.
 		if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
-			updatedWorkflow := r.handleProjectAssignment(ctx, plan.ID.ValueString(), plan.ProjectID.ValueString(), &resp.Diagnostics)
+			updatedWorkflow := r.handleProjectAssignment(ctx, workflowID, plan.ProjectID.ValueString(), &resp.Diagnostics)
 			// Check if project assignment succeeded
 			if resp.Diagnostics.HasError() {
 				// Return failure.
