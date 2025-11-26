@@ -75,8 +75,9 @@ resource "n8n_workflow_connection" "test_to_output" {
 
 # WORKFLOW
 resource "n8n_workflow" "test_e2e-test" {
-  name   = "Test: E2E Test"
-  active = false
+  name       = "Test: E2E Test"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
 
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.manual_trigger.node_json),

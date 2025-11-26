@@ -59,8 +59,9 @@ resource "n8n_workflow_connection" "test_to_output" {
 
 # WORKFLOW
 resource "n8n_workflow" "test_n8n-trigger" {
-  name   = "Test: n8n Trigger"
-  active = false
+  name       = "Test: n8n Trigger"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
 
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.test_node.node_json),

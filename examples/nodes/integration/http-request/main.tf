@@ -78,8 +78,9 @@ resource "n8n_workflow_connection" "test_to_output" {
 
 # WORKFLOW
 resource "n8n_workflow" "test_http-request" {
-  name   = "Test: HTTP Request"
-  active = false
+  name       = "Test: HTTP Request"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
 
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.manual_trigger.node_json),

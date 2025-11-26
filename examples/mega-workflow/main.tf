@@ -6919,8 +6919,9 @@ resource "n8n_workflow_connection" "last_to_end" {
 # ============================================================================
 
 resource "n8n_workflow" "mega_workflow" {
-  name   = "MEGA Workflow - All 296 Nodes"
-  active = false
+  name       = "MEGA Workflow - All 296 Nodes"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
 
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.start_trigger.node_json),
