@@ -1686,6 +1686,114 @@ func Test_mapWorkflowProjectID(t *testing.T) {
 	}
 }
 
+// Test_preserveProjectIDOnUpdate tests the preserveProjectIDOnUpdate function.
+func Test_preserveProjectIDOnUpdate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "preserves state project_id when unchanged",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				projectID := "test-project-id"
+				plan := &models.Resource{
+					ProjectID: types.StringValue(projectID),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringValue(projectID),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				assert.Equal(t, projectID, plan.ProjectID.ValueString())
+			},
+		},
+		{
+			name: "preserves plan project_id when changed",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				newProjectID := "new-project-id"
+				oldProjectID := "old-project-id"
+				plan := &models.Resource{
+					ProjectID: types.StringValue(newProjectID),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringValue(oldProjectID),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				assert.Equal(t, newProjectID, plan.ProjectID.ValueString())
+			},
+		},
+		{
+			name: "preserves state when plan is null",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				projectID := "test-project-id"
+				plan := &models.Resource{
+					ProjectID: types.StringNull(),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringValue(projectID),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				assert.Equal(t, projectID, plan.ProjectID.ValueString())
+			},
+		},
+		{
+			name: "preserves state when plan is unknown",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				projectID := "test-project-id"
+				plan := &models.Resource{
+					ProjectID: types.StringUnknown(),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringValue(projectID),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				assert.Equal(t, projectID, plan.ProjectID.ValueString())
+			},
+		},
+		{
+			name: "preserves null state when both null",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				plan := &models.Resource{
+					ProjectID: types.StringNull(),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringNull(),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				assert.True(t, plan.ProjectID.IsNull())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tt.testFunc(t)
+		})
+	}
+}
+
 // TestWorkflowResource_createWorkflowViaAPI tests the createWorkflowViaAPI method.
 // Note: This is an integration test that requires a real n8n instance.
 // Unit testing is not feasible without complex mocking of the SDK client.

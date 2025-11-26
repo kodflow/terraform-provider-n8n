@@ -556,6 +556,9 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		plan.UpdatedAt = state.UpdatedAt
 	}
 
+	// Preserve project_id since PUT API doesn't return Shared data.
+	preserveProjectIDOnUpdate(plan, state)
+
 	// Return success.
 	return true
 }

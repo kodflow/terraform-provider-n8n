@@ -172,6 +172,28 @@ func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	}
 }
 
+// preserveProjectIDOnUpdate preserves the project_id after update.
+// The PUT API doesn't return Shared data, so mapWorkflowToModel sets project_id to null.
+// This function restores the correct project_id from plan/state.
+//
+// Params:
+//   - plan: The planned resource data (will be updated)
+//   - state: The current resource state
+func preserveProjectIDOnUpdate(plan, state *models.Resource) {
+	// Check if project changed
+	if !plan.ProjectID.Equal(state.ProjectID) {
+		// Project was changed, but if plan is null/unknown, keep state value
+		// (removing from project is not supported by n8n API)
+		if plan.ProjectID.IsNull() || plan.ProjectID.IsUnknown() {
+			plan.ProjectID = state.ProjectID
+		}
+		// Otherwise keep plan value (already set by handleProjectAssignment)
+	} else {
+		// No change requested, preserve state value since API didn't return it
+		plan.ProjectID = state.ProjectID
+	}
+}
+
 // mapWorkflowToModel maps a workflow from the SDK to the Terraform model.
 // This updates computed fields like timestamps, version, metadata, etc.
 //
