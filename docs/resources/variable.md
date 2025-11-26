@@ -23,8 +23,8 @@ n8n variable resource. Note: API limitations require workarounds for Read operat
 ### Optional
 
 - `project_id` (String) Project ID to associate this variable with
-- `type` (String) Variable type
 
 ### Read-Only
 
 - `id` (String) Variable identifier
+- `type` (String) Variable type (computed by n8n, read-only)
