@@ -610,8 +610,21 @@ func TestProjectResource_Update(t *testing.T) {
 					Raw:    planRaw,
 				}
 
+				// Create valid state (required since Update reads from both plan and state)
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":   tftypes.NewValue(tftypes.String, "proj-123"),
+					"name": tftypes.NewValue(tftypes.String, "existing-project"),
+					"type": tftypes.NewValue(tftypes.String, "team"),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
 				req := resource.UpdateRequest{
-					Plan: plan,
+					Plan:  plan,
+					State: state,
 				}
 				resp := &resource.UpdateResponse{}
 
