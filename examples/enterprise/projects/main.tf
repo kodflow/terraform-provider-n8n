@@ -29,6 +29,8 @@ resource "n8n_project" "main" {
 
 resource "n8n_project" "dev" {
   name = "ci-${var.run_id}-Enterprise Dev Project"
+  # Sequential creation to avoid n8n database concurrency issues
+  depends_on = [n8n_project.main]
 }
 
 # ============================================================================
