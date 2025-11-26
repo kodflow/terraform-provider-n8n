@@ -18,27 +18,6 @@ permissions:
 
 jobs:
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 0: E2E SETUP - Create isolated project for all E2E tests
-  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  e2e-setup:
-    name: E2E Setup - Create Project
-    runs-on: ubuntu-latest
-    outputs:
-      project_id: ${{ steps.setup.outputs.project_id }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Setup E2E Project
-        id: setup
-        env:
-          N8N_BASE_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: |
-          chmod +x scripts/e2e-project-setup.sh
-          ./scripts/e2e-project-setup.sh setup
-
-  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # JOB 1: BUILD & UNIT TESTS
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   build-and-test:
@@ -192,12 +171,36 @@ jobs:
         run: make docs
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 2: E2E TESTS - COMMUNITY EXAMPLES
+  # JOB 2: E2E SETUP - Create isolated project for E2E tests
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  e2e-setup:
+    name: E2E Setup - Create Project
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    outputs:
+      project_id: ${{ steps.create-project.outputs.project_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Create E2E Project
+        id: create-project
+        env:
+          N8N_BASE_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          chmod +x scripts/e2e-project-setup.sh
+          PROJECT_ID=$(./scripts/e2e-project-setup.sh create)
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+          echo "Created project: $PROJECT_ID"
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 3: E2E TESTS - COMMUNITY EXAMPLES
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-community:
     name: E2E Community - ${{ matrix.example-name }}
     runs-on: ubuntu-latest
-    needs: [build-and-test, e2e-setup]
+    needs: e2e-setup
     strategy:
       fail-fast: false
       matrix:
@@ -298,12 +301,12 @@ jobs:
         run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 3: E2E TESTS - SCENARIO (RENAME OPERATIONS)
+  # JOB 4: E2E TESTS - SCENARIO (RENAME OPERATIONS)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-scenario:
     name: E2E Scenario - Rename Operations
     runs-on: ubuntu-latest
-    needs: [build-and-test, e2e-setup]
+    needs: e2e-setup
     steps:
       # Checkout repository
       - name: Checkout
@@ -441,12 +444,12 @@ jobs:
         run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 4: E2E TESTS - ENTERPRISE EXAMPLES
+  # JOB 5: E2E TESTS - ENTERPRISE EXAMPLES
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-enterprise:
     name: E2E Enterprise - ${{ matrix.example-name }}
     runs-on: ubuntu-latest
-    needs: [build-and-test, e2e-setup]
+    needs: e2e-setup
     # Enterprise tests may fail on Community Edition - this is expected
     continue-on-error: true
     strategy:
@@ -526,12 +529,12 @@ jobs:
         run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 5: E2E TESTS - ALL NODES (296 nodes in 14 groups)
+  # JOB 6: E2E TESTS - ALL NODES (296 nodes in 14 groups)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   test-e2e-nodes:
     name: E2E Nodes - ${{ matrix.group-name }} (${{ matrix.count }})
     runs-on: ubuntu-latest
-    needs: [build-and-test, e2e-setup]
+    needs: e2e-setup
     strategy:
       fail-fast: false
       matrix:
@@ -653,7 +656,7 @@ jobs:
           fi
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 6: E2E CLEANUP - Destroy project after all tests
+  # JOB 7: E2E CLEANUP - Destroy project after all tests
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   e2e-cleanup:
     name: E2E Cleanup - Destroy Project
