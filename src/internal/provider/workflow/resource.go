@@ -486,8 +486,9 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 		return false
 	}
 
-	// Use state.ID for the workflow ID since plan.ID may be Unknown for Computed attributes.
-	// The ID cannot change during an update, so state.ID is always the correct value.
+	// Use state.ID for the workflow ID since plan.ID may be Unknown
+	// for Computed attributes. The ID cannot change during an update,
+	// so state.ID is always the correct value.
 	workflowID := state.ID.ValueString()
 
 	// Copy ID from state to plan for consistency.
