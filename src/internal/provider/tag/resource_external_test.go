@@ -614,8 +614,22 @@ func TestTagResource_Update(t *testing.T) {
 					Raw:    planRaw,
 				}
 
+				// Create valid state (required since Update reads from both plan and state)
+				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "tag-123"),
+					"name":       tftypes.NewValue(tftypes.String, "existing-tag"),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+				})
+
+				state := tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    stateRaw,
+				}
+
 				req := resource.UpdateRequest{
-					Plan: plan,
+					Plan:  plan,
+					State: state,
 				}
 				resp := &resource.UpdateResponse{}
 
