@@ -179,11 +179,13 @@ create_project() {
   project_id=$(echo "$response" | jq -r '.id' 2>/dev/null || echo "")
 
   if [ -z "$project_id" ] || [ "$project_id" = "null" ]; then
-    echo -e "${RED}Failed to create project: $response${NC}"
+    echo -e "${RED}Failed to create project: $response${NC}" >&2
     exit 1
   fi
 
-  echo -e "${GREEN}  Project created: $project_id${NC}"
+  # Output informational message to stderr (so it doesn't get captured)
+  echo -e "${GREEN}  Project created: $project_id${NC}" >&2
+  # Output just the project_id to stdout (for capture)
   echo "$project_id"
 }
 
