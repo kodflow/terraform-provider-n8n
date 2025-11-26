@@ -547,6 +547,15 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 	// Map workflow response to state.
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
+	// Ensure computed timestamp fields have known values.
+	// The PUT API may not return these fields, so fall back to state values.
+	if plan.CreatedAt.IsUnknown() || plan.CreatedAt.IsNull() {
+		plan.CreatedAt = state.CreatedAt
+	}
+	if plan.UpdatedAt.IsUnknown() || plan.UpdatedAt.IsNull() {
+		plan.UpdatedAt = state.UpdatedAt
+	}
+
 	// Return success.
 	return true
 }
