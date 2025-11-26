@@ -51,7 +51,6 @@ jobs:
           mkdir -p /tmp/attestation
           TAG="${{ github.event.release.tag_name }}"
           echo "Downloading assets for tag: $TAG"
-          gh release download "$TAG" --pattern 'terraform-provider-n8n_*.tar.gz' --dir /tmp/attestation
           gh release download "$TAG" --pattern 'terraform-provider-n8n_*.zip' --dir /tmp/attestation
           ls -lh /tmp/attestation/
 
