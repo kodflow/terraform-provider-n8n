@@ -10,7 +10,21 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6ad65f0b28b64849ad2799943e8ad338)](https://app.codacy.com/gh/kodflow/terraform-provider-n8n/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/6ad65f0b28b64849ad2799943e8ad338)](https://app.codacy.com/gh/kodflow/terraform-provider-n8n/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
-Manage your n8n workflows, credentials, and resources as code with Terraform.
+**Manage your n8n workflows as code.** Version control, PR reviews, GitOps workflows, and reproducible environments for your automation platform.
+
+---
+
+## Why This Provider?
+
+Low-code is great for building fast. It's terrible for:
+
+- **Versioning workflows cleanly** — giant JSON exports are unreadable in diffs
+- **Reviewing changes in PRs** — no way to track what actually changed
+- **Reproducing environments** — manual clicks don't scale across teams
+- **Collaborating without clicking through a UI** — engineers need code
+
+This provider doesn't replace the visual builder — it gives you a **proper, maintainable backbone** behind it. Define workflows as structured code while keeping
+the visual magic for rapid prototyping.
 
 ---
 
@@ -20,8 +34,6 @@ Manage your n8n workflows, credentials, and resources as code with Terraform.
 >
 > I use it for my personal needs and continuously improve it. **Every issue you create helps me fix bugs and improve the quality of the product** — please don't
 > hesitate to report problems!
->
-> The **nodes** management approach is still being refined to find the best solution.
 
 ### 🚨 Important Limitation: Credentials
 
@@ -38,11 +50,7 @@ Manage your n8n workflows, credentials, and resources as code with Terraform.
 
 ---
 
-## Why This Provider?
-
-### 🎯 Standard Terraform Provider
-
-Full support for n8n resources with standard Terraform workflows:
+## Resources
 
 | Resource                  | Description                                    |
 | ------------------------- | ---------------------------------------------- |
@@ -56,30 +64,11 @@ Full support for n8n resources with standard Terraform workflows:
 | `n8n_user`                | User management (Enterprise)                   |
 | `n8n_source_control` 🚧   | Git integration (Enterprise - not implemented) |
 
-### 🚀 Advanced Node Composition
-
-**296 n8n nodes** fully supported with comprehensive workflow examples:
-
-| Category        | Count | Description                                                         |
-| --------------- | ----- | ------------------------------------------------------------------- |
-| **Core**        | 5     | Essential workflow building blocks (Code, If, Merge, Set, Switch)   |
-| **Trigger**     | 25    | Event-based workflow initiators (Webhook, Manual, Cron, etc.)       |
-| **Integration** | 266   | Third-party service integrations (Slack, GitHub, AWS, Google, etc.) |
-
-**Every node includes:**
-
-- ✅ Complete Terraform workflow example
-- ✅ Full lifecycle testing (init/plan/apply/destroy)
-- ✅ 100% test pass rate with real n8n validation
-- ✅ Ready-to-use templates
-
-**📊 [View complete test coverage →](COVERAGE.MD)** | **📚 [Browse all 296 nodes →](examples/nodes/)**
+---
 
 ## Quick Start
 
-### Installation
-
-#### Via Terraform Registry (Recommended)
+### 1. Configure the Provider
 
 ```hcl
 terraform {
@@ -97,89 +86,77 @@ provider "n8n" {
 }
 ```
 
-#### Via OpenTofu Registry
+> Works with both **Terraform** and **OpenTofu** — same configuration, same registry.
 
-```hcl
-terraform {
-  required_providers {
-    n8n = {
-      source  = "kodflow/n8n"
-      version = "~> 1.0"
-    }
-  }
-}
-```
-
-### Get Your n8n API Key
+### 2. Get Your n8n API Key
 
 1. Open your n8n instance
-2. Go to **Settings** > **API**
+2. Go to **Settings** → **API**
 3. Click **Create API Key**
-4. Set as `N8N_API_KEY` environment variable
-
-### Run Your First Workflow
+4. Export it:
 
 ```bash
-export N8N_API_URL="http://localhost:5678"
-export N8N_API_KEY="your-api-key"
+export TF_VAR_n8n_api_key="your-api-key"
+export TF_VAR_n8n_base_url="http://localhost:5678"
+```
 
+### 3. Run Your First Workflow
+
+```bash
 cd examples/community/workflows/basic-workflow
 terraform init
 terraform apply
 ```
 
+---
+
 ## Examples
-
-### 📦 Node Examples (296 workflows)
-
-Explore **all 296 n8n nodes** with complete Terraform examples:
-
-- **[Core Nodes](examples/nodes/#core-nodes-5)** - If, Code, Set, Merge, Switch
-- **[Trigger Nodes](examples/nodes/#trigger-nodes-25)** - Webhook, Cron, Manual, Email, etc.
-- **[Integration Nodes](examples/nodes/#integration-nodes-266)** - Slack, GitHub, AWS, Google Cloud, etc.
-- **[MEGA Workflow](examples/mega-workflow/)** - All 296 nodes in a single workflow (testing)
-
-📊 **Testing status:** All 296 workflows tested and passing
 
 ### 🎓 Community Examples
 
-Ready-to-use examples for common use cases:
+Basic examples for n8n Community Edition:
 
-- **[Workflows](examples/community/workflows/)** - Basic webhook and scheduled workflows
-- **[Credentials](examples/community/credentials/)** - HTTP Basic Auth and API credentials
-- **[Tags](examples/community/tags/)** - Workflow organization with tags
-- **[Variables](examples/community/variables/)** - Environment variable management
+| Example                                                                | Description                           |
+| ---------------------------------------------------------------------- | ------------------------------------- |
+| [Basic Workflow](examples/community/workflows/basic-workflow/)         | Simple webhook workflow with response |
+| [Scheduled Workflow](examples/community/workflows/scheduled-workflow/) | Cron-triggered automation             |
+| [Credentials](examples/community/credentials/)                         | HTTP Basic Auth setup                 |
+| [Tags](examples/community/tags/)                                       | Workflow organization                 |
 
-### 🏗️ Production Examples
+### 🏢 Enterprise Examples
 
-Advanced production-ready examples:
+Examples requiring n8n Enterprise license:
 
-- **[Complete Modular Workflow](examples/comprehensive/complete-modular-workflow/)** - Multi-node workflow with error handling, validation, and external API
-  integration
+| Example                                     | Description                |
+| ------------------------------------------- | -------------------------- |
+| [Projects](examples/enterprise/projects/)   | Multi-project organization |
+| [Users](examples/enterprise/users/)         | User management and roles  |
+| [Variables](examples/enterprise/variables/) | Environment variables      |
+
+### 📦 Node Examples (296 workflows)
+
+Complete Terraform examples for **all 296 n8n nodes**:
+
+| Category                                       | Count | Examples                               |
+| ---------------------------------------------- | ----- | -------------------------------------- |
+| **[Core](examples/nodes/core/)**               | 5     | Code, If, Merge, Set, Switch           |
+| **[Trigger](examples/nodes/trigger/)**         | 25    | Webhook, Cron, Manual, Email, etc.     |
+| **[Integration](examples/nodes/integration/)** | 266   | Slack, GitHub, AWS, Google Cloud, etc. |
+
+Every node includes a complete workflow example with full lifecycle testing.
+
+**📚 [Browse all 296 nodes →](examples/nodes/)**
+
+---
 
 ## Documentation
 
-- **[Terraform Registry Docs](https://registry.terraform.io/providers/kodflow/n8n/latest/docs)** - Complete provider documentation
-- **[Test Coverage](COVERAGE.MD)** - Detailed test coverage report (97.9%)
-- **[All Nodes](examples/nodes/)** - Complete catalog of 296 supported nodes
-- **[Contributing Guide](CONTRIBUTING.md)** - Development setup and guidelines
+- **[Terraform Registry Docs](https://registry.terraform.io/providers/kodflow/n8n/latest/docs)** — Complete provider documentation
+- **[Test Coverage](COVERAGE.MD)** — Detailed coverage report (97.9%)
+- **[All Nodes](examples/nodes/)** — Complete catalog of 296 supported nodes
+- **[Contributing Guide](CONTRIBUTING.md)** — Development setup and guidelines
 
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-
-- Development environment setup
-- Essential commands and workflow
-- Quality standards and testing requirements
-- Git hooks and commit conventions
-
-Quick start for contributors:
-
-```bash
-make build    # Build provider locally
-make test     # Run full test suite
-make help     # Display all available commands
-```
+---
 
 ## Support This Project
 
@@ -188,11 +165,11 @@ If you find this project useful, consider sponsoring its development:
 - ❤️ [GitHub Sponsors](https://github.com/sponsors/kodflow)
 - ☕ [Ko-fi](https://ko-fi.com/kodflow)
 
-Your support helps maintain and improve this provider. Thank you! 🙏
+---
 
 ## License
 
-Sustainable Use License 1.0 - See [LICENSE](LICENSE) for details.
+Sustainable Use License 1.0 — See [LICENSE](LICENSE) for details.
 
 ---
 
