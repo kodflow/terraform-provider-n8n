@@ -825,6 +825,50 @@ func TestCredentialResource_applySchemaTypeConversions(t *testing.T) {
 				"unknown": "value",
 			},
 		},
+		{
+			name: "error case - invalid number string returns original",
+			schema: map[string]any{
+				"properties": map[string]any{
+					"port": map[string]any{"type": "number"},
+				},
+			},
+			data: map[string]any{
+				"port": "not-a-number",
+			},
+			expected: map[string]any{
+				"port": "not-a-number",
+			},
+		},
+		{
+			name: "error case - invalid boolean string returns original",
+			schema: map[string]any{
+				"properties": map[string]any{
+					"enabled": map[string]any{"type": "boolean"},
+				},
+			},
+			data: map[string]any{
+				"enabled": "maybe",
+			},
+			expected: map[string]any{
+				"enabled": "maybe",
+			},
+		},
+		{
+			name: "error case - nil data returns empty map",
+			schema: map[string]any{
+				"properties": map[string]any{
+					"port": map[string]any{"type": "number"},
+				},
+			},
+			data:     nil,
+			expected: map[string]any{},
+		},
+		{
+			name:     "error case - nil schema returns original data",
+			schema:   nil,
+			data:     map[string]any{"key": "value"},
+			expected: map[string]any{"key": "value"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1003,6 +1047,12 @@ func Test_mapCredentialProjectID(t *testing.T) {
 			name:               "project_id is unknown",
 			requestedProjectID: types.StringUnknown(),
 			expectedIsNull:     true,
+			expectedValue:      "",
+		},
+		{
+			name:               "error case - empty string project_id",
+			requestedProjectID: types.StringValue(""),
+			expectedIsNull:     false,
 			expectedValue:      "",
 		},
 	}

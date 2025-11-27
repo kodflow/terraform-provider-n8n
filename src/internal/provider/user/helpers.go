@@ -70,16 +70,18 @@ func mapUserToResourceModel(user *n8nsdk.User, data *models.Resource) {
 		data.ID = types.StringValue(*user.Id)
 	}
 	data.Email = types.StringValue(user.Email)
-	// FirstName may be nil for pending users - set explicit Null instead of leaving unknown.
+	// FirstName may be nil for pending users.
 	if user.FirstName != nil {
 		data.FirstName = types.StringPointerValue(user.FirstName)
 	} else {
+		// Set explicit Null instead of leaving unknown.
 		data.FirstName = types.StringNull()
 	}
-	// LastName may be nil for pending users - set explicit Null instead of leaving unknown.
+	// LastName may be nil for pending users.
 	if user.LastName != nil {
 		data.LastName = types.StringPointerValue(user.LastName)
 	} else {
+		// Set explicit Null instead of leaving unknown.
 		data.LastName = types.StringNull()
 	}
 	// Check for non-nil value.
