@@ -16,6 +16,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Provider version for E2E tests (uses dev version for freshly built binary)
+  PROVIDER_VERSION: "99.99.99"
+
 jobs:
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # JOB 1a: LINT & FORMAT (parallel, no build needed)
@@ -187,9 +191,9 @@ jobs:
 
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
       - name: Terraform Init
         working-directory: ${{ matrix.example-path }}
@@ -250,9 +254,9 @@ jobs:
 
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
       - name: Terraform Init
         working-directory: examples/scenario
@@ -350,9 +354,9 @@ jobs:
 
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
       - name: Terraform Init
         working-directory: ${{ matrix.example-path }}
@@ -463,9 +467,9 @@ jobs:
 
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
       - name: Create .env file
         run: |
