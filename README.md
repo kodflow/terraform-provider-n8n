@@ -160,7 +160,7 @@ Advanced production-ready examples:
 ## Documentation
 
 - **[Terraform Registry Docs](https://registry.terraform.io/providers/kodflow/n8n/latest/docs)** - Complete provider documentation
-- **[Test Coverage](COVERAGE.MD)** - Detailed test coverage report (96.4%)
+- **[Test Coverage](COVERAGE.MD)** - Detailed test coverage report (97.9%)
 - **[All Nodes](examples/nodes/)** - Complete catalog of 296 supported nodes
 - **[Contributing Guide](CONTRIBUTING.md)** - Development setup and guidelines
 

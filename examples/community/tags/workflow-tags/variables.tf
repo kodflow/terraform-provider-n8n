@@ -21,3 +21,9 @@ variable "timestamp" {
   type        = string
   default     = "0"
 }
+
+variable "project_id" {
+  description = "Project ID for E2E test isolation"
+  type        = string
+  default     = ""
+}

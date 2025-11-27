@@ -5,12 +5,16 @@
 package workflow
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -411,6 +415,246 @@ func TestWorkflowConnectionResource_getSchemaAttributes(t *testing.T) {
 				if len(attrs) == 0 && !tt.wantErr {
 					t.Error("expected attributes, got empty map")
 				}
+			}
+		})
+	}
+}
+
+// createConnectionTestSchema creates a schema for connection resource testing.
+func createConnectionTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
+	r := &WorkflowConnectionResource{}
+	return schema.Schema{
+		Attributes: r.getSchemaAttributes(),
+	}
+}
+
+// getConnectionObjectType returns the tftypes.Object for connection resource.
+func getConnectionObjectType() tftypes.Object {
+	return tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"id":                  tftypes.String,
+			"source_node":         tftypes.String,
+			"source_output":       tftypes.String,
+			"source_output_index": tftypes.Number,
+			"target_node":         tftypes.String,
+			"target_input":        tftypes.String,
+			"target_input_index":  tftypes.Number,
+			"connection_json":     tftypes.String,
+		},
+	}
+}
+
+func TestWorkflowConnectionResource_Create_Success(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowConnectionResource{}
+	ctx := context.Background()
+	objectType := getConnectionObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":                  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"source_node":         tftypes.NewValue(tftypes.String, "Webhook"),
+		"source_output":       tftypes.NewValue(tftypes.String, "main"),
+		"source_output_index": tftypes.NewValue(tftypes.Number, 0),
+		"target_node":         tftypes.NewValue(tftypes.String, "Process"),
+		"target_input":        tftypes.NewValue(tftypes.String, "main"),
+		"target_input_index":  tftypes.NewValue(tftypes.Number, 0),
+		"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+}
+
+func TestWorkflowConnectionResource_Create_WithMultipleOutputs(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowConnectionResource{}
+	ctx := context.Background()
+	objectType := getConnectionObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":                  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"source_node":         tftypes.NewValue(tftypes.String, "Switch"),
+		"source_output":       tftypes.NewValue(tftypes.String, "main"),
+		"source_output_index": tftypes.NewValue(tftypes.Number, 2),
+		"target_node":         tftypes.NewValue(tftypes.String, "Handler"),
+		"target_input":        tftypes.NewValue(tftypes.String, "main"),
+		"target_input_index":  tftypes.NewValue(tftypes.Number, 1),
+		"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Create with multiple outputs should not have errors")
+}
+
+func TestWorkflowConnectionResource_Update_Success(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowConnectionResource{}
+	ctx := context.Background()
+	objectType := getConnectionObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":                  tftypes.NewValue(tftypes.String, "conn-123"),
+		"source_node":         tftypes.NewValue(tftypes.String, "UpdatedWebhook"),
+		"source_output":       tftypes.NewValue(tftypes.String, "main"),
+		"source_output_index": tftypes.NewValue(tftypes.Number, 0),
+		"target_node":         tftypes.NewValue(tftypes.String, "UpdatedProcess"),
+		"target_input":        tftypes.NewValue(tftypes.String, "main"),
+		"target_input_index":  tftypes.NewValue(tftypes.Number, 0),
+		"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	req := resource.UpdateRequest{
+		Plan: plan,
+	}
+	resp := resource.UpdateResponse{
+		State: state,
+	}
+
+	r.Update(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
+}
+
+func TestWorkflowConnectionResource_ImportState_Success(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowConnectionResource{}
+	ctx := context.Background()
+	objectType := getConnectionObjectType()
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createConnectionTestSchema(t),
+	}
+
+	req := resource.ImportStateRequest{
+		ID: "imported-connection-id",
+	}
+	resp := resource.ImportStateResponse{
+		State: state,
+	}
+
+	r.ImportState(ctx, req, &resp)
+
+	// ImportState uses passthrough so it should set the ID in state.
+	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
+}
+
+func TestWorkflowConnectionResource_generateConnectionJSON_Error(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		plan          *models.ConnectionResource
+		expectSuccess bool
+		expectError   bool
+	}{
+		{
+			name: "success - with unknown source node",
+			plan: &models.ConnectionResource{
+				ID:                types.StringValue("test-id"),
+				SourceNode:        types.StringUnknown(),
+				SourceOutput:      types.StringValue("main"),
+				SourceOutputIndex: types.Int64Value(0),
+				TargetNode:        types.StringValue("Target"),
+				TargetInput:       types.StringValue("main"),
+				TargetInputIndex:  types.Int64Value(0),
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+		{
+			name: "error case - all null values",
+			plan: &models.ConnectionResource{
+				ID:                types.StringNull(),
+				SourceNode:        types.StringNull(),
+				SourceOutput:      types.StringNull(),
+				SourceOutputIndex: types.Int64Null(),
+				TargetNode:        types.StringNull(),
+				TargetInput:       types.StringNull(),
+				TargetInputIndex:  types.Int64Null(),
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+		{
+			name: "error case - unknown target values",
+			plan: &models.ConnectionResource{
+				ID:                types.StringValue("test-id"),
+				SourceNode:        types.StringValue("Source"),
+				SourceOutput:      types.StringValue("main"),
+				SourceOutputIndex: types.Int64Value(0),
+				TargetNode:        types.StringUnknown(),
+				TargetInput:       types.StringUnknown(),
+				TargetInputIndex:  types.Int64Unknown(),
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowConnectionResource{}
+			var diags diag.Diagnostics
+			success := r.generateConnectionJSON(tt.plan, &diags)
+			// Check expectations.
+			assert.Equal(t, tt.expectSuccess, success, "Success should match expected")
+			if tt.expectError {
+				assert.True(t, diags.HasError(), "Should have diagnostics error")
+			} else {
+				assert.False(t, diags.HasError(), "Should not have diagnostics error")
 			}
 		})
 	}

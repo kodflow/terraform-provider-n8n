@@ -6,7 +6,7 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 1.0"
+      version = ">= 1.0"
     }
   }
 }
@@ -101,8 +101,9 @@ resource "n8n_workflow_connection" "test_to_output" {
 
 # WORKFLOW
 resource "n8n_workflow" "test_merge" {
-  name   = "Test: Merge"
-  active = false
+  name       = "Test: Merge"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
 
   nodes_json = jsonencode([
     jsondecode(n8n_workflow_node.input_0.node_json),

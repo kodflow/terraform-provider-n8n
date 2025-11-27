@@ -109,8 +109,7 @@ func (r *VariableResource) Schema(_ctx context.Context, _req resource.SchemaRequ
 				Sensitive:           true,
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "Variable type",
-				Optional:            true,
+				MarkdownDescription: "Variable type (computed by n8n, read-only)",
 				Computed:            true,
 			},
 			"project_id": schema.StringAttribute{

@@ -19,8 +19,8 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential/models"
 )
 
-// float64BitSize is the bit size for float64 parsing.
-const float64BitSize = 64
+// FLOAT64_BIT_SIZE is the bit size for float64 parsing.
+const FLOAT64_BIT_SIZE int = 64
 
 // createNewCredential creates a new credential via the API.
 // Returns the new credential response or adds an error to diagnostics.
@@ -358,7 +358,7 @@ func convertValueByType(ctx context.Context, key, value string, propSchema map[s
 	// Handle numeric types (number, integer) by converting string to float64.
 	case "number", "integer":
 		// Try to parse as float64 (handles both int and float).
-		if f, err := strconv.ParseFloat(value, float64BitSize); err == nil {
+		if f, err := strconv.ParseFloat(value, FLOAT64_BIT_SIZE); err == nil {
 			tflog.Debug(ctx, fmt.Sprintf("Converted '%s' from string to number: %v", key, f))
 			// Return converted number.
 			return f

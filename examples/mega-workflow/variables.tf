@@ -8,3 +8,9 @@ variable "n8n_api_key" {
   type        = string
   sensitive   = true
 }
+
+variable "project_id" {
+  description = "Project ID for E2E test isolation"
+  type        = string
+  default     = ""
+}

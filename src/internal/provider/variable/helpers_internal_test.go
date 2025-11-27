@@ -596,14 +596,14 @@ func Test_buildVariableRequest(t *testing.T) {
 				plan := &models.Resource{
 					Key:       types.StringValue("mykey"),
 					Value:     types.StringValue("myvalue"),
-					Type:      types.StringValue("string"),
+					Type:      types.StringValue("string"), // Type is computed/read-only, not sent to API
 					ProjectID: types.StringValue("proj-123"),
 				}
 				request := buildVariableRequest(plan)
 				assert.Equal(t, "mykey", request.Key)
 				assert.Equal(t, "myvalue", request.Value)
-				assert.NotNil(t, request.Type)
-				assert.Equal(t, "string", *request.Type)
+				// Type is NOT sent to API - it's computed by n8n
+				assert.Nil(t, request.Type)
 				assert.True(t, request.ProjectId.IsSet())
 				assert.Equal(t, "proj-123", *request.ProjectId.Get())
 			},

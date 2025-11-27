@@ -11,8 +11,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -560,4 +563,459 @@ func TestWorkflowNodeResource_getSchemaAttributes(t *testing.T) {
 			}
 		})
 	}
+}
+
+// createNodeTestSchema creates a schema for node resource testing.
+func createNodeTestSchema(t *testing.T) schema.Schema {
+	t.Helper()
+	r := &WorkflowNodeResource{}
+	return schema.Schema{
+		Attributes: r.getSchemaAttributes(),
+	}
+}
+
+// getNodeObjectType returns the tftypes.Object for node resource.
+func getNodeObjectType() tftypes.Object {
+	return tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"id":           tftypes.String,
+			"name":         tftypes.String,
+			"type":         tftypes.String,
+			"type_version": tftypes.Number,
+			"position":     tftypes.List{ElementType: tftypes.Number},
+			"parameters":   tftypes.String,
+			"webhook_id":   tftypes.String,
+			"disabled":     tftypes.Bool,
+			"notes":        tftypes.String,
+			"node_json":    tftypes.String,
+		},
+	}
+}
+
+func TestWorkflowNodeResource_Create_Success(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"name":         tftypes.NewValue(tftypes.String, "Webhook"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+}
+
+func TestWorkflowNodeResource_Create_WithInvalidParameters(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"name":         tftypes.NewValue(tftypes.String, "Code Node"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.code"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, "{invalid json"),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.True(t, resp.Diagnostics.HasError(), "Create should have errors with invalid JSON")
+}
+
+func TestWorkflowNodeResource_Create_WithNullParameters(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"name":         tftypes.NewValue(tftypes.String, "Node with null params"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, nil),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Create with null parameters should not have errors")
+}
+
+func TestWorkflowNodeResource_Update_Success(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, "node-123"),
+		"name":         tftypes.NewValue(tftypes.String, "Updated Webhook"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 350), tftypes.NewValue(tftypes.Number, 400)}),
+		"parameters":   tftypes.NewValue(tftypes.String, `{"path":"test"}`),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.UpdateRequest{
+		Plan: plan,
+	}
+	resp := resource.UpdateResponse{
+		State: state,
+	}
+
+	r.Update(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
+}
+
+func TestWorkflowNodeResource_Update_WithNullTypeVersion(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, "node-123"),
+		"name":         tftypes.NewValue(tftypes.String, "Node without version"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
+		"type_version": tftypes.NewValue(tftypes.Number, nil),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.UpdateRequest{
+		Plan: plan,
+	}
+	resp := resource.UpdateResponse{
+		State: state,
+	}
+
+	r.Update(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Update with null type version should not have errors")
+}
+
+func TestWorkflowNodeResource_Update_InvalidJSON(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, "node-123"),
+		"name":         tftypes.NewValue(tftypes.String, "Code Node"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.code"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, "{invalid json"),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.UpdateRequest{
+		Plan: plan,
+	}
+	resp := resource.UpdateResponse{
+		State: state,
+	}
+
+	r.Update(ctx, req, &resp)
+
+	assert.True(t, resp.Diagnostics.HasError(), "Update should have errors with invalid JSON")
+}
+
+func TestWorkflowNodeResource_ImportState_Success(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.ImportStateRequest{
+		ID: "imported-node-id",
+	}
+	resp := resource.ImportStateResponse{
+		State: state,
+	}
+
+	r.ImportState(ctx, req, &resp)
+
+	// ImportState uses passthrough so it should set the ID in state.
+	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
+}
+
+func TestWorkflowNodeResource_generateNodeJSON_PositionError(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	var diags diag.Diagnostics
+
+	// Create a plan with unknown position to trigger position extraction failure.
+	plan := &models.NodeResource{
+		ID:          types.StringValue("test-id"),
+		Name:        types.StringValue("Test Node"),
+		Type:        types.StringValue("n8n-nodes-base.webhook"),
+		TypeVersion: types.Int64Value(1),
+		Position:    types.ListUnknown(types.Int64Type),
+		Parameters:  types.StringValue("{}"),
+	}
+
+	success := r.generateNodeJSON(ctx, plan, &diags)
+
+	assert.False(t, success)
+	assert.True(t, diags.HasError())
+}
+
+func TestWorkflowNodeResource_Configure_WithData(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+
+	req := resource.ConfigureRequest{
+		ProviderData: nil,
+	}
+	resp := resource.ConfigureResponse{}
+
+	r.Configure(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Configure should not have errors")
+}
+
+func TestWorkflowNodeResource_Read_NoOp(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+
+	req := resource.ReadRequest{}
+	resp := resource.ReadResponse{}
+
+	r.Read(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+}
+
+func TestWorkflowNodeResource_Delete_NoOp(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+
+	req := resource.DeleteRequest{}
+	resp := resource.DeleteResponse{}
+
+	r.Delete(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Delete should not have errors")
+}
+
+func TestWorkflowNodeResource_Create_WithWebhookID(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"name":         tftypes.NewValue(tftypes.String, "Webhook Trigger"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+		"webhook_id":   tftypes.NewValue(tftypes.String, "my-webhook-id"),
+		"disabled":     tftypes.NewValue(tftypes.Bool, false),
+		"notes":        tftypes.NewValue(tftypes.String, "Test notes"),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Create with webhook ID should not have errors")
+}
+
+func TestWorkflowNodeResource_Create_Disabled(t *testing.T) {
+	t.Parallel()
+
+	r := &WorkflowNodeResource{}
+	ctx := context.Background()
+	objectType := getNodeObjectType()
+
+	rawPlan := map[string]tftypes.Value{
+		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"name":         tftypes.NewValue(tftypes.String, "Disabled Node"),
+		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
+		"type_version": tftypes.NewValue(tftypes.Number, 1),
+		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+		"disabled":     tftypes.NewValue(tftypes.Bool, true),
+		"notes":        tftypes.NewValue(tftypes.String, nil),
+		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	}
+
+	plan := tfsdk.Plan{
+		Raw:    tftypes.NewValue(objectType, rawPlan),
+		Schema: createNodeTestSchema(t),
+	}
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(objectType, nil),
+		Schema: createNodeTestSchema(t),
+	}
+
+	req := resource.CreateRequest{
+		Plan: plan,
+	}
+	resp := resource.CreateResponse{
+		State: state,
+	}
+
+	r.Create(ctx, req, &resp)
+
+	assert.False(t, resp.Diagnostics.HasError(), "Create disabled node should not have errors")
 }

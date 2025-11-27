@@ -8,7 +8,7 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 1.0"
+      version = ">= 1.0"
     }
   }
 }
@@ -311,8 +311,9 @@ resource "n8n_workflow_connection" "error_to_format" {
 # WORKFLOW - Assemble all nodes and connections
 # ============================================================================
 resource "n8n_workflow" "complete_modular" {
-  name   = "ci-${var.run_id}-Complete Modular Workflow"
-  active = false # Set to true after testing
+  name       = "ci-${var.run_id}-Complete Modular Workflow"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false # Set to true after testing
 
   # Assemble all nodes
   nodes_json = jsonencode([
