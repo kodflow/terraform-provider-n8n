@@ -1,7 +1,7 @@
 # Scenario Test - E2E Rename/Update Operations
 # This example tests the complete lifecycle including rename operations:
-# 1. Plan/Apply with initial names (version = "v1")
-# 2. Plan/Apply with renamed resources (version = "v2")
+# 1. Plan/Apply with initial names (name_suffix = "v1")
+# 2. Plan/Apply with renamed resources (name_suffix = "v2")
 # 3. Destroy all resources
 #
 # This validates that terraform update operations work correctly,
@@ -11,7 +11,7 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 1.0"
+      version = ">= 1.0"
     }
   }
 }

@@ -9,7 +9,7 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 1.0"
+      version = ">= 1.0"
     }
   }
 }
@@ -44,8 +44,7 @@ data "n8n_users" "all" {
 }
 
 data "n8n_user" "admin" {
-  id         = n8n_user.admin.id
-  depends_on = [n8n_user.admin]
+  id = n8n_user.admin.id
 }
 
 # ============================================================================
