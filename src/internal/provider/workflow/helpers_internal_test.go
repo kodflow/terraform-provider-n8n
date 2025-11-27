@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"math/big"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,9 +14,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 	"github.com/stretchr/testify/assert"
 )
+
+// setupTestClientForHelpers creates a test N8nClient with httptest server.
+func setupTestClientForHelpers(t *testing.T, handler http.HandlerFunc) (*client.N8nClient, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{
+		{
+			URL:         server.URL,
+			Description: "Test server",
+		},
+	}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{
+		APIClient: apiClient,
+	}
+
+	return n8nClient, server
+}
 
 func Test_parseWorkflowJSON(t *testing.T) {
 	tests := []struct {
@@ -1784,6 +1810,42 @@ func Test_preserveProjectIDOnUpdate(t *testing.T) {
 				assert.True(t, plan.ProjectID.IsNull())
 			},
 		},
+		{
+			name: "error case - empty string project_id preserved",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				plan := &models.Resource{
+					ProjectID: types.StringValue(""),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringValue("old-project"),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				// Empty string is valid, not replaced with state.
+				assert.Equal(t, "", plan.ProjectID.ValueString())
+			},
+		},
+		{
+			name: "error case - unknown state keeps plan unknown",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				plan := &models.Resource{
+					ProjectID: types.StringUnknown(),
+				}
+				state := &models.Resource{
+					ProjectID: types.StringUnknown(),
+				}
+
+				preserveProjectIDOnUpdate(plan, state)
+
+				// Both are unknown, plan should become unknown.
+				assert.True(t, plan.ProjectID.IsUnknown())
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -2202,6 +2264,266 @@ func TestWorkflowResource_applyPostCreationTagsAndProject(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			tt.testFunc(t)
+		})
+	}
+}
+
+// TestWorkflowResource_transferWorkflowToProject_WithMock tests transferWorkflowToProject with mock HTTP.
+func TestWorkflowResource_transferWorkflowToProject_WithMock(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		workflowID   string
+		projectID    string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+	}{
+		{
+			name:       "success - transfer workflow to project",
+			workflowID: "workflow-123",
+			projectID:  "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "PUT" && strings.HasPrefix(r.URL.Path, "/workflows/") && strings.HasSuffix(r.URL.Path, "/transfer") {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+		},
+		{
+			name:       "error - transfer fails",
+			workflowID: "workflow-123",
+			projectID:  "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"message": "Failed to transfer workflow"}`))
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClientForHelpers(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			diags := &diag.Diagnostics{}
+
+			result := r.transferWorkflowToProject(ctx, tt.workflowID, tt.projectID, diags)
+
+			if tt.expectError {
+				assert.False(t, result, "Should return false on error")
+				assert.True(t, diags.HasError(), "Should have diagnostics error")
+			} else {
+				assert.True(t, result, "Should return true on success")
+				assert.False(t, diags.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_handleProjectAssignment_WithMock tests handleProjectAssignment with mock HTTP.
+func TestWorkflowResource_handleProjectAssignment_WithMock(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		workflowID   string
+		projectID    string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectNil    bool
+	}{
+		{
+			name:       "success - assign workflow to project",
+			workflowID: "workflow-123",
+			projectID:  "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == "PUT" && strings.HasSuffix(r.URL.Path, "/transfer") {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{}`))
+					return
+				}
+				if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/workflows/workflow-123") {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{
+						"id": "workflow-123",
+						"name": "Test Workflow",
+						"active": false,
+						"nodes": [],
+						"connections": {},
+						"settings": {}
+					}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectNil:   false,
+		},
+		{
+			name:       "error - transfer fails",
+			workflowID: "workflow-123",
+			projectID:  "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "PUT" && strings.HasSuffix(r.URL.Path, "/transfer") {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, _ = w.Write([]byte(`{"message": "Failed to transfer"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+			expectNil:   true,
+		},
+		{
+			name:       "error - refetch fails after transfer",
+			workflowID: "workflow-123",
+			projectID:  "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "PUT" && strings.HasSuffix(r.URL.Path, "/transfer") {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{}`))
+					return
+				}
+				if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/workflows/workflow-123") {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, _ = w.Write([]byte(`{"message": "Failed to fetch workflow"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+			expectNil:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClientForHelpers(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			diags := &diag.Diagnostics{}
+
+			result := r.handleProjectAssignment(ctx, tt.workflowID, tt.projectID, diags)
+
+			if tt.expectError {
+				assert.True(t, diags.HasError(), "Should have diagnostics error")
+			} else {
+				assert.False(t, diags.HasError(), "Should not have diagnostics error")
+			}
+
+			if tt.expectNil {
+				assert.Nil(t, result, "Should return nil on error")
+			} else {
+				assert.NotNil(t, result, "Should return workflow on success")
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_applyPostCreationTagsAndProject_WithMock tests project assignment path.
+func TestWorkflowResource_applyPostCreationTagsAndProject_WithMock(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		projectID    string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectError  bool
+		expectNil    bool
+	}{
+		{
+			name:      "success - apply project assignment",
+			projectID: "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == "PUT" && strings.HasSuffix(r.URL.Path, "/transfer") {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{}`))
+					return
+				}
+				if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/workflows/") {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{
+						"id": "workflow-123",
+						"name": "Test Workflow",
+						"active": false,
+						"nodes": [],
+						"connections": {},
+						"settings": {}
+					}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: false,
+			expectNil:   false,
+		},
+		{
+			name:      "error - project assignment fails",
+			projectID: "project-456",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "PUT" && strings.HasSuffix(r.URL.Path, "/transfer") {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, _ = w.Write([]byte(`{"message": "Failed to assign project"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectError: true,
+			expectNil:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClientForHelpers(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			ctx := context.Background()
+			diags := &diag.Diagnostics{}
+
+			workflowID := "workflow-123"
+			workflow := &n8nsdk.Workflow{Id: &workflowID}
+			plan := &models.Resource{
+				ProjectID: types.StringValue(tt.projectID),
+			}
+
+			result := r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
+
+			if tt.expectError {
+				assert.True(t, diags.HasError(), "Should have diagnostics error")
+			} else {
+				assert.False(t, diags.HasError(), "Should not have diagnostics error")
+			}
+
+			if tt.expectNil {
+				assert.Nil(t, result, "Should return nil on error")
+			} else {
+				assert.NotNil(t, result, "Should return workflow on success")
+			}
 		})
 	}
 }

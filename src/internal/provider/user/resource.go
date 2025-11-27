@@ -21,6 +21,14 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/user/models"
 )
 
+// HTTP status code range constants.
+const (
+	// HTTP_STATUS_SUCCESS_MIN is min success code.
+	HTTP_STATUS_SUCCESS_MIN int = 200
+	// HTTP_STATUS_SUCCESS_MAX is max success (excl).
+	HTTP_STATUS_SUCCESS_MAX int = 300
+)
+
 // Ensure UserResource implements required interfaces.
 var (
 	_ resource.Resource                = &UserResource{}
@@ -233,17 +241,122 @@ func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Reso
 	return true
 }
 
-// userCreateResponseUser represents the user object in the create response.
-type userCreateResponseUser struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
+// buildUserCreateRequest builds the JSON request body for user creation.
+//
+// Params:
+//   - plan: user resource model
+//   - resp: create response for errors
+//
+// Returns:
+//   - []byte: JSON body or nil on error
+func (r *UserResource) buildUserCreateRequest(plan *models.Resource, resp *resource.CreateResponse) []byte {
+	reqBody := []map[string]string{{"email": plan.Email.ValueString()}}
+	// Check condition.
+	if !plan.Role.IsNull() && !plan.Role.IsUnknown() {
+		reqBody[0]["role"] = plan.Role.ValueString()
+	}
+	jsonBody, err := json.Marshal(reqBody)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not marshal request: %s", err.Error()))
+		// Return empty slice on error.
+		return []byte{}
+	}
+	// Return marshalled JSON body.
+	return jsonBody
 }
 
-// userCreateResponse represents a single item in the array response from n8n user creation API.
-type userCreateResponse struct {
-	User  userCreateResponseUser `json:"user"`
-	Error string                 `json:"error"`
+// executeUserHTTPRequest executes the HTTP request for user creation.
+//
+// Params:
+//   - ctx: context for operation
+//   - jsonBody: request body
+//   - resp: create response for errors
+//
+// Returns:
+//   - []byte: response body or nil on error
+//   - int: HTTP status code
+func (r *UserResource) executeUserHTTPRequest(ctx context.Context, jsonBody []byte, resp *resource.CreateResponse) ([]byte, int) {
+	cfg := r.client.APIClient.GetConfig()
+	url := fmt.Sprintf("%s/users", cfg.Servers[0].URL)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not create HTTP request: %s", err.Error()))
+		// Return empty slice on error.
+		return []byte{}, 0
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "application/json")
+	httpReq.Header.Set("X-N8N-API-KEY", cfg.DefaultHeader["X-N8N-API-KEY"])
+	httpClient := cfg.HTTPClient
+	// Check for nil value.
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+	httpResp, err := httpClient.Do(httpReq)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not execute HTTP request: %s", err.Error()))
+		// Return empty slice on error.
+		return []byte{}, 0
+	}
+	defer httpResp.Body.Close()
+	body, err := io.ReadAll(httpResp.Body)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not read response body: %s", err.Error()))
+		// Return empty slice on error.
+		return []byte{}, 0
+	}
+	// Return response body and status code.
+	return body, httpResp.StatusCode
+}
+
+// parseUserCreateResponse parses and validates the user creation response.
+//
+// Params:
+//   - body: response body
+//   - statusCode: HTTP status code
+//   - resp: create response for errors
+//
+// Returns:
+//   - string: user ID or empty string on error
+func (r *UserResource) parseUserCreateResponse(body []byte, statusCode int, resp *resource.CreateResponse) string {
+	// Check HTTP status is in success range.
+	if statusCode < HTTP_STATUS_SUCCESS_MIN || statusCode >= HTTP_STATUS_SUCCESS_MAX {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("API returned status %d: %s", statusCode, string(body)))
+		// Return empty string on error.
+		return ""
+	}
+	var results []userCreateResponse
+	err := json.Unmarshal(body, &results)
+	// Check for error.
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not parse response: %s\nBody: %s", err.Error(), string(body)))
+		// Return empty string on error.
+		return ""
+	}
+	// Validate response.
+	if len(results) == 0 {
+		resp.Diagnostics.AddError("Error creating user", "API returned empty response")
+		// Return empty string on error.
+		return ""
+	}
+	// Check for API error in response.
+	if results[0].Error != "" {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("API error: %s", results[0].Error))
+		// Return empty string on error.
+		return ""
+	}
+	// Validate user ID.
+	if results[0].User.ID == "" {
+		resp.Diagnostics.AddError("Error creating user", "API did not return user ID")
+		// Return empty string on validation error.
+		return ""
+	}
+	// Return the user ID.
+	return results[0].User.ID
 }
 
 // createUser creates a user and returns the user ID.
@@ -258,133 +371,20 @@ type userCreateResponse struct {
 // Returns:
 //   - string: user ID or empty string if error occurred
 func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) string {
-	// Build request body
-	reqBody := []map[string]string{
-		{
-			"email": plan.Email.ValueString(),
-		},
-	}
-	// Check condition.
-	if !plan.Role.IsNull() && !plan.Role.IsUnknown() {
-		reqBody[0]["role"] = plan.Role.ValueString()
-	}
-
-	jsonBody, err := json.Marshal(reqBody)
-	// Check for error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("Could not marshal request: %s", err.Error()),
-		)
+	jsonBody := r.buildUserCreateRequest(plan, resp)
+	// Check for error during request build.
+	if len(jsonBody) == 0 {
 		// Return empty string on error.
 		return ""
 	}
-
-	// Build HTTP request
-	cfg := r.client.APIClient.GetConfig()
-	url := fmt.Sprintf("%s/users", cfg.Servers[0].URL)
-
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
-	// Check for error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("Could not create HTTP request: %s", err.Error()),
-		)
+	body, statusCode := r.executeUserHTTPRequest(ctx, jsonBody, resp)
+	// Check for error during HTTP request.
+	if len(body) == 0 {
 		// Return empty string on error.
 		return ""
 	}
-
-	// Set headers
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Accept", "application/json")
-	httpReq.Header.Set("X-N8N-API-KEY", cfg.DefaultHeader["X-N8N-API-KEY"])
-
-	// Execute request
-	httpClient := cfg.HTTPClient
-	// Check for nil value.
-	if httpClient == nil {
-		httpClient = http.DefaultClient
-	}
-	httpResp, err := httpClient.Do(httpReq)
-	// Check for error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("Could not execute HTTP request: %s", err.Error()),
-		)
-		// Return empty string on error.
-		return ""
-	}
-	defer httpResp.Body.Close()
-
-	// Read response body
-	body, err := io.ReadAll(httpResp.Body)
-	// Check for error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("Could not read response body: %s", err.Error()),
-		)
-		// Return empty string on error.
-		return ""
-	}
-
-	// Check HTTP status
-	if httpResp.StatusCode < 200 || httpResp.StatusCode >= 300 {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("API returned status %d: %s", httpResp.StatusCode, string(body)),
-		)
-		// Return empty string on error.
-		return ""
-	}
-
-	// Parse array response (n8n API returns array, not single object)
-	var results []userCreateResponse
-	err = json.Unmarshal(body, &results)
-	// Check for error.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("Could not parse response: %s\nBody: %s", err.Error(), string(body)),
-		)
-		// Return empty string on error.
-		return ""
-	}
-
-	// Validate response
-	if len(results) == 0 {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			"API returned empty response",
-		)
-		// Return empty string on error.
-		return ""
-	}
-
-	// Check for API error in response
-	if results[0].Error != "" {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			fmt.Sprintf("API error: %s", results[0].Error),
-		)
-		// Return empty string on error.
-		return ""
-	}
-
-	// Validate user ID
-	if results[0].User.ID == "" {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			"API did not return user ID",
-		)
-		// Return empty string on validation error.
-		return ""
-	}
-
-	// Return the user ID.
-	return results[0].User.ID
+	// Return the parsed user ID.
+	return r.parseUserCreateResponse(body, statusCode, resp)
 }
 
 // fetchFullUserDetails retrieves full user details by ID.

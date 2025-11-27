@@ -363,12 +363,14 @@ func (r *TagResource) executeUpdateLogic(ctx context.Context, plan, state *model
 	if tag.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	} else {
+		// Fall back to state value when API response doesn't include timestamp.
 		plan.CreatedAt = state.CreatedAt
 	}
 	// Copy updated_at from API response or fall back to state value.
 	if tag.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	} else {
+		// Fall back to state value when API response doesn't include timestamp.
 		plan.UpdatedAt = state.UpdatedAt
 	}
 
