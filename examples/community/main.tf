@@ -5,7 +5,7 @@ terraform {
   required_providers {
     n8n = {
       source  = "kodflow/n8n"
-      version = "~> 1.0"
+      version = ">= 1.0"
     }
   }
 }
@@ -33,16 +33,18 @@ resource "n8n_tag" "environment" {
 
 # Basic workflow without nodes (inactive)
 resource "n8n_workflow" "basic" {
-  name   = "Community Test - Basic"
-  active = false
-  tags   = [n8n_tag.test.id]
+  name       = "Community Test - Basic"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
+  tags       = [n8n_tag.test.id]
 }
 
 # Workflow with nodes
 resource "n8n_workflow" "with_nodes" {
-  name   = "Community Test - With Nodes"
-  active = false
-  tags   = [n8n_tag.test.id, n8n_tag.environment.id]
+  name       = "Community Test - With Nodes"
+  project_id = var.project_id != "" ? var.project_id : null
+  active     = false
+  tags       = [n8n_tag.test.id, n8n_tag.environment.id]
 
   nodes_json = jsonencode([
     {

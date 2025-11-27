@@ -2975,3 +2975,398 @@ func TestWorkflowResource_handlePostCreationActivation(t *testing.T) {
 		})
 	}
 }
+
+// TestWorkflowResource_performUpdateOperations tests the performUpdateOperations method.
+func TestWorkflowResource_performUpdateOperations(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		workflowID     string
+		planNodesJSON  string
+		planConnJSON   string
+		planSettJSON   string
+		planActive     types.Bool
+		stateActive    types.Bool
+		planProjectID  types.String
+		stateProjectID types.String
+		setupHandler   func(w http.ResponseWriter, r *http.Request)
+		expectNil      bool
+		expectError    bool
+	}{
+		{
+			name:           "success case - basic update",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-1"),
+			stateProjectID: types.StringValue("proj-1"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Handle PUT /workflows/{id} for update.
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:           "success case - update with project transfer",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-new"),
+			stateProjectID: types.StringValue("proj-old"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				// Handle PUT /workflows/{id} for update.
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				// Handle PUT /workflows/{id}/transfer for project transfer.
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123/transfer" {
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{})
+					return
+				}
+				// Handle GET /workflows/{id} for re-fetch after transfer.
+				if r.Method == http.MethodGet && r.URL.Path == "/workflows/wf-123" {
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:           "error case - invalid nodes JSON",
+			workflowID:     "wf-123",
+			planNodesJSON:  `{invalid`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-1"),
+			stateProjectID: types.StringValue("proj-1"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:           "error case - invalid connections JSON",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{invalid`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-1"),
+			stateProjectID: types.StringValue("proj-1"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:           "error case - invalid settings JSON",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{invalid`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-1"),
+			stateProjectID: types.StringValue("proj-1"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:           "error case - API update error",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-1"),
+			stateProjectID: types.StringValue("proj-1"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			},
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:           "error case - activation error during update",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(true),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringValue("proj-1"),
+			stateProjectID: types.StringValue("proj-1"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Fail on activate endpoint.
+				if r.Method == http.MethodPost && r.URL.Path == "/workflows/wf-123/activate" {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{"id": "wf-123"})
+			},
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			name:           "success case - null project_id no transfer",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringNull(),
+			stateProjectID: types.StringValue("proj-old"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Handle PUT /workflows/{id} for update.
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:           "success case - unknown project_id no transfer",
+			workflowID:     "wf-123",
+			planNodesJSON:  `[]`,
+			planConnJSON:   `{}`,
+			planSettJSON:   `{}`,
+			planActive:     types.BoolValue(false),
+			stateActive:    types.BoolValue(false),
+			planProjectID:  types.StringUnknown(),
+			stateProjectID: types.StringValue("proj-old"),
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				// Handle PUT /workflows/{id} for update.
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectNil:   false,
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			// Create null Tags to skip tag update.
+			plan := &models.Resource{
+				ID:              types.StringValue(tt.workflowID),
+				Name:            types.StringValue("Test Workflow"),
+				NodesJSON:       types.StringValue(tt.planNodesJSON),
+				ConnectionsJSON: types.StringValue(tt.planConnJSON),
+				SettingsJSON:    types.StringValue(tt.planSettJSON),
+				Active:          tt.planActive,
+				ProjectID:       tt.planProjectID,
+				Tags:            types.SetNull(types.StringType),
+			}
+			state := &models.Resource{
+				ID:        types.StringValue(tt.workflowID),
+				Active:    tt.stateActive,
+				ProjectID: tt.stateProjectID,
+			}
+			diags := &diag.Diagnostics{}
+
+			result := r.performUpdateOperations(context.Background(), tt.workflowID, plan, state, diags)
+
+			if tt.expectNil {
+				assert.Nil(t, result, "Should return nil")
+			} else {
+				assert.NotNil(t, result, "Should return workflow")
+			}
+
+			if tt.expectError {
+				assert.True(t, diags.HasError(), "Should have error")
+			} else {
+				assert.False(t, diags.HasError(), "Should not have error")
+			}
+		})
+	}
+}
+
+// Test_applyTimestampFallbacks tests the applyTimestampFallbacks function.
+func Test_applyTimestampFallbacks(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		planCreatedAt   types.String
+		planUpdatedAt   types.String
+		stateCreatedAt  types.String
+		stateUpdatedAt  types.String
+		expectCreatedAt types.String
+		expectUpdatedAt types.String
+	}{
+		{
+			name:            "success case - all values known",
+			planCreatedAt:   types.StringValue("2024-01-01T00:00:00Z"),
+			planUpdatedAt:   types.StringValue("2024-01-02T00:00:00Z"),
+			stateCreatedAt:  types.StringValue("2024-01-01T00:00:00Z"),
+			stateUpdatedAt:  types.StringValue("2024-01-02T00:00:00Z"),
+			expectCreatedAt: types.StringValue("2024-01-01T00:00:00Z"),
+			expectUpdatedAt: types.StringValue("2024-01-02T00:00:00Z"),
+		},
+		{
+			name:            "success case - plan unknown falls back to state",
+			planCreatedAt:   types.StringUnknown(),
+			planUpdatedAt:   types.StringUnknown(),
+			stateCreatedAt:  types.StringValue("2024-01-01T00:00:00Z"),
+			stateUpdatedAt:  types.StringValue("2024-01-02T00:00:00Z"),
+			expectCreatedAt: types.StringValue("2024-01-01T00:00:00Z"),
+			expectUpdatedAt: types.StringValue("2024-01-02T00:00:00Z"),
+		},
+		{
+			name:            "success case - plan null falls back to state",
+			planCreatedAt:   types.StringNull(),
+			planUpdatedAt:   types.StringNull(),
+			stateCreatedAt:  types.StringValue("2024-01-01T00:00:00Z"),
+			stateUpdatedAt:  types.StringValue("2024-01-02T00:00:00Z"),
+			expectCreatedAt: types.StringValue("2024-01-01T00:00:00Z"),
+			expectUpdatedAt: types.StringValue("2024-01-02T00:00:00Z"),
+		},
+		{
+			name:            "error case - mixed unknown and known values",
+			planCreatedAt:   types.StringUnknown(),
+			planUpdatedAt:   types.StringValue("2024-01-03T00:00:00Z"),
+			stateCreatedAt:  types.StringValue("2024-01-01T00:00:00Z"),
+			stateUpdatedAt:  types.StringValue("2024-01-02T00:00:00Z"),
+			expectCreatedAt: types.StringValue("2024-01-01T00:00:00Z"),
+			expectUpdatedAt: types.StringValue("2024-01-03T00:00:00Z"),
+		},
+		{
+			name:            "error case - mixed null and known values",
+			planCreatedAt:   types.StringValue("2024-01-01T00:00:00Z"),
+			planUpdatedAt:   types.StringNull(),
+			stateCreatedAt:  types.StringValue("2024-01-01T00:00:00Z"),
+			stateUpdatedAt:  types.StringValue("2024-01-02T00:00:00Z"),
+			expectCreatedAt: types.StringValue("2024-01-01T00:00:00Z"),
+			expectUpdatedAt: types.StringValue("2024-01-02T00:00:00Z"),
+		},
+		{
+			name:            "error case - state values also unknown",
+			planCreatedAt:   types.StringUnknown(),
+			planUpdatedAt:   types.StringUnknown(),
+			stateCreatedAt:  types.StringUnknown(),
+			stateUpdatedAt:  types.StringUnknown(),
+			expectCreatedAt: types.StringUnknown(),
+			expectUpdatedAt: types.StringUnknown(),
+		},
+		{
+			name:            "error case - state values also null",
+			planCreatedAt:   types.StringNull(),
+			planUpdatedAt:   types.StringNull(),
+			stateCreatedAt:  types.StringNull(),
+			stateUpdatedAt:  types.StringNull(),
+			expectCreatedAt: types.StringNull(),
+			expectUpdatedAt: types.StringNull(),
+		},
+		{
+			name:            "error case - empty string values",
+			planCreatedAt:   types.StringValue(""),
+			planUpdatedAt:   types.StringValue(""),
+			stateCreatedAt:  types.StringValue("2024-01-01T00:00:00Z"),
+			stateUpdatedAt:  types.StringValue("2024-01-02T00:00:00Z"),
+			expectCreatedAt: types.StringValue(""),
+			expectUpdatedAt: types.StringValue(""),
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			plan := &models.Resource{
+				CreatedAt: tt.planCreatedAt,
+				UpdatedAt: tt.planUpdatedAt,
+			}
+			state := &models.Resource{
+				CreatedAt: tt.stateCreatedAt,
+				UpdatedAt: tt.stateUpdatedAt,
+			}
+
+			applyTimestampFallbacks(plan, state)
+
+			assert.Equal(t, tt.expectCreatedAt, plan.CreatedAt, "CreatedAt should match expected")
+			assert.Equal(t, tt.expectUpdatedAt, plan.UpdatedAt, "UpdatedAt should match expected")
+		})
+	}
+}

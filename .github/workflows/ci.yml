@@ -16,130 +16,75 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Provider version for E2E tests (uses dev version for freshly built binary)
+  PROVIDER_VERSION: "99.99.99"
+
 jobs:
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 1: BUILD & UNIT TESTS
+  # JOB 1a: LINT & FORMAT (parallel, no build needed)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  build-and-test:
-    name: Build & Unit Tests
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # CRITICAL: Validate secrets are available before wasting time
-      - name: Validate required secrets
-        run: |
-          echo "🔐 Validating required secrets..."
-          MISSING_SECRETS=0
-
-          if [ -z "${{ secrets.N8N_API_URL }}" ]; then
-            echo "❌ CRITICAL: N8N_API_URL secret is NOT set!"
-            MISSING_SECRETS=1
-          else
-            echo "✓ N8N_API_URL is configured"
-          fi
-
-          if [ -z "${{ secrets.N8N_API_KEY }}" ]; then
-            echo "❌ CRITICAL: N8N_API_KEY secret is NOT set!"
-            MISSING_SECRETS=1
-          else
-            echo "✓ N8N_API_KEY is configured"
-          fi
-
-          if [ $MISSING_SECRETS -eq 1 ]; then
-            echo ""
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "❌ PIPELINE FAILED: Missing required secrets!"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo ""
-            echo "Please configure the following secrets in:"
-            echo "Repository Settings → Secrets and variables → Actions"
-            echo ""
-            echo "Required secrets:"
-            echo "  - N8N_API_URL: Your n8n instance URL"
-            echo "  - N8N_API_KEY: Your n8n API key"
-            echo ""
-            exit 1
-          fi
-
-          echo "✅ All required secrets are configured"
-
-      # Setup Go
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: "go.mod"
           cache: true
 
-      # Setup Bazel
+      - name: Install linting tools
+        run: |
+          go install github.com/kodflow/ktn-linter/cmd/ktn-linter@latest
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install github.com/bazelbuild/buildtools/buildifier@latest
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8.0.0
+        with:
+          version: latest
+          install-mode: binary
+          args: --help
+
+      - name: Check formatting
+        run: make ci/fmt
+
+      - name: Run linters
+        run: make ci/lint
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 1b: UNIT TESTS + BUILD (parallel - combined for efficiency)
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  test-and-build:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
         with:
           disk-cache: true
           repository-cache: true
 
-      # Setup Terraform (needed for terraform validate in lint step)
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          terraform_version: "1.13.5"
-
-      # Install all development tools (includes dependencies, dev tools, and linting tools)
-      - name: Install tools
-        run: make tools
-
-      # Build provider (needed for terraform validate in lint step)
-      - name: Build provider for validation
-        run: make build
-
-      # Check code formatting
-      - name: Check formatting
-        run: make fmt
-
-      # Run linters
-      - name: Run linters
-        run: make lint
-
-      # Run unit tests with coverage
       - name: Run unit tests with coverage
-        run: |
-          echo "Running tests with coverage collection..."
-          bazel coverage --combined_report=lcov --instrumentation_filter="//src/..." //src/...
-          echo ""
-          echo "Coverage report generated at: bazel-out/_coverage/_coverage_report.dat"
-          echo ""
-          echo "Coverage summary:"
-          # Display coverage summary from LCOV
-          if [ -f bazel-out/_coverage/_coverage_report.dat ]; then
-            TOTAL_LINES=$(grep -c "^DA:" bazel-out/_coverage/_coverage_report.dat || echo 0)
-            HIT_LINES=$(grep "^DA:" bazel-out/_coverage/_coverage_report.dat | grep -v ",0$" | wc -l || echo 0)
-            if [ "$TOTAL_LINES" -gt 0 ]; then
-              COVERAGE=$(awk "BEGIN {printf \"%.1f\", ($HIT_LINES / $TOTAL_LINES) * 100}")
-              echo "  Lines covered: $HIT_LINES / $TOTAL_LINES ($COVERAGE%)"
-            fi
-          fi
+        run: make ci/test
 
-      # Rename coverage report for Codacy
-      - name: Rename coverage report for Codacy
-        run: |
-          mv bazel-out/_coverage/_coverage_report.dat bazel-out/_coverage/_coverage_report.lcov
-          echo "Coverage report renamed to .lcov for better Codacy detection"
-
-      # Upload coverage to Codacy
-      - name: Upload coverage to Codacy
-        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: bazel-out/_coverage/_coverage_report.lcov
-        continue-on-error: true
-
-      # Build provider with Bazel
       - name: Build provider
-        run: make build
+        run: make ci/build
 
-      # Upload provider binary for E2E test jobs
       - name: Upload provider binary
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
@@ -147,124 +92,133 @@ jobs:
           path: bazel-bin/src/terraform-provider-n8n_/terraform-provider-n8n
           retention-days: 1
 
-      # Test n8n API connection before running acceptance tests
-      - name: Test n8n API connection
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: |
-          chmod +x scripts/test-n8n-connection.sh
-          ./scripts/test-n8n-connection.sh
-
-      # Run acceptance tests (Go E2E tests)
-      - name: Run Go acceptance tests
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-          TF_ACC: "1"
-        run: |
-          echo "Running Go E2E acceptance tests..."
-          go test -v -tags=acceptance -timeout 30m ./src/internal/provider/credential/... ./src/internal/provider/tag/... ./src/internal/provider/variable/... ./src/internal/provider/workflow/...
-
-      # Generate documentation
-      - name: Generate documentation
-        run: make docs
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: coverage-report
+          path: bazel-out/_coverage/_coverage_report.dat
+          retention-days: 1
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 2: E2E TESTS - STANDARD EXAMPLES
+  # JOB 2: COVERAGE UPLOAD (non-blocking, runs in parallel with E2E setup)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  test-e2e-standard:
-    name: E2E Standard - ${{ matrix.example-name }}
+  coverage-upload:
+    name: Upload Coverage
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: test-and-build
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Upload to Codacy
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage/_coverage_report.dat
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 3: E2E SETUP - Create isolated project (after all quality checks)
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  e2e-setup:
+    name: E2E Setup
+    runs-on: ubuntu-latest
+    needs: [lint, test-and-build]
+    outputs:
+      project_id: ${{ steps.create-project.outputs.project_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.N8N_API_URL }}" ] || [ -z "${{ secrets.N8N_API_KEY }}" ]; then
+            echo "❌ Missing N8N_API_URL or N8N_API_KEY secrets"
+            exit 1
+          fi
+          echo "✓ Secrets configured"
+
+      - name: Create E2E Project
+        id: create-project
+        env:
+          N8N_BASE_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          chmod +x scripts/e2e-project-setup.sh
+          ./scripts/e2e-project-setup.sh setup
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 4: E2E TESTS - COMMUNITY EXAMPLES
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  test-e2e-community:
+    name: E2E Community - ${{ matrix.example-name }}
+    runs-on: ubuntu-latest
+    needs: e2e-setup
     strategy:
       fail-fast: false
       matrix:
         include:
-          - example-name: basic-sample
-            example-path: examples/basic-sample
-          - example-name: community-full
+          - example-name: full
             example-path: examples/community
-          - example-name: community-credentials
+          - example-name: credentials
             example-path: examples/community/credentials/basic-auth
-          - example-name: community-tags
+          - example-name: tags
             example-path: examples/community/tags/workflow-tags
-          - example-name: community-workflow-basic
+          - example-name: workflow-basic
             example-path: examples/community/workflows/basic-workflow
-          - example-name: community-workflow-scheduled
+          - example-name: workflow-scheduled
             example-path: examples/community/workflows/scheduled-workflow
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.13.5"
 
-      # Download provider binary
       - name: Download provider binary
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: terraform-provider-n8n
           path: /tmp/terraform-provider
 
-      # Install provider
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
-      # Terraform Init
       - name: Terraform Init
         working-directory: ${{ matrix.example-path }}
         run: terraform init -no-color
 
-      # Terraform Plan
       - name: Terraform Plan
         env:
           TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
           TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
           TF_VAR_run_id: ${{ github.run_number }}
           TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         working-directory: ${{ matrix.example-path }}
         run: terraform plan -no-color -input=false -out=tfplan
 
-      # Terraform Apply
       - name: Terraform Apply
-        id: terraform-apply
         env:
           TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
           TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
           TF_VAR_run_id: ${{ github.run_number }}
           TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         working-directory: ${{ matrix.example-path }}
-        run: |
-          terraform apply -no-color -auto-approve tfplan
-          terraform output -no-color || true
+        run: terraform apply -no-color -auto-approve tfplan
 
-      # Verify via n8n API
-      - name: Verify resources via n8n API
-        env:
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-        working-directory: ${{ matrix.example-path }}
-        run: |
-          echo "🔍 Verifying resources via n8n API..."
-          terraform output -json > outputs.json
-
-          # Basic API health check
-          RESPONSE=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows")
-          if echo "$RESPONSE" | jq -e '.data' >/dev/null 2>&1; then
-            echo "✅ API accessible and resources verified"
-          else
-            echo "⚠️  API response: $RESPONSE"
-          fi
-
-      # Terraform Destroy
       - name: Terraform Destroy
         if: always()
         env:
@@ -272,152 +226,286 @@ jobs:
           TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
           TF_VAR_run_id: ${{ github.run_number }}
           TF_VAR_timestamp: ${{ github.run_number }}-${{ github.run_attempt }}
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         working-directory: ${{ matrix.example-path }}
         run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 3: E2E TESTS - CUSTOM NODES (CORE)
+  # JOB 5: E2E TESTS - SCENARIO (RENAME OPERATIONS)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  test-e2e-nodes-core:
-    name: E2E Nodes Core (5 nodes)
+  test-e2e-scenario:
+    name: E2E Scenario - Rename
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: e2e-setup
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.13.5"
 
-      # Download provider binary
       - name: Download provider binary
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: terraform-provider-n8n
           path: /tmp/terraform-provider
 
-      # Install provider
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
-      # Create .env file
-      - name: Create .env file
-        run: |
-          cat > .env <<EOF
-          N8N_API_URL=${{ secrets.N8N_API_URL }}
-          N8N_API_KEY=${{ secrets.N8N_API_KEY }}
-          EOF
+      - name: Terraform Init
+        working-directory: examples/scenario
+        run: terraform init -no-color
 
-      # Test all core nodes
-      - name: Test all core nodes (Plan/Apply/Verify/Destroy)
+      - name: "Create resources (v1)"
         env:
-          CATEGORY: core
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v1
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
+        working-directory: examples/scenario
         run: |
-          chmod +x scripts/test-nodes.sh
-          export NODES_CATEGORY=core
-          ./scripts/test-nodes.sh
+          terraform plan -no-color -input=false -out=tfplan-v1
+          terraform apply -no-color -auto-approve tfplan-v1
+
+      - name: "Rename resources (v1 → v2)"
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
+        working-directory: examples/scenario
+        run: |
+          terraform plan -no-color -input=false -out=tfplan-v2
+          terraform apply -no-color -auto-approve tfplan-v2
+
+      - name: "Verify rename"
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
+        working-directory: examples/scenario
+        run: |
+          WORKFLOW_ID=$(terraform output -raw workflow_id 2>/dev/null || echo "")
+          if [ -n "$WORKFLOW_ID" ]; then
+            NAME=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_API_URL/api/v1/workflows/$WORKFLOW_ID" | jq -r '.name // empty')
+            if echo "$NAME" | grep -q "v2"; then
+              echo "✓ Workflow renamed"
+            else
+              echo "✗ Rename failed"
+              exit 1
+            fi
+          fi
+
+      - name: Destroy
+        if: always()
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_name_suffix: v2
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
+        working-directory: examples/scenario
+        run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 4: E2E TESTS - CUSTOM NODES (INTEGRATION)
+  # JOB 6: E2E TESTS - ENTERPRISE EXAMPLES
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  test-e2e-nodes-integration:
-    name: E2E Nodes Integration (266 nodes)
+  test-e2e-enterprise:
+    name: E2E Enterprise - ${{ matrix.example-name }}
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: e2e-setup
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example-name: projects
+            example-path: examples/enterprise/projects
+          - example-name: users
+            example-path: examples/enterprise/users
+          - example-name: variables
+            example-path: examples/enterprise/variables
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.13.5"
 
-      # Download provider binary
       - name: Download provider binary
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: terraform-provider-n8n
           path: /tmp/terraform-provider
 
-      # Install provider
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
-      # Create .env file
-      - name: Create .env file
-        run: |
-          cat > .env <<EOF
-          N8N_API_URL=${{ secrets.N8N_API_URL }}
-          N8N_API_KEY=${{ secrets.N8N_API_KEY }}
-          EOF
+      - name: Terraform Init
+        working-directory: ${{ matrix.example-path }}
+        run: terraform init -no-color
 
-      # Test all integration nodes
-      - name: Test all integration nodes (Plan/Apply/Verify/Destroy)
+      - name: Terraform Apply
         env:
-          CATEGORY: integration
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
+        working-directory: ${{ matrix.example-path }}
         run: |
-          chmod +x scripts/test-nodes.sh
-          export NODES_CATEGORY=integration
-          ./scripts/test-nodes.sh
+          terraform plan -no-color -input=false -out=tfplan
+          terraform apply -no-color -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: always()
+        env:
+          TF_VAR_n8n_api_key: ${{ secrets.N8N_API_KEY }}
+          TF_VAR_n8n_base_url: ${{ secrets.N8N_API_URL }}
+          TF_VAR_run_id: ${{ github.run_number }}
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
+        working-directory: ${{ matrix.example-path }}
+        run: terraform destroy -no-color -input=false -auto-approve
 
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 5: E2E TESTS - CUSTOM NODES (TRIGGER)
+  # JOB 7: E2E TESTS - ALL NODES (296 nodes in 14 groups)
   #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  test-e2e-nodes-trigger:
-    name: E2E Nodes Trigger (25 nodes)
+  test-e2e-nodes:
+    name: E2E Nodes - ${{ matrix.group-name }} (${{ matrix.count }})
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: e2e-setup
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group-name: Core
+            group-id: core
+            category: core
+            count: 5
+          - group-name: Trigger
+            group-id: trigger
+            category: trigger
+            count: 25
+          - group-name: CRM & Marketing
+            group-id: crm-marketing
+            category: integration
+            count: 42
+          - group-name: Communication
+            group-id: communication
+            category: integration
+            count: 25
+          - group-name: Project & Collab
+            group-id: project-collab
+            category: integration
+            count: 19
+          - group-name: Social & Content
+            group-id: social-content
+            category: integration
+            count: 20
+          - group-name: E-commerce & Finance
+            group-id: ecommerce-finance
+            category: integration
+            count: 18
+          - group-name: Dev & DevOps
+            group-id: dev-devops
+            category: integration
+            count: 22
+          - group-name: Database & Storage
+            group-id: database-storage
+            category: integration
+            count: 27
+          - group-name: Data Transform
+            group-id: data-transform
+            category: integration
+            count: 23
+          - group-name: AI & Automation
+            group-id: ai-automation
+            category: integration
+            count: 18
+          - group-name: Support & Business
+            group-id: support-business
+            category: integration
+            count: 24
+          - group-name: Security & Identity
+            group-id: security-identity
+            category: integration
+            count: 10
+          - group-name: Utilities & Testing
+            group-id: utilities-testing
+            category: integration
+            count: 18
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.13.5"
 
-      # Download provider binary
       - name: Download provider binary
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: terraform-provider-n8n
           path: /tmp/terraform-provider
 
-      # Install provider
       - name: Install provider
         run: |
-          mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64
-          cp /tmp/terraform-provider/terraform-provider-n8n $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
-          chmod +x $HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/1.1.0/linux_amd64/terraform-provider-n8n_v1.1.0
+          mkdir -p "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64"
+          cp /tmp/terraform-provider/terraform-provider-n8n "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
+          chmod +x "$HOME/.terraform.d/plugins/registry.terraform.io/kodflow/n8n/${{ env.PROVIDER_VERSION }}/linux_amd64/terraform-provider-n8n_v${{ env.PROVIDER_VERSION }}"
 
-      # Create .env file
       - name: Create .env file
         run: |
           cat > .env <<EOF
           N8N_API_URL=${{ secrets.N8N_API_URL }}
           N8N_API_KEY=${{ secrets.N8N_API_KEY }}
+          TF_VAR_project_id=${{ needs.e2e-setup.outputs.project_id }}
           EOF
 
-      # Test all trigger nodes
-      - name: Test all trigger nodes (Plan/Apply/Verify/Destroy)
+      - name: Test ${{ matrix.group-name }} nodes
         env:
-          CATEGORY: trigger
+          TF_VAR_project_id: ${{ needs.e2e-setup.outputs.project_id }}
         run: |
           chmod +x scripts/test-nodes.sh
-          export NODES_CATEGORY=trigger
-          ./scripts/test-nodes.sh
+          if [ "${{ matrix.category }}" = "integration" ]; then
+            NODES_GROUP=${{ matrix.group-id }} ./scripts/test-nodes.sh
+          else
+            NODES_CATEGORY=${{ matrix.category }} ./scripts/test-nodes.sh
+          fi
+
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # JOB 8: E2E CLEANUP - Destroy project after all tests
+  #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  e2e-cleanup:
+    name: E2E Cleanup
+    runs-on: ubuntu-latest
+    needs: [test-e2e-community, test-e2e-scenario, test-e2e-enterprise, test-e2e-nodes]
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Cleanup E2E Project
+        env:
+          N8N_BASE_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          chmod +x scripts/e2e-project-setup.sh
+          ./scripts/e2e-project-setup.sh cleanup

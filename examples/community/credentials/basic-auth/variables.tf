@@ -28,3 +28,9 @@ variable "basic_auth_password" {
   sensitive   = true
   default     = "testpassword"
 }
+
+variable "project_id" {
+  description = "Project ID for E2E test isolation"
+  type        = string
+  default     = ""
+}

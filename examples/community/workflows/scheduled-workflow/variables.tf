@@ -15,3 +15,9 @@ variable "run_id" {
   type        = string
   default     = "local"
 }
+
+variable "project_id" {
+  description = "Project ID for E2E test isolation"
+  type        = string
+  default     = ""
+}

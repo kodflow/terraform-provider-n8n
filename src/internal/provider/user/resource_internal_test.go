@@ -58,9 +58,13 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 				if r.Method == http.MethodPost && r.URL.Path == "/users" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{
-							"id": "user-123",
+					// n8n API returns an array response
+					json.NewEncoder(w).Encode([]map[string]any{
+						{
+							"user": map[string]any{
+								"id": "user-123",
+							},
+							"error": "",
 						},
 					})
 					return
@@ -103,8 +107,12 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 				if r.Method == http.MethodPost && r.URL.Path == "/users" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{},
+					// n8n API returns an array response with empty user
+					json.NewEncoder(w).Encode([]map[string]any{
+						{
+							"user":  map[string]any{},
+							"error": "",
+						},
 					})
 					return
 				}
@@ -120,9 +128,13 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 				if r.Method == http.MethodPost && r.URL.Path == "/users" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"user": map[string]any{
-							"id": "user-456",
+					// n8n API returns an array response
+					json.NewEncoder(w).Encode([]map[string]any{
+						{
+							"user": map[string]any{
+								"id": "user-456",
+							},
+							"error": "",
 						},
 					})
 					return
@@ -561,9 +573,13 @@ func TestUserResource_createUser(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{
-					"user": map[string]any{
-						"id": "user-123",
+				// n8n API returns an array response
+				json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user": map[string]any{
+							"id": "user-123",
+						},
+						"error": "",
 					},
 				})
 			},
@@ -577,9 +593,13 @@ func TestUserResource_createUser(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{
-					"user": map[string]any{
-						"id": "user-456",
+				// n8n API returns an array response
+				json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user": map[string]any{
+							"id": "user-456",
+						},
+						"error": "",
 					},
 				})
 			},
@@ -604,21 +624,26 @@ func TestUserResource_createUser(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{
-					"user": map[string]any{},
+				// n8n API returns an array response with empty user
+				json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user":  map[string]any{},
+						"error": "",
+					},
 				})
 			},
 			expectUserID: "",
 			expectError:  true,
 		},
 		{
-			name:  "nil user in response",
+			name:  "empty array response",
 			email: "niluser@example.com",
 			role:  "global:member",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(map[string]any{})
+				// n8n API returns empty array
+				json.NewEncoder(w).Encode([]map[string]any{})
 			},
 			expectUserID: "",
 			expectError:  true,
@@ -969,6 +994,351 @@ func TestUserResource_refreshUserData(t *testing.T) {
 				if user != nil && user.Role != nil {
 					assert.Equal(t, tt.expectRole, *user.Role, "Role should match")
 				}
+			}
+		})
+	}
+}
+
+// TestUserResource_createUser_ErrorPaths tests createUser error handling paths.
+func TestUserResource_createUser_ErrorPaths(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		email        string
+		role         string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectUserID string
+		expectError  bool
+	}{
+		{
+			name:  "invalid JSON response",
+			email: "test@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				// Return invalid JSON
+				_, _ = w.Write([]byte(`{invalid json`))
+			},
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:  "API error in response body",
+			email: "existing@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				// n8n API returns an array response with error field populated
+				_ = json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user": map[string]any{
+							"id": "",
+						},
+						"error": "Email already exists",
+					},
+				})
+			},
+			expectUserID: "",
+			expectError:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(tt.setupHandler)
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Email: types.StringValue(tt.email),
+				Role:  types.StringValue(tt.role),
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			userID := r.createUser(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.Empty(t, userID, "Should return empty string on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.Equal(t, tt.expectUserID, userID, "User ID should match")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestUserResource_createUser_NilHTTPClient tests createUser with nil HTTP client uses default.
+func TestUserResource_createUser_NilHTTPClient(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		email        string
+		role         string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectUserID string
+		expectError  bool
+	}{
+		{
+			name:  "nil HTTP client uses default",
+			email: "test@example.com",
+			role:  "global:member",
+			setupHandler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				_ = json.NewEncoder(w).Encode([]map[string]any{
+					{
+						"user": map[string]any{
+							"id": "user-from-default-client",
+						},
+						"error": "",
+					},
+				})
+			},
+			expectUserID: "user-from-default-client",
+			expectError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Create a test server
+			server := httptest.NewServer(http.HandlerFunc(tt.setupHandler))
+			defer server.Close()
+
+			// Create config with nil HTTPClient
+			cfg := n8nsdk.NewConfiguration()
+			cfg.Servers = n8nsdk.ServerConfigurations{
+				{
+					URL:         server.URL,
+					Description: "Test server",
+				},
+			}
+			cfg.HTTPClient = nil // Explicitly set to nil
+			cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+			apiClient := n8nsdk.NewAPIClient(cfg)
+			n8nClient := &client.N8nClient{
+				APIClient: apiClient,
+			}
+
+			r := &UserResource{client: n8nClient}
+			ctx := context.Background()
+			plan := &models.Resource{
+				Email: types.StringValue(tt.email),
+				Role:  types.StringValue(tt.role),
+			}
+			resp := &resource.CreateResponse{
+				State: resource.CreateResponse{}.State,
+			}
+
+			userID := r.createUser(ctx, plan, resp)
+
+			if tt.expectError {
+				assert.Empty(t, userID, "Should return empty string on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.Equal(t, tt.expectUserID, userID, "Should return user ID using default client")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestUserResource_buildUserCreateRequest tests the buildUserCreateRequest helper function.
+func TestUserResource_buildUserCreateRequest(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		email       string
+		role        string
+		expectBody  bool
+		expectError bool
+	}{
+		{
+			name:        "success - with role",
+			email:       "test@example.com",
+			role:        "global:member",
+			expectBody:  true,
+			expectError: false,
+		},
+		{
+			name:        "success - without role",
+			email:       "test@example.com",
+			role:        "",
+			expectBody:  true,
+			expectError: false,
+		},
+		{
+			name:        "success - with admin role",
+			email:       "admin@example.com",
+			role:        "global:admin",
+			expectBody:  true,
+			expectError: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &UserResource{}
+			plan := &models.Resource{
+				Email: types.StringValue(tt.email),
+			}
+			// Check if role is provided.
+			if tt.role != "" {
+				plan.Role = types.StringValue(tt.role)
+			} else {
+				plan.Role = types.StringNull()
+			}
+			resp := &resource.CreateResponse{}
+			body := r.buildUserCreateRequest(plan, resp)
+			// Check body expectations.
+			if tt.expectBody {
+				assert.NotEmpty(t, body, "Should return non-empty body")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+			}
+		})
+	}
+}
+
+// TestUserResource_executeUserHTTPRequest tests the executeUserHTTPRequest helper function.
+func TestUserResource_executeUserHTTPRequest(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectBody   bool
+		expectError  bool
+		expectStatus int
+	}{
+		{
+			name: "success - valid response",
+			setupHandler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				_, _ = w.Write([]byte(`[{"user":{"id":"user-123"},"error":""}]`))
+			},
+			expectBody:   true,
+			expectError:  false,
+			expectStatus: http.StatusCreated,
+		},
+		{
+			name: "error - server error",
+			setupHandler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal server error"}`))
+			},
+			expectBody:   true,
+			expectError:  false,
+			expectStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			server := httptest.NewServer(http.HandlerFunc(tt.setupHandler))
+			defer server.Close()
+			cfg := n8nsdk.NewConfiguration()
+			cfg.Servers = n8nsdk.ServerConfigurations{{URL: server.URL, Description: "Test server"}}
+			cfg.HTTPClient = server.Client()
+			cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+			apiClient := n8nsdk.NewAPIClient(cfg)
+			r := &UserResource{
+				client: &client.N8nClient{APIClient: apiClient},
+			}
+			ctx := context.Background()
+			jsonBody := []byte(`[{"email":"test@example.com"}]`)
+			resp := &resource.CreateResponse{}
+			body, statusCode := r.executeUserHTTPRequest(ctx, jsonBody, resp)
+			// Check body expectations.
+			if tt.expectBody {
+				assert.NotEmpty(t, body, "Should return non-empty body")
+			}
+			assert.Equal(t, tt.expectStatus, statusCode, "Should return expected status code")
+		})
+	}
+}
+
+// TestUserResource_parseUserCreateResponse tests the parseUserCreateResponse helper function.
+func TestUserResource_parseUserCreateResponse(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		body         []byte
+		statusCode   int
+		expectUserID string
+		expectError  bool
+	}{
+		{
+			name:         "success - valid response",
+			body:         []byte(`[{"user":{"id":"user-123","email":"test@example.com","role":"global:member"},"error":""}]`),
+			statusCode:   http.StatusCreated,
+			expectUserID: "user-123",
+			expectError:  false,
+		},
+		{
+			name:         "error - status code out of range",
+			body:         []byte(`{"error":"not found"}`),
+			statusCode:   http.StatusNotFound,
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:         "error - invalid JSON",
+			body:         []byte(`{invalid json`),
+			statusCode:   http.StatusCreated,
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:         "error - empty response array",
+			body:         []byte(`[]`),
+			statusCode:   http.StatusCreated,
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:         "error - API error in response",
+			body:         []byte(`[{"user":{"id":""},"error":"Email already exists"}]`),
+			statusCode:   http.StatusCreated,
+			expectUserID: "",
+			expectError:  true,
+		},
+		{
+			name:         "error - empty user ID",
+			body:         []byte(`[{"user":{"id":"","email":"test@example.com"},"error":""}]`),
+			statusCode:   http.StatusCreated,
+			expectUserID: "",
+			expectError:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &UserResource{}
+			resp := &resource.CreateResponse{}
+			userID := r.parseUserCreateResponse(tt.body, tt.statusCode, resp)
+			// Check expectations.
+			if tt.expectError {
+				assert.Empty(t, userID, "Should return empty string on error")
+				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			} else {
+				assert.Equal(t, tt.expectUserID, userID, "Should return expected user ID")
+				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
 			}
 		})
 	}

@@ -478,77 +478,98 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 // Returns:
 //   - bool: True if update succeeded, false otherwise
 func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	// Parse JSON fields.
-	nodes, connections, settings := parseWorkflowJSON(plan, &resp.Diagnostics)
-	// Check for JSON parsing errors.
-	if resp.Diagnostics.HasError() {
-		// Return failure.
-		return false
-	}
-
-	// Use state.ID for the workflow ID since plan.ID may be Unknown
-	// for Computed attributes. The ID cannot change during an update,
-	// so state.ID is always the correct value.
+	// Use state.ID for the workflow ID and copy to plan.
 	workflowID := state.ID.ValueString()
-
-	// Copy ID from state to plan for consistency.
 	plan.ID = state.ID
 
-	// Handle activation change.
-	r.handleWorkflowActivation(ctx, plan, state, &resp.Diagnostics)
-	// Check for activation change errors.
-	if resp.Diagnostics.HasError() {
-		// Return failure.
-		return false
-	}
-
-	// Update workflow content.
-	workflowRequest := n8nsdk.Workflow{
-		Name:        plan.Name.ValueString(),
-		Nodes:       nodes,
-		Connections: connections,
-		Settings:    settings,
-	}
-
-	workflow := r.updateWorkflowViaAPI(ctx, workflowID, workflowRequest, &resp.Diagnostics)
-	// Check for API error
+	// Execute all update operations in sequence.
+	workflow := r.performUpdateOperations(ctx, workflowID, plan, state, &resp.Diagnostics)
+	// Check for any errors during update operations.
 	if resp.Diagnostics.HasError() {
 		return false
 	}
 
-	// Update tags.
-	r.updateWorkflowTags(ctx, workflowID, plan, workflow, &resp.Diagnostics)
-	// Check for tag update errors.
-	if resp.Diagnostics.HasError() {
-		// Return failure.
-		return false
-	}
-
-	// Handle project transfer if project_id changed.
-	if !plan.ProjectID.Equal(state.ProjectID) {
-		// Transfer to new project if project_id is set
-		// Note: Removing a workflow from a project (changing from a
-		// value to null) is not supported by the n8n API. The workflow
-		// will remain in its current project if project_id changes to null.
-		if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
-			updatedWorkflow := r.handleProjectAssignment(ctx, workflowID, plan.ProjectID.ValueString(), &resp.Diagnostics)
-			// Check if project assignment succeeded
-			if resp.Diagnostics.HasError() {
-				// Return failure.
-				return false
-			}
-			// Use updated workflow if available.
-			if updatedWorkflow != nil {
-				workflow = updatedWorkflow
-			}
-		}
-	}
-
-	// Map workflow response to state.
+	// Finalize state by mapping response and applying fallbacks.
+	applyTimestampFallbacks(plan, state)
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
+	preserveProjectIDOnUpdate(plan, state)
 
 	// Return success.
 	return true
+}
+
+// performUpdateOperations executes all update operations in sequence.
+//
+// Params:
+//   - ctx: Context for the request
+//   - workflowID: The workflow identifier
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: The updated workflow or nil on error
+func (r *WorkflowResource) performUpdateOperations(ctx context.Context, workflowID string, plan, state *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
+	// Parse JSON fields.
+	nodes, connections, settings := parseWorkflowJSON(plan, diags)
+	// Check for JSON parsing errors.
+	if diags.HasError() {
+		return nil
+	}
+
+	// Handle activation change.
+	r.handleWorkflowActivation(ctx, plan, state, diags)
+	// Check for activation errors.
+	if diags.HasError() {
+		return nil
+	}
+
+	// Update workflow content via API.
+	workflow := r.updateWorkflowViaAPI(ctx, workflowID, n8nsdk.Workflow{
+		Name: plan.Name.ValueString(), Nodes: nodes, Connections: connections, Settings: settings,
+	}, diags)
+	// Check for API error.
+	if diags.HasError() {
+		return nil
+	}
+
+	// Update tags.
+	r.updateWorkflowTags(ctx, workflowID, plan, workflow, diags)
+	// Check for tag update errors.
+	if diags.HasError() {
+		return nil
+	}
+
+	// Handle project transfer if project_id changed to a valid value.
+	needsTransfer := !plan.ProjectID.Equal(state.ProjectID) && !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown()
+	// Transfer workflow to new project if needed.
+	if needsTransfer {
+		updated := r.handleProjectAssignment(ctx, workflowID, plan.ProjectID.ValueString(), diags)
+		// Check if project assignment returned updated workflow.
+		if updated != nil {
+			// Return updated workflow from project assignment.
+			return updated
+		}
+	}
+
+	// Return current workflow.
+	return workflow
+}
+
+// applyTimestampFallbacks applies state fallback values for timestamps.
+//
+// Params:
+//   - plan: The planned resource state
+//   - state: The current resource state
+func applyTimestampFallbacks(plan, state *models.Resource) {
+	// Fall back to state created_at when plan value is unknown or null.
+	if plan.CreatedAt.IsUnknown() || plan.CreatedAt.IsNull() {
+		plan.CreatedAt = state.CreatedAt
+	}
+	// Fall back to state updated_at when plan value is unknown or null.
+	if plan.UpdatedAt.IsUnknown() || plan.UpdatedAt.IsNull() {
+		plan.UpdatedAt = state.UpdatedAt
+	}
 }
 
 // Delete deletes the resource and removes the Terraform state on success.

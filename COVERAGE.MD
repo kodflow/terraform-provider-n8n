@@ -14,7 +14,7 @@ Automatically generated coverage report.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **94.9%** |
+| **Total Coverage** | **97.9%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -59,14 +59,14 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider` | 100.0% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential` | 93.1% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential` | 98.2% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/project` | 99.1% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client` | 100.0% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag` | 100.0% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 100.0% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag` | 98.9% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 95.9% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 97.7% |
-| 🟡 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 86.1% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow` | 97.4% |
 
 ---
 
@@ -117,13 +117,13 @@ Defines connections between workflow nodes for modular composition.
 | Function | Coverage | Notes |
 |----------|:--------:|-------|
 | `Configure` | 🔵 N/A | No configuration needed |
-| `Create` | 🔴 0.0% | State-only operation (no API calls) |
+| `Create` | 🟡 75.0% | State-only operation (no API calls) |
 | `Delete` | 🔵 N/A | Automatic state removal |
-| `ImportState` | 🔴 0.0% | Passthrough implementation |
+| `ImportState` | 🟢 100.0% | Passthrough implementation |
 | `Metadata` | 🟢 100.0% | ✅ Fully tested |
 | `Read` | 🔵 N/A | State is always current |
 | `Schema` | 🟢 100.0% | ✅ Fully tested |
-| `Update` | 🔴 0.0% | Regenerates JSON in state |
+| `Update` | 🟡 71.4% | Regenerates JSON in state |
 
 **Type:** Local state-only resource
 **Purpose:** Generate connection JSON for `n8n_workflow` resources
@@ -136,13 +136,13 @@ Defines individual workflow nodes for modular composition.
 | Function | Coverage | Notes |
 |----------|:--------:|-------|
 | `Configure` | 🔵 N/A | No configuration needed |
-| `Create` | 🔴 0.0% | State-only operation (no API calls) |
+| `Create` | 🟡 87.5% | State-only operation (no API calls) |
 | `Delete` | 🔵 N/A | Automatic state removal |
-| `ImportState` | 🔴 0.0% | Passthrough implementation |
+| `ImportState` | 🟢 100.0% | Passthrough implementation |
 | `Metadata` | 🟢 100.0% | ✅ Fully tested |
 | `Read` | 🔵 N/A | State is always current |
 | `Schema` | 🟢 100.0% | ✅ Fully tested |
-| `Update` | 🔴 0.0% | Regenerates JSON in state |
+| `Update` | 🟡 85.7% | Regenerates JSON in state |
 
 **Type:** Local state-only resource
 **Purpose:** Generate node JSON for `n8n_workflow` resources
@@ -211,5 +211,5 @@ Reading n8n resources without managing their lifecycle.
 
 ---
 
-*Report generated on: 2025-11-26*
+*Report generated on: 2025-11-27*
 *Threshold: 70.0%*

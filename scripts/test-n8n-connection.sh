@@ -80,13 +80,8 @@ if [ "$HTTP_CODE" = "000" ]; then
   exit 1
 elif [ "$HTTP_CODE" = "200" ]; then
   echo -e "${GREEN}✓${RESET} Authentication successful!"
-  echo -e "${GREEN}→${RESET} Response preview:"
-  echo "$BODY" | head -5
 elif [ "$HTTP_CODE" = "401" ]; then
   echo -e "${RED}✗${RESET} Authentication failed (HTTP 401 Unauthorized)"
-  echo -e "${RED}→${RESET} Response:"
-  echo "$BODY"
-  echo ""
   echo -e "${YELLOW}Possible causes:${RESET}"
   echo "  1. API key is invalid or expired"
   echo "  2. API key format is incorrect"
@@ -94,7 +89,6 @@ elif [ "$HTTP_CODE" = "401" ]; then
   exit 1
 else
   echo -e "${RED}✗${RESET} Unexpected response (HTTP $HTTP_CODE)"
-  echo "$BODY"
   exit 1
 fi
 
