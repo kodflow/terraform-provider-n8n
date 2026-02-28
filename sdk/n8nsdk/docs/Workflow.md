@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **StaticData** | Pointer to [**WorkflowStaticData**](WorkflowStaticData.md) |  | [optional] 
 **Tags** | Pointer to [**[]Tag**](Tag.md) |  | [optional] [readonly] 
 **Shared** | Pointer to [**[]SharedWorkflow**](SharedWorkflow.md) |  | [optional] 
+**ActiveVersion** | Pointer to [**NullableActiveVersion**](ActiveVersion.md) |  | [optional] 
 
 ## Methods
 
@@ -290,6 +291,41 @@ SetShared sets Shared field to given value.
 
 HasShared returns a boolean if a field has been set.
 
+### GetActiveVersion
+
+`func (o *Workflow) GetActiveVersion() ActiveVersion`
+
+GetActiveVersion returns the ActiveVersion field if non-nil, zero value otherwise.
+
+### GetActiveVersionOk
+
+`func (o *Workflow) GetActiveVersionOk() (*ActiveVersion, bool)`
+
+GetActiveVersionOk returns a tuple with the ActiveVersion field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetActiveVersion
+
+`func (o *Workflow) SetActiveVersion(v ActiveVersion)`
+
+SetActiveVersion sets ActiveVersion field to given value.
+
+### HasActiveVersion
+
+`func (o *Workflow) HasActiveVersion() bool`
+
+HasActiveVersion returns a boolean if a field has been set.
+
+### SetActiveVersionNil
+
+`func (o *Workflow) SetActiveVersionNil(b bool)`
+
+ SetActiveVersionNil sets the value for ActiveVersion to be an explicit nil
+
+### UnsetActiveVersion
+`func (o *Workflow) UnsetActiveVersion()`
+
+UnsetActiveVersion ensures that no value is present for ActiveVersion, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

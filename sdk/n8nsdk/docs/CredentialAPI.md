@@ -4,11 +4,79 @@ All URIs are relative to */api/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**CreateCredential**](CredentialAPI.md#CreateCredential) | **Post** /credentials | Create a credential
 [**CredentialsIdTransferPut**](CredentialAPI.md#CredentialsIdTransferPut) | **Put** /credentials/{id}/transfer | Transfer a credential to another project.
-[**CredentialsPost**](CredentialAPI.md#CredentialsPost) | **Post** /credentials | Create a credential
 [**CredentialsSchemaCredentialTypeNameGet**](CredentialAPI.md#CredentialsSchemaCredentialTypeNameGet) | **Get** /credentials/schema/{credentialTypeName} | Show credential data schema
 [**DeleteCredential**](CredentialAPI.md#DeleteCredential) | **Delete** /credentials/{id} | Delete credential by ID
+[**GetCredentials**](CredentialAPI.md#GetCredentials) | **Get** /credentials | List credentials
+[**UpdateCredential**](CredentialAPI.md#UpdateCredential) | **Patch** /credentials/{id} | Update credential by ID
 
+
+
+## CreateCredential
+
+> CreateCredentialResponse CreateCredential(ctx).Credential(credential).Execute()
+
+Create a credential
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	credential := *openapiclient.NewCredential("Joe's Github Credentials", "githubApi", map[string]interface{}({"accessToken":"ada612vad6fa5df4adf5a5dsf4389adsf76da7s"})) // Credential | Credential to be created.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.CredentialAPI.CreateCredential(context.Background()).Credential(credential).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `CredentialAPI.CreateCredential``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `CreateCredential`: CreateCredentialResponse
+	fmt.Fprintf(os.Stdout, "Response from `CredentialAPI.CreateCredential`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiCreateCredentialRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **credential** | [**Credential**](Credential.md) | Credential to be created. | 
+
+### Return type
+
+[**CreateCredentialResponse**](CreateCredentialResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## CredentialsIdTransferPut
@@ -75,72 +143,6 @@ Name | Type | Description  | Notes
 
 - **Content-Type**: application/json
 - **Accept**: Not defined
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## CredentialsPost
-
-> CreateCredentialResponse CredentialsPost(ctx).Credential(credential).Execute()
-
-Create a credential
-
-
-
-### Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
-)
-
-func main() {
-	credential := *openapiclient.NewCredential("Joe's Github Credentials", "github", map[string]interface{}({"token":"ada612vad6fa5df4adf5a5dsf4389adsf76da7s"})) // Credential | Credential to be created.
-
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.CredentialAPI.CredentialsPost(context.Background()).Credential(credential).Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `CredentialAPI.CredentialsPost``: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-	}
-	// response from `CredentialsPost`: CreateCredentialResponse
-	fmt.Fprintf(os.Stdout, "Response from `CredentialAPI.CredentialsPost`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCredentialsPostRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **credential** | [**Credential**](Credential.md) | Credential to be created. | 
-
-### Return type
-
-[**CreateCredentialResponse**](CreateCredentialResponse.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth)
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
@@ -278,6 +280,146 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## GetCredentials
+
+> CredentialList GetCredentials(ctx).Limit(limit).Cursor(cursor).Execute()
+
+List credentials
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	limit := float32(100) // float32 | The maximum number of items to return. (optional) (default to 100)
+	cursor := "cursor_example" // string | Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail. (optional)
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.CredentialAPI.GetCredentials(context.Background()).Limit(limit).Cursor(cursor).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `CredentialAPI.GetCredentials``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `GetCredentials`: CredentialList
+	fmt.Fprintf(os.Stdout, "Response from `CredentialAPI.GetCredentials`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetCredentialsRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **limit** | **float32** | The maximum number of items to return. | [default to 100]
+ **cursor** | **string** | Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request&#39;s response. Default value fetches the first \&quot;page\&quot; of the collection. See pagination for more detail. | 
+
+### Return type
+
+[**CredentialList**](CredentialList.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## UpdateCredential
+
+> CreateCredentialResponse UpdateCredential(ctx, id).UpdateCredentialRequest(updateCredentialRequest).Execute()
+
+Update credential by ID
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	id := "id_example" // string | The credential ID that needs to be updated
+	updateCredentialRequest := *openapiclient.NewUpdateCredentialRequest() // UpdateCredentialRequest | Credential data to update. All fields are optional.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.CredentialAPI.UpdateCredential(context.Background(), id).UpdateCredentialRequest(updateCredentialRequest).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `CredentialAPI.UpdateCredential``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `UpdateCredential`: CreateCredentialResponse
+	fmt.Fprintf(os.Stdout, "Response from `CredentialAPI.UpdateCredential`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **string** | The credential ID that needs to be updated | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiUpdateCredentialRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **updateCredentialRequest** | [**UpdateCredentialRequest**](UpdateCredentialRequest.md) | Credential data to update. All fields are optional. | 
+
+### Return type
+
+[**CreateCredentialResponse**](CreateCredentialResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

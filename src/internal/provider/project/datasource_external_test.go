@@ -256,11 +256,7 @@ func TestProjectDataSource_Read(t *testing.T) {
 							{
 								"id": "project-123",
 								"name": "Test Project",
-								"type": "team",
-								"createdAt": "2024-01-01T00:00:00Z",
-								"updatedAt": "2024-01-02T00:00:00Z",
-								"icon": {"value": "icon-test"},
-								"description": "Test description"
+								"type": "team"
 							}
 						]
 					}`))
@@ -280,13 +276,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 
 				// Build config
 				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":          tftypes.NewValue(tftypes.String, "project-123"),
-					"name":        tftypes.NewValue(tftypes.String, nil),
-					"type":        tftypes.NewValue(tftypes.String, nil),
-					"created_at":  tftypes.NewValue(tftypes.String, nil),
-					"updated_at":  tftypes.NewValue(tftypes.String, nil),
-					"icon":        tftypes.NewValue(tftypes.String, nil),
-					"description": tftypes.NewValue(tftypes.String, nil),
+					"id":   tftypes.NewValue(tftypes.String, "project-123"),
+					"name": tftypes.NewValue(tftypes.String, nil),
+					"type": tftypes.NewValue(tftypes.String, nil),
 				})
 
 				config := tfsdk.Config{
@@ -329,11 +321,7 @@ func TestProjectDataSource_Read(t *testing.T) {
 							{
 								"id": "project-123",
 								"name": "Test Project",
-								"type": "team",
-								"createdAt": "2024-01-01T00:00:00Z",
-								"updatedAt": "2024-01-02T00:00:00Z",
-								"icon": {"value": "icon-test"},
-								"description": "Test description"
+								"type": "team"
 							}
 						]
 					}`))
@@ -353,13 +341,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 
 				// Build config with name instead of id
 				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":          tftypes.NewValue(tftypes.String, nil),
-					"name":        tftypes.NewValue(tftypes.String, "Test Project"),
-					"type":        tftypes.NewValue(tftypes.String, nil),
-					"created_at":  tftypes.NewValue(tftypes.String, nil),
-					"updated_at":  tftypes.NewValue(tftypes.String, nil),
-					"icon":        tftypes.NewValue(tftypes.String, nil),
-					"description": tftypes.NewValue(tftypes.String, nil),
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, "Test Project"),
+					"type": tftypes.NewValue(tftypes.String, nil),
 				})
 
 				config := tfsdk.Config{
@@ -447,13 +431,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
 				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":          tftypes.NewValue(tftypes.String, "project-123"),
-					"name":        tftypes.NewValue(tftypes.String, nil),
-					"type":        tftypes.NewValue(tftypes.String, nil),
-					"created_at":  tftypes.NewValue(tftypes.String, nil),
-					"updated_at":  tftypes.NewValue(tftypes.String, nil),
-					"icon":        tftypes.NewValue(tftypes.String, nil),
-					"description": tftypes.NewValue(tftypes.String, nil),
+					"id":   tftypes.NewValue(tftypes.String, "project-123"),
+					"name": tftypes.NewValue(tftypes.String, nil),
+					"type": tftypes.NewValue(tftypes.String, nil),
 				})
 
 				config := tfsdk.Config{
@@ -490,13 +470,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 
 				// Create config with both id and name as null
 				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":          tftypes.NewValue(tftypes.String, nil),
-					"name":        tftypes.NewValue(tftypes.String, nil),
-					"type":        tftypes.NewValue(tftypes.String, nil),
-					"created_at":  tftypes.NewValue(tftypes.String, nil),
-					"updated_at":  tftypes.NewValue(tftypes.String, nil),
-					"icon":        tftypes.NewValue(tftypes.String, nil),
-					"description": tftypes.NewValue(tftypes.String, nil),
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, nil),
+					"type": tftypes.NewValue(tftypes.String, nil),
 				})
 
 				config := tfsdk.Config{
@@ -553,13 +529,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
 				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":          tftypes.NewValue(tftypes.String, "project-123"),
-					"name":        tftypes.NewValue(tftypes.String, nil),
-					"type":        tftypes.NewValue(tftypes.String, nil),
-					"created_at":  tftypes.NewValue(tftypes.String, nil),
-					"updated_at":  tftypes.NewValue(tftypes.String, nil),
-					"icon":        tftypes.NewValue(tftypes.String, nil),
-					"description": tftypes.NewValue(tftypes.String, nil),
+					"id":   tftypes.NewValue(tftypes.String, "project-123"),
+					"name": tftypes.NewValue(tftypes.String, nil),
+					"type": tftypes.NewValue(tftypes.String, nil),
 				})
 
 				config := tfsdk.Config{
@@ -616,13 +588,9 @@ func TestProjectDataSource_Read(t *testing.T) {
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
 				configRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-					"id":          tftypes.NewValue(tftypes.String, nil),
-					"name":        tftypes.NewValue(tftypes.String, "NonExistent Project"),
-					"type":        tftypes.NewValue(tftypes.String, nil),
-					"created_at":  tftypes.NewValue(tftypes.String, nil),
-					"updated_at":  tftypes.NewValue(tftypes.String, nil),
-					"icon":        tftypes.NewValue(tftypes.String, nil),
-					"description": tftypes.NewValue(tftypes.String, nil),
+					"id":   tftypes.NewValue(tftypes.String, nil),
+					"name": tftypes.NewValue(tftypes.String, "NonExistent Project"),
+					"type": tftypes.NewValue(tftypes.String, nil),
 				})
 
 				config := tfsdk.Config{

@@ -77,4 +77,32 @@ func Test_n8nsdk_ExecutionAPIService(t *testing.T) {
 
 	})
 
+	t.Run("Test ExecutionAPIService ExecutionsIdTagsGet", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var id float32
+
+		resp, httpRes, err := apiClient.ExecutionAPI.ExecutionsIdTagsGet(context.Background(), id).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
+	t.Run("Test ExecutionAPIService ExecutionsIdTagsPut", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var id float32
+
+		resp, httpRes, err := apiClient.ExecutionAPI.ExecutionsIdTagsPut(context.Background(), id).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
 }

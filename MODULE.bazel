@@ -29,9 +29,11 @@ use_repo(
     "com_github_hashicorp_terraform_plugin_framework",
     "com_github_hashicorp_terraform_plugin_go",
     "com_github_hashicorp_terraform_plugin_log",
+    "com_github_hashicorp_terraform_plugin_testing",
     "com_github_kodflow_terraform_provider_n8n_sdk_n8nsdk",
     "com_github_spf13_cobra",
     "com_github_stretchr_testify",
+    "in_gopkg_validator_v2",
 )
 
 # Register Go toolchain - use specific version to avoid Bazel 9.0.0rc1 host detection bug

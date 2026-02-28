@@ -23,6 +23,18 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
 
+	t.Run("Test CredentialAPIService CreateCredential", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		resp, httpRes, err := apiClient.CredentialAPI.CreateCredential(context.Background()).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
 	t.Run("Test CredentialAPIService CredentialsIdTransferPut", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test
@@ -32,18 +44,6 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 		httpRes, err := apiClient.CredentialAPI.CredentialsIdTransferPut(context.Background(), id).Execute()
 
 		require.Nil(t, err)
-		assert.Equal(t, 200, httpRes.StatusCode)
-
-	})
-
-	t.Run("Test CredentialAPIService CredentialsPost", func(t *testing.T) {
-
-		t.Skip("skip test") // remove to run test
-
-		resp, httpRes, err := apiClient.CredentialAPI.CredentialsPost(context.Background()).Execute()
-
-		require.Nil(t, err)
-		require.NotNil(t, resp)
 		assert.Equal(t, 200, httpRes.StatusCode)
 
 	})
@@ -69,6 +69,32 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 		var id string
 
 		resp, httpRes, err := apiClient.CredentialAPI.DeleteCredential(context.Background(), id).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
+	t.Run("Test CredentialAPIService GetCredentials", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		resp, httpRes, err := apiClient.CredentialAPI.GetCredentials(context.Background()).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
+	t.Run("Test CredentialAPIService UpdateCredential", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var id string
+
+		resp, httpRes, err := apiClient.CredentialAPI.UpdateCredential(context.Background(), id).Execute()
 
 		require.Nil(t, err)
 		require.NotNil(t, resp)

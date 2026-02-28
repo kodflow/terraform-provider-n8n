@@ -146,6 +146,21 @@ func Test_n8nsdk_WorkflowAPIService(t *testing.T) {
 
 	})
 
+	t.Run("Test WorkflowAPIService WorkflowsIdVersionIdGet", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var id string
+		var versionId string
+
+		resp, httpRes, err := apiClient.WorkflowAPI.WorkflowsIdVersionIdGet(context.Background(), id, versionId).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
 	t.Run("Test WorkflowAPIService WorkflowsPost", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test

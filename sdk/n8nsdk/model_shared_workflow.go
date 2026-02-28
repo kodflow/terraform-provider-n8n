@@ -21,18 +21,12 @@ var _ MappedNullable = &SharedWorkflow{}
 
 // SharedWorkflow struct for SharedWorkflow
 type SharedWorkflow struct {
-	// Shared workflow ID
-	Id *string `json:"id,omitempty"`
-	// Project ID
-	ProjectId *string `json:"projectId,omitempty"`
-	// User ID
-	UserId *string `json:"userId,omitempty"`
-	// User role
-	Role                 *string                 `json:"role,omitempty"`
-	WorkflowId           *string                 `json:"workflowId,omitempty"`
-	Project              *SharedWorkflowProject1 `json:"project,omitempty"`
-	CreatedAt            *time.Time              `json:"createdAt,omitempty"`
-	UpdatedAt            *time.Time              `json:"updatedAt,omitempty"`
+	Role                 *string                `json:"role,omitempty"`
+	WorkflowId           *string                `json:"workflowId,omitempty"`
+	ProjectId            *string                `json:"projectId,omitempty"`
+	Project              *SharedWorkflowProject `json:"project,omitempty"`
+	CreatedAt            *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt            *time.Time             `json:"updatedAt,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -53,102 +47,6 @@ func NewSharedWorkflow() *SharedWorkflow {
 func NewSharedWorkflowWithDefaults() *SharedWorkflow {
 	this := SharedWorkflow{}
 	return &this
-}
-
-// GetId returns the Id field value if set, zero value otherwise.
-func (o *SharedWorkflow) GetId() string {
-	if o == nil || IsNil(o.Id) {
-		var ret string
-		return ret
-	}
-	return *o.Id
-}
-
-// GetIdOk returns a tuple with the Id field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SharedWorkflow) GetIdOk() (*string, bool) {
-	if o == nil || IsNil(o.Id) {
-		return nil, false
-	}
-	return o.Id, true
-}
-
-// HasId returns a boolean if a field has been set.
-func (o *SharedWorkflow) HasId() bool {
-	if o != nil && !IsNil(o.Id) {
-		return true
-	}
-
-	return false
-}
-
-// SetId gets a reference to the given string and assigns it to the Id field.
-func (o *SharedWorkflow) SetId(v string) {
-	o.Id = &v
-}
-
-// GetProjectId returns the ProjectId field value if set, zero value otherwise.
-func (o *SharedWorkflow) GetProjectId() string {
-	if o == nil || IsNil(o.ProjectId) {
-		var ret string
-		return ret
-	}
-	return *o.ProjectId
-}
-
-// GetProjectIdOk returns a tuple with the ProjectId field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SharedWorkflow) GetProjectIdOk() (*string, bool) {
-	if o == nil || IsNil(o.ProjectId) {
-		return nil, false
-	}
-	return o.ProjectId, true
-}
-
-// HasProjectId returns a boolean if a field has been set.
-func (o *SharedWorkflow) HasProjectId() bool {
-	if o != nil && !IsNil(o.ProjectId) {
-		return true
-	}
-
-	return false
-}
-
-// SetProjectId gets a reference to the given string and assigns it to the ProjectId field.
-func (o *SharedWorkflow) SetProjectId(v string) {
-	o.ProjectId = &v
-}
-
-// GetUserId returns the UserId field value if set, zero value otherwise.
-func (o *SharedWorkflow) GetUserId() string {
-	if o == nil || IsNil(o.UserId) {
-		var ret string
-		return ret
-	}
-	return *o.UserId
-}
-
-// GetUserIdOk returns a tuple with the UserId field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SharedWorkflow) GetUserIdOk() (*string, bool) {
-	if o == nil || IsNil(o.UserId) {
-		return nil, false
-	}
-	return o.UserId, true
-}
-
-// HasUserId returns a boolean if a field has been set.
-func (o *SharedWorkflow) HasUserId() bool {
-	if o != nil && !IsNil(o.UserId) {
-		return true
-	}
-
-	return false
-}
-
-// SetUserId gets a reference to the given string and assigns it to the UserId field.
-func (o *SharedWorkflow) SetUserId(v string) {
-	o.UserId = &v
 }
 
 // GetRole returns the Role field value if set, zero value otherwise.
@@ -215,10 +113,42 @@ func (o *SharedWorkflow) SetWorkflowId(v string) {
 	o.WorkflowId = &v
 }
 
+// GetProjectId returns the ProjectId field value if set, zero value otherwise.
+func (o *SharedWorkflow) GetProjectId() string {
+	if o == nil || IsNil(o.ProjectId) {
+		var ret string
+		return ret
+	}
+	return *o.ProjectId
+}
+
+// GetProjectIdOk returns a tuple with the ProjectId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SharedWorkflow) GetProjectIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ProjectId) {
+		return nil, false
+	}
+	return o.ProjectId, true
+}
+
+// HasProjectId returns a boolean if a field has been set.
+func (o *SharedWorkflow) HasProjectId() bool {
+	if o != nil && !IsNil(o.ProjectId) {
+		return true
+	}
+
+	return false
+}
+
+// SetProjectId gets a reference to the given string and assigns it to the ProjectId field.
+func (o *SharedWorkflow) SetProjectId(v string) {
+	o.ProjectId = &v
+}
+
 // GetProject returns the Project field value if set, zero value otherwise.
-func (o *SharedWorkflow) GetProject() SharedWorkflowProject1 {
+func (o *SharedWorkflow) GetProject() SharedWorkflowProject {
 	if o == nil || IsNil(o.Project) {
-		var ret SharedWorkflowProject1
+		var ret SharedWorkflowProject
 		return ret
 	}
 	return *o.Project
@@ -226,7 +156,7 @@ func (o *SharedWorkflow) GetProject() SharedWorkflowProject1 {
 
 // GetProjectOk returns a tuple with the Project field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SharedWorkflow) GetProjectOk() (*SharedWorkflowProject1, bool) {
+func (o *SharedWorkflow) GetProjectOk() (*SharedWorkflowProject, bool) {
 	if o == nil || IsNil(o.Project) {
 		return nil, false
 	}
@@ -242,8 +172,8 @@ func (o *SharedWorkflow) HasProject() bool {
 	return false
 }
 
-// SetProject gets a reference to the given SharedWorkflowProject1 and assigns it to the Project field.
-func (o *SharedWorkflow) SetProject(v SharedWorkflowProject1) {
+// SetProject gets a reference to the given SharedWorkflowProject and assigns it to the Project field.
+func (o *SharedWorkflow) SetProject(v SharedWorkflowProject) {
 	o.Project = &v
 }
 
@@ -321,20 +251,14 @@ func (o SharedWorkflow) MarshalJSON() ([]byte, error) {
 
 func (o SharedWorkflow) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Id) {
-		toSerialize["id"] = o.Id
-	}
-	if !IsNil(o.ProjectId) {
-		toSerialize["projectId"] = o.ProjectId
-	}
-	if !IsNil(o.UserId) {
-		toSerialize["userId"] = o.UserId
-	}
 	if !IsNil(o.Role) {
 		toSerialize["role"] = o.Role
 	}
 	if !IsNil(o.WorkflowId) {
 		toSerialize["workflowId"] = o.WorkflowId
+	}
+	if !IsNil(o.ProjectId) {
+		toSerialize["projectId"] = o.ProjectId
 	}
 	if !IsNil(o.Project) {
 		toSerialize["project"] = o.Project
@@ -367,11 +291,9 @@ func (o *SharedWorkflow) UnmarshalJSON(data []byte) (err error) {
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "id")
-		delete(additionalProperties, "projectId")
-		delete(additionalProperties, "userId")
 		delete(additionalProperties, "role")
 		delete(additionalProperties, "workflowId")
+		delete(additionalProperties, "projectId")
 		delete(additionalProperties, "project")
 		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "updatedAt")

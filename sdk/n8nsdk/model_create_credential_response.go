@@ -22,11 +22,9 @@ var _ MappedNullable = &CreateCredentialResponse{}
 
 // CreateCredentialResponse struct for CreateCredentialResponse
 type CreateCredentialResponse struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
-	// Whether the credential is managed by n8n
-	IsManaged            *bool     `json:"isManaged,omitempty"`
+	Id                   string    `json:"id"`
+	Name                 string    `json:"name"`
+	Type                 string    `json:"type"`
 	CreatedAt            time.Time `json:"createdAt"`
 	UpdatedAt            time.Time `json:"updatedAt"`
 	AdditionalProperties map[string]interface{}
@@ -128,38 +126,6 @@ func (o *CreateCredentialResponse) SetType(v string) {
 	o.Type = v
 }
 
-// GetIsManaged returns the IsManaged field value if set, zero value otherwise.
-func (o *CreateCredentialResponse) GetIsManaged() bool {
-	if o == nil || IsNil(o.IsManaged) {
-		var ret bool
-		return ret
-	}
-	return *o.IsManaged
-}
-
-// GetIsManagedOk returns a tuple with the IsManaged field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *CreateCredentialResponse) GetIsManagedOk() (*bool, bool) {
-	if o == nil || IsNil(o.IsManaged) {
-		return nil, false
-	}
-	return o.IsManaged, true
-}
-
-// HasIsManaged returns a boolean if a field has been set.
-func (o *CreateCredentialResponse) HasIsManaged() bool {
-	if o != nil && !IsNil(o.IsManaged) {
-		return true
-	}
-
-	return false
-}
-
-// SetIsManaged gets a reference to the given bool and assigns it to the IsManaged field.
-func (o *CreateCredentialResponse) SetIsManaged(v bool) {
-	o.IsManaged = &v
-}
-
 // GetCreatedAt returns the CreatedAt field value
 func (o *CreateCredentialResponse) GetCreatedAt() time.Time {
 	if o == nil {
@@ -221,9 +187,6 @@ func (o CreateCredentialResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize["id"] = o.Id
 	toSerialize["name"] = o.Name
 	toSerialize["type"] = o.Type
-	if !IsNil(o.IsManaged) {
-		toSerialize["isManaged"] = o.IsManaged
-	}
 	toSerialize["createdAt"] = o.CreatedAt
 	toSerialize["updatedAt"] = o.UpdatedAt
 
@@ -276,7 +239,6 @@ func (o *CreateCredentialResponse) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "id")
 		delete(additionalProperties, "name")
 		delete(additionalProperties, "type")
-		delete(additionalProperties, "isManaged")
 		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "updatedAt")
 		o.AdditionalProperties = additionalProperties

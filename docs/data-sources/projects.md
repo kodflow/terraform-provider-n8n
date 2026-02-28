@@ -24,10 +24,6 @@ Fetches a list of all n8n projects
 
 Read-Only:
 
-- `created_at` (String) Timestamp when the project was created
-- `description` (String) Project description
-- `icon` (String) Project icon
 - `id` (String) Project identifier
 - `name` (String) Project name
 - `type` (String) Project type (e.g., 'team', 'personal')
-- `updated_at` (String) Timestamp when the project was last updated

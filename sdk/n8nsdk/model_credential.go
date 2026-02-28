@@ -26,8 +26,8 @@ type Credential struct {
 	Name string                 `json:"name"`
 	Type string                 `json:"type"`
 	Data map[string]interface{} `json:"data"`
-	// Whether the credential is managed by n8n
-	IsManaged            *bool      `json:"isManaged,omitempty"`
+	// Whether this credential has resolvable fields
+	IsResolvable         *bool      `json:"isResolvable,omitempty"`
 	CreatedAt            *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt            *time.Time `json:"updatedAt,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -159,36 +159,36 @@ func (o *Credential) SetData(v map[string]interface{}) {
 	o.Data = v
 }
 
-// GetIsManaged returns the IsManaged field value if set, zero value otherwise.
-func (o *Credential) GetIsManaged() bool {
-	if o == nil || IsNil(o.IsManaged) {
+// GetIsResolvable returns the IsResolvable field value if set, zero value otherwise.
+func (o *Credential) GetIsResolvable() bool {
+	if o == nil || IsNil(o.IsResolvable) {
 		var ret bool
 		return ret
 	}
-	return *o.IsManaged
+	return *o.IsResolvable
 }
 
-// GetIsManagedOk returns a tuple with the IsManaged field value if set, nil otherwise
+// GetIsResolvableOk returns a tuple with the IsResolvable field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Credential) GetIsManagedOk() (*bool, bool) {
-	if o == nil || IsNil(o.IsManaged) {
+func (o *Credential) GetIsResolvableOk() (*bool, bool) {
+	if o == nil || IsNil(o.IsResolvable) {
 		return nil, false
 	}
-	return o.IsManaged, true
+	return o.IsResolvable, true
 }
 
-// HasIsManaged returns a boolean if a field has been set.
-func (o *Credential) HasIsManaged() bool {
-	if o != nil && !IsNil(o.IsManaged) {
+// HasIsResolvable returns a boolean if a field has been set.
+func (o *Credential) HasIsResolvable() bool {
+	if o != nil && !IsNil(o.IsResolvable) {
 		return true
 	}
 
 	return false
 }
 
-// SetIsManaged gets a reference to the given bool and assigns it to the IsManaged field.
-func (o *Credential) SetIsManaged(v bool) {
-	o.IsManaged = &v
+// SetIsResolvable gets a reference to the given bool and assigns it to the IsResolvable field.
+func (o *Credential) SetIsResolvable(v bool) {
+	o.IsResolvable = &v
 }
 
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
@@ -271,8 +271,8 @@ func (o Credential) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name
 	toSerialize["type"] = o.Type
 	toSerialize["data"] = o.Data
-	if !IsNil(o.IsManaged) {
-		toSerialize["isManaged"] = o.IsManaged
+	if !IsNil(o.IsResolvable) {
+		toSerialize["isResolvable"] = o.IsResolvable
 	}
 	if !IsNil(o.CreatedAt) {
 		toSerialize["createdAt"] = o.CreatedAt
@@ -329,7 +329,7 @@ func (o *Credential) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "name")
 		delete(additionalProperties, "type")
 		delete(additionalProperties, "data")
-		delete(additionalProperties, "isManaged")
+		delete(additionalProperties, "isResolvable")
 		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "updatedAt")
 		o.AdditionalProperties = additionalProperties

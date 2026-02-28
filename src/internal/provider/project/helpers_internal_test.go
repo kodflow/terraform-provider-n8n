@@ -2,7 +2,6 @@ package project
 
 import (
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
@@ -149,28 +148,16 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 			case "map with all fields":
 				id := "proj-123"
 				projectType := "personal"
-				createdAt := time.Now()
-				updatedAt := time.Now().Add(1 * time.Hour)
-				icon := "📁"
-				description := "Test project description"
 				project := &n8nsdk.Project{
-					Id:          &id,
-					Name:        "Test Project",
-					Type:        &projectType,
-					CreatedAt:   &createdAt,
-					UpdatedAt:   &updatedAt,
-					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
-					Description: *n8nsdk.NewNullableString(&description),
+					Id:   &id,
+					Name: "Test Project",
+					Type: &projectType,
 				}
 				data := &models.DataSource{}
 				mapProjectToDataSourceModel(project, data)
 				assert.Equal(t, "proj-123", data.ID.ValueString())
 				assert.Equal(t, "Test Project", data.Name.ValueString())
 				assert.Equal(t, "personal", data.Type.ValueString())
-				assert.Equal(t, createdAt.String(), data.CreatedAt.ValueString())
-				assert.Equal(t, updatedAt.String(), data.UpdatedAt.ValueString())
-				assert.Equal(t, "📁", data.Icon.ValueString())
-				assert.Equal(t, "Test project description", data.Description.ValueString())
 
 			case "map with nil fields":
 				project := &n8nsdk.Project{Name: "Minimal Project"}
@@ -179,20 +166,14 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 				assert.True(t, data.ID.IsNull())
 				assert.Equal(t, "Minimal Project", data.Name.ValueString())
 				assert.True(t, data.Type.IsNull())
-				assert.True(t, data.CreatedAt.IsNull())
-				assert.True(t, data.UpdatedAt.IsNull())
-				assert.True(t, data.Icon.IsNull())
-				assert.True(t, data.Description.IsNull())
 
 			case "overwrite existing data":
 				id := "new-id"
 				projectType := "team"
 				data := &models.DataSource{
-					ID:          types.StringValue("old-id"),
-					Name:        types.StringValue("Old Name"),
-					Type:        types.StringValue("personal"),
-					Icon:        types.StringValue("🔧"),
-					Description: types.StringValue("Old description"),
+					ID:   types.StringValue("old-id"),
+					Name: types.StringValue("Old Name"),
+					Type: types.StringValue("personal"),
 				}
 				project := &n8nsdk.Project{
 					Id:   &id,
@@ -203,8 +184,6 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 				assert.Equal(t, "new-id", data.ID.ValueString())
 				assert.Equal(t, "New Project", data.Name.ValueString())
 				assert.Equal(t, "team", data.Type.ValueString())
-				assert.True(t, data.Icon.IsNull())
-				assert.True(t, data.Description.IsNull())
 
 			case "error case - validation checks":
 				project := &n8nsdk.Project{Name: "Test"}
@@ -239,27 +218,15 @@ func Test_mapProjectToItem(t *testing.T) {
 			case "map with all fields":
 				id := "proj-456"
 				projectType := "organization"
-				createdAt := time.Now()
-				updatedAt := time.Now().Add(2 * time.Hour)
-				icon := "🚀"
-				description := "Item project description"
 				project := &n8nsdk.Project{
-					Id:          &id,
-					Name:        "Item Project",
-					Type:        &projectType,
-					CreatedAt:   &createdAt,
-					UpdatedAt:   &updatedAt,
-					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
-					Description: *n8nsdk.NewNullableString(&description),
+					Id:   &id,
+					Name: "Item Project",
+					Type: &projectType,
 				}
 				item := mapProjectToItem(project)
 				assert.Equal(t, "proj-456", item.ID.ValueString())
 				assert.Equal(t, "Item Project", item.Name.ValueString())
 				assert.Equal(t, "organization", item.Type.ValueString())
-				assert.Equal(t, createdAt.String(), item.CreatedAt.ValueString())
-				assert.Equal(t, updatedAt.String(), item.UpdatedAt.ValueString())
-				assert.Equal(t, "🚀", item.Icon.ValueString())
-				assert.Equal(t, "Item project description", item.Description.ValueString())
 
 			case "map with minimal fields":
 				project := &n8nsdk.Project{Name: "Minimal Item"}
@@ -267,48 +234,32 @@ func Test_mapProjectToItem(t *testing.T) {
 				assert.True(t, item.ID.IsNull())
 				assert.Equal(t, "Minimal Item", item.Name.ValueString())
 				assert.True(t, item.Type.IsNull())
-				assert.True(t, item.CreatedAt.IsNull())
-				assert.True(t, item.UpdatedAt.IsNull())
-				assert.True(t, item.Icon.IsNull())
-				assert.True(t, item.Description.IsNull())
 
 			case "map empty string values":
 				id := ""
 				projectType := ""
-				icon := ""
-				description := ""
 				project := &n8nsdk.Project{
-					Id:          &id,
-					Name:        "",
-					Type:        &projectType,
-					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
-					Description: *n8nsdk.NewNullableString(&description),
+					Id:   &id,
+					Name: "",
+					Type: &projectType,
 				}
 				item := mapProjectToItem(project)
 				assert.Equal(t, "", item.ID.ValueString())
 				assert.Equal(t, "", item.Name.ValueString())
 				assert.Equal(t, "", item.Type.ValueString())
-				assert.Equal(t, "", item.Icon.ValueString())
-				assert.Equal(t, "", item.Description.ValueString())
 
 			case "map special characters":
 				id := "proj-!@#$%^&*()"
 				projectType := "type-with-üñíçödé"
-				icon := "🌍🌎🌏"
-				description := "Description with\nnewlines\tand\ttabs"
 				project := &n8nsdk.Project{
-					Id:          &id,
-					Name:        "Name with 特殊字符",
-					Type:        &projectType,
-					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
-					Description: *n8nsdk.NewNullableString(&description),
+					Id:   &id,
+					Name: "Name with 特殊字符",
+					Type: &projectType,
 				}
 				item := mapProjectToItem(project)
 				assert.Equal(t, id, item.ID.ValueString())
 				assert.Equal(t, "Name with 特殊字符", item.Name.ValueString())
 				assert.Equal(t, projectType, item.Type.ValueString())
-				assert.Equal(t, icon, item.Icon.ValueString())
-				assert.Equal(t, description, item.Description.ValueString())
 
 			case "error case - validation checks":
 				project := &n8nsdk.Project{Name: "Test"}
@@ -366,12 +317,10 @@ func TestHelpersConcurrency(t *testing.T) {
 			case "concurrent mapProjectToItem":
 				id := "proj-concurrent"
 				projectType := "team"
-				icon := "🔄"
 				project := &n8nsdk.Project{
 					Id:   &id,
 					Name: "Concurrent Project",
 					Type: &projectType,
-					Icon: *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
 				}
 				done := make(chan bool, 100)
 				for i := 0; i < 100; i++ {
@@ -380,7 +329,6 @@ func TestHelpersConcurrency(t *testing.T) {
 						assert.Equal(t, "proj-concurrent", item.ID.ValueString())
 						assert.Equal(t, "Concurrent Project", item.Name.ValueString())
 						assert.Equal(t, "team", item.Type.ValueString())
-						assert.Equal(t, "🔄", item.Icon.ValueString())
 						done <- true
 					}()
 				}
@@ -439,19 +387,10 @@ func BenchmarkFindProjectByIDOrName(b *testing.B) {
 func BenchmarkMapProjectToItem(b *testing.B) {
 	id := "proj-bench"
 	projectType := "team"
-	createdAt := time.Now()
-	updatedAt := time.Now()
-	icon := "📊"
-	description := "Benchmark description"
-
 	project := &n8nsdk.Project{
-		Id:          &id,
-		Name:        "Benchmark Project",
-		Type:        &projectType,
-		CreatedAt:   &createdAt,
-		UpdatedAt:   &updatedAt,
-		Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
-		Description: *n8nsdk.NewNullableString(&description),
+		Id:   &id,
+		Name: "Benchmark Project",
+		Type: &projectType,
 	}
 
 	b.ResetTimer()

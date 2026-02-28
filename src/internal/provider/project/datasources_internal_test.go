@@ -66,22 +66,22 @@ func TestProjectsDataSource_projectAttributes(t *testing.T) {
 	}{
 		{
 			name:      "returns correct number of attributes",
-			want:      7, // id, name, type, created_at, updated_at, icon, description
+			want:      3, // id, name, type
 			wantError: false,
 		},
 		{
 			name:      "nil datasource should not panic",
-			want:      7,
+			want:      3,
 			wantError: false,
 		},
 		{
 			name:      "multiple calls return same result",
-			want:      7,
+			want:      3,
 			wantError: false,
 		},
 		{
 			name:      "all required attributes present",
-			want:      7,
+			want:      3,
 			wantError: false,
 		},
 	}
@@ -107,10 +107,6 @@ func TestProjectsDataSource_projectAttributes(t *testing.T) {
 			assert.Contains(t, attrs, "id")
 			assert.Contains(t, attrs, "name")
 			assert.Contains(t, attrs, "type")
-			assert.Contains(t, attrs, "created_at")
-			assert.Contains(t, attrs, "updated_at")
-			assert.Contains(t, attrs, "icon")
-			assert.Contains(t, attrs, "description")
 		})
 	}
 }

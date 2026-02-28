@@ -37,9 +37,9 @@ type WorkflowAPI interface {
 	WorkflowsGetExecute(r WorkflowAPIWorkflowsGetRequest) (*WorkflowList, *http.Response, error)
 
 	/*
-		WorkflowsIdActivatePost Activate a workflow
+		WorkflowsIdActivatePost Publish a workflow
 
-		Active a workflow.
+		Publish a workflow. In n8n v1, this action was termed activating a workflow.
 
 		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		@param id The ID of the workflow.
@@ -69,7 +69,7 @@ type WorkflowAPI interface {
 	/*
 		WorkflowsIdDelete Delete a workflow
 
-		Deletes a workflow.
+		Delete a workflow.
 
 		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		@param id The ID of the workflow.
@@ -82,9 +82,9 @@ type WorkflowAPI interface {
 	WorkflowsIdDeleteExecute(r WorkflowAPIWorkflowsIdDeleteRequest) (*Workflow, *http.Response, error)
 
 	/*
-		WorkflowsIdGet Retrieves a workflow
+		WorkflowsIdGet Retrieve a workflow
 
-		Retrieves a workflow.
+		Retrieve a workflow.
 
 		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		@param id The ID of the workflow.
@@ -99,7 +99,7 @@ type WorkflowAPI interface {
 	/*
 		WorkflowsIdPut Update a workflow
 
-		Update a workflow.
+		Update a workflow. If the workflow is published, the updated version will be automatically re-published.
 
 		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		@param id The ID of the workflow.
@@ -142,9 +142,9 @@ type WorkflowAPI interface {
 	WorkflowsIdTagsPutExecute(r WorkflowAPIWorkflowsIdTagsPutRequest) ([]Tag, *http.Response, error)
 
 	/*
-		WorkflowsIdTransferPut Transfer a workflow to another project.
+		WorkflowsIdTransferPut Transfer a workflow to another project
 
-		Transfer a workflow to another project.
+		Transfer a workflow to another project
 
 		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		@param id The ID of the workflow.
@@ -154,6 +154,22 @@ type WorkflowAPI interface {
 
 	// WorkflowsIdTransferPutExecute executes the request
 	WorkflowsIdTransferPutExecute(r WorkflowAPIWorkflowsIdTransferPutRequest) (*http.Response, error)
+
+	/*
+		WorkflowsIdVersionIdGet Retrieves a specific version of a workflow
+
+		Retrieves a specific version of a workflow from workflow history.
+
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@param versionId The version ID to retrieve
+		@return WorkflowAPIWorkflowsIdVersionIdGetRequest
+	*/
+	WorkflowsIdVersionIdGet(ctx context.Context, id string, versionId string) WorkflowAPIWorkflowsIdVersionIdGetRequest
+
+	// WorkflowsIdVersionIdGetExecute executes the request
+	//  @return WorkflowVersion
+	WorkflowsIdVersionIdGetExecute(r WorkflowAPIWorkflowsIdVersionIdGetRequest) (*WorkflowVersion, *http.Response, error)
 
 	/*
 		WorkflowsPost Create a workflow
@@ -357,9 +373,16 @@ func (a *WorkflowAPIService) WorkflowsGetExecute(r WorkflowAPIWorkflowsGetReques
 }
 
 type WorkflowAPIWorkflowsIdActivatePostRequest struct {
-	ctx        context.Context
-	ApiService WorkflowAPI
-	id         string
+	ctx                            context.Context
+	ApiService                     WorkflowAPI
+	id                             string
+	workflowsIdActivatePostRequest *WorkflowsIdActivatePostRequest
+}
+
+// Optional parameters to publish the workflow.
+func (r WorkflowAPIWorkflowsIdActivatePostRequest) WorkflowsIdActivatePostRequest(workflowsIdActivatePostRequest WorkflowsIdActivatePostRequest) WorkflowAPIWorkflowsIdActivatePostRequest {
+	r.workflowsIdActivatePostRequest = &workflowsIdActivatePostRequest
+	return r
 }
 
 func (r WorkflowAPIWorkflowsIdActivatePostRequest) Execute() (*Workflow, *http.Response, error) {
@@ -367,9 +390,9 @@ func (r WorkflowAPIWorkflowsIdActivatePostRequest) Execute() (*Workflow, *http.R
 }
 
 /*
-WorkflowsIdActivatePost Activate a workflow
+WorkflowsIdActivatePost Publish a workflow
 
-Active a workflow.
+Publish a workflow. In n8n v1, this action was termed activating a workflow.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id The ID of the workflow.
@@ -407,7 +430,7 @@ func (a *WorkflowAPIService) WorkflowsIdActivatePostExecute(r WorkflowAPIWorkflo
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHTTPContentTypes := []string{"application/json"}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -423,6 +446,8 @@ func (a *WorkflowAPIService) WorkflowsIdActivatePostExecute(r WorkflowAPIWorkflo
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	// body params
+	localVarPostBody = r.workflowsIdActivatePostRequest
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
@@ -605,7 +630,7 @@ func (r WorkflowAPIWorkflowsIdDeleteRequest) Execute() (*Workflow, *http.Respons
 /*
 WorkflowsIdDelete Delete a workflow
 
-Deletes a workflow.
+Delete a workflow.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id The ID of the workflow.
@@ -728,9 +753,9 @@ func (r WorkflowAPIWorkflowsIdGetRequest) Execute() (*Workflow, *http.Response, 
 }
 
 /*
-WorkflowsIdGet Retrieves a workflow
+WorkflowsIdGet Retrieve a workflow
 
-Retrieves a workflow.
+Retrieve a workflow.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id The ID of the workflow.
@@ -858,7 +883,7 @@ func (r WorkflowAPIWorkflowsIdPutRequest) Execute() (*Workflow, *http.Response, 
 /*
 WorkflowsIdPut Update a workflow
 
-Update a workflow.
+Update a workflow. If the workflow is published, the updated version will be automatically re-published.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id The ID of the workflow.
@@ -1234,9 +1259,9 @@ func (r WorkflowAPIWorkflowsIdTransferPutRequest) Execute() (*http.Response, err
 }
 
 /*
-WorkflowsIdTransferPut Transfer a workflow to another project.
+WorkflowsIdTransferPut Transfer a workflow to another project
 
-Transfer a workflow to another project.
+Transfer a workflow to another project
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id The ID of the workflow.
@@ -1332,6 +1357,128 @@ func (a *WorkflowAPIService) WorkflowsIdTransferPutExecute(r WorkflowAPIWorkflow
 	}
 
 	return localVarHTTPResponse, nil
+}
+
+type WorkflowAPIWorkflowsIdVersionIdGetRequest struct {
+	ctx        context.Context
+	ApiService WorkflowAPI
+	id         string
+	versionId  string
+}
+
+func (r WorkflowAPIWorkflowsIdVersionIdGetRequest) Execute() (*WorkflowVersion, *http.Response, error) {
+	return r.ApiService.WorkflowsIdVersionIdGetExecute(r)
+}
+
+/*
+WorkflowsIdVersionIdGet Retrieves a specific version of a workflow
+
+Retrieves a specific version of a workflow from workflow history.
+
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id The ID of the workflow.
+	@param versionId The version ID to retrieve
+	@return WorkflowAPIWorkflowsIdVersionIdGetRequest
+*/
+func (a *WorkflowAPIService) WorkflowsIdVersionIdGet(ctx context.Context, id string, versionId string) WorkflowAPIWorkflowsIdVersionIdGetRequest {
+	return WorkflowAPIWorkflowsIdVersionIdGetRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+		versionId:  versionId,
+	}
+}
+
+// Execute executes the request
+//
+//	@return WorkflowVersion
+func (a *WorkflowAPIService) WorkflowsIdVersionIdGetExecute(r WorkflowAPIWorkflowsIdVersionIdGetRequest) (*WorkflowVersion, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *WorkflowVersion
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdVersionIdGet")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/workflows/{id}/{versionId}"
+	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterValueToString(r.id, "id")), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"versionId"+"}", url.PathEscape(parameterValueToString(r.versionId, "versionId")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["ApiKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["X-N8N-API-KEY"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type WorkflowAPIWorkflowsPostRequest struct {

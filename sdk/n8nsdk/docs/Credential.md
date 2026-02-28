@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **Name** | **string** |  | 
 **Type** | **string** |  | 
 **Data** | **map[string]interface{}** |  | 
-**IsManaged** | Pointer to **bool** | Whether the credential is managed by n8n | [optional] [readonly] [default to false]
+**IsResolvable** | Pointer to **bool** | Whether this credential has resolvable fields | [optional] 
 **CreatedAt** | Pointer to **time.Time** |  | [optional] [readonly] 
 **UpdatedAt** | Pointer to **time.Time** |  | [optional] [readonly] 
 
@@ -116,30 +116,30 @@ and a boolean to check if the value has been set.
 SetData sets Data field to given value.
 
 
-### GetIsManaged
+### GetIsResolvable
 
-`func (o *Credential) GetIsManaged() bool`
+`func (o *Credential) GetIsResolvable() bool`
 
-GetIsManaged returns the IsManaged field if non-nil, zero value otherwise.
+GetIsResolvable returns the IsResolvable field if non-nil, zero value otherwise.
 
-### GetIsManagedOk
+### GetIsResolvableOk
 
-`func (o *Credential) GetIsManagedOk() (*bool, bool)`
+`func (o *Credential) GetIsResolvableOk() (*bool, bool)`
 
-GetIsManagedOk returns a tuple with the IsManaged field if it's non-nil, zero value otherwise
+GetIsResolvableOk returns a tuple with the IsResolvable field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetIsManaged
+### SetIsResolvable
 
-`func (o *Credential) SetIsManaged(v bool)`
+`func (o *Credential) SetIsResolvable(v bool)`
 
-SetIsManaged sets IsManaged field to given value.
+SetIsResolvable sets IsResolvable field to given value.
 
-### HasIsManaged
+### HasIsResolvable
 
-`func (o *Credential) HasIsManaged() bool`
+`func (o *Credential) HasIsResolvable() bool`
 
-HasIsManaged returns a boolean if a field has been set.
+HasIsResolvable returns a boolean if a field has been set.
 
 ### GetCreatedAt
 

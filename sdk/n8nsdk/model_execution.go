@@ -21,17 +21,13 @@ var _ MappedNullable = &Execution{}
 
 // Execution struct for Execution
 type Execution struct {
-	Id   *float32               `json:"id,omitempty"`
-	Data map[string]interface{} `json:"data,omitempty"`
-	// Deprecated - use status instead
-	Finished *bool    `json:"finished,omitempty"`
-	Mode     *string  `json:"mode,omitempty"`
-	RetryOf  *float32 `json:"retryOf,omitempty"`
-	// The time at which the execution was created
-	CreatedAt      NullableTime    `json:"createdAt,omitempty"`
-	RetrySuccessId NullableFloat32 `json:"retrySuccessId,omitempty"`
-	// The time at which the execution started
-	StartedAt NullableTime `json:"startedAt,omitempty"`
+	Id             *float32               `json:"id,omitempty"`
+	Data           map[string]interface{} `json:"data,omitempty"`
+	Finished       *bool                  `json:"finished,omitempty"`
+	Mode           *string                `json:"mode,omitempty"`
+	RetryOf        NullableFloat32        `json:"retryOf,omitempty"`
+	RetrySuccessId NullableFloat32        `json:"retrySuccessId,omitempty"`
+	StartedAt      *time.Time             `json:"startedAt,omitempty"`
 	// The time at which the execution stopped. Will only be null for executions that still have the status 'running'.
 	StoppedAt            NullableTime           `json:"stoppedAt,omitempty"`
 	WorkflowId           *float32               `json:"workflowId,omitempty"`
@@ -188,79 +184,47 @@ func (o *Execution) SetMode(v string) {
 	o.Mode = &v
 }
 
-// GetRetryOf returns the RetryOf field value if set, zero value otherwise.
+// GetRetryOf returns the RetryOf field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *Execution) GetRetryOf() float32 {
-	if o == nil || IsNil(o.RetryOf) {
+	if o == nil || IsNil(o.RetryOf.Get()) {
 		var ret float32
 		return ret
 	}
-	return *o.RetryOf
+	return *o.RetryOf.Get()
 }
 
 // GetRetryOfOk returns a tuple with the RetryOf field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *Execution) GetRetryOfOk() (*float32, bool) {
-	if o == nil || IsNil(o.RetryOf) {
+	if o == nil {
 		return nil, false
 	}
-	return o.RetryOf, true
+	return o.RetryOf.Get(), o.RetryOf.IsSet()
 }
 
 // HasRetryOf returns a boolean if a field has been set.
 func (o *Execution) HasRetryOf() bool {
-	if o != nil && !IsNil(o.RetryOf) {
+	if o != nil && o.RetryOf.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetRetryOf gets a reference to the given float32 and assigns it to the RetryOf field.
+// SetRetryOf gets a reference to the given NullableFloat32 and assigns it to the RetryOf field.
 func (o *Execution) SetRetryOf(v float32) {
-	o.RetryOf = &v
+	o.RetryOf.Set(&v)
 }
 
-// GetCreatedAt returns the CreatedAt field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Execution) GetCreatedAt() time.Time {
-	if o == nil || IsNil(o.CreatedAt.Get()) {
-		var ret time.Time
-		return ret
-	}
-	return *o.CreatedAt.Get()
+// SetRetryOfNil sets the value for RetryOf to be an explicit nil
+func (o *Execution) SetRetryOfNil() {
+	o.RetryOf.Set(nil)
 }
 
-// GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Execution) GetCreatedAtOk() (*time.Time, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return o.CreatedAt.Get(), o.CreatedAt.IsSet()
-}
-
-// HasCreatedAt returns a boolean if a field has been set.
-func (o *Execution) HasCreatedAt() bool {
-	if o != nil && o.CreatedAt.IsSet() {
-		return true
-	}
-
-	return false
-}
-
-// SetCreatedAt gets a reference to the given NullableTime and assigns it to the CreatedAt field.
-func (o *Execution) SetCreatedAt(v time.Time) {
-	o.CreatedAt.Set(&v)
-}
-
-// SetCreatedAtNil sets the value for CreatedAt to be an explicit nil
-func (o *Execution) SetCreatedAtNil() {
-	o.CreatedAt.Set(nil)
-}
-
-// UnsetCreatedAt ensures that no value is present for CreatedAt, not even an explicit nil
-func (o *Execution) UnsetCreatedAt() {
-	o.CreatedAt.Unset()
+// UnsetRetryOf ensures that no value is present for RetryOf, not even an explicit nil
+func (o *Execution) UnsetRetryOf() {
+	o.RetryOf.Unset()
 }
 
 // GetRetrySuccessId returns the RetrySuccessId field value if set, zero value otherwise (both if not set or set to explicit null).
@@ -306,47 +270,36 @@ func (o *Execution) UnsetRetrySuccessId() {
 	o.RetrySuccessId.Unset()
 }
 
-// GetStartedAt returns the StartedAt field value if set, zero value otherwise (both if not set or set to explicit null).
+// GetStartedAt returns the StartedAt field value if set, zero value otherwise.
 func (o *Execution) GetStartedAt() time.Time {
-	if o == nil || IsNil(o.StartedAt.Get()) {
+	if o == nil || IsNil(o.StartedAt) {
 		var ret time.Time
 		return ret
 	}
-	return *o.StartedAt.Get()
+	return *o.StartedAt
 }
 
 // GetStartedAtOk returns a tuple with the StartedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *Execution) GetStartedAtOk() (*time.Time, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.StartedAt) {
 		return nil, false
 	}
-	return o.StartedAt.Get(), o.StartedAt.IsSet()
+	return o.StartedAt, true
 }
 
 // HasStartedAt returns a boolean if a field has been set.
 func (o *Execution) HasStartedAt() bool {
-	if o != nil && o.StartedAt.IsSet() {
+	if o != nil && !IsNil(o.StartedAt) {
 		return true
 	}
 
 	return false
 }
 
-// SetStartedAt gets a reference to the given NullableTime and assigns it to the StartedAt field.
+// SetStartedAt gets a reference to the given time.Time and assigns it to the StartedAt field.
 func (o *Execution) SetStartedAt(v time.Time) {
-	o.StartedAt.Set(&v)
-}
-
-// SetStartedAtNil sets the value for StartedAt to be an explicit nil
-func (o *Execution) SetStartedAtNil() {
-	o.StartedAt.Set(nil)
-}
-
-// UnsetStartedAt ensures that no value is present for StartedAt, not even an explicit nil
-func (o *Execution) UnsetStartedAt() {
-	o.StartedAt.Unset()
+	o.StartedAt = &v
 }
 
 // GetStoppedAt returns the StoppedAt field value if set, zero value otherwise (both if not set or set to explicit null).
@@ -553,17 +506,14 @@ func (o Execution) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Mode) {
 		toSerialize["mode"] = o.Mode
 	}
-	if !IsNil(o.RetryOf) {
-		toSerialize["retryOf"] = o.RetryOf
-	}
-	if o.CreatedAt.IsSet() {
-		toSerialize["createdAt"] = o.CreatedAt.Get()
+	if o.RetryOf.IsSet() {
+		toSerialize["retryOf"] = o.RetryOf.Get()
 	}
 	if o.RetrySuccessId.IsSet() {
 		toSerialize["retrySuccessId"] = o.RetrySuccessId.Get()
 	}
-	if o.StartedAt.IsSet() {
-		toSerialize["startedAt"] = o.StartedAt.Get()
+	if !IsNil(o.StartedAt) {
+		toSerialize["startedAt"] = o.StartedAt
 	}
 	if o.StoppedAt.IsSet() {
 		toSerialize["stoppedAt"] = o.StoppedAt.Get()
@@ -607,7 +557,6 @@ func (o *Execution) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "finished")
 		delete(additionalProperties, "mode")
 		delete(additionalProperties, "retryOf")
-		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "retrySuccessId")
 		delete(additionalProperties, "startedAt")
 		delete(additionalProperties, "stoppedAt")

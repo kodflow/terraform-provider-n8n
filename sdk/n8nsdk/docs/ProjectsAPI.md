@@ -8,6 +8,7 @@ Method | HTTP request | Description
 [**ProjectsPost**](ProjectsAPI.md#ProjectsPost) | **Post** /projects | Create a project
 [**ProjectsProjectIdDelete**](ProjectsAPI.md#ProjectsProjectIdDelete) | **Delete** /projects/{projectId} | Delete a project
 [**ProjectsProjectIdPut**](ProjectsAPI.md#ProjectsProjectIdPut) | **Put** /projects/{projectId} | Update a project
+[**ProjectsProjectIdUsersGet**](ProjectsAPI.md#ProjectsProjectIdUsersGet) | **Get** /projects/{projectId}/users | List project members
 [**ProjectsProjectIdUsersPost**](ProjectsAPI.md#ProjectsProjectIdUsersPost) | **Post** /projects/{projectId}/users | Add one or more users to a project
 [**ProjectsProjectIdUsersUserIdDelete**](ProjectsAPI.md#ProjectsProjectIdUsersUserIdDelete) | **Delete** /projects/{projectId}/users/{userId} | Delete a user from a project
 [**ProjectsProjectIdUsersUserIdPatch**](ProjectsAPI.md#ProjectsProjectIdUsersUserIdPatch) | **Patch** /projects/{projectId}/users/{userId} | Change a user&#39;s role in a project
@@ -278,6 +279,80 @@ Name | Type | Description  | Notes
 
 - **Content-Type**: application/json
 - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ProjectsProjectIdUsersGet
+
+> ProjectMemberList ProjectsProjectIdUsersGet(ctx, projectId).Limit(limit).Cursor(cursor).Execute()
+
+List project members
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	projectId := "projectId_example" // string | The ID of the project.
+	limit := float32(100) // float32 | The maximum number of items to return. (optional) (default to 100)
+	cursor := "cursor_example" // string | Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail. (optional)
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.ProjectsAPI.ProjectsProjectIdUsersGet(context.Background(), projectId).Limit(limit).Cursor(cursor).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `ProjectsAPI.ProjectsProjectIdUsersGet``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `ProjectsProjectIdUsersGet`: ProjectMemberList
+	fmt.Fprintf(os.Stdout, "Response from `ProjectsAPI.ProjectsProjectIdUsersGet`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**projectId** | **string** | The ID of the project. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiProjectsProjectIdUsersGetRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **limit** | **float32** | The maximum number of items to return. | [default to 100]
+ **cursor** | **string** | Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request&#39;s response. Default value fetches the first \&quot;page\&quot; of the collection. See pagination for more detail. | 
+
+### Return type
+
+[**ProjectMemberList**](ProjectMemberList.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)

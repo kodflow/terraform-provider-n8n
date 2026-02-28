@@ -255,11 +255,7 @@ func TestProjectsDataSource_Read(t *testing.T) {
 							{
 								"id": "project-123",
 								"name": "Test Project",
-								"type": "team",
-								"createdAt": "2024-01-01T00:00:00Z",
-								"updatedAt": "2024-01-02T00:00:00Z",
-								"icon": {"value": "icon-test"},
-								"description": "Test description"
+								"type": "team"
 							}
 						]
 					}`))
@@ -282,13 +278,9 @@ func TestProjectsDataSource_Read(t *testing.T) {
 					"projects": tftypes.NewValue(
 						tftypes.List{ElementType: tftypes.Object{
 							AttributeTypes: map[string]tftypes.Type{
-								"id":          tftypes.String,
-								"name":        tftypes.String,
-								"type":        tftypes.String,
-								"created_at":  tftypes.String,
-								"updated_at":  tftypes.String,
-								"icon":        tftypes.String,
-								"description": tftypes.String,
+								"id":   tftypes.String,
+								"name": tftypes.String,
+								"type": tftypes.String,
 							},
 						}},
 						nil,
@@ -348,13 +340,9 @@ func TestProjectsDataSource_Read(t *testing.T) {
 					"projects": tftypes.NewValue(
 						tftypes.List{ElementType: tftypes.Object{
 							AttributeTypes: map[string]tftypes.Type{
-								"id":          tftypes.String,
-								"name":        tftypes.String,
-								"type":        tftypes.String,
-								"created_at":  tftypes.String,
-								"updated_at":  tftypes.String,
-								"icon":        tftypes.String,
-								"description": tftypes.String,
+								"id":   tftypes.String,
+								"name": tftypes.String,
+								"type": tftypes.String,
 							},
 						}},
 						nil,

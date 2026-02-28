@@ -6,12 +6,11 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | Pointer to **float32** |  | [optional] 
 **Data** | Pointer to **map[string]interface{}** |  | [optional] 
-**Finished** | Pointer to **bool** | Deprecated - use status instead | [optional] 
+**Finished** | Pointer to **bool** |  | [optional] 
 **Mode** | Pointer to **string** |  | [optional] 
-**RetryOf** | Pointer to **float32** |  | [optional] 
-**CreatedAt** | Pointer to **NullableTime** | The time at which the execution was created | [optional] [readonly] 
+**RetryOf** | Pointer to **NullableFloat32** |  | [optional] 
 **RetrySuccessId** | Pointer to **NullableFloat32** |  | [optional] 
-**StartedAt** | Pointer to **NullableTime** | The time at which the execution started | [optional] 
+**StartedAt** | Pointer to **time.Time** |  | [optional] 
 **StoppedAt** | Pointer to **NullableTime** | The time at which the execution stopped. Will only be null for executions that still have the status &#39;running&#39;. | [optional] 
 **WorkflowId** | Pointer to **float32** |  | [optional] 
 **WaitTill** | Pointer to **NullableTime** |  | [optional] 
@@ -162,41 +161,16 @@ SetRetryOf sets RetryOf field to given value.
 
 HasRetryOf returns a boolean if a field has been set.
 
-### GetCreatedAt
+### SetRetryOfNil
 
-`func (o *Execution) GetCreatedAt() time.Time`
+`func (o *Execution) SetRetryOfNil(b bool)`
 
-GetCreatedAt returns the CreatedAt field if non-nil, zero value otherwise.
+ SetRetryOfNil sets the value for RetryOf to be an explicit nil
 
-### GetCreatedAtOk
+### UnsetRetryOf
+`func (o *Execution) UnsetRetryOf()`
 
-`func (o *Execution) GetCreatedAtOk() (*time.Time, bool)`
-
-GetCreatedAtOk returns a tuple with the CreatedAt field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetCreatedAt
-
-`func (o *Execution) SetCreatedAt(v time.Time)`
-
-SetCreatedAt sets CreatedAt field to given value.
-
-### HasCreatedAt
-
-`func (o *Execution) HasCreatedAt() bool`
-
-HasCreatedAt returns a boolean if a field has been set.
-
-### SetCreatedAtNil
-
-`func (o *Execution) SetCreatedAtNil(b bool)`
-
- SetCreatedAtNil sets the value for CreatedAt to be an explicit nil
-
-### UnsetCreatedAt
-`func (o *Execution) UnsetCreatedAt()`
-
-UnsetCreatedAt ensures that no value is present for CreatedAt, not even an explicit nil
+UnsetRetryOf ensures that no value is present for RetryOf, not even an explicit nil
 ### GetRetrySuccessId
 
 `func (o *Execution) GetRetrySuccessId() float32`
@@ -257,16 +231,6 @@ SetStartedAt sets StartedAt field to given value.
 
 HasStartedAt returns a boolean if a field has been set.
 
-### SetStartedAtNil
-
-`func (o *Execution) SetStartedAtNil(b bool)`
-
- SetStartedAtNil sets the value for StartedAt to be an explicit nil
-
-### UnsetStartedAt
-`func (o *Execution) UnsetStartedAt()`
-
-UnsetStartedAt ensures that no value is present for StartedAt, not even an explicit nil
 ### GetStoppedAt
 
 `func (o *Execution) GetStoppedAt() time.Time`

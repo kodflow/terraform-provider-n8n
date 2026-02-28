@@ -4,9 +4,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | Pointer to **string** | Project ID | [optional] 
-**Name** | Pointer to **string** | Project name | [optional] 
-**Type** | Pointer to **string** | Project type | [optional] 
+**Id** | Pointer to **string** |  | [optional] [readonly] 
+**Name** | Pointer to **string** |  | [optional] 
+**Type** | Pointer to **string** |  | [optional] [readonly] 
 
 ## Methods
 

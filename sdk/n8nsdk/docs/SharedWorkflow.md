@@ -4,12 +4,10 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | Pointer to **string** | Shared workflow ID | [optional] 
-**ProjectId** | Pointer to **string** | Project ID | [optional] 
-**UserId** | Pointer to **string** | User ID | [optional] 
-**Role** | Pointer to **string** | User role | [optional] 
+**Role** | Pointer to **string** |  | [optional] 
 **WorkflowId** | Pointer to **string** |  | [optional] 
-**Project** | Pointer to [**SharedWorkflowProject1**](SharedWorkflowProject1.md) |  | [optional] 
+**ProjectId** | Pointer to **string** |  | [optional] 
+**Project** | Pointer to [**SharedWorkflowProject**](SharedWorkflowProject.md) |  | [optional] 
 **CreatedAt** | Pointer to **time.Time** |  | [optional] [readonly] 
 **UpdatedAt** | Pointer to **time.Time** |  | [optional] [readonly] 
 
@@ -31,81 +29,6 @@ will change when the set of required properties is changed
 NewSharedWorkflowWithDefaults instantiates a new SharedWorkflow object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
-
-### GetId
-
-`func (o *SharedWorkflow) GetId() string`
-
-GetId returns the Id field if non-nil, zero value otherwise.
-
-### GetIdOk
-
-`func (o *SharedWorkflow) GetIdOk() (*string, bool)`
-
-GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetId
-
-`func (o *SharedWorkflow) SetId(v string)`
-
-SetId sets Id field to given value.
-
-### HasId
-
-`func (o *SharedWorkflow) HasId() bool`
-
-HasId returns a boolean if a field has been set.
-
-### GetProjectId
-
-`func (o *SharedWorkflow) GetProjectId() string`
-
-GetProjectId returns the ProjectId field if non-nil, zero value otherwise.
-
-### GetProjectIdOk
-
-`func (o *SharedWorkflow) GetProjectIdOk() (*string, bool)`
-
-GetProjectIdOk returns a tuple with the ProjectId field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetProjectId
-
-`func (o *SharedWorkflow) SetProjectId(v string)`
-
-SetProjectId sets ProjectId field to given value.
-
-### HasProjectId
-
-`func (o *SharedWorkflow) HasProjectId() bool`
-
-HasProjectId returns a boolean if a field has been set.
-
-### GetUserId
-
-`func (o *SharedWorkflow) GetUserId() string`
-
-GetUserId returns the UserId field if non-nil, zero value otherwise.
-
-### GetUserIdOk
-
-`func (o *SharedWorkflow) GetUserIdOk() (*string, bool)`
-
-GetUserIdOk returns a tuple with the UserId field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetUserId
-
-`func (o *SharedWorkflow) SetUserId(v string)`
-
-SetUserId sets UserId field to given value.
-
-### HasUserId
-
-`func (o *SharedWorkflow) HasUserId() bool`
-
-HasUserId returns a boolean if a field has been set.
 
 ### GetRole
 
@@ -157,22 +80,47 @@ SetWorkflowId sets WorkflowId field to given value.
 
 HasWorkflowId returns a boolean if a field has been set.
 
+### GetProjectId
+
+`func (o *SharedWorkflow) GetProjectId() string`
+
+GetProjectId returns the ProjectId field if non-nil, zero value otherwise.
+
+### GetProjectIdOk
+
+`func (o *SharedWorkflow) GetProjectIdOk() (*string, bool)`
+
+GetProjectIdOk returns a tuple with the ProjectId field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetProjectId
+
+`func (o *SharedWorkflow) SetProjectId(v string)`
+
+SetProjectId sets ProjectId field to given value.
+
+### HasProjectId
+
+`func (o *SharedWorkflow) HasProjectId() bool`
+
+HasProjectId returns a boolean if a field has been set.
+
 ### GetProject
 
-`func (o *SharedWorkflow) GetProject() SharedWorkflowProject1`
+`func (o *SharedWorkflow) GetProject() SharedWorkflowProject`
 
 GetProject returns the Project field if non-nil, zero value otherwise.
 
 ### GetProjectOk
 
-`func (o *SharedWorkflow) GetProjectOk() (*SharedWorkflowProject1, bool)`
+`func (o *SharedWorkflow) GetProjectOk() (*SharedWorkflowProject, bool)`
 
 GetProjectOk returns a tuple with the Project field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetProject
 
-`func (o *SharedWorkflow) SetProject(v SharedWorkflowProject1)`
+`func (o *SharedWorkflow) SetProject(v SharedWorkflowProject)`
 
 SetProject sets Project field to given value.
 

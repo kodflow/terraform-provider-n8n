@@ -20,7 +20,9 @@ var _ MappedNullable = &Pull{}
 
 // Pull struct for Pull
 type Pull struct {
-	Force                *bool                  `json:"force,omitempty"`
+	Force *bool `json:"force,omitempty"`
+	// Controls automatic workflow publishing after import: - `none`: Keep workflows in their local published state (default) - `all`: Publish all imported workflows - `published`: Publish only workflows that were published locally before import
+	AutoPublish          *string                `json:"autoPublish,omitempty"`
 	Variables            map[string]interface{} `json:"variables,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
@@ -33,6 +35,8 @@ type _Pull Pull
 // will change when the set of required properties is changed
 func NewPull() *Pull {
 	this := Pull{}
+	var autoPublish string = "none"
+	this.AutoPublish = &autoPublish
 	return &this
 }
 
@@ -41,6 +45,8 @@ func NewPull() *Pull {
 // but it doesn't guarantee that properties required by API are set
 func NewPullWithDefaults() *Pull {
 	this := Pull{}
+	var autoPublish string = "none"
+	this.AutoPublish = &autoPublish
 	return &this
 }
 
@@ -74,6 +80,38 @@ func (o *Pull) HasForce() bool {
 // SetForce gets a reference to the given bool and assigns it to the Force field.
 func (o *Pull) SetForce(v bool) {
 	o.Force = &v
+}
+
+// GetAutoPublish returns the AutoPublish field value if set, zero value otherwise.
+func (o *Pull) GetAutoPublish() string {
+	if o == nil || IsNil(o.AutoPublish) {
+		var ret string
+		return ret
+	}
+	return *o.AutoPublish
+}
+
+// GetAutoPublishOk returns a tuple with the AutoPublish field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pull) GetAutoPublishOk() (*string, bool) {
+	if o == nil || IsNil(o.AutoPublish) {
+		return nil, false
+	}
+	return o.AutoPublish, true
+}
+
+// HasAutoPublish returns a boolean if a field has been set.
+func (o *Pull) HasAutoPublish() bool {
+	if o != nil && !IsNil(o.AutoPublish) {
+		return true
+	}
+
+	return false
+}
+
+// SetAutoPublish gets a reference to the given string and assigns it to the AutoPublish field.
+func (o *Pull) SetAutoPublish(v string) {
+	o.AutoPublish = &v
 }
 
 // GetVariables returns the Variables field value if set, zero value otherwise.
@@ -121,6 +159,9 @@ func (o Pull) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Force) {
 		toSerialize["force"] = o.Force
 	}
+	if !IsNil(o.AutoPublish) {
+		toSerialize["autoPublish"] = o.AutoPublish
+	}
 	if !IsNil(o.Variables) {
 		toSerialize["variables"] = o.Variables
 	}
@@ -147,6 +188,7 @@ func (o *Pull) UnmarshalJSON(data []byte) (err error) {
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "force")
+		delete(additionalProperties, "autoPublish")
 		delete(additionalProperties, "variables")
 		o.AdditionalProperties = additionalProperties
 	}

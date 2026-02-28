@@ -72,6 +72,20 @@ func Test_n8nsdk_ProjectsAPIService(t *testing.T) {
 
 	})
 
+	t.Run("Test ProjectsAPIService ProjectsProjectIdUsersGet", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var projectId string
+
+		resp, httpRes, err := apiClient.ProjectsAPI.ProjectsProjectIdUsersGet(context.Background(), projectId).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
 	t.Run("Test ProjectsAPIService ProjectsProjectIdUsersPost", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test

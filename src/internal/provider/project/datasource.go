@@ -93,22 +93,6 @@ func (d *ProjectDataSource) Schema(_ctx context.Context, _req datasource.SchemaR
 				MarkdownDescription: "Project type (e.g., 'team', 'personal')",
 				Computed:            true,
 			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the project was created",
-				Computed:            true,
-			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the project was last updated",
-				Computed:            true,
-			},
-			"icon": schema.StringAttribute{
-				MarkdownDescription: "Project icon",
-				Computed:            true,
-			},
-			"description": schema.StringAttribute{
-				MarkdownDescription: "Project description",
-				Computed:            true,
-			},
 		},
 	}
 }

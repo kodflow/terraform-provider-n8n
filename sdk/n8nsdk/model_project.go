@@ -14,7 +14,6 @@ package n8nsdk
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 )
 
 // checks if the Project type satisfies the MappedNullable interface at compile time
@@ -22,18 +21,9 @@ var _ MappedNullable = &Project{}
 
 // Project struct for Project
 type Project struct {
-	Id   *string `json:"id,omitempty"`
-	Name string  `json:"name"`
-	Type *string `json:"type,omitempty"`
-	// Project creation timestamp
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	// Project last update timestamp
-	UpdatedAt *time.Time          `json:"updatedAt,omitempty"`
-	Icon      NullableProjectIcon `json:"icon,omitempty"`
-	// Project description
-	Description NullableString `json:"description,omitempty"`
-	// Project relations
-	ProjectRelations     []map[string]interface{} `json:"projectRelations,omitempty"`
+	Id                   *string `json:"id,omitempty"`
+	Name                 string  `json:"name"`
+	Type                 *string `json:"type,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -145,188 +135,6 @@ func (o *Project) SetType(v string) {
 	o.Type = &v
 }
 
-// GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
-func (o *Project) GetCreatedAt() time.Time {
-	if o == nil || IsNil(o.CreatedAt) {
-		var ret time.Time
-		return ret
-	}
-	return *o.CreatedAt
-}
-
-// GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Project) GetCreatedAtOk() (*time.Time, bool) {
-	if o == nil || IsNil(o.CreatedAt) {
-		return nil, false
-	}
-	return o.CreatedAt, true
-}
-
-// HasCreatedAt returns a boolean if a field has been set.
-func (o *Project) HasCreatedAt() bool {
-	if o != nil && !IsNil(o.CreatedAt) {
-		return true
-	}
-
-	return false
-}
-
-// SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
-func (o *Project) SetCreatedAt(v time.Time) {
-	o.CreatedAt = &v
-}
-
-// GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
-func (o *Project) GetUpdatedAt() time.Time {
-	if o == nil || IsNil(o.UpdatedAt) {
-		var ret time.Time
-		return ret
-	}
-	return *o.UpdatedAt
-}
-
-// GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Project) GetUpdatedAtOk() (*time.Time, bool) {
-	if o == nil || IsNil(o.UpdatedAt) {
-		return nil, false
-	}
-	return o.UpdatedAt, true
-}
-
-// HasUpdatedAt returns a boolean if a field has been set.
-func (o *Project) HasUpdatedAt() bool {
-	if o != nil && !IsNil(o.UpdatedAt) {
-		return true
-	}
-
-	return false
-}
-
-// SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
-func (o *Project) SetUpdatedAt(v time.Time) {
-	o.UpdatedAt = &v
-}
-
-// GetIcon returns the Icon field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Project) GetIcon() ProjectIcon {
-	if o == nil || IsNil(o.Icon.Get()) {
-		var ret ProjectIcon
-		return ret
-	}
-	return *o.Icon.Get()
-}
-
-// GetIconOk returns a tuple with the Icon field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Project) GetIconOk() (*ProjectIcon, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return o.Icon.Get(), o.Icon.IsSet()
-}
-
-// HasIcon returns a boolean if a field has been set.
-func (o *Project) HasIcon() bool {
-	if o != nil && o.Icon.IsSet() {
-		return true
-	}
-
-	return false
-}
-
-// SetIcon gets a reference to the given NullableProjectIcon and assigns it to the Icon field.
-func (o *Project) SetIcon(v ProjectIcon) {
-	o.Icon.Set(&v)
-}
-
-// SetIconNil sets the value for Icon to be an explicit nil
-func (o *Project) SetIconNil() {
-	o.Icon.Set(nil)
-}
-
-// UnsetIcon ensures that no value is present for Icon, not even an explicit nil
-func (o *Project) UnsetIcon() {
-	o.Icon.Unset()
-}
-
-// GetDescription returns the Description field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Project) GetDescription() string {
-	if o == nil || IsNil(o.Description.Get()) {
-		var ret string
-		return ret
-	}
-	return *o.Description.Get()
-}
-
-// GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Project) GetDescriptionOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return o.Description.Get(), o.Description.IsSet()
-}
-
-// HasDescription returns a boolean if a field has been set.
-func (o *Project) HasDescription() bool {
-	if o != nil && o.Description.IsSet() {
-		return true
-	}
-
-	return false
-}
-
-// SetDescription gets a reference to the given NullableString and assigns it to the Description field.
-func (o *Project) SetDescription(v string) {
-	o.Description.Set(&v)
-}
-
-// SetDescriptionNil sets the value for Description to be an explicit nil
-func (o *Project) SetDescriptionNil() {
-	o.Description.Set(nil)
-}
-
-// UnsetDescription ensures that no value is present for Description, not even an explicit nil
-func (o *Project) UnsetDescription() {
-	o.Description.Unset()
-}
-
-// GetProjectRelations returns the ProjectRelations field value if set, zero value otherwise.
-func (o *Project) GetProjectRelations() []map[string]interface{} {
-	if o == nil || IsNil(o.ProjectRelations) {
-		var ret []map[string]interface{}
-		return ret
-	}
-	return o.ProjectRelations
-}
-
-// GetProjectRelationsOk returns a tuple with the ProjectRelations field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Project) GetProjectRelationsOk() ([]map[string]interface{}, bool) {
-	if o == nil || IsNil(o.ProjectRelations) {
-		return nil, false
-	}
-	return o.ProjectRelations, true
-}
-
-// HasProjectRelations returns a boolean if a field has been set.
-func (o *Project) HasProjectRelations() bool {
-	if o != nil && !IsNil(o.ProjectRelations) {
-		return true
-	}
-
-	return false
-}
-
-// SetProjectRelations gets a reference to the given []map[string]interface{} and assigns it to the ProjectRelations field.
-func (o *Project) SetProjectRelations(v []map[string]interface{}) {
-	o.ProjectRelations = v
-}
-
 func (o Project) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -343,21 +151,6 @@ func (o Project) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name
 	if !IsNil(o.Type) {
 		toSerialize["type"] = o.Type
-	}
-	if !IsNil(o.CreatedAt) {
-		toSerialize["createdAt"] = o.CreatedAt
-	}
-	if !IsNil(o.UpdatedAt) {
-		toSerialize["updatedAt"] = o.UpdatedAt
-	}
-	if o.Icon.IsSet() {
-		toSerialize["icon"] = o.Icon.Get()
-	}
-	if o.Description.IsSet() {
-		toSerialize["description"] = o.Description.Get()
-	}
-	if !IsNil(o.ProjectRelations) {
-		toSerialize["projectRelations"] = o.ProjectRelations
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -405,11 +198,6 @@ func (o *Project) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "id")
 		delete(additionalProperties, "name")
 		delete(additionalProperties, "type")
-		delete(additionalProperties, "createdAt")
-		delete(additionalProperties, "updatedAt")
-		delete(additionalProperties, "icon")
-		delete(additionalProperties, "description")
-		delete(additionalProperties, "projectRelations")
 		o.AdditionalProperties = additionalProperties
 	}
 

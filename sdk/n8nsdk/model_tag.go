@@ -22,8 +22,7 @@ var _ MappedNullable = &Tag{}
 
 // Tag struct for Tag
 type Tag struct {
-	Id *string `json:"id,omitempty"`
-	// Tag name (1-24 characters, must be unique)
+	Id                   *string    `json:"id,omitempty"`
 	Name                 string     `json:"name"`
 	CreatedAt            *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt            *time.Time `json:"updatedAt,omitempty"`

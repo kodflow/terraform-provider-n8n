@@ -52,35 +52,6 @@ func mapProjectToDataSourceModel(project *n8nsdk.Project, data *models.DataSourc
 	if project.Type != nil {
 		data.Type = types.StringPointerValue(project.Type)
 	}
-	// Check for non-nil value.
-	if project.CreatedAt != nil {
-		data.CreatedAt = types.StringValue(project.CreatedAt.String())
-	}
-	// Check for non-nil value.
-	if project.UpdatedAt != nil {
-		data.UpdatedAt = types.StringValue(project.UpdatedAt.String())
-	}
-	// Check for non-nil value.
-	if project.Icon.IsSet() && project.Icon.Get() != nil {
-		projectIcon := project.Icon.Get()
-		// Check if icon value is set.
-		if projectIcon.Value != nil {
-			data.Icon = types.StringValue(*projectIcon.Value)
-		} else {
-			// Icon value is nil, set to null.
-			data.Icon = types.StringNull()
-		}
-	} else {
-		// Icon is nil, explicitly set to null for Terraform state.
-		data.Icon = types.StringNull()
-	}
-	// Check for non-nil value.
-	if project.Description.IsSet() && project.Description.Get() != nil {
-		data.Description = types.StringPointerValue(project.Description.Get())
-	} else {
-		// Description is nil, explicitly set to null for Terraform state.
-		data.Description = types.StringNull()
-	}
 }
 
 // mapProjectToItem maps an SDK project to the project item model for datasources.
@@ -102,26 +73,6 @@ func mapProjectToItem(project *n8nsdk.Project) models.Item {
 	// Check for non-nil value.
 	if project.Type != nil {
 		item.Type = types.StringPointerValue(project.Type)
-	}
-	// Check for non-nil value.
-	if project.CreatedAt != nil {
-		item.CreatedAt = types.StringValue(project.CreatedAt.String())
-	}
-	// Check for non-nil value.
-	if project.UpdatedAt != nil {
-		item.UpdatedAt = types.StringValue(project.UpdatedAt.String())
-	}
-	// Check for non-nil value.
-	if project.Icon.IsSet() && project.Icon.Get() != nil {
-		projectIcon := project.Icon.Get()
-		// Check if icon value is set.
-		if projectIcon.Value != nil {
-			item.Icon = types.StringValue(*projectIcon.Value)
-		}
-	}
-	// Check for non-nil value.
-	if project.Description.IsSet() && project.Description.Get() != nil {
-		item.Description = types.StringPointerValue(project.Description.Get())
 	}
 
 	// Return result.

@@ -296,7 +296,7 @@ Name | Type | Description  | Notes
 
 ## UsersPost
 
-> UsersPost201Response UsersPost(ctx).UsersPostRequestInner(usersPostRequestInner).Execute()
+> UsersPost200Response UsersPost(ctx).UsersPostRequestInner(usersPostRequestInner).Execute()
 
 Create multiple users
 
@@ -324,7 +324,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error when calling `UserAPI.UsersPost``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `UsersPost`: UsersPost201Response
+	// response from `UsersPost`: UsersPost200Response
 	fmt.Fprintf(os.Stdout, "Response from `UserAPI.UsersPost`: %v\n", resp)
 }
 ```
@@ -344,7 +344,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**UsersPost201Response**](UsersPost201Response.md)
+[**UsersPost200Response**](UsersPost200Response.md)
 
 ### Authorization
 

@@ -41,7 +41,7 @@ func (r *CredentialResource) createNewCredential(ctx context.Context, name, cred
 		Data: credData,
 	}
 
-	newCred, httpResp, err := r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
+	newCred, httpResp, err := r.client.APIClient.CredentialAPI.CreateCredential(ctx).
 		Credential(credRequest).
 		Execute()
 	// Close response body if present.

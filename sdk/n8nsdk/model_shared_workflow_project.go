@@ -20,11 +20,8 @@ var _ MappedNullable = &SharedWorkflowProject{}
 
 // SharedWorkflowProject struct for SharedWorkflowProject
 type SharedWorkflowProject struct {
-	// Project ID
-	Id *string `json:"id,omitempty"`
-	// Project name
-	Name *string `json:"name,omitempty"`
-	// Project type
+	Id                   *string `json:"id,omitempty"`
+	Name                 *string `json:"name,omitempty"`
 	Type                 *string `json:"type,omitempty"`
 	AdditionalProperties map[string]interface{}
 }

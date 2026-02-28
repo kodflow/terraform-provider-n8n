@@ -5,6 +5,7 @@ go_test(
     srcs = [
         "api_audit_test.go",
         "api_credential_test.go",
+        "api_data_table_test.go",
         "api_execution_test.go",
         "api_projects_test.go",
         "api_source_control_test.go",

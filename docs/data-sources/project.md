@@ -22,8 +22,4 @@ Fetches a single n8n project by ID or name. Since the n8n API doesn't provide a 
 
 ### Read-Only
 
-- `created_at` (String) Timestamp when the project was created
-- `description` (String) Project description
-- `icon` (String) Project icon
 - `type` (String) Project type (e.g., 'team', 'personal')
-- `updated_at` (String) Timestamp when the project was last updated

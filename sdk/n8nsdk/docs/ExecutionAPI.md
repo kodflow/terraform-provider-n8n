@@ -8,6 +8,8 @@ Method | HTTP request | Description
 [**ExecutionsIdDelete**](ExecutionAPI.md#ExecutionsIdDelete) | **Delete** /executions/{id} | Delete an execution
 [**ExecutionsIdGet**](ExecutionAPI.md#ExecutionsIdGet) | **Get** /executions/{id} | Retrieve an execution
 [**ExecutionsIdRetryPost**](ExecutionAPI.md#ExecutionsIdRetryPost) | **Post** /executions/{id}/retry | Retry an execution
+[**ExecutionsIdTagsGet**](ExecutionAPI.md#ExecutionsIdTagsGet) | **Get** /executions/{id}/tags | Get execution tags
+[**ExecutionsIdTagsPut**](ExecutionAPI.md#ExecutionsIdTagsPut) | **Put** /executions/{id}/tags | Update tags of an execution
 
 
 
@@ -286,6 +288,148 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Execution**](Execution.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ExecutionsIdTagsGet
+
+> []Tag ExecutionsIdTagsGet(ctx, id).Execute()
+
+Get execution tags
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	id := float32(8.14) // float32 | The ID of the execution.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.ExecutionAPI.ExecutionsIdTagsGet(context.Background(), id).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `ExecutionAPI.ExecutionsIdTagsGet``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `ExecutionsIdTagsGet`: []Tag
+	fmt.Fprintf(os.Stdout, "Response from `ExecutionAPI.ExecutionsIdTagsGet`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **float32** | The ID of the execution. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiExecutionsIdTagsGetRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**[]Tag**](Tag.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ExecutionsIdTagsPut
+
+> []Tag ExecutionsIdTagsPut(ctx, id).TagIdsInner(tagIdsInner).Execute()
+
+Update tags of an execution
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	id := float32(8.14) // float32 | The ID of the execution.
+	tagIdsInner := []openapiclient.TagIdsInner{*openapiclient.NewTagIdsInner("2tUt1wbLX592XDdX")} // []TagIdsInner | List of annotation tag IDs
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.ExecutionAPI.ExecutionsIdTagsPut(context.Background(), id).TagIdsInner(tagIdsInner).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `ExecutionAPI.ExecutionsIdTagsPut``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `ExecutionsIdTagsPut`: []Tag
+	fmt.Fprintf(os.Stdout, "Response from `ExecutionAPI.ExecutionsIdTagsPut`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **float32** | The ID of the execution. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiExecutionsIdTagsPutRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **tagIdsInner** | [**[]TagIdsInner**](TagIdsInner.md) | List of annotation tag IDs | 
+
+### Return type
+
+[**[]Tag**](Tag.md)
 
 ### Authorization
 

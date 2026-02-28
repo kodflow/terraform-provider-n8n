@@ -33,6 +33,7 @@ type Workflow struct {
 	StaticData           *WorkflowStaticData    `json:"staticData,omitempty"`
 	Tags                 []Tag                  `json:"tags,omitempty"`
 	Shared               []SharedWorkflow       `json:"shared,omitempty"`
+	ActiveVersion        NullableActiveVersion  `json:"activeVersion,omitempty"`
 	Description          *string                `json:"description,omitempty"`
 	VersionId            *string                `json:"versionId,omitempty"`
 	IsArchived           *bool                  `json:"isArchived,omitempty"`
@@ -386,6 +387,49 @@ func (o *Workflow) SetShared(v []SharedWorkflow) {
 	o.Shared = v
 }
 
+// GetActiveVersion returns the ActiveVersion field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *Workflow) GetActiveVersion() ActiveVersion {
+	if o == nil || IsNil(o.ActiveVersion.Get()) {
+		var ret ActiveVersion
+		return ret
+	}
+	return *o.ActiveVersion.Get()
+}
+
+// GetActiveVersionOk returns a tuple with the ActiveVersion field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *Workflow) GetActiveVersionOk() (*ActiveVersion, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.ActiveVersion.Get(), o.ActiveVersion.IsSet()
+}
+
+// HasActiveVersion returns a boolean if a field has been set.
+func (o *Workflow) HasActiveVersion() bool {
+	if o != nil && o.ActiveVersion.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetActiveVersion gets a reference to the given NullableActiveVersion and assigns it to the ActiveVersion field.
+func (o *Workflow) SetActiveVersion(v ActiveVersion) {
+	o.ActiveVersion.Set(&v)
+}
+
+// SetActiveVersionNil sets the value for ActiveVersion to be an explicit nil
+func (o *Workflow) SetActiveVersionNil() {
+	o.ActiveVersion.Set(nil)
+}
+
+// UnsetActiveVersion ensures that no value is present for ActiveVersion, not even an explicit nil
+func (o *Workflow) UnsetActiveVersion() {
+	o.ActiveVersion.Unset()
+}
+
 func (o Workflow) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -420,6 +464,9 @@ func (o Workflow) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Shared) {
 		toSerialize["shared"] = o.Shared
+	}
+	if o.ActiveVersion.IsSet() {
+		toSerialize["activeVersion"] = o.ActiveVersion.Get()
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -478,6 +525,7 @@ func (o *Workflow) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "staticData")
 		delete(additionalProperties, "tags")
 		delete(additionalProperties, "shared")
+		delete(additionalProperties, "activeVersion")
 		o.AdditionalProperties = additionalProperties
 	}
 

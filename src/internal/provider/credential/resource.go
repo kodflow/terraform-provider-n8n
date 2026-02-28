@@ -304,7 +304,7 @@ func (r *CredentialResource) executeCreate(ctx context.Context, name, credType s
 	}
 
 	// Execute API call and return result.
-	return r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
+	return r.client.APIClient.CredentialAPI.CreateCredential(ctx).
 		Credential(credRequest).
 		Execute()
 }

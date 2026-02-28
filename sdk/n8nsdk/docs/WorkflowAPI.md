@@ -5,14 +5,15 @@ All URIs are relative to */api/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**WorkflowsGet**](WorkflowAPI.md#WorkflowsGet) | **Get** /workflows | Retrieve all workflows
-[**WorkflowsIdActivatePost**](WorkflowAPI.md#WorkflowsIdActivatePost) | **Post** /workflows/{id}/activate | Activate a workflow
+[**WorkflowsIdActivatePost**](WorkflowAPI.md#WorkflowsIdActivatePost) | **Post** /workflows/{id}/activate | Publish a workflow
 [**WorkflowsIdDeactivatePost**](WorkflowAPI.md#WorkflowsIdDeactivatePost) | **Post** /workflows/{id}/deactivate | Deactivate a workflow
 [**WorkflowsIdDelete**](WorkflowAPI.md#WorkflowsIdDelete) | **Delete** /workflows/{id} | Delete a workflow
-[**WorkflowsIdGet**](WorkflowAPI.md#WorkflowsIdGet) | **Get** /workflows/{id} | Retrieves a workflow
+[**WorkflowsIdGet**](WorkflowAPI.md#WorkflowsIdGet) | **Get** /workflows/{id} | Retrieve a workflow
 [**WorkflowsIdPut**](WorkflowAPI.md#WorkflowsIdPut) | **Put** /workflows/{id} | Update a workflow
 [**WorkflowsIdTagsGet**](WorkflowAPI.md#WorkflowsIdTagsGet) | **Get** /workflows/{id}/tags | Get workflow tags
 [**WorkflowsIdTagsPut**](WorkflowAPI.md#WorkflowsIdTagsPut) | **Put** /workflows/{id}/tags | Update tags of a workflow
-[**WorkflowsIdTransferPut**](WorkflowAPI.md#WorkflowsIdTransferPut) | **Put** /workflows/{id}/transfer | Transfer a workflow to another project.
+[**WorkflowsIdTransferPut**](WorkflowAPI.md#WorkflowsIdTransferPut) | **Put** /workflows/{id}/transfer | Transfer a workflow to another project
+[**WorkflowsIdVersionIdGet**](WorkflowAPI.md#WorkflowsIdVersionIdGet) | **Get** /workflows/{id}/{versionId} | Retrieves a specific version of a workflow
 [**WorkflowsPost**](WorkflowAPI.md#WorkflowsPost) | **Post** /workflows | Create a workflow
 
 
@@ -97,9 +98,9 @@ Name | Type | Description  | Notes
 
 ## WorkflowsIdActivatePost
 
-> Workflow WorkflowsIdActivatePost(ctx, id).Execute()
+> Workflow WorkflowsIdActivatePost(ctx, id).WorkflowsIdActivatePostRequest(workflowsIdActivatePostRequest).Execute()
 
-Activate a workflow
+Publish a workflow
 
 
 
@@ -117,10 +118,11 @@ import (
 
 func main() {
 	id := "id_example" // string | The ID of the workflow.
+	workflowsIdActivatePostRequest := *openapiclient.NewWorkflowsIdActivatePostRequest() // WorkflowsIdActivatePostRequest | Optional parameters to publish the workflow. (optional)
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.WorkflowAPI.WorkflowsIdActivatePost(context.Background(), id).Execute()
+	resp, r, err := apiClient.WorkflowAPI.WorkflowsIdActivatePost(context.Background(), id).WorkflowsIdActivatePostRequest(workflowsIdActivatePostRequest).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `WorkflowAPI.WorkflowsIdActivatePost``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -146,6 +148,7 @@ Other parameters are passed through a pointer to a apiWorkflowsIdActivatePostReq
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
+ **workflowsIdActivatePostRequest** | [**WorkflowsIdActivatePostRequest**](WorkflowsIdActivatePostRequest.md) | Optional parameters to publish the workflow. | 
 
 ### Return type
 
@@ -157,7 +160,7 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
-- **Content-Type**: Not defined
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
@@ -309,7 +312,7 @@ Name | Type | Description  | Notes
 
 > Workflow WorkflowsIdGet(ctx, id).ExcludePinnedData(excludePinnedData).Execute()
 
-Retrieves a workflow
+Retrieve a workflow
 
 
 
@@ -595,7 +598,7 @@ Name | Type | Description  | Notes
 
 > WorkflowsIdTransferPut(ctx, id).WorkflowsIdTransferPutRequest(workflowsIdTransferPutRequest).Execute()
 
-Transfer a workflow to another project.
+Transfer a workflow to another project
 
 
 
@@ -655,6 +658,79 @@ Name | Type | Description  | Notes
 
 - **Content-Type**: application/json
 - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## WorkflowsIdVersionIdGet
+
+> WorkflowVersion WorkflowsIdVersionIdGet(ctx, id, versionId).Execute()
+
+Retrieves a specific version of a workflow
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID/n8nsdk"
+)
+
+func main() {
+	id := "id_example" // string | The ID of the workflow.
+	versionId := "abc123-def456-ghi789" // string | The version ID to retrieve
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.WorkflowAPI.WorkflowsIdVersionIdGet(context.Background(), id, versionId).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `WorkflowAPI.WorkflowsIdVersionIdGet``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `WorkflowsIdVersionIdGet`: WorkflowVersion
+	fmt.Fprintf(os.Stdout, "Response from `WorkflowAPI.WorkflowsIdVersionIdGet`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **string** | The ID of the workflow. | 
+**versionId** | **string** | The version ID to retrieve | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiWorkflowsIdVersionIdGetRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+
+### Return type
+
+[**WorkflowVersion**](WorkflowVersion.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)

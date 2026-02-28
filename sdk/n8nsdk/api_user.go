@@ -90,8 +90,8 @@ type UserAPI interface {
 	UsersPost(ctx context.Context) UserAPIUsersPostRequest
 
 	// UsersPostExecute executes the request
-	//  @return UsersPost201Response
-	UsersPostExecute(r UserAPIUsersPostRequest) (*UsersPost201Response, *http.Response, error)
+	//  @return UsersPost200Response
+	UsersPostExecute(r UserAPIUsersPostRequest) (*UsersPost200Response, *http.Response, error)
 }
 
 // UserAPIService UserAPI service
@@ -623,7 +623,7 @@ func (r UserAPIUsersPostRequest) UsersPostRequestInner(usersPostRequestInner []U
 	return r
 }
 
-func (r UserAPIUsersPostRequest) Execute() (*UsersPost201Response, *http.Response, error) {
+func (r UserAPIUsersPostRequest) Execute() (*UsersPost200Response, *http.Response, error) {
 	return r.ApiService.UsersPostExecute(r)
 }
 
@@ -644,13 +644,13 @@ func (a *UserAPIService) UsersPost(ctx context.Context) UserAPIUsersPostRequest 
 
 // Execute executes the request
 //
-//	@return UsersPost201Response
-func (a *UserAPIService) UsersPostExecute(r UserAPIUsersPostRequest) (*UsersPost201Response, *http.Response, error) {
+//	@return UsersPost200Response
+func (a *UserAPIService) UsersPostExecute(r UserAPIUsersPostRequest) (*UsersPost200Response, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue *UsersPost201Response
+		localVarReturnValue *UsersPost200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserAPIService.UsersPost")

@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Force** | Pointer to **bool** |  | [optional] 
+**AutoPublish** | Pointer to **string** | Controls automatic workflow publishing after import: - &#x60;none&#x60;: Keep workflows in their local published state (default) - &#x60;all&#x60;: Publish all imported workflows - &#x60;published&#x60;: Publish only workflows that were published locally before import  | [optional] [default to "none"]
 **Variables** | Pointer to **map[string]interface{}** |  | [optional] 
 
 ## Methods
@@ -50,6 +51,31 @@ SetForce sets Force field to given value.
 `func (o *Pull) HasForce() bool`
 
 HasForce returns a boolean if a field has been set.
+
+### GetAutoPublish
+
+`func (o *Pull) GetAutoPublish() string`
+
+GetAutoPublish returns the AutoPublish field if non-nil, zero value otherwise.
+
+### GetAutoPublishOk
+
+`func (o *Pull) GetAutoPublishOk() (*string, bool)`
+
+GetAutoPublishOk returns a tuple with the AutoPublish field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAutoPublish
+
+`func (o *Pull) SetAutoPublish(v string)`
+
+SetAutoPublish sets AutoPublish field to given value.
+
+### HasAutoPublish
+
+`func (o *Pull) HasAutoPublish() bool`
+
+HasAutoPublish returns a boolean if a field has been set.
 
 ### GetVariables
 
