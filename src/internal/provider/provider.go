@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/datatable"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models"
@@ -178,6 +179,8 @@ func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource
 		variable.NewVariableResourceWrapper,
 		// User domain
 		user.NewUserResourceWrapper,
+		// Data table domain
+		datatable.NewDataTableResourceWrapper,
 	}
 }
 
@@ -207,6 +210,9 @@ func (p *N8nProvider) DataSources(_ctx context.Context) []func() datasource.Data
 		// User domain
 		user.NewUserDataSourceWrapper,
 		user.NewUsersDataSourceWrapper,
+		// Data table domain
+		datatable.NewDataTableDataSourceWrapper,
+		datatable.NewDataTablesDataSourceWrapper,
 	}
 }
 

@@ -63,6 +63,7 @@ the visual magic for rapid prototyping.
 | `n8n_project`             | Project management (Enterprise)                |
 | `n8n_user`                | User management (Enterprise)                   |
 | `n8n_source_control` 🚧   | Git integration (Enterprise - not implemented) |
+| `n8n_data_table` ️         | Create and manage data tables                  |
 
 ---
 

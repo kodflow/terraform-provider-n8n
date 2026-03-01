@@ -10,6 +10,7 @@ go_library(
     visibility = ["//src:__subpackages__"],
     deps = [
         "//src/internal/provider/credential",
+        "//src/internal/provider/datatable",
         "//src/internal/provider/project",
         "//src/internal/provider/shared/client",
         "//src/internal/provider/shared/models",
