@@ -1,0 +1,40 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "sourcecontrol",
+    srcs = [
+        "helpers.go",
+        "resource.go",
+    ],
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/sourcecontrol",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/shared/client",
+        "//src/internal/provider/sourcecontrol/models",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema/booldefault",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+    ],
+)
+
+go_test(
+    name = "sourcecontrol_test",
+    srcs = [
+        "helpers_internal_test.go",
+        "resource_external_test.go",
+        "resource_internal_test.go",
+    ],
+    embed = [":sourcecontrol"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/shared/client",
+        "//src/internal/provider/sourcecontrol/models",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_hashicorp_terraform_plugin_go//tftypes",
+        "@com_github_stretchr_testify//assert",
+    ],
+)

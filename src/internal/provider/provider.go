@@ -13,12 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/audit"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/datatable"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/execution"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/sourcecontrol"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/user"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable"
@@ -197,6 +199,7 @@ func (p *N8nProvider) Resources(ctx context.Context) (resources []func() resourc
 		user.NewUserResourceWrapper,
 		datatable.NewDataTableResourceWrapper,
 		execution.NewExecutionTagsResourceWrapper,
+		sourcecontrol.NewSourceControlPullResourceWrapper,
 	}
 }
 
@@ -228,6 +231,9 @@ func (p *N8nProvider) DataSources(ctx context.Context) (dataSources []func() dat
 		credential.NewCredentialsDataSourceWrapper,
 		datatable.NewDataTableDataSourceWrapper,
 		datatable.NewDataTablesDataSourceWrapper,
+		execution.NewExecutionDataSourceWrapper,
+		execution.NewExecutionsDataSourceWrapper,
+		audit.NewAuditDataSourceWrapper,
 	}
 }
 

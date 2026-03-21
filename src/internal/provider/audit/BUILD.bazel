@@ -1,0 +1,39 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "audit",
+    srcs = [
+        "datasource.go",
+        "helpers.go",
+    ],
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/audit",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/audit/models",
+        "//src/internal/provider/shared/client",
+        "@com_github_hashicorp_terraform_plugin_framework//datasource",
+        "@com_github_hashicorp_terraform_plugin_framework//datasource/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+    ],
+)
+
+go_test(
+    name = "audit_test",
+    srcs = [
+        "datasource_external_test.go",
+        "datasource_internal_test.go",
+        "helpers_internal_test.go",
+    ],
+    embed = [":audit"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/audit/models",
+        "//src/internal/provider/shared/client",
+        "@com_github_hashicorp_terraform_plugin_framework//datasource",
+        "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_hashicorp_terraform_plugin_go//tftypes",
+        "@com_github_stretchr_testify//assert",
+    ],
+)

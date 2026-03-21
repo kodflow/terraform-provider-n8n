@@ -14,7 +14,7 @@ Automatically generated coverage report.
 
 | Metric | Value |
 |--------|-------|
-| **Total Coverage** | **92.1%** |
+| **Total Coverage** | **92.4%** |
 | **Threshold** | **70.0%** |
 | **Status** | ✅ PASSED |
 
@@ -59,12 +59,14 @@ Acceptance tests validate the real behavior of the provider against an n8n insta
 | Icon | Package | Coverage |
 |:----:|---------|----------|
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider` | 100.0% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/audit` | 95.3% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential` | 94.2% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/datatable` | 92.0% |
-| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/execution` | 92.0% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/execution` | 94.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/project` | 93.2% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared` | 100.0% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client` | 100.0% |
+| 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/sourcecontrol` | 94.7% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag` | 92.5% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/user` | 90.8% |
 | 🟢 | `github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable` | 93.0% |
@@ -81,16 +83,16 @@ Tables are organized by resource category to facilitate understanding of the pro
 
 Complete lifecycle management of n8n resources (Create, Read, Update, Delete).
 
-| Function | credential | project | tag | user | variable | workflow |
-|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-| `Configure` | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 80.0% |
-| `Create` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Delete` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `ImportState` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Metadata` | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
-| `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
-| `Schema` | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟡 80.0% |
-| `Update` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 91.7% | 🟢 100.0% |
+| Function | credential | project | sourcecontrol | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 80.0% |
+| `Create` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Delete` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `ImportState` | 🟢 100.0% | 🟢 100.0% | 🔵 N/A | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Metadata` | 🟠 66.7% | 🟠 66.7% | 🟢 100.0% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
+| `Read` | 🟢 100.0% | 🟢 100.0% | 🟡 80.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% |
+| `Schema` | 🟠 66.7% | 🟠 66.7% | 🟢 100.0% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟡 80.0% |
+| `Update` | 🟢 100.0% | 🟢 100.0% | 🟡 85.7% | 🟢 100.0% | 🟢 100.0% | 🟢 91.7% | 🟢 100.0% |
 
 ---
 
@@ -196,21 +198,21 @@ Reading n8n resources without managing their lifecycle.
 
 ### datasource (singular)
 
-| Function | credential | project | tag | user | variable | workflow |
-|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-| `Configure` | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 80.0% |
-| `Metadata` | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
-| `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 93.8% |
-| `Schema` | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟡 80.0% |
+| Function | credential | execution | project | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 80.0% |
+| `Metadata` | 🟠 66.7% | 🟢 100.0% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
+| `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 100.0% | 🟢 93.8% |
+| `Schema` | 🟠 66.7% | 🟢 100.0% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟡 80.0% |
 
 ### datasources (plural)
 
-| Function | credential | project | tag | user | variable | workflow |
-|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-| `Configure` | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% |
-| `Metadata` | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
-| `Read` | 🟢 100.0% | 🟢 93.3% | 🟢 92.3% | 🟢 93.3% | 🟢 93.3% | 🟢 100.0% |
-| `Schema` | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
+| Function | credential | execution | project | tag | user | variable | workflow |
+|----------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| `Configure` | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% | 🟡 88.9% |
+| `Metadata` | 🟠 66.7% | 🟢 100.0% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
+| `Read` | 🟢 100.0% | 🟢 100.0% | 🟢 93.3% | 🟢 92.3% | 🟢 93.3% | 🟢 93.3% | 🟢 100.0% |
+| `Schema` | 🟠 66.7% | 🟢 100.0% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% | 🟠 66.7% |
 
 ---
 
