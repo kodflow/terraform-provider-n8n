@@ -1,4 +1,39 @@
 services:
+  # ========== N8N LOCAL INSTANCE ==========
+  n8n:
+    image: ghcr.io/kodflow/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Unlock all Enterprise features without a license (dev/test only)
+      - N8N_DEV_ENTERPRISE_MODE=true
+      # Fixed encryption key so credentials survive volume recreations
+      - N8N_ENCRYPTION_KEY=devcontainer-local-key-not-for-prod
+      # Use SQLite — no external database needed for local dev
+      - DB_TYPE=sqlite
+      - DB_SQLITE_VACUUM_ON_STARTUP=false
+      # Disable telemetry, diagnostics, and pruning for clean dev experience
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - EXECUTIONS_PRUNING_ENABLED=false
+      # Required to skip strict file permission enforcement in containers
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      # Webhook URL for local access
+      - WEBHOOK_URL=http://localhost:5678
+      - N8N_LOG_LEVEL=warn
+    volumes:
+      - n8n-data:/home/node/.n8n
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+
   # ========== DEVCONTAINER ==========
   devcontainer:
     # Ollama runs on HOST for GPU acceleration (installed via initialize.sh)
@@ -170,6 +205,8 @@ volumes:
   op-cache:
   cloud-config:
   kube-config:
+  # n8n SQLite database and settings persistence
+  n8n-data:
 
 networks:
   default:

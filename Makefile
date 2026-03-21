@@ -33,6 +33,7 @@ include makefiles/quality.mk
 include makefiles/build.mk
 include makefiles/tools.mk
 include makefiles/terraform.mk
+include makefiles/n8n.mk
 
 # ============================================================================
 # Global Update Target
@@ -104,6 +105,9 @@ help: ## Display available commands
 	@echo ""
 	@echo "$(BOLD)Tools & Dependencies:$(RESET)"
 	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/tools.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(BOLD)Local n8n (acceptance tests):$(RESET)"
+	@grep -h -E '^[a-zA-Z_/-]+:.*?## .*$$' makefiles/n8n.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
 	@echo ""
