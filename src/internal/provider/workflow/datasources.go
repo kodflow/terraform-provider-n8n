@@ -9,12 +9,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/constants"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/constants"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 )
 
@@ -44,9 +44,9 @@ type WorkflowsDataSource struct {
 // NewWorkflowsDataSource creates a new WorkflowsDataSource instance.
 //
 // Returns:
-//   - datasource.DataSource: A new WorkflowsDataSource instance
-func NewWorkflowsDataSource() *WorkflowsDataSource {
-	// Return result.
+//   - workflowsDataSource: A new WorkflowsDataSource instance
+func NewWorkflowsDataSource() (workflowsDataSource *WorkflowsDataSource) {
+	//: Return result.
 	return &WorkflowsDataSource{}
 }
 
@@ -54,9 +54,9 @@ func NewWorkflowsDataSource() *WorkflowsDataSource {
 // This wrapper function is used by the provider to maintain compatibility with the framework.
 //
 // Returns:
-//   - datasource.DataSource: the wrapped WorkflowsDataSource instance
-func NewWorkflowsDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+//   - dataSource: the wrapped WorkflowsDataSource instance
+func NewWorkflowsDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewWorkflowsDataSource()
 }
 
@@ -66,7 +66,12 @@ func NewWorkflowsDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the operation
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to populate with type name
-func (d *WorkflowsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *WorkflowsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_workflows"
 }
 
@@ -74,10 +79,24 @@ func (d *WorkflowsDataSource) Metadata(_ctx context.Context, req datasource.Meta
 //
 // Params:
 //   - ctx: context for the operation
-//   - req: schema request
+//   - _: schema request (empty struct, unused by framework)
 //   - resp: schema response to populate with schema definition
-func (d *WorkflowsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *WorkflowsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	resp.Schema = buildWorkflowsDataSourceSchema()
+}
+
+// buildWorkflowsDataSourceSchema constructs the schema for the workflows datasource.
+//
+// Returns:
+//   - s: The schema definition
+func buildWorkflowsDataSourceSchema() (s schema.Schema) {
+	//: Return schema with all workflow list attributes.
+	return schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n workflows",
 
 		Attributes: map[string]schema.Attribute{
@@ -115,21 +134,26 @@ func (d *WorkflowsDataSource) Schema(_ctx context.Context, _req datasource.Schem
 //   - ctx: context for the operation
 //   - req: configure request containing provider data
 //   - resp: configure response for error handling
-func (d *WorkflowsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *WorkflowsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return with error.
+		//: Return early without error when provider data is nil.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -146,53 +170,87 @@ func (d *WorkflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data models.DataSources
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Build the request
+	//: Execute API request to fetch workflows.
+	if !d.executeWorkflowsRead(ctx, &data, resp) {
+		//: Return with error.
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// executeWorkflowsRead fetches workflows from the API and maps them to data.
+//
+// Params:
+//   - ctx: context for the operation
+//   - data: the data source model to populate
+//   - resp: read response for error reporting
+//
+// Returns:
+//   - ok: True if the read succeeded, false otherwise
+func (d *WorkflowsDataSource) executeWorkflowsRead(ctx context.Context, data *models.DataSources, resp *datasource.ReadResponse) (ok bool) {
+	//: Build the request.
 	apiReq := d.client.APIClient.WorkflowAPI.WorkflowsGet(ctx)
 
-	// Apply filters if specified
+	//: Apply filters if specified.
 	if !data.Active.IsNull() {
 		apiReq = apiReq.Active(data.Active.ValueBool())
 	}
 
 	workflowList, httpResp, err := apiReq.Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading workflows",
 			fmt.Sprintf("Could not read workflows: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
-		return
+		//: Return failure.
+		return false
 	}
 
-	// Map response to state
-	data.Workflows = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
-	// Check for non-nil value.
-	if workflowList.Data != nil {
-		// Iterate over items.
-		for _, workflow := range workflowList.Data {
-			workflowModel := models.Item{
-				ID:   types.StringPointerValue(workflow.Id),
-				Name: types.StringValue(workflow.Name),
-			}
-			// Check for non-nil value.
-			if workflow.Active != nil {
-				workflowModel.Active = types.BoolPointerValue(workflow.Active)
-			}
-			data.Workflows = append(data.Workflows, workflowModel)
+	//: Map workflow items to model.
+	data.Workflows = mapWorkflowItems(workflowList.Data)
+	//: Return success.
+	return true
+}
+
+// mapWorkflowItems converts SDK workflow list items to model items.
+//
+// Params:
+//   - wfList: the SDK workflow items to convert
+//
+// Returns:
+//   - result: the mapped workflow models
+func mapWorkflowItems(wfList []n8nsdk.Workflow) (result []models.Item) {
+	result = make([]models.Item, 0, constants.DefaultListCapacity)
+	//: Iterate over items.
+	for _, workflow := range wfList {
+		workflowModel := models.Item{
+			ID:   types.StringPointerValue(workflow.Id),
+			Name: types.StringValue(workflow.Name),
 		}
+		//: Check for non-nil value.
+		if workflow.Active != nil {
+			workflowModel.Active = types.BoolPointerValue(workflow.Active)
+		}
+		result = append(result, workflowModel)
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	//: Return result.
+	return result
 }

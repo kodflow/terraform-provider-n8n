@@ -31,7 +31,6 @@ func Test_mapTagToDataSourceModel(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,10 +182,9 @@ func Test_mapTagToDataSourceModel(t *testing.T) {
 				assert.Equal(t, "New Name", data.Name.ValueString())
 
 			case "map multiple times":
-				id1 := "tag-1"
 				name1 := "First Tag"
 				tag1 := &n8nsdk.Tag{
-					Id:   &id1,
+					Id:   new("tag-1"),
 					Name: name1,
 				}
 
@@ -194,10 +192,9 @@ func Test_mapTagToDataSourceModel(t *testing.T) {
 				mapTagToDataSourceModel(tag1, data)
 				assert.Equal(t, "First Tag", data.Name.ValueString())
 
-				id2 := "tag-2"
 				name2 := "Second Tag"
 				tag2 := &n8nsdk.Tag{
-					Id:   &id2,
+					Id:   new("tag-2"),
 					Name: name2,
 				}
 
@@ -218,9 +215,8 @@ func Test_mapTagToDataSourceModel(t *testing.T) {
 
 				// Test with nil data pointer
 				assert.NotPanics(t, func() {
-					id := "test-id"
 					tag := &n8nsdk.Tag{
-						Id:   &id,
+						Id:   new("test-id"),
 						Name: "Test",
 					}
 					var nilData *models.DataSource
@@ -261,20 +257,16 @@ func Test_findTagByName(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "find existing tag":
-				id1 := "tag-1"
-				id2 := "tag-2"
-				id3 := "tag-3"
 
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "Production"},
-					{Id: &id2, Name: "Development"},
-					{Id: &id3, Name: "Testing"},
+					{Id: new("tag-1"), Name: "Production"},
+					{Id: new("tag-2"), Name: "Development"},
+					{Id: new("tag-3"), Name: "Testing"},
 				}
 
 				tag, found := findTagByName(tags, "Development")
@@ -285,9 +277,8 @@ func Test_findTagByName(t *testing.T) {
 				assert.Equal(t, "tag-2", *tag.Id)
 
 			case "tag not found":
-				id1 := "tag-1"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "Production"},
+					{Id: new("tag-1"), Name: "Production"},
 				}
 
 				tag, found := findTagByName(tags, "NonExistent")
@@ -312,11 +303,9 @@ func Test_findTagByName(t *testing.T) {
 				assert.Nil(t, tag)
 
 			case "find first tag":
-				id1 := "tag-1"
-				id2 := "tag-2"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "First"},
-					{Id: &id2, Name: "Second"},
+					{Id: new("tag-1"), Name: "First"},
+					{Id: new("tag-2"), Name: "Second"},
 				}
 
 				tag, found := findTagByName(tags, "First")
@@ -327,11 +316,9 @@ func Test_findTagByName(t *testing.T) {
 				assert.Equal(t, "tag-1", *tag.Id)
 
 			case "find last tag":
-				id1 := "tag-1"
-				id2 := "tag-2"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "First"},
-					{Id: &id2, Name: "Last"},
+					{Id: new("tag-1"), Name: "First"},
+					{Id: new("tag-2"), Name: "Last"},
 				}
 
 				tag, found := findTagByName(tags, "Last")
@@ -366,11 +353,9 @@ func Test_findTagByName(t *testing.T) {
 				assert.Nil(t, tag)
 
 			case "empty name search":
-				id1 := "tag-1"
-				id2 := "tag-2"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "Production"},
-					{Id: &id2, Name: ""},
+					{Id: new("tag-1"), Name: "Production"},
+					{Id: new("tag-2"), Name: ""},
 				}
 
 				tag, found := findTagByName(tags, "")
@@ -381,11 +366,9 @@ func Test_findTagByName(t *testing.T) {
 				assert.Equal(t, "tag-2", *tag.Id)
 
 			case "whitespace in names":
-				id1 := "tag-1"
-				id2 := "tag-2"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: " Production "},
-					{Id: &id2, Name: "Production"},
+					{Id: new("tag-1"), Name: " Production "},
+					{Id: new("tag-2"), Name: "Production"},
 				}
 
 				// Exact match with whitespace
@@ -423,11 +406,9 @@ func Test_findTagByName(t *testing.T) {
 				assert.Equal(t, "标签测试", tag.Name)
 
 			case "duplicate names returns first":
-				id1 := "tag-1"
-				id2 := "tag-2"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "Duplicate"},
-					{Id: &id2, Name: "Duplicate"},
+					{Id: new("tag-1"), Name: "Duplicate"},
+					{Id: new("tag-2"), Name: "Duplicate"},
 				}
 
 				tag, found := findTagByName(tags, "Duplicate")
@@ -450,18 +431,16 @@ func Test_findTagByName(t *testing.T) {
 
 			case "large tag list":
 				tags := make([]n8nsdk.Tag, 1000)
-				for i := 0; i < 1000; i++ {
-					id := "tag-" + string(rune(i))
+				for i := range 1000 {
 					tags[i] = n8nsdk.Tag{
-						Id:   &id,
+						Id:   new("tag-" + string(rune(i))),
 						Name: "Tag-" + string(rune(i)),
 					}
 				}
 
 				// Add target tag at the end
-				targetID := "target-tag"
 				tags = append(tags, n8nsdk.Tag{
-					Id:   &targetID,
+					Id:   new("target-tag"),
 					Name: "TargetTag",
 				})
 
@@ -502,6 +481,9 @@ func Test_findTagByName(t *testing.T) {
 	}
 }
 
+// Test_mapTagToDataSourceModelConcurrency tests concurrent access to mapTagToDataSourceModel.
+// Each goroutine terminates after calling mapTagToDataSourceModel once and signaling the done channel.
+// All goroutines complete before the test exits via the channel drain loop.
 func Test_mapTagToDataSourceModelConcurrency(t *testing.T) {
 	t.Parallel()
 
@@ -514,26 +496,22 @@ func Test_mapTagToDataSourceModelConcurrency(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// NO t.Parallel() here - concurrency test with goroutines
 
 			switch tt.name {
 			case "concurrent mapping":
-				id := "tag-concurrent"
 				name := "Concurrent Tag"
-				createdAt := time.Now()
-				updatedAt := time.Now().Add(5 * time.Minute)
 
 				tag := &n8nsdk.Tag{
-					Id:        &id,
+					Id:        new("tag-concurrent"),
 					Name:      name,
-					CreatedAt: &createdAt,
-					UpdatedAt: &updatedAt,
+					CreatedAt: new(time.Now()),
+					UpdatedAt: new(time.Now().Add(5 * time.Minute)),
 				}
 
 				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					go func() {
 						data := &models.DataSource{}
 						mapTagToDataSourceModel(tag, data)
@@ -543,23 +521,22 @@ func Test_mapTagToDataSourceModelConcurrency(t *testing.T) {
 					}()
 				}
 
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					<-done
 				}
 
 			case "error case - validation checks":
 				// Test concurrent access with nil fields
-				id := "tag-nil-fields"
 				name := "Tag with nil fields"
 				tag := &n8nsdk.Tag{
-					Id:        &id,
+					Id:        new("tag-nil-fields"),
 					Name:      name,
 					CreatedAt: nil,
 					UpdatedAt: nil,
 				}
 
 				done := make(chan bool, 50)
-				for i := 0; i < 50; i++ {
+				for range 50 {
 					go func() {
 						data := &models.DataSource{}
 						mapTagToDataSourceModel(tag, data)
@@ -570,7 +547,7 @@ func Test_mapTagToDataSourceModelConcurrency(t *testing.T) {
 					}()
 				}
 
-				for i := 0; i < 50; i++ {
+				for range 50 {
 					<-done
 				}
 			}
@@ -578,6 +555,9 @@ func Test_mapTagToDataSourceModelConcurrency(t *testing.T) {
 	}
 }
 
+// Test_findTagByNameConcurrency tests concurrent access to findTagByName.
+// Each goroutine terminates after calling findTagByName once and signaling the done channel.
+// All goroutines complete before the test exits via the channel drain loop.
 func Test_findTagByNameConcurrency(t *testing.T) {
 	t.Parallel()
 
@@ -590,24 +570,20 @@ func Test_findTagByNameConcurrency(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// NO t.Parallel() here - concurrency test with goroutines
 
 			switch tt.name {
 			case "concurrent searches":
-				id1 := "tag-1"
-				id2 := "tag-2"
-				id3 := "tag-3"
 
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "Production"},
-					{Id: &id2, Name: "Development"},
-					{Id: &id3, Name: "Testing"},
+					{Id: new("tag-1"), Name: "Production"},
+					{Id: new("tag-2"), Name: "Development"},
+					{Id: new("tag-3"), Name: "Testing"},
 				}
 
 				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					go func() {
 						tag, found := findTagByName(tags, "Development")
 						assert.True(t, found)
@@ -617,21 +593,19 @@ func Test_findTagByNameConcurrency(t *testing.T) {
 					}()
 				}
 
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					<-done
 				}
 
 			case "error case - validation checks":
 				// Test concurrent searches for non-existent tag
-				id1 := "tag-1"
-				id2 := "tag-2"
 				tags := []n8nsdk.Tag{
-					{Id: &id1, Name: "Production"},
-					{Id: &id2, Name: "Development"},
+					{Id: new("tag-1"), Name: "Production"},
+					{Id: new("tag-2"), Name: "Development"},
 				}
 
 				done := make(chan bool, 50)
-				for i := 0; i < 50; i++ {
+				for range 50 {
 					go func() {
 						tag, found := findTagByName(tags, "NonExistent")
 						assert.False(t, found)
@@ -640,7 +614,7 @@ func Test_findTagByNameConcurrency(t *testing.T) {
 					}()
 				}
 
-				for i := 0; i < 50; i++ {
+				for range 50 {
 					<-done
 				}
 			}
@@ -649,20 +623,17 @@ func Test_findTagByNameConcurrency(t *testing.T) {
 }
 
 func BenchmarkMapTagToDataSourceModel(b *testing.B) {
-	id := "tag-benchmark"
 	name := "Benchmark Tag"
-	createdAt := time.Now()
-	updatedAt := time.Now().Add(5 * time.Minute)
 
 	tag := &n8nsdk.Tag{
-		Id:        &id,
+		Id:        new("tag-benchmark"),
 		Name:      name,
-		CreatedAt: &createdAt,
-		UpdatedAt: &updatedAt,
+		CreatedAt: new(time.Now()),
+		UpdatedAt: new(time.Now().Add(5 * time.Minute)),
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		data := &models.DataSource{}
 		mapTagToDataSourceModel(tag, data)
 	}
@@ -670,62 +641,57 @@ func BenchmarkMapTagToDataSourceModel(b *testing.B) {
 
 func BenchmarkFindTagByName(b *testing.B) {
 	tags := make([]n8nsdk.Tag, 100)
-	for i := 0; i < 100; i++ {
-		id := "tag-" + string(rune(i))
+	for i := range 100 {
 		tags[i] = n8nsdk.Tag{
-			Id:   &id,
+			Id:   new("tag-" + string(rune(i))),
 			Name: "Tag-" + string(rune(i)),
 		}
 	}
 
 	// Add target tag at position 50
-	targetID := "target-tag"
 	tags[50] = n8nsdk.Tag{
-		Id:   &targetID,
+		Id:   new("target-tag"),
 		Name: "TargetTag",
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = findTagByName(tags, "TargetTag")
 	}
 }
 
 func BenchmarkFindTagByNameWorstCase(b *testing.B) {
 	tags := make([]n8nsdk.Tag, 1000)
-	for i := 0; i < 1000; i++ {
-		id := "tag-" + string(rune(i))
+	for i := range 1000 {
 		tags[i] = n8nsdk.Tag{
-			Id:   &id,
+			Id:   new("tag-" + string(rune(i))),
 			Name: "Tag-" + string(rune(i)),
 		}
 	}
 
 	// Target tag is at the end
-	targetID := "target-tag"
 	tags = append(tags, n8nsdk.Tag{
-		Id:   &targetID,
+		Id:   new("target-tag"),
 		Name: "TargetTag",
 	})
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = findTagByName(tags, "TargetTag")
 	}
 }
 
 func BenchmarkFindTagByNameNotFound(b *testing.B) {
 	tags := make([]n8nsdk.Tag, 100)
-	for i := 0; i < 100; i++ {
-		id := "tag-" + string(rune(i))
+	for i := range 100 {
 		tags[i] = n8nsdk.Tag{
-			Id:   &id,
+			Id:   new("tag-" + string(rune(i))),
 			Name: "Tag-" + string(rune(i)),
 		}
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = findTagByName(tags, "NonExistentTag")
 	}
 }

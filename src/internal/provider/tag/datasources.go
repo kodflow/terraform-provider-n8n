@@ -9,12 +9,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/constants"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/terraform-provider-n8n/sdk/n8nsdk"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/constants"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/tag/models"
 )
 
@@ -45,8 +45,8 @@ type TagsDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: une nouvelle instance de TagsDataSource
-func NewTagsDataSource() *TagsDataSource {
-	// Return result.
+func NewTagsDataSource() (tagsDataSource *TagsDataSource) {
+	//: Return result.
 	return &TagsDataSource{}
 }
 
@@ -55,8 +55,8 @@ func NewTagsDataSource() *TagsDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped TagsDataSource instance
-func NewTagsDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewTagsDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewTagsDataSource()
 }
 
@@ -66,7 +66,12 @@ func NewTagsDataSourceWrapper() datasource.DataSource {
 //   - ctx: contexte de la requête
 //   - req: requête de métadonnées
 //   - resp: réponse de métadonnées
-func (d *TagsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *TagsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_tags"
 }
 
@@ -76,7 +81,12 @@ func (d *TagsDataSource) Metadata(_ctx context.Context, req datasource.MetadataR
 //   - ctx: contexte de la requête
 //   - req: requête de schéma
 //   - resp: réponse de schéma
-func (d *TagsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n tags",
 
@@ -115,21 +125,26 @@ func (d *TagsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequ
 //   - ctx: contexte de la requête
 //   - req: requête de configuration
 //   - resp: réponse de configuration
-func (d *TagsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *TagsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -142,47 +157,66 @@ func (d *TagsDataSource) Configure(_ctx context.Context, req datasource.Configur
 //   - ctx: contexte de la requête
 //   - req: requête de lecture
 //   - resp: réponse de lecture
-func (d *TagsDataSource) Read(ctx context.Context, _req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *TagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data models.DataSources
 
 	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing tags",
 			fmt.Sprintf("Could not list tags: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
-	data.Tags = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
-	// Check for non-nil value.
+	data.Tags = make([]models.Item, 0, constants.DefaultListCapacity)
+	//: Check for non-nil value.
 	if tagList.Data != nil {
-		// Iterate over items.
-		for _, tag := range tagList.Data {
-			item := models.Item{
-				Name: types.StringValue(tag.Name),
-			}
-			// Check for non-nil value.
-			if tag.Id != nil {
-				item.ID = types.StringValue(*tag.Id)
-			}
-			// Check for non-nil value.
-			if tag.CreatedAt != nil {
-				item.CreatedAt = types.StringValue(tag.CreatedAt.String())
-			}
-			// Check for non-nil value.
-			if tag.UpdatedAt != nil {
-				item.UpdatedAt = types.StringValue(tag.UpdatedAt.String())
-			}
-			data.Tags = append(data.Tags, item)
-		}
+		data.Tags = d.mapTagsToItems(tagList.Data, data.Tags)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// mapTagsToItems maps SDK tags to models.Item slice.
+//
+// Params:
+//   - tags: slice of n8nsdk.Tag to map
+//   - items: existing items slice to append to
+//
+// Returns:
+//   - []models.Item: populated items slice
+func (d *TagsDataSource) mapTagsToItems(tags []n8nsdk.Tag, items []models.Item) (result []models.Item) {
+	//: Iterate over items.
+	for _, tag := range tags {
+		item := models.Item{
+			Name: types.StringValue(tag.Name),
+		}
+		//: Check for non-nil value.
+		if tag.Id != nil {
+			item.ID = types.StringValue(*tag.Id)
+		}
+		//: Check for non-nil value.
+		if tag.CreatedAt != nil {
+			item.CreatedAt = types.StringValue(tag.CreatedAt.String())
+		}
+		//: Check for non-nil value.
+		if tag.UpdatedAt != nil {
+			item.UpdatedAt = types.StringValue(tag.UpdatedAt.String())
+		}
+		items = append(items, item)
+	}
+	//: Return result.
+	return items
 }

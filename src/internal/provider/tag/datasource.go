@@ -43,8 +43,8 @@ type TagDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: A new TagDataSource instance
-func NewTagDataSource() *TagDataSource {
-	// Return result.
+func NewTagDataSource() (tagDataSource *TagDataSource) {
+	//: Return result.
 	return &TagDataSource{}
 }
 
@@ -53,8 +53,8 @@ func NewTagDataSource() *TagDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped TagDataSource instance
-func NewTagDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewTagDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewTagDataSource()
 }
 
@@ -67,7 +67,12 @@ func NewTagDataSourceWrapper() datasource.DataSource {
 //
 // Returns:
 //   - None
-func (d *TagDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *TagDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_tag"
 }
 
@@ -80,7 +85,12 @@ func (d *TagDataSource) Metadata(_ctx context.Context, req datasource.MetadataRe
 //
 // Returns:
 //   - None
-func (d *TagDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n tag by ID or name. When using ID, the API's GET /tags/{id} endpoint is used directly. When using name, the LIST endpoint is used with client-side filtering.",
 
@@ -116,21 +126,26 @@ func (d *TagDataSource) Schema(_ctx context.Context, _req datasource.SchemaReque
 //
 // Returns:
 //   - None
-func (d *TagDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil provider data.
+func (d *TagDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil provider data.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check if provider data is correct type.
+	//: Check if provider data is correct type.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -150,35 +165,34 @@ func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
-	// If there are errors from config parsing, return early.
+	//: If there are errors from config parsing, return early.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Validate that at least one identifier is provided.
+	//: Validate that at least one identifier is provided.
 	if !d.validateIdentifier(data, resp) {
-		// Return result.
+		//: Return result.
 		return
 	}
 
-	// Fetch tag by ID or name
 	var tag *n8nsdk.Tag
-	// Check for non-null value.
+	//: Check for non-null value.
 	if !data.ID.IsNull() {
 		tag = d.fetchTagByID(ctx, data, resp)
-		// Handle alternative case.
+		//: Handle alternative case.
 	} else {
 		tag = d.fetchTagByName(ctx, data, resp)
 	}
 
-	// Check if tag was found
+	//: Check if tag was found.
 	if tag == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
-	// Map tag to model.
+	//: Map tag to model.
 	mapTagToDataSourceModel(tag, data)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
@@ -192,15 +206,17 @@ func (d *TagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 //
 // Returns:
 //   - bool: true if valid, false otherwise
-func (d *TagDataSource) validateIdentifier(data *models.DataSource, resp *datasource.ReadResponse) bool {
-	// Check for non-null value.
+func (d *TagDataSource) validateIdentifier(data *models.DataSource, resp *datasource.ReadResponse) (ok bool) {
+	//: Check for non-null value.
 	if data.ID.IsNull() && data.Name.IsNull() {
 		resp.Diagnostics.AddError(
 			"Missing Required Attribute",
 			"Either 'id' or 'name' must be specified",
 		)
+		//: Return failure.
 		return false
 	}
+	//: Return success.
 	return true
 }
 
@@ -213,23 +229,28 @@ func (d *TagDataSource) validateIdentifier(data *models.DataSource, resp *dataso
 //
 // Returns:
 //   - *n8nsdk.Tag: The found tag or nil if error occurred
-func (d *TagDataSource) fetchTagByID(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) *n8nsdk.Tag {
-	tag, httpResp, err := d.client.APIClient.TagsAPI.TagsIdGet(ctx, data.ID.ValueString()).Execute()
-	// Close HTTP response body if present.
+func (d *TagDataSource) fetchTagByID(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) (result *n8nsdk.Tag) {
+	result, httpResp, err := d.client.APIClient.TagsAPI.TagsIdGet(ctx, data.ID.ValueString()).Execute()
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
-	// Check if API call returned an error.
+	//: Check if API call returned an error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving tag",
 			fmt.Sprintf("Could not retrieve tag with ID %s: %s\nHTTP Response: %v", data.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
-	// Return result.
-	return tag
+	//: Return result.
+	return result
 }
 
 // fetchTagByName retrieves a tag by listing and filtering by name.
@@ -241,40 +262,43 @@ func (d *TagDataSource) fetchTagByID(ctx context.Context, data *models.DataSourc
 //
 // Returns:
 //   - *n8nsdk.Tag: The found tag or nil if error occurred
-func (d *TagDataSource) fetchTagByName(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) *n8nsdk.Tag {
+func (d *TagDataSource) fetchTagByName(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) (result *n8nsdk.Tag) {
 	tagList, httpResp, err := d.client.APIClient.TagsAPI.TagsGet(ctx).Execute()
-	// Close HTTP response body if present.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
-	// Check if API call returned an error.
+	//: Check if API call returned an error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing tags",
 			fmt.Sprintf("Could not list tags: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
-	// Find tag by name in the response data.
-	var tag *n8nsdk.Tag
 	var found bool
-	// Check if tag list data is not empty.
+	//: Check if tag list data is not empty.
 	if tagList.Data != nil {
-		tag, found = findTagByName(tagList.Data, data.Name.ValueString())
+		result, found = findTagByName(tagList.Data, data.Name.ValueString())
 	}
 
-	// Return error if tag was not found.
+	//: Return error if tag was not found.
 	if !found {
 		resp.Diagnostics.AddError(
 			"Tag Not Found",
 			fmt.Sprintf("Could not find tag with name: %s", data.Name.ValueString()),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
-	// Return result.
-	return tag
+	//: Return result.
+	return result
 }

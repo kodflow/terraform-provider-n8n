@@ -45,8 +45,8 @@ type VariablesDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: a new VariablesDataSource instance
-func NewVariablesDataSource() *VariablesDataSource {
-	// Return result.
+func NewVariablesDataSource() (variablesDataSource *VariablesDataSource) {
+	//: Return result.
 	return &VariablesDataSource{}
 }
 
@@ -55,8 +55,8 @@ func NewVariablesDataSource() *VariablesDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped VariablesDataSource instance
-func NewVariablesDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewVariablesDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewVariablesDataSource()
 }
 
@@ -69,7 +69,12 @@ func NewVariablesDataSourceWrapper() datasource.DataSource {
 //
 // Returns:
 //   - (none)
-func (d *VariablesDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *VariablesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_variables"
 }
 
@@ -82,7 +87,12 @@ func (d *VariablesDataSource) Metadata(_ctx context.Context, req datasource.Meta
 //
 // Returns:
 //   - (none)
-func (d *VariablesDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *VariablesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of n8n variables with optional filtering",
 		Attributes:          d.schemaAttributes(),
@@ -93,8 +103,8 @@ func (d *VariablesDataSource) Schema(_ctx context.Context, _req datasource.Schem
 //
 // Returns:
 //   - map[string]schema.Attribute: the data source attribute definitions
-func (d *VariablesDataSource) schemaAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+func (d *VariablesDataSource) schemaAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes.
 	return map[string]schema.Attribute{
 		"project_id": schema.StringAttribute{
 			MarkdownDescription: "Filter variables by project ID",
@@ -116,8 +126,8 @@ func (d *VariablesDataSource) schemaAttributes() map[string]schema.Attribute {
 //
 // Returns:
 //   - map[string]schema.Attribute: the variable item attribute definitions
-func (d *VariablesDataSource) variableItemAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+func (d *VariablesDataSource) variableItemAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes.
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			MarkdownDescription: "Variable identifier",
@@ -152,21 +162,26 @@ func (d *VariablesDataSource) variableItemAttributes() map[string]schema.Attribu
 //
 // Returns:
 //   - (none)
-func (d *VariablesDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// If no provider data is available, exit early
+func (d *VariablesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: If no provider data is available, exit early
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// If the provider data is not a valid N8nClient, report an error
+	//: If the provider data is not a valid N8nClient, report an error
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return early on type assertion failure
+		//: Return early on type assertion failure
 		return
 	}
 
@@ -186,9 +201,9 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data models.DataSources
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	// If there are errors in loading the config, return early
+	//: If there are errors in loading the config, return early
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -196,17 +211,22 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	apiReq := d.buildAPIRequestWithFilters(ctx, &data)
 
 	variableList, httpResp, err := apiReq.Execute()
-	// Ensure the HTTP response body is properly closed to prevent resource leaks
+	//: Ensure the HTTP response body is properly closed to prevent resource leaks
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// If the API request failed, report the error and return early
+	//: If the API request failed, report the error and return early
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing variables",
 			fmt.Sprintf("Could not list variables: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -222,19 +242,19 @@ func (d *VariablesDataSource) Read(ctx context.Context, req datasource.ReadReque
 //
 // Returns:
 //   - n8nsdk.VariablesAPIVariablesGetRequest: API request with filters applied
-func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, data *models.DataSources) n8nsdk.VariablesAPIVariablesGetRequest {
+func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, data *models.DataSources) (variablesAPIVariablesGetRequest n8nsdk.VariablesAPIVariablesGetRequest) {
 	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
 
-	// If a project ID filter is specified, add it to the API request
+	//: If a project ID filter is specified, add it to the API request
 	if !data.ProjectID.IsNull() {
 		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
 	}
-	// If a state filter is specified, add it to the API request
+	//: If a state filter is specified, add it to the API request
 	if !data.State.IsNull() {
 		apiReq = apiReq.State(data.State.ValueString())
 	}
 
-	// Return result.
+	//: Return result.
 	return apiReq
 }
 
@@ -244,14 +264,14 @@ func (d *VariablesDataSource) buildAPIRequestWithFilters(ctx context.Context, da
 //   - data: DataSources model to populate
 //   - variableList: API response with variable data
 func (d *VariablesDataSource) populateVariables(data *models.DataSources, variableList *n8nsdk.VariableList) {
-	data.Variables = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
-	// If the API returned variable data, process each variable
+	data.Variables = make([]models.Item, 0, constants.DefaultListCapacity)
+	//: If the API returned variable data, process each variable
 	if variableList.Data == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
-	// For each variable returned from the API, map it to the Terraform model
+	//: For each variable returned from the API, map it to the Terraform model
 	for _, variable := range variableList.Data {
 		item := d.mapVariableToItem(&variable)
 		data.Variables = append(data.Variables, *item)
@@ -265,22 +285,22 @@ func (d *VariablesDataSource) populateVariables(data *models.DataSources, variab
 //
 // Returns:
 //   - *models.Item: pointer to mapped variable item
-func (d *VariablesDataSource) mapVariableToItem(variable *n8nsdk.Variable) *models.Item {
-	item := &models.Item{}
-	// If the variable has an ID, include it in the model
+func (d *VariablesDataSource) mapVariableToItem(variable *n8nsdk.Variable) (item *models.Item) {
+	item = &models.Item{}
+	//: If the variable has an ID, include it in the model
 	if variable.Id != nil {
 		item.ID = types.StringValue(*variable.Id)
 	}
 	item.Key = types.StringValue(variable.Key)
 	item.Value = types.StringValue(variable.Value)
-	// If the variable has a type, include it in the model
+	//: If the variable has a type, include it in the model
 	if variable.Type != nil {
 		item.Type = types.StringPointerValue(variable.Type)
 	}
-	// Extract project ID if the project object and its ID are present
+	//: Extract project ID if the project object and its ID are present
 	if variable.Project != nil && variable.Project.Id != nil {
 		item.ProjectID = types.StringPointerValue(variable.Project.Id)
 	}
-	// Return pointer to avoid copying large struct.
+	//: Return pointer to avoid copying large struct.
 	return item
 }

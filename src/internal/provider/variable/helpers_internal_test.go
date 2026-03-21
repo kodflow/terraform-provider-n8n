@@ -11,6 +11,8 @@ import (
 
 // TestfindVariableByIDOrKey tests the findVariableByIDOrKey private function.
 func Test_findVariableByIDOrKey(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -21,9 +23,8 @@ func Test_findVariableByIDOrKey(t *testing.T) {
 			name: "find variable by ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByIDOrKey(variables, types.StringValue("var-123"), types.StringNull())
 				assert.True(t, found)
@@ -35,9 +36,8 @@ func Test_findVariableByIDOrKey(t *testing.T) {
 			name: "find variable by key",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-456"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-456"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByIDOrKey(variables, types.StringNull(), types.StringValue("key1"))
 				assert.True(t, found)
@@ -49,9 +49,8 @@ func Test_findVariableByIDOrKey(t *testing.T) {
 			name: "find variable by ID when both ID and key provided",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-789"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-789"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByIDOrKey(variables, types.StringValue("var-789"), types.StringValue("key1"))
 				assert.True(t, found)
@@ -63,9 +62,8 @@ func Test_findVariableByIDOrKey(t *testing.T) {
 			name: "variable not found",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByIDOrKey(variables, types.StringValue("non-existent"), types.StringValue("non-existent"))
 				assert.False(t, found)
@@ -86,9 +84,8 @@ func Test_findVariableByIDOrKey(t *testing.T) {
 			name: "error case - nil ID and null key",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByIDOrKey(variables, types.StringNull(), types.StringNull())
 				assert.False(t, found)
@@ -118,6 +115,8 @@ func Test_findVariableByIDOrKey(t *testing.T) {
 
 // TestfindVariableByID tests the findVariableByID private function.
 func Test_findVariableByID(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -128,9 +127,8 @@ func Test_findVariableByID(t *testing.T) {
 			name: "find variable by ID success",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByID(variables, "var-123")
 				assert.True(t, found)
@@ -142,11 +140,9 @@ func Test_findVariableByID(t *testing.T) {
 			name: "multiple variables find correct one",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id1 := "var-123"
-				id2 := "var-456"
 				variables := []n8nsdk.Variable{
-					{Id: &id1, Key: "key1", Value: "value1"},
-					{Id: &id2, Key: "key2", Value: "value2"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
+					{Id: new("var-456"), Key: "key2", Value: "value2"},
 				}
 				foundVar, found := findVariableByID(variables, "var-456")
 				assert.True(t, found)
@@ -158,9 +154,8 @@ func Test_findVariableByID(t *testing.T) {
 			name: "variable not found",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByID(variables, "non-existent")
 				assert.False(t, found)
@@ -193,9 +188,8 @@ func Test_findVariableByID(t *testing.T) {
 			name: "error case - empty search ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByID(variables, "")
 				assert.False(t, found)
@@ -213,6 +207,8 @@ func Test_findVariableByID(t *testing.T) {
 
 // TestfindVariableByKey tests the findVariableByKey private function.
 func Test_findVariableByKey(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -223,9 +219,8 @@ func Test_findVariableByKey(t *testing.T) {
 			name: "find variable by key success",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "mykey", Value: "value1"},
+					{Id: new("var-123"), Key: "mykey", Value: "value1"},
 				}
 				foundVar, found := findVariableByKey(variables, "mykey")
 				assert.True(t, found)
@@ -237,11 +232,9 @@ func Test_findVariableByKey(t *testing.T) {
 			name: "multiple variables find correct one",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id1 := "var-123"
-				id2 := "var-456"
 				variables := []n8nsdk.Variable{
-					{Id: &id1, Key: "key1", Value: "value1"},
-					{Id: &id2, Key: "key2", Value: "value2"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
+					{Id: new("var-456"), Key: "key2", Value: "value2"},
 				}
 				foundVar, found := findVariableByKey(variables, "key2")
 				assert.True(t, found)
@@ -253,9 +246,8 @@ func Test_findVariableByKey(t *testing.T) {
 			name: "variable not found",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByKey(variables, "non-existent")
 				assert.False(t, found)
@@ -276,9 +268,8 @@ func Test_findVariableByKey(t *testing.T) {
 			name: "error case - empty search key",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "key1", Value: "value1"},
+					{Id: new("var-123"), Key: "key1", Value: "value1"},
 				}
 				foundVar, found := findVariableByKey(variables, "")
 				assert.False(t, found)
@@ -289,9 +280,8 @@ func Test_findVariableByKey(t *testing.T) {
 			name: "error case - case sensitive key search",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variables := []n8nsdk.Variable{
-					{Id: &id, Key: "MyKey", Value: "value1"},
+					{Id: new("var-123"), Key: "MyKey", Value: "value1"},
 				}
 				foundVar, found := findVariableByKey(variables, "mykey")
 				assert.False(t, found)
@@ -309,6 +299,8 @@ func Test_findVariableByKey(t *testing.T) {
 
 // TestmapVariableToDataSourceModel tests the mapVariableToDataSourceModel private function.
 func Test_mapVariableToDataSourceModel(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -319,16 +311,13 @@ func Test_mapVariableToDataSourceModel(t *testing.T) {
 			name: "map all fields success",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
-				varType := "string"
-				projectID := "proj-456"
 				variable := &n8nsdk.Variable{
-					Id:    &id,
+					Id:    new("var-123"),
 					Key:   "mykey",
 					Value: "myvalue",
-					Type:  &varType,
+					Type:  new("string"),
 					Project: &n8nsdk.Project{
-						Id: &projectID,
+						Id: new("proj-456"),
 					},
 				}
 				data := &models.DataSource{}
@@ -360,9 +349,8 @@ func Test_mapVariableToDataSourceModel(t *testing.T) {
 			name: "map with nil Type",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:    &id,
+					Id:    new("var-123"),
 					Key:   "mykey",
 					Value: "myvalue",
 					Type:  nil,
@@ -376,9 +364,8 @@ func Test_mapVariableToDataSourceModel(t *testing.T) {
 			name: "map with nil Project",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:      &id,
+					Id:      new("var-123"),
 					Key:     "mykey",
 					Value:   "myvalue",
 					Project: nil,
@@ -410,9 +397,8 @@ func Test_mapVariableToDataSourceModel(t *testing.T) {
 						t.Error("Expected panic from nil data, but did not panic")
 					}
 				}()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:    &id,
+					Id:    new("var-123"),
 					Key:   "mykey",
 					Value: "myvalue",
 				}
@@ -423,9 +409,8 @@ func Test_mapVariableToDataSourceModel(t *testing.T) {
 			name: "error case - project with nil ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:      &id,
+					Id:      new("var-123"),
 					Key:     "mykey",
 					Value:   "myvalue",
 					Project: &n8nsdk.Project{Id: nil},
@@ -446,6 +431,8 @@ func Test_mapVariableToDataSourceModel(t *testing.T) {
 
 // TestmapVariableToResourceModel tests the mapVariableToResourceModel private function.
 func Test_mapVariableToResourceModel(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -456,16 +443,13 @@ func Test_mapVariableToResourceModel(t *testing.T) {
 			name: "map all fields success",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
-				varType := "string"
-				projectID := "proj-456"
 				variable := &n8nsdk.Variable{
-					Id:    &id,
+					Id:    new("var-123"),
 					Key:   "mykey",
 					Value: "myvalue",
-					Type:  &varType,
+					Type:  new("string"),
 					Project: &n8nsdk.Project{
-						Id: &projectID,
+						Id: new("proj-456"),
 					},
 				}
 				data := &models.Resource{}
@@ -497,9 +481,8 @@ func Test_mapVariableToResourceModel(t *testing.T) {
 			name: "map with nil Type",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:    &id,
+					Id:    new("var-123"),
 					Key:   "mykey",
 					Value: "myvalue",
 					Type:  nil,
@@ -513,9 +496,8 @@ func Test_mapVariableToResourceModel(t *testing.T) {
 			name: "map with nil Project",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:      &id,
+					Id:      new("var-123"),
 					Key:     "mykey",
 					Value:   "myvalue",
 					Project: nil,
@@ -547,9 +529,8 @@ func Test_mapVariableToResourceModel(t *testing.T) {
 						t.Error("Expected panic from nil data, but did not panic")
 					}
 				}()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:    &id,
+					Id:    new("var-123"),
 					Key:   "mykey",
 					Value: "myvalue",
 				}
@@ -560,9 +541,8 @@ func Test_mapVariableToResourceModel(t *testing.T) {
 			name: "error case - project with nil ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				id := "var-123"
 				variable := &n8nsdk.Variable{
-					Id:      &id,
+					Id:      new("var-123"),
 					Key:     "mykey",
 					Value:   "myvalue",
 					Project: &n8nsdk.Project{Id: nil},
@@ -583,6 +563,8 @@ func Test_mapVariableToResourceModel(t *testing.T) {
 
 // TestbuildVariableRequest tests the buildVariableRequest private function.
 func Test_buildVariableRequest(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {

@@ -168,6 +168,22 @@ type WorkflowAPI interface {
 	// WorkflowsPostExecute executes the request
 	//  @return Workflow
 	WorkflowsPostExecute(r WorkflowAPIWorkflowsPostRequest) (*Workflow, *http.Response, error)
+
+	/*
+		WorkflowsIdVersionIdGet Retrieve a specific workflow version
+
+		Retrieves a specific version of a workflow from workflow history.
+
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the workflow.
+		@param versionId The version ID to retrieve.
+		@return WorkflowAPIWorkflowsIdVersionIdGetRequest
+	*/
+	WorkflowsIdVersionIdGet(ctx context.Context, id string, versionId string) WorkflowAPIWorkflowsIdVersionIdGetRequest
+
+	// WorkflowsIdVersionIdGetExecute executes the request
+	//  @return WorkflowVersion
+	WorkflowsIdVersionIdGetExecute(r WorkflowAPIWorkflowsIdVersionIdGetRequest) (*WorkflowVersion, *http.Response, error)
 }
 
 // WorkflowAPIService WorkflowAPI service
@@ -1423,6 +1439,99 @@ func (a *WorkflowAPIService) WorkflowsPostExecute(r WorkflowAPIWorkflowsPostRequ
 			}
 		}
 	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+// WorkflowAPIWorkflowsIdVersionIdGetRequest is the request for getting a specific workflow version.
+type WorkflowAPIWorkflowsIdVersionIdGetRequest struct {
+	ctx        context.Context
+	ApiService WorkflowAPI
+	id         string
+	versionId  string
+}
+
+// Execute executes the request.
+//
+//	@return WorkflowVersion
+func (r WorkflowAPIWorkflowsIdVersionIdGetRequest) Execute() (*WorkflowVersion, *http.Response, error) {
+	return r.ApiService.WorkflowsIdVersionIdGetExecute(r)
+}
+
+// WorkflowsIdVersionIdGet returns a request builder for getting a specific workflow version.
+func (a *WorkflowAPIService) WorkflowsIdVersionIdGet(ctx context.Context, id string, versionId string) WorkflowAPIWorkflowsIdVersionIdGetRequest {
+	return WorkflowAPIWorkflowsIdVersionIdGetRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+		versionId:  versionId,
+	}
+}
+
+// WorkflowsIdVersionIdGetExecute executes the get workflow version request.
+func (a *WorkflowAPIService) WorkflowsIdVersionIdGetExecute(r WorkflowAPIWorkflowsIdVersionIdGetRequest) (*WorkflowVersion, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *WorkflowVersion
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "WorkflowAPIService.WorkflowsIdVersionIdGet")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/workflows/" + strings.NewReplacer().Replace(r.id) + "/" + strings.NewReplacer().Replace(r.versionId)
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	localVarHTTPContentTypes := []string{}
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

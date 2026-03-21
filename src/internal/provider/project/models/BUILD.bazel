@@ -4,6 +4,7 @@ go_library(
     name = "models",
     srcs = [
         "datasource.go",
+        "datasource_members.go",
         "datasources.go",
         "item.go",
         "resource.go",

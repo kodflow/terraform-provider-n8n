@@ -1,0 +1,26 @@
+{
+  "id": "go",
+  "version": "1.0.0",
+  "name": "Go Development Environment",
+  "description": "Installs Go with common development tools and multi-architecture support",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Go version to install"
+    }
+  },
+  "containerEnv": {
+    "GOROOT": "/usr/local/go",
+    "GOPATH": "/home/vscode/.cache/go",
+    "GOCACHE": "/home/vscode/.cache/go-build",
+    "GOMODCACHE": "/home/vscode/.cache/go/pkg/mod",
+    "PATH": "/usr/local/go/bin:/home/vscode/.cache/go/bin:${PATH}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["golang.go"]
+    }
+  },
+  "installsAfter": []
+}

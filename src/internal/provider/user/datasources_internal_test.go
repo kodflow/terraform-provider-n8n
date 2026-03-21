@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -41,52 +42,47 @@ func (m *MockUsersDataSourceInterface) Read(ctx context.Context, req datasource.
 
 // TestUsersDataSource_Configure is now in external test file - refactored to test behavior only.
 
+// Compile-time interface satisfaction checks.
+var _ datasource.DataSource = (*UsersDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*UsersDataSource)(nil)
+var _ UsersDataSourceInterface = (*UsersDataSource)(nil)
+
 func TestUsersDataSource_Interfaces(t *testing.T) {
-	t.Helper()
+	t.Parallel()
 
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
 	}{
 		{
-			name: "implements required interfaces",
+			name: "constructor returns non-nil instance",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-
 				ds := NewUsersDataSource()
-
-				// Test that UsersDataSource implements datasource.DataSource
-				var _ datasource.DataSource = ds
-
-				// Test that UsersDataSource implements datasource.DataSourceWithConfigure
-				var _ datasource.DataSourceWithConfigure = ds
-
-				// Test that UsersDataSource implements UsersDataSourceInterface
-				var _ UsersDataSourceInterface = ds
+				assert.NotNil(t, ds)
 			},
 		},
 		{
 			name: "interface implementation error case",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-
 				ds := NewUsersDataSource()
-
-				// This test ensures the type assertions don't panic
 				assert.NotNil(t, ds)
-				var _ datasource.DataSource = ds
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt.testFunc(t)
 		})
 	}
 }
 
 func TestUsersDataSourceConcurrency(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -100,21 +96,17 @@ func TestUsersDataSourceConcurrency(t *testing.T) {
 
 				ds := NewUsersDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						resp := &datasource.MetadataResponse{}
-						ds.Metadata(context.Background(), datasource.MetadataRequest{
+						ds.Metadata(t.Context(), datasource.MetadataRequest{
 							ProviderTypeName: "n8n",
 						}, resp)
 						assert.Equal(t, "n8n_users", resp.TypeName)
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
@@ -124,19 +116,15 @@ func TestUsersDataSourceConcurrency(t *testing.T) {
 
 				ds := NewUsersDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						resp := &datasource.SchemaResponse{}
-						ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+						ds.Schema(t.Context(), datasource.SchemaRequest{}, resp)
 						assert.NotNil(t, resp.Schema)
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
@@ -146,22 +134,18 @@ func TestUsersDataSourceConcurrency(t *testing.T) {
 
 				ds := NewUsersDataSource()
 
-				done := make(chan bool, 50)
-				for i := 0; i < 50; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Go(func() {
 						resp := &datasource.ConfigureResponse{}
 						req := datasource.ConfigureRequest{
 							ProviderData: "invalid",
 						}
-						ds.Configure(context.Background(), req, resp)
+						ds.Configure(t.Context(), req, resp)
 						assert.True(t, resp.Diagnostics.HasError())
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 50; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 	}
@@ -176,20 +160,18 @@ func TestUsersDataSourceConcurrency(t *testing.T) {
 func BenchmarkUsersDataSource_Schema(b *testing.B) {
 	ds := NewUsersDataSource()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.SchemaResponse{}
-		ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+		ds.Schema(b.Context(), datasource.SchemaRequest{}, resp)
 	}
 }
 
 func BenchmarkUsersDataSource_Metadata(b *testing.B) {
 	ds := NewUsersDataSource()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.MetadataResponse{}
-		ds.Metadata(context.Background(), datasource.MetadataRequest{}, resp)
+		ds.Metadata(b.Context(), datasource.MetadataRequest{}, resp)
 	}
 }
 
@@ -197,13 +179,12 @@ func BenchmarkUsersDataSource_Configure(b *testing.B) {
 	ds := NewUsersDataSource()
 	mockClient := &client.N8nClient{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.ConfigureResponse{}
 		req := datasource.ConfigureRequest{
 			ProviderData: mockClient,
 		}
-		ds.Configure(context.Background(), req, resp)
+		ds.Configure(b.Context(), req, resp)
 	}
 }
 
@@ -212,6 +193,8 @@ func BenchmarkUsersDataSource_Configure(b *testing.B) {
 
 // TestUsersDataSource_schemaAttributes tests the private schemaAttributes method.
 func TestUsersDataSource_schemaAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -248,6 +231,8 @@ func TestUsersDataSource_schemaAttributes(t *testing.T) {
 
 // TestUsersDataSource_userItemAttributes tests the private userItemAttributes method.
 func TestUsersDataSource_userItemAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)

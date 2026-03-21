@@ -1,11 +1,11 @@
 package tag
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -90,7 +90,6 @@ func TestTagResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -99,7 +98,7 @@ func TestTagResource_executeCreateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &TagResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.tagName),
 			}
@@ -173,7 +172,6 @@ func TestTagResource_executeReadLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -182,7 +180,7 @@ func TestTagResource_executeReadLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &TagResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.tagID),
 			}
@@ -258,7 +256,6 @@ func TestTagResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -267,7 +264,7 @@ func TestTagResource_executeUpdateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &TagResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.newName),
 			}
@@ -335,7 +332,6 @@ func TestTagResource_executeDeleteLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -344,7 +340,7 @@ func TestTagResource_executeDeleteLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &TagResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.tagID),
 			}
@@ -361,6 +357,89 @@ func TestTagResource_executeDeleteLogic(t *testing.T) {
 				assert.True(t, result, "Should return true on success")
 				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
 			}
+		})
+	}
+}
+
+// TestApplyTagTimestamps tests the applyTagTimestamps helper function.
+func TestApplyTagTimestamps(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		tagCreatedAt    *time.Time
+		tagUpdatedAt    *time.Time
+		stateCreatedAt  string
+		stateUpdatedAt  string
+		expectCreatedAt string
+		expectUpdatedAt string
+	}{
+		{
+			name:            "both timestamps from API",
+			tagCreatedAt:    new(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+			tagUpdatedAt:    new(time.Date(2024, 6, 15, 12, 0, 0, 0, time.UTC)),
+			stateCreatedAt:  "2023-01-01T00:00:00Z",
+			stateUpdatedAt:  "2023-06-01T00:00:00Z",
+			expectCreatedAt: "2024-01-01T00:00:00Z",
+			expectUpdatedAt: "2024-06-15T12:00:00Z",
+		},
+		{
+			name:            "nil timestamps fall back to state",
+			tagCreatedAt:    nil,
+			tagUpdatedAt:    nil,
+			stateCreatedAt:  "2023-01-01T00:00:00Z",
+			stateUpdatedAt:  "2023-06-01T00:00:00Z",
+			expectCreatedAt: "2023-01-01T00:00:00Z",
+			expectUpdatedAt: "2023-06-01T00:00:00Z",
+		},
+		{
+			name:            "only created_at from API",
+			tagCreatedAt:    new(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+			tagUpdatedAt:    nil,
+			stateCreatedAt:  "2023-01-01T00:00:00Z",
+			stateUpdatedAt:  "2023-06-01T00:00:00Z",
+			expectCreatedAt: "2024-01-01T00:00:00Z",
+			expectUpdatedAt: "2023-06-01T00:00:00Z",
+		},
+		{
+			name:            "only updated_at from API",
+			tagCreatedAt:    nil,
+			tagUpdatedAt:    new(time.Date(2024, 6, 15, 12, 0, 0, 0, time.UTC)),
+			stateCreatedAt:  "2023-01-01T00:00:00Z",
+			stateUpdatedAt:  "2023-06-01T00:00:00Z",
+			expectCreatedAt: "2023-01-01T00:00:00Z",
+			expectUpdatedAt: "2024-06-15T12:00:00Z",
+		},
+		{
+			name:            "error case - empty state timestamps",
+			tagCreatedAt:    nil,
+			tagUpdatedAt:    nil,
+			stateCreatedAt:  "",
+			stateUpdatedAt:  "",
+			expectCreatedAt: "",
+			expectUpdatedAt: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			tag := &n8nsdk.Tag{
+				Name:      "Test Tag",
+				CreatedAt: tt.tagCreatedAt,
+				UpdatedAt: tt.tagUpdatedAt,
+			}
+			plan := &models.Resource{}
+			state := &models.Resource{
+				CreatedAt: types.StringValue(tt.stateCreatedAt),
+				UpdatedAt: types.StringValue(tt.stateUpdatedAt),
+			}
+
+			applyTagTimestamps(tag, plan, state)
+
+			assert.Equal(t, tt.expectCreatedAt, plan.CreatedAt.ValueString())
+			assert.Equal(t, tt.expectUpdatedAt, plan.UpdatedAt.ValueString())
 		})
 	}
 }

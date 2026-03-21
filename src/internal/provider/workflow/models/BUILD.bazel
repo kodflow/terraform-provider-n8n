@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "connection_resource.go",
         "datasource.go",
+        "datasource_version.go",
         "datasources.go",
         "item.go",
         "node_resource.go",

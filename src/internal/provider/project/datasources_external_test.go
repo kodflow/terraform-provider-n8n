@@ -1,7 +1,6 @@
 package project_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -34,7 +33,6 @@ func TestNewProjectsDataSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -71,16 +69,11 @@ func TestNewProjectsDataSourceWrapper(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
-			case "creates valid datasource wrapper":
-				wrapper := project.NewProjectsDataSourceWrapper()
-				assert.NotNil(t, wrapper)
-
-			case "error case - validation checks":
+			case "creates valid datasource wrapper", "error case - validation checks":
 				wrapper := project.NewProjectsDataSourceWrapper()
 				assert.NotNil(t, wrapper)
 			}
@@ -107,7 +100,6 @@ func TestProjectsDataSource_Metadata(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -118,7 +110,7 @@ func TestProjectsDataSource_Metadata(t *testing.T) {
 					ProviderTypeName: "n8n",
 				}
 				resp := &datasource.MetadataResponse{}
-				ds.Metadata(context.Background(), req, resp)
+				ds.Metadata(t.Context(), req, resp)
 				assert.Equal(t, "n8n_projects", resp.TypeName)
 
 			case "error case - validation checks":
@@ -127,7 +119,7 @@ func TestProjectsDataSource_Metadata(t *testing.T) {
 					ProviderTypeName: "n8n",
 				}
 				resp := &datasource.MetadataResponse{}
-				ds.Metadata(context.Background(), req, resp)
+				ds.Metadata(t.Context(), req, resp)
 				assert.NotEmpty(t, resp.TypeName)
 			}
 		})
@@ -153,7 +145,6 @@ func TestProjectsDataSource_Schema(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -162,7 +153,7 @@ func TestProjectsDataSource_Schema(t *testing.T) {
 				ds := project.NewProjectsDataSource()
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
-				ds.Schema(context.Background(), req, resp)
+				ds.Schema(t.Context(), req, resp)
 				assert.NotNil(t, resp.Schema)
 				assert.NotEmpty(t, resp.Schema.Attributes)
 
@@ -170,7 +161,7 @@ func TestProjectsDataSource_Schema(t *testing.T) {
 				ds := project.NewProjectsDataSource()
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
-				ds.Schema(context.Background(), req, resp)
+				ds.Schema(t.Context(), req, resp)
 				assert.NotNil(t, resp.Schema)
 			}
 		})
@@ -200,7 +191,6 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -211,7 +201,7 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 					ProviderData: &client.N8nClient{},
 				}
 				resp := &datasource.ConfigureResponse{}
-				ds.Configure(context.Background(), req, resp)
+				ds.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - nil provider data":
@@ -220,7 +210,7 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 					ProviderData: nil,
 				}
 				resp := &datasource.ConfigureResponse{}
-				ds.Configure(context.Background(), req, resp)
+				ds.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - wrong provider data type":
@@ -229,7 +219,7 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 					ProviderData: "wrong type",
 				}
 				resp := &datasource.ConfigureResponse{}
-				ds.Configure(context.Background(), req, resp)
+				ds.Configure(t.Context(), req, resp)
 				assert.True(t, resp.Diagnostics.HasError())
 				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Data Source Configure Type")
 			}
@@ -239,6 +229,8 @@ func TestProjectsDataSource_Configure(t *testing.T) {
 
 // TestProjectsDataSource_Read tests the Read method.
 func TestProjectsDataSource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -269,11 +261,11 @@ func TestProjectsDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := project.NewProjectsDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -336,11 +328,11 @@ func TestProjectsDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := project.NewProjectsDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 

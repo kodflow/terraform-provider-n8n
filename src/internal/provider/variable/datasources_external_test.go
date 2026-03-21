@@ -1,7 +1,6 @@
 package variable_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -97,7 +96,7 @@ func TestVariablesDataSource_Metadata(t *testing.T) {
 				}
 				resp := &datasource.MetadataResponse{}
 
-				ds.Metadata(context.Background(), req, resp)
+				ds.Metadata(t.Context(), req, resp)
 
 				assert.Equal(t, "n8n_variables", resp.TypeName, "TypeName should be set correctly")
 			},
@@ -112,7 +111,7 @@ func TestVariablesDataSource_Metadata(t *testing.T) {
 				}
 				resp := &datasource.MetadataResponse{}
 
-				ds.Metadata(context.Background(), req, resp)
+				ds.Metadata(t.Context(), req, resp)
 
 				assert.Equal(t, "n8n_variables", resp.TypeName, "TypeName should be set correctly")
 			},
@@ -141,7 +140,7 @@ func TestVariablesDataSource_Schema(t *testing.T) {
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
 
-				ds.Schema(context.Background(), req, resp)
+				ds.Schema(t.Context(), req, resp)
 
 				assert.NotNil(t, resp.Schema, "Schema should not be nil")
 				assert.NotNil(t, resp.Schema.Attributes, "Schema attributes should not be nil")
@@ -155,7 +154,7 @@ func TestVariablesDataSource_Schema(t *testing.T) {
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
 
-				ds.Schema(context.Background(), req, resp)
+				ds.Schema(t.Context(), req, resp)
 
 				assert.NotNil(t, resp.Schema, "Schema should not be nil")
 				assert.NotNil(t, resp.Schema.Attributes, "Schema attributes should not be nil")
@@ -175,7 +174,7 @@ func TestVariablesDataSource_Configure(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		providerData interface{}
+		providerData any
 		expectError  bool
 	}{
 		{
@@ -196,7 +195,6 @@ func TestVariablesDataSource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -206,7 +204,7 @@ func TestVariablesDataSource_Configure(t *testing.T) {
 			}
 			resp := &datasource.ConfigureResponse{}
 
-			ds.Configure(context.Background(), req, resp)
+			ds.Configure(t.Context(), req, resp)
 
 			if tt.expectError {
 				assert.True(t, resp.Diagnostics.HasError(), "Configure should return error for invalid provider data")
@@ -219,6 +217,8 @@ func TestVariablesDataSource_Configure(t *testing.T) {
 
 // TestVariablesDataSource_Read tests the Read method.
 func TestVariablesDataSource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -247,11 +247,11 @@ func TestVariablesDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := variable.NewVariablesDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -306,7 +306,7 @@ func TestVariablesDataSource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := variable.NewVariablesDataSource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
@@ -349,11 +349,11 @@ func TestVariablesDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := variable.NewVariablesDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -29,27 +30,24 @@ func Test_mapUserToItem(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "map with all fields populated":
-				id := "user123"
 				email := "test@example.com"
 				firstName := "John"
 				lastName := "Doe"
-				isPending := false
 				role := "global:admin"
 				createdAt := time.Now()
 				updatedAt := time.Now().Add(1 * time.Hour)
 
 				user := &n8nsdk.User{
-					Id:        &id,
+					Id:        new("user123"),
 					Email:     email,
 					FirstName: &firstName,
 					LastName:  &lastName,
-					IsPending: &isPending,
+					IsPending: new(false),
 					Role:      &role,
 					CreatedAt: &createdAt,
 					UpdatedAt: &updatedAt,
@@ -85,12 +83,11 @@ func Test_mapUserToItem(t *testing.T) {
 				assert.True(t, item.UpdatedAt.IsNull())
 
 			case "map with partial fields":
-				id := "user456"
 				email := "partial@example.com"
 				role := "global:member"
 
 				user := &n8nsdk.User{
-					Id:    &id,
+					Id:    new("user456"),
 					Email: email,
 					Role:  &role,
 				}
@@ -125,10 +122,9 @@ func Test_mapUserToItem(t *testing.T) {
 				roles := []string{"global:owner", "global:admin", "global:member"}
 
 				for _, role := range roles {
-					roleCopy := role
 					user := &n8nsdk.User{
 						Email: "test@example.com",
-						Role:  &roleCopy,
+						Role:  new(role),
 					}
 
 					item := mapUserToItem(user)
@@ -222,27 +218,22 @@ func Test_mapUserToResourceModel(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "map with all fields populated":
-				id := "user789"
 				email := "resource@example.com"
-				firstName := "Alice"
-				lastName := "Smith"
-				isPending := false
 				role := "global:owner"
 				createdAt := time.Now()
 				updatedAt := time.Now().Add(2 * time.Hour)
 
 				user := &n8nsdk.User{
-					Id:        &id,
+					Id:        new("user789"),
 					Email:     email,
-					FirstName: &firstName,
-					LastName:  &lastName,
-					IsPending: &isPending,
+					FirstName: new("Alice"),
+					LastName:  new("Smith"),
+					IsPending: new(false),
 					Role:      &role,
 					CreatedAt: &createdAt,
 					UpdatedAt: &updatedAt,
@@ -280,12 +271,11 @@ func Test_mapUserToResourceModel(t *testing.T) {
 				assert.True(t, data.UpdatedAt.IsNull())
 
 			case "map updates existing data model":
-				id := "updated123"
 				email := "updated@example.com"
 				role := "global:admin"
 
 				user := &n8nsdk.User{
-					Id:    &id,
+					Id:    new("updated123"),
 					Email: email,
 					Role:  &role,
 				}
@@ -302,11 +292,10 @@ func Test_mapUserToResourceModel(t *testing.T) {
 				assert.Equal(t, "global:admin", data.Role.ValueString())
 
 			case "map preserves email when updating":
-				id := "preserve123"
 				email := "preserve@example.com"
 
 				user := &n8nsdk.User{
-					Id:    &id,
+					Id:    new("preserve123"),
 					Email: email,
 				}
 
@@ -319,10 +308,9 @@ func Test_mapUserToResourceModel(t *testing.T) {
 				roles := []string{"global:owner", "global:admin", "global:member"}
 
 				for _, role := range roles {
-					roleCopy := role
 					user := &n8nsdk.User{
 						Email: "roles@example.com",
-						Role:  &roleCopy,
+						Role:  new(role),
 					}
 
 					data := &models.Resource{}
@@ -333,10 +321,9 @@ func Test_mapUserToResourceModel(t *testing.T) {
 
 			case "map pending and active states":
 				// Test pending user
-				pendingFlag := true
 				pendingUser := &n8nsdk.User{
 					Email:     "pending@example.com",
-					IsPending: &pendingFlag,
+					IsPending: new(true),
 				}
 
 				pendingData := &models.Resource{}
@@ -344,10 +331,9 @@ func Test_mapUserToResourceModel(t *testing.T) {
 				assert.True(t, pendingData.IsPending.ValueBool())
 
 				// Test active user
-				activeFlag := false
 				activeUser := &n8nsdk.User{
 					Email:     "active@example.com",
-					IsPending: &activeFlag,
+					IsPending: new(false),
 				}
 
 				activeData := &models.Resource{}
@@ -355,16 +341,13 @@ func Test_mapUserToResourceModel(t *testing.T) {
 				assert.False(t, activeData.IsPending.ValueBool())
 
 			case "map overwrites previous values":
-				id := "newid"
 				email := "new@example.com"
-				firstName := "New"
-				lastName := "Name"
 
 				user := &n8nsdk.User{
-					Id:        &id,
+					Id:        new("newid"),
 					Email:     email,
-					FirstName: &firstName,
-					LastName:  &lastName,
+					FirstName: new("New"),
+					LastName:  new("Name"),
 				}
 
 				data := &models.Resource{
@@ -410,31 +393,25 @@ func Test_mapUserToItemConcurrency(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			// NO t.Parallel() here due to goroutines
+			t.Parallel()
 
 			switch tt.name {
 			case "concurrent mapping":
-				id := "concurrent123"
 				email := "concurrent@example.com"
-				firstName := "Concurrent"
-				lastName := "Test"
-				isPending := false
-				role := "global:admin"
 
 				user := &n8nsdk.User{
-					Id:        &id,
+					Id:        new("concurrent123"),
 					Email:     email,
-					FirstName: &firstName,
-					LastName:  &lastName,
-					IsPending: &isPending,
-					Role:      &role,
+					FirstName: new("Concurrent"),
+					LastName:  new("Test"),
+					IsPending: new(false),
+					Role:      new("global:admin"),
 				}
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						item := mapUserToItem(user)
 						assert.Equal(t, "concurrent123", item.ID.ValueString())
 						assert.Equal(t, "concurrent@example.com", item.Email.ValueString())
@@ -442,13 +419,9 @@ func Test_mapUserToItemConcurrency(t *testing.T) {
 						assert.Equal(t, "Test", item.LastName.ValueString())
 						assert.False(t, item.IsPending.ValueBool())
 						assert.Equal(t, "global:admin", item.Role.ValueString())
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 
 			case "error case - validation checks":
 				// Test concurrent mapping with minimal valid user
@@ -456,20 +429,16 @@ func Test_mapUserToItemConcurrency(t *testing.T) {
 				user := &n8nsdk.User{
 					Email: email,
 				}
-				done := make(chan bool, 50)
 
-				for i := 0; i < 50; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Go(func() {
 						item := mapUserToItem(user)
 						assert.Equal(t, "", item.Email.ValueString())
 						assert.True(t, item.ID.IsNull())
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 50; i++ {
-					<-done
-				}
+				wg.Wait()
 			}
 		})
 	}
@@ -487,37 +456,30 @@ func Test_mapUserToResourceModelConcurrency(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			// NO t.Parallel() here due to goroutines
+			t.Parallel()
 
 			switch tt.name {
 			case "concurrent resource mapping":
-				id := "resourceconcurrent"
 				email := "resourceconcurrent@example.com"
-				role := "global:member"
 
 				user := &n8nsdk.User{
-					Id:    &id,
+					Id:    new("resourceconcurrent"),
 					Email: email,
-					Role:  &role,
+					Role:  new("global:member"),
 				}
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						data := &models.Resource{}
 						mapUserToResourceModel(user, data)
 						assert.Equal(t, "resourceconcurrent", data.ID.ValueString())
 						assert.Equal(t, "resourceconcurrent@example.com", data.Email.ValueString())
 						assert.Equal(t, "global:member", data.Role.ValueString())
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 
 			case "error case - validation checks":
 				// Test concurrent mapping with minimal valid user
@@ -525,78 +487,58 @@ func Test_mapUserToResourceModelConcurrency(t *testing.T) {
 				user := &n8nsdk.User{
 					Email: email,
 				}
-				done := make(chan bool, 50)
 
-				for i := 0; i < 50; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Go(func() {
 						data := &models.Resource{}
 						mapUserToResourceModel(user, data)
 						assert.Equal(t, "", data.Email.ValueString())
 						assert.True(t, data.ID.IsNull())
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 50; i++ {
-					<-done
-				}
+				wg.Wait()
 			}
 		})
 	}
 }
 
 func Benchmark_mapUserToItem(b *testing.B) {
-	id := "benchmark123"
 	email := "benchmark@example.com"
-	firstName := "Benchmark"
-	lastName := "User"
-	isPending := false
-	role := "global:admin"
-	createdAt := time.Now()
-	updatedAt := time.Now().Add(1 * time.Hour)
 
 	user := &n8nsdk.User{
-		Id:        &id,
+		Id:        new("benchmark123"),
 		Email:     email,
-		FirstName: &firstName,
-		LastName:  &lastName,
-		IsPending: &isPending,
-		Role:      &role,
-		CreatedAt: &createdAt,
-		UpdatedAt: &updatedAt,
+		FirstName: new("Benchmark"),
+		LastName:  new("User"),
+		IsPending: new(false),
+		Role:      new("global:admin"),
+		CreatedAt: new(time.Now()),
+		UpdatedAt: new(time.Now().Add(1 * time.Hour)),
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = mapUserToItem(user)
+	for b.Loop() {
+		mapUserToItem(user)
 	}
 }
 
 func Benchmark_mapUserToResourceModel(b *testing.B) {
-	id := "benchmarkresource"
 	email := "benchmarkresource@example.com"
-	firstName := "Benchmark"
-	lastName := "Resource"
-	isPending := false
-	role := "global:owner"
-	createdAt := time.Now()
-	updatedAt := time.Now().Add(2 * time.Hour)
 
 	user := &n8nsdk.User{
-		Id:        &id,
+		Id:        new("benchmarkresource"),
 		Email:     email,
-		FirstName: &firstName,
-		LastName:  &lastName,
-		IsPending: &isPending,
-		Role:      &role,
-		CreatedAt: &createdAt,
-		UpdatedAt: &updatedAt,
+		FirstName: new("Benchmark"),
+		LastName:  new("Resource"),
+		IsPending: new(false),
+		Role:      new("global:owner"),
+		CreatedAt: new(time.Now()),
+		UpdatedAt: new(time.Now().Add(2 * time.Hour)),
 	}
 
 	data := &models.Resource{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		mapUserToResourceModel(user, data)
 	}
 }

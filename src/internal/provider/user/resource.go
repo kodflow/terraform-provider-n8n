@@ -23,10 +23,10 @@ import (
 
 // HTTP status code range constants.
 const (
-	// HTTP_STATUS_SUCCESS_MIN is min success code.
-	HTTP_STATUS_SUCCESS_MIN int = 200
-	// HTTP_STATUS_SUCCESS_MAX is max success (excl).
-	HTTP_STATUS_SUCCESS_MAX int = 300
+	// HTTPStatusSuccessMin is min success code.
+	HTTPStatusSuccessMin int = 200
+	// HTTPStatusSuccessMax is max success (excl).
+	HTTPStatusSuccessMax int = 300
 )
 
 // Ensure UserResource implements required interfaces.
@@ -61,8 +61,8 @@ type UserResource struct {
 //
 // Returns:
 //   - resource.Resource: A new UserResource configured for Terraform
-func NewUserResource() *UserResource {
-	// Return result.
+func NewUserResource() (userResource *UserResource) {
+	//: Return result.
 	return &UserResource{}
 }
 
@@ -71,8 +71,8 @@ func NewUserResource() *UserResource {
 //
 // Returns:
 //   - resource.Resource: the wrapped UserResource instance
-func NewUserResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+func NewUserResourceWrapper() (r resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewUserResource()
 }
 
@@ -85,7 +85,12 @@ func NewUserResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - (none)
-func (r *UserResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	// Set resource type name.
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
@@ -99,7 +104,12 @@ func (r *UserResource) Metadata(_ctx context.Context, req resource.MetadataReque
 //
 // Returns:
 //   - (none)
-func (r *UserResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages n8n users. Only available for the instance owner. Note: The API only supports updating the user's role, not other fields.",
 		Attributes:          r.schemaAttributes(),
@@ -110,8 +120,8 @@ func (r *UserResource) Schema(_ctx context.Context, _req resource.SchemaRequest,
 //
 // Returns:
 //   - map[string]schema.Attribute: the resource attribute definitions
-func (r *UserResource) schemaAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+func (r *UserResource) schemaAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes.
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			MarkdownDescription: "User identifier",
@@ -158,21 +168,26 @@ func (r *UserResource) schemaAttributes() map[string]schema.Attribute {
 //
 // Returns:
 //   - (none)
-func (r *UserResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Check for nil value.
+func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -192,15 +207,15 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan := &models.Resource{}
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute create logic
+	//: Execute create logic
 	if !r.executeCreateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -217,27 +232,27 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 //
 // Returns:
 //   - bool: True if creation succeeded, false otherwise
-func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
+func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (ok bool) {
 	// Create user and get ID
 	userID := r.createUser(ctx, plan, resp)
-	// Check condition.
+	//: Check condition.
 	if userID == "" {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Fetch full user details
 	user := r.fetchFullUserDetails(ctx, userID, resp)
-	// Check for nil value.
+	//: Check for nil value.
 	if user == nil {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Map user to model
 	mapUserToResourceModel(user, plan)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -249,20 +264,20 @@ func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Reso
 //
 // Returns:
 //   - []byte: JSON body or nil on error
-func (r *UserResource) buildUserCreateRequest(plan *models.Resource, resp *resource.CreateResponse) []byte {
+func (r *UserResource) buildUserCreateRequest(plan *models.Resource, resp *resource.CreateResponse) (items []byte) {
 	reqBody := []map[string]string{{"email": plan.Email.ValueString()}}
-	// Check condition.
+	//: Check condition.
 	if !plan.Role.IsNull() && !plan.Role.IsUnknown() {
 		reqBody[0]["role"] = plan.Role.ValueString()
 	}
 	jsonBody, err := json.Marshal(reqBody)
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not marshal request: %s", err.Error()))
-		// Return empty slice on error.
-		return []byte{}
+		//: Return empty slice on error.
+		return nil
 	}
-	// Return marshalled JSON body.
+	//: Return marshalled JSON body.
 	return jsonBody
 }
 
@@ -276,40 +291,45 @@ func (r *UserResource) buildUserCreateRequest(plan *models.Resource, resp *resou
 // Returns:
 //   - []byte: response body or nil on error
 //   - int: HTTP status code
-func (r *UserResource) executeUserHTTPRequest(ctx context.Context, jsonBody []byte, resp *resource.CreateResponse) ([]byte, int) {
+func (r *UserResource) executeUserHTTPRequest(ctx context.Context, jsonBody []byte, resp *resource.CreateResponse) (items []byte, n int) {
 	cfg := r.client.APIClient.GetConfig()
 	url := fmt.Sprintf("%s/users", cfg.Servers[0].URL)
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not create HTTP request: %s", err.Error()))
-		// Return empty slice on error.
-		return []byte{}, 0
+		//: Return empty slice on error.
+		return nil, 0
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "application/json")
 	httpReq.Header.Set("X-N8N-API-KEY", cfg.DefaultHeader["X-N8N-API-KEY"])
 	httpClient := cfg.HTTPClient
-	// Check for nil value.
+	//: Check for nil value.
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 	httpResp, err := httpClient.Do(httpReq)
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not execute HTTP request: %s", err.Error()))
-		// Return empty slice on error.
-		return []byte{}, 0
+		//: Return empty slice on error.
+		return nil, 0
 	}
-	defer httpResp.Body.Close()
+	defer func() {
+		//: Silently discard close error on response body.
+		if closeErr := httpResp.Body.Close(); closeErr != nil {
+			resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+		}
+	}()
 	body, err := io.ReadAll(httpResp.Body)
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not read response body: %s", err.Error()))
-		// Return empty slice on error.
-		return []byte{}, 0
+		//: Return empty slice on error.
+		return nil, 0
 	}
-	// Return response body and status code.
+	//: Return response body and status code.
 	return body, httpResp.StatusCode
 }
 
@@ -322,40 +342,42 @@ func (r *UserResource) executeUserHTTPRequest(ctx context.Context, jsonBody []by
 //
 // Returns:
 //   - string: user ID or empty string on error
-func (r *UserResource) parseUserCreateResponse(body []byte, statusCode int, resp *resource.CreateResponse) string {
-	// Check HTTP status is in success range.
-	if statusCode < HTTP_STATUS_SUCCESS_MIN || statusCode >= HTTP_STATUS_SUCCESS_MAX {
-		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("API returned status %d: %s", statusCode, string(body)))
-		// Return empty string on error.
+func (r *UserResource) parseUserCreateResponse(body []byte, statusCode int, resp *resource.CreateResponse) (s string) {
+	//: Store body as string once to avoid repeated conversion.
+	bodyStr := string(body)
+	//: Check HTTP status is in success range.
+	if statusCode < HTTPStatusSuccessMin || statusCode >= HTTPStatusSuccessMax {
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("API returned status %d: %s", statusCode, bodyStr))
+		//: Return empty string on error.
 		return ""
 	}
 	var results []userCreateResponse
 	err := json.Unmarshal(body, &results)
-	// Check for error.
+	//: Check for error.
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not parse response: %s\nBody: %s", err.Error(), string(body)))
-		// Return empty string on error.
+		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("Could not parse response: %s\nBody: %s", err.Error(), bodyStr))
+		//: Return empty string on error.
 		return ""
 	}
-	// Validate response.
+	//: Validate response.
 	if len(results) == 0 {
 		resp.Diagnostics.AddError("Error creating user", "API returned empty response")
-		// Return empty string on error.
+		//: Return empty string on error.
 		return ""
 	}
-	// Check for API error in response.
+	//: Check for API error in response.
 	if results[0].Error != "" {
 		resp.Diagnostics.AddError("Error creating user", fmt.Sprintf("API error: %s", results[0].Error))
-		// Return empty string on error.
+		//: Return empty string on error.
 		return ""
 	}
-	// Validate user ID.
+	//: Validate user ID.
 	if results[0].User.ID == "" {
 		resp.Diagnostics.AddError("Error creating user", "API did not return user ID")
-		// Return empty string on validation error.
+		//: Return empty string on validation error.
 		return ""
 	}
-	// Return the user ID.
+	//: Return the user ID.
 	return results[0].User.ID
 }
 
@@ -370,20 +392,20 @@ func (r *UserResource) parseUserCreateResponse(body []byte, statusCode int, resp
 //
 // Returns:
 //   - string: user ID or empty string if error occurred
-func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) string {
+func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (s string) {
 	jsonBody := r.buildUserCreateRequest(plan, resp)
-	// Check for error during request build.
+	//: Check for error during request build.
 	if len(jsonBody) == 0 {
-		// Return empty string on error.
+		//: Return empty string on error.
 		return ""
 	}
 	body, statusCode := r.executeUserHTTPRequest(ctx, jsonBody, resp)
-	// Check for error during HTTP request.
+	//: Check for error during HTTP request.
 	if len(body) == 0 {
-		// Return empty string on error.
+		//: Return empty string on error.
 		return ""
 	}
-	// Return the parsed user ID.
+	//: Return the parsed user ID.
 	return r.parseUserCreateResponse(body, statusCode, resp)
 }
 
@@ -396,22 +418,27 @@ func (r *UserResource) createUser(ctx context.Context, plan *models.Resource, re
 //
 // Returns:
 //   - *n8nsdk.User: user object or nil if error occurred
-func (r *UserResource) fetchFullUserDetails(ctx context.Context, userID string, resp *resource.CreateResponse) *n8nsdk.User {
+func (r *UserResource) fetchFullUserDetails(ctx context.Context, userID string, resp *resource.CreateResponse) (user *n8nsdk.User) {
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, userID).IncludeRole(true).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading created user",
 			fmt.Sprintf("User was created but could not read full details: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return nil on error.
+		//: Return nil on error.
 		return nil
 	}
-	// Return the user details.
+	//: Return the user details.
 	return user
 }
 
@@ -428,15 +455,15 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state := &models.Resource{}
 
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute read logic
+	//: Execute read logic
 	if !r.executeReadLogic(ctx, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -453,27 +480,32 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 //
 // Returns:
 //   - bool: True if read succeeded, false otherwise
-func (r *UserResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
+func (r *UserResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) (ok bool) {
 	// Fetch user by ID
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, state.ID.ValueString()).IncludeRole(true).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
 			fmt.Sprintf("Could not read user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Map user to model
 	mapUserToResourceModel(user, state)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -492,15 +524,15 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute update logic
+	//: Execute update logic
 	if !r.executeUpdateLogic(ctx, plan, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -518,33 +550,33 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 //
 // Returns:
 //   - bool: True if update succeeded, false otherwise
-func (r *UserResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	// Validate email hasn't changed
+func (r *UserResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) (ok bool) {
+	//: Validate email hasn't changed
 	if !r.validateEmailUnchanged(plan, state, resp) {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Update role if changed
 	r.updateRoleIfChanged(ctx, plan, state, resp)
-	// Check for errors in diagnostics.
+	//: Check for errors in diagnostics.
 	if resp.Diagnostics.HasError() {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Refresh user data
 	user := r.refreshUserData(ctx, state.ID.ValueString(), resp)
-	// Check for nil value.
+	//: Check for nil value.
 	if user == nil {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Map user to model
 	mapUserToResourceModel(user, plan)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -557,15 +589,17 @@ func (r *UserResource) executeUpdateLogic(ctx context.Context, plan, state *mode
 //
 // Returns:
 //   - bool: true if email unchanged, false otherwise
-func (r *UserResource) validateEmailUnchanged(plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	// Check condition.
+func (r *UserResource) validateEmailUnchanged(plan, state *models.Resource, resp *resource.UpdateResponse) (ok bool) {
+	//: Check condition.
 	if !plan.Email.Equal(state.Email) {
 		resp.Diagnostics.AddError(
 			"Email Change Not Supported",
 			"The n8n API does not support changing a user's email address. Please delete and recreate the user if needed.",
 		)
+		//: Return failure.
 		return false
 	}
+	//: Return success.
 	return true
 }
 
@@ -581,9 +615,9 @@ func (r *UserResource) updateRoleIfChanged(ctx context.Context, plan, state *mod
 	roleChanged := !plan.Role.IsNull() && !state.Role.IsNull() &&
 		!plan.Role.Equal(state.Role)
 
-	// Check condition.
+	//: Check condition.
 	if !roleChanged {
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -591,11 +625,16 @@ func (r *UserResource) updateRoleIfChanged(ctx context.Context, plan, state *mod
 	roleReq := n8nsdk.NewUsersIdRolePatchRequest(plan.Role.ValueString())
 	httpResp, err := r.client.APIClient.UserAPI.UsersIdRolePatch(ctx, state.ID.ValueString()).
 		UsersIdRolePatchRequest(*roleReq).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating user role",
@@ -613,22 +652,27 @@ func (r *UserResource) updateRoleIfChanged(ctx context.Context, plan, state *mod
 //
 // Returns:
 //   - *n8nsdk.User: user object or nil if error occurred
-func (r *UserResource) refreshUserData(ctx context.Context, userID string, resp *resource.UpdateResponse) *n8nsdk.User {
+func (r *UserResource) refreshUserData(ctx context.Context, userID string, resp *resource.UpdateResponse) (user *n8nsdk.User) {
 	user, httpResp, err := r.client.APIClient.UserAPI.UsersIdGet(ctx, userID).IncludeRole(true).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user after update",
 			fmt.Sprintf("Could not read user %s after update: %s\nHTTP Response: %v", userID, err.Error(), httpResp),
 		)
-		// Return nil on error.
+		//: Return nil on error.
 		return nil
 	}
-	// Return the user details.
+	//: Return the user details.
 	return user
 }
 
@@ -645,9 +689,9 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	state := &models.Resource{}
 
 	resp.Diagnostics.Append(req.State.Get(ctx, state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -665,24 +709,29 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 //
 // Returns:
 //   - bool: True if delete succeeded, false otherwise
-func (r *UserResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
+func (r *UserResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) (ok bool) {
 	// Delete user
 	httpResp, err := r.client.APIClient.UserAPI.UsersIdDelete(ctx, state.ID.ValueString()).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting user",
 			fmt.Sprintf("Could not delete user %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 

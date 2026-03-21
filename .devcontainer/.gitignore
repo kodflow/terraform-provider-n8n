@@ -1,8 +1,8 @@
-# Generated MCP configuration (contains secrets)
+# Generated MCP config (contains secrets)
+hooks/shared/mcp.json
+hooks/shared/.env
 mcp.json
-
-# Environment variables (may contain secrets)
 .env
 
-# GPG public key (exported by configure-gpg.sh)
+# GPG keys
 gpg-public-key.asc

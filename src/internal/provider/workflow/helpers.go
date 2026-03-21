@@ -6,6 +6,7 @@
 package workflow
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -17,9 +18,16 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 )
 
-// CALLER_POLICY_DEFAULT is the default value for the CallerPolicy workflow setting.
+// CallerPolicyDefault is the default value for the CallerPolicy workflow setting.
 // The n8n API returns this value even when not explicitly set by the user.
-const CALLER_POLICY_DEFAULT string = "workflowsFromSameOwner"
+const CallerPolicyDefault string = "workflowsFromSameOwner"
+
+// diagnostics is a minimal interface for reporting diagnostic errors, replacing *diag.Diagnostics.
+type diagnostics interface {
+	AddError(summary, detail string)
+	Append(in ...diag.Diagnostic)
+	HasError() bool
+}
 
 // parseWorkflowJSON parses the JSON fields from a workflow model.
 //
@@ -31,51 +39,108 @@ const CALLER_POLICY_DEFAULT string = "workflowsFromSameOwner"
 //   - []n8nsdk.Node: Parsed workflow nodes
 //   - map[string]any: Parsed workflow connections
 //   - n8nsdk.WorkflowSettings: Parsed workflow settings
-func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk.Node, map[string]any, n8nsdk.WorkflowSettings) {
-	// Parse nodes
-	var nodes []n8nsdk.Node
-	// Check for non-nil value.
-	if !plan.NodesJSON.IsNull() && !plan.NodesJSON.IsUnknown() {
-		// Check for error.
-		if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
-			diags.AddError("Invalid nodes JSON", fmt.Sprintf("Could not parse nodes_json: %s", err.Error()))
-			// Return failure status.
-			return []n8nsdk.Node{}, map[string]any{}, n8nsdk.WorkflowSettings{}
-		}
-	} else {
-		// Return empty slice.
-		nodes = []n8nsdk.Node{}
+func parseWorkflowJSON(plan *models.Resource, diags diagnostics) (items []n8nsdk.Node, m map[string]any, workflowSettings n8nsdk.WorkflowSettings) {
+	//: Parse nodes from plan JSON.
+	nodes, ok := parseNodesJSON(plan, diags)
+	//: Check for error.
+	if !ok {
+		//: Return failure status.
+		return nil, map[string]any{}, n8nsdk.WorkflowSettings{}
 	}
 
-	// Parse connections
-	var connections map[string]any
-	// Check for non-nil value.
-	if !plan.ConnectionsJSON.IsNull() && !plan.ConnectionsJSON.IsUnknown() {
-		// Check for error.
-		if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
-			diags.AddError("Invalid connections JSON", fmt.Sprintf("Could not parse connections_json: %s", err.Error()))
-			// Return failure status.
-			return []n8nsdk.Node{}, map[string]any{}, n8nsdk.WorkflowSettings{}
-		}
-	} else {
-		// Return empty slice.
-		connections = map[string]any{}
+	//: Parse connections from plan JSON.
+	connections, ok := parseConnectionsJSON(plan, diags)
+	//: Check for error.
+	if !ok {
+		//: Return failure status.
+		return nil, map[string]any{}, n8nsdk.WorkflowSettings{}
 	}
 
-	// Parse settings
-	var settings n8nsdk.WorkflowSettings
-	// Check for non-nil value.
-	if !plan.SettingsJSON.IsNull() && !plan.SettingsJSON.IsUnknown() {
-		// Check for error.
-		if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
-			diags.AddError("Invalid settings JSON", fmt.Sprintf("Could not parse settings_json: %s", err.Error()))
-			// Return failure status.
-			return []n8nsdk.Node{}, map[string]any{}, n8nsdk.WorkflowSettings{}
-		}
+	//: Parse settings from plan JSON.
+	settings, ok := parseSettingsJSON(plan, diags)
+	//: Check for error.
+	if !ok {
+		//: Return failure status.
+		return nil, map[string]any{}, n8nsdk.WorkflowSettings{}
 	}
 
-	// Return result.
+	//: Return result.
 	return nodes, connections, settings
+}
+
+// parseNodesJSON parses the nodes JSON field from the workflow model.
+//
+// Params:
+//   - plan: The workflow resource model containing JSON data
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - []n8nsdk.Node: Parsed workflow nodes
+//   - bool: True if parsing succeeded, false otherwise
+func parseNodesJSON(plan *models.Resource, diags diagnostics) (nodes []n8nsdk.Node, ok bool) {
+	//: Check for non-nil value.
+	if plan.NodesJSON.IsNull() || plan.NodesJSON.IsUnknown() {
+		//: Return nil nodes when field is absent.
+		return nil, true
+	}
+	//: Check for error.
+	if err := json.Unmarshal([]byte(plan.NodesJSON.ValueString()), &nodes); err != nil {
+		diags.AddError("Invalid nodes JSON", fmt.Sprintf("Could not parse nodes_json: %s", err.Error()))
+		//: Return failure.
+		return nil, false
+	}
+	//: Return result.
+	return nodes, true
+}
+
+// parseConnectionsJSON parses the connections JSON field from the workflow model.
+//
+// Params:
+//   - plan: The workflow resource model containing JSON data
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - map[string]any: Parsed workflow connections
+//   - bool: True if parsing succeeded, false otherwise
+func parseConnectionsJSON(plan *models.Resource, diags diagnostics) (connections map[string]any, ok bool) {
+	//: Check for non-nil value.
+	if plan.ConnectionsJSON.IsNull() || plan.ConnectionsJSON.IsUnknown() {
+		//: Return empty map when field is absent.
+		return map[string]any{}, true
+	}
+	//: Check for error.
+	if err := json.Unmarshal([]byte(plan.ConnectionsJSON.ValueString()), &connections); err != nil {
+		diags.AddError("Invalid connections JSON", fmt.Sprintf("Could not parse connections_json: %s", err.Error()))
+		//: Return failure.
+		return nil, false
+	}
+	//: Return result.
+	return connections, true
+}
+
+// parseSettingsJSON parses the settings JSON field from the workflow model.
+//
+// Params:
+//   - plan: The workflow resource model containing JSON data
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - n8nsdk.WorkflowSettings: Parsed workflow settings
+//   - bool: True if parsing succeeded, false otherwise
+func parseSettingsJSON(plan *models.Resource, diags diagnostics) (settings n8nsdk.WorkflowSettings, ok bool) {
+	//: Check for non-nil value.
+	if plan.SettingsJSON.IsNull() || plan.SettingsJSON.IsUnknown() {
+		//: Return empty settings when field is absent.
+		return n8nsdk.WorkflowSettings{}, true
+	}
+	//: Check for error.
+	if err := json.Unmarshal([]byte(plan.SettingsJSON.ValueString()), &settings); err != nil {
+		diags.AddError("Invalid settings JSON", fmt.Sprintf("Could not parse settings_json: %s", err.Error()))
+		//: Return failure.
+		return n8nsdk.WorkflowSettings{}, false
+	}
+	//: Return result.
+	return settings, true
 }
 
 // mapTagsFromWorkflow maps tags from the SDK workflow to Terraform types.
@@ -87,14 +152,14 @@ func parseWorkflowJSON(plan *models.Resource, diags *diag.Diagnostics) ([]n8nsdk
 //
 // Returns:
 //   - types.Set: Terraform set of tag IDs
-func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) types.Set {
-	// Check length.
+func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags diagnostics) (set types.Set) {
+	//: Check length.
 	if len(workflow.Tags) > 0 {
-		// Collect tag IDs
+		//: Collect tag IDs
 		tagIDs := make([]types.String, 0, len(workflow.Tags))
-		// Iterate over items.
+		//: Iterate over items.
 		for _, tag := range workflow.Tags {
-			// Check for non-nil value.
+			//: Check for non-nil value.
 			if tag.Id != nil {
 				tagIDs = append(tagIDs, types.StringValue(*tag.Id))
 			}
@@ -102,11 +167,11 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 
 		tagSet, tagDiags := types.SetValueFrom(ctx, types.StringType, tagIDs)
 		diags.Append(tagDiags...)
-		// Return result.
+		//: Return result.
 		return tagSet
 	}
 
-	// Return null set if no tags to avoid inconsistent result errors.
+	//: Return null set if no tags to avoid inconsistent result errors.
 	return types.SetNull(types.StringType)
 }
 
@@ -116,19 +181,19 @@ func mapTagsFromWorkflow(ctx context.Context, workflow *n8nsdk.Workflow, diags *
 //   - workflow: The n8n workflow to map from
 //   - plan: The resource model to update
 func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *models.Resource) {
-	// Set active status if available.
+	//: Set active status if available.
 	if workflow.Active != nil {
 		plan.Active = types.BoolPointerValue(workflow.Active)
 	}
-	// Set version ID if available.
+	//: Set version ID if available.
 	if workflow.VersionId != nil {
 		plan.VersionID = types.StringPointerValue(workflow.VersionId)
 	}
-	// Set archived status if available.
+	//: Set archived status if available.
 	if workflow.IsArchived != nil {
 		plan.IsArchived = types.BoolPointerValue(workflow.IsArchived)
 	}
-	// Set trigger count if available.
+	//: Set trigger count if available.
 	if workflow.TriggerCount != nil {
 		plan.TriggerCount = types.Int64Value(int64(*workflow.TriggerCount))
 	}
@@ -140,18 +205,17 @@ func mapWorkflowBasicFields(workflow *n8nsdk.Workflow, plan *models.Resource) {
 //   - workflow: The n8n workflow to map from
 //   - plan: The resource model to update
 func mapWorkflowProjectID(workflow *n8nsdk.Workflow, plan *models.Resource) {
-	// Extract projectId from workflow.Shared[0].ProjectId
-	// Check if workflow has shared projects
+	//: Check if workflow has shared projects.
 	if len(workflow.Shared) > 0 {
-		// Check if the first shared project has a project ID
+		//: Check if the first shared project has a project ID.
 		if workflow.Shared[0].ProjectId != nil {
 			plan.ProjectID = types.StringPointerValue(workflow.Shared[0].ProjectId)
 		} else {
-			// Project ID is nil, set to null in state
+			//: Project ID is nil, set to null in state.
 			plan.ProjectID = types.StringNull()
 		}
 	} else {
-		// No shared projects, workflow is in default location
+		//: No shared projects, workflow is in default location.
 		plan.ProjectID = types.StringNull()
 	}
 }
@@ -162,11 +226,11 @@ func mapWorkflowProjectID(workflow *n8nsdk.Workflow, plan *models.Resource) {
 //   - workflow: The n8n workflow to map from
 //   - plan: The resource model to update
 func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *models.Resource) {
-	// Set creation timestamp if available.
+	//: Set creation timestamp if available.
 	if workflow.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(workflow.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
-	// Set update timestamp if available.
+	//: Set update timestamp if available.
 	if workflow.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(workflow.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
@@ -180,16 +244,15 @@ func mapWorkflowTimestamps(workflow *n8nsdk.Workflow, plan *models.Resource) {
 //   - plan: The planned resource data (will be updated)
 //   - state: The current resource state
 func preserveProjectIDOnUpdate(plan, state *models.Resource) {
-	// Check if project changed
+	//: Check if project changed.
 	if !plan.ProjectID.Equal(state.ProjectID) {
-		// Project was changed, but if plan is null/unknown, keep state value
-		// (removing from project is not supported by n8n API)
+		//: If plan is null or unknown, preserve state value.
 		if plan.ProjectID.IsNull() || plan.ProjectID.IsUnknown() {
 			plan.ProjectID = state.ProjectID
 		}
-		// Otherwise keep plan value (already set by handleProjectAssignment)
+		//: Otherwise keep plan value (already set by handleProjectAssignment).
 	} else {
-		// No change requested, preserve state value since API didn't return it
+		//: No change requested, preserve state value since API didn't return it.
 		plan.ProjectID = state.ProjectID
 	}
 }
@@ -202,49 +265,48 @@ func preserveProjectIDOnUpdate(plan, state *models.Resource) {
 //   - workflow: The workflow from SDK to map
 //   - plan: The Terraform model to update
 //   - diags: Diagnostics for error reporting
-func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) {
-	// Basic fields
+func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags diagnostics) {
+	//: Set workflow name.
 	plan.Name = types.StringValue(workflow.Name)
 
-	// Map simple fields
+	//: Map simple fields.
 	mapWorkflowBasicFields(workflow, plan)
 
-	// Tags
+	//: Map tags.
 	plan.Tags = mapTagsFromWorkflow(ctx, workflow, diags)
 
-	// Project ID from shared workflow info
+	//: Map project ID from shared workflow info.
 	mapWorkflowProjectID(workflow, plan)
 
-	// Map timestamps
+	//: Map timestamps.
 	mapWorkflowTimestamps(workflow, plan)
 
-	// Map objects
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if workflow.Meta != nil {
 		metaMap, metaDiags := types.MapValueFrom(ctx, types.StringType, workflow.Meta)
 		diags.Append(metaDiags...)
-		// Check condition.
+		//: Check condition.
 		if !diags.HasError() {
 			plan.Meta = metaMap
 		}
 	} else {
-		// Set null map when API returns nil to ensure attribute is known.
+		//: Set null map when API returns nil to ensure attribute is known.
 		plan.Meta = types.MapNull(types.StringType)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if workflow.PinData != nil {
 		pinDataMap, pinDiags := types.MapValueFrom(ctx, types.StringType, workflow.PinData)
 		diags.Append(pinDiags...)
-		// Check condition.
+		//: Check condition.
 		if !diags.HasError() {
 			plan.PinData = pinDataMap
 		}
 	} else {
-		// Set null map when API returns nil to ensure attribute is known.
+		//: Set null map when API returns nil to ensure attribute is known.
 		plan.PinData = types.MapNull(types.StringType)
 	}
 
-	// Serialize JSON fields
+	//: Serialize JSON fields.
 	serializeWorkflowJSON(workflow, plan)
 }
 
@@ -257,23 +319,23 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *mo
 // Returns:
 //   - None: Updates plan in-place
 func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if workflow.Nodes != nil {
-		// Check for error.
+		//: Check for error.
 		if nodesJSON, err := json.Marshal(workflow.Nodes); err == nil {
 			plan.NodesJSON = types.StringValue(string(nodesJSON))
 		}
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if workflow.Connections != nil {
-		// Check for error.
+		//: Check for error.
 		if connectionsJSON, err := json.Marshal(workflow.Connections); err == nil {
 			plan.ConnectionsJSON = types.StringValue(string(connectionsJSON))
 		}
 	}
-	// Normalize settings before serialization to avoid unnecessary diffs.
+	//: Normalize settings before serialization to avoid unnecessary diffs.
 	normalizedSettings := normalizeWorkflowSettings(workflow.Settings)
-	// Check for error.
+	//: Check for error.
 	if settingsJSON, err := json.Marshal(normalizedSettings); err == nil {
 		plan.SettingsJSON = types.StringValue(string(settingsJSON))
 	}
@@ -288,21 +350,21 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 //
 // Returns:
 //   - n8nsdk.WorkflowSettings: Normalized settings without default values
-func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.WorkflowSettings {
-	// Create a copy to avoid modifying the original.
+func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) (workflowSettings n8nsdk.WorkflowSettings) {
+	//: Create a copy to avoid modifying the original.
 	normalized := settings
 
-	// Remove callerPolicy if it's the default value.
-	if normalized.CallerPolicy != nil && *normalized.CallerPolicy == CALLER_POLICY_DEFAULT {
+	//: Remove callerPolicy if it's the default value.
+	if normalized.CallerPolicy != nil && *normalized.CallerPolicy == CallerPolicyDefault {
 		normalized.CallerPolicy = nil
 	}
 
-	// Remove availableInMCP if it's the default value (false).
+	//: Remove availableInMCP if it's the default value (false).
 	if normalized.AvailableInMCP != nil && !*normalized.AvailableInMCP {
 		normalized.AvailableInMCP = nil
 	}
 
-	// Return result.
+	//: Return result.
 	return normalized
 }
 
@@ -313,13 +375,13 @@ func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.Workflow
 //
 // Returns:
 //   - []n8nsdk.TagIdsInner: Converted tag IDs in SDK format
-func convertTagIDsToTagIdsInner(tagIDs []string) []n8nsdk.TagIdsInner {
+func convertTagIDsToTagIdsInner(tagIDs []string) (items []n8nsdk.TagIdsInner) {
 	tagIdsInner := make([]n8nsdk.TagIdsInner, 0, len(tagIDs))
-	// Iterate over items.
+	//: Iterate over items.
 	for _, tagID := range tagIDs {
 		tagIdsInner = append(tagIdsInner, n8nsdk.TagIdsInner{Id: tagID})
 	}
-	// Return result.
+	//: Return result.
 	return tagIdsInner
 }
 
@@ -333,33 +395,38 @@ func convertTagIDsToTagIdsInner(tagIDs []string) []n8nsdk.TagIdsInner {
 //
 // Returns:
 //   - None: Updates workflow via API
-func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, state *models.Resource, diags *diag.Diagnostics) {
+func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, state *models.Resource, diags diagnostics) {
 	activeChanged := isActivationChanged(plan, state)
 
-	// Check condition.
+	//: Check condition.
 	if !activeChanged {
-		// Return success status.
+		//: Return success status.
 		return
 	}
 
 	var httpResp *http.Response
 	var err error
 
-	// Use dedicated activate/deactivate endpoints
-	// Check condition.
+	//: Use dedicated activate/deactivate endpoints.
+	//: Check condition.
 	if plan.Active.ValueBool() {
 		_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdActivatePost(ctx, plan.ID.ValueString()).Execute()
 	} else {
-		// Deactivate workflow when Active is false
+		//: Deactivate workflow when Active is false.
 		_, httpResp, err = r.client.APIClient.WorkflowAPI.WorkflowsIdDeactivatePost(ctx, plan.ID.ValueString()).Execute()
 	}
 
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				diags.AddError("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		action := getActivationAction(plan)
 		diags.AddError(
@@ -377,8 +444,8 @@ func (r *WorkflowResource) handleWorkflowActivation(ctx context.Context, plan, s
 //
 // Returns:
 //   - bool: True if activation status has changed
-func isActivationChanged(plan, state *models.Resource) bool {
-	// Return boolean result.
+func isActivationChanged(plan, state *models.Resource) (ok bool) {
+	//: Return boolean result.
 	return !plan.Active.IsNull() && !plan.Active.IsUnknown() &&
 		!state.Active.IsNull() && !state.Active.IsUnknown() &&
 		plan.Active.ValueBool() != state.Active.ValueBool()
@@ -391,13 +458,13 @@ func isActivationChanged(plan, state *models.Resource) bool {
 //
 // Returns:
 //   - string: "activate" or "deactivate"
-func getActivationAction(plan *models.Resource) string {
-	// Check condition.
+func getActivationAction(plan *models.Resource) (s string) {
+	//: Check condition.
 	if plan.Active.ValueBool() {
-		// Return activate action.
+		//: Return activate action.
 		return "activate"
 	}
-	// Return deactivate action.
+	//: Return deactivate action.
 	return "deactivate"
 }
 
@@ -412,18 +479,18 @@ func getActivationAction(plan *models.Resource) string {
 //
 // Returns:
 //   - None: Updates workflow tags via API
-func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID string, plan *models.Resource, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) {
-	// Check for null value.
+func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID string, plan *models.Resource, workflow *n8nsdk.Workflow, diags diagnostics) {
+	//: Check for null value.
 	if plan.Tags.IsNull() || plan.Tags.IsUnknown() {
-		// Return success status.
+		//: Return success status.
 		return
 	}
 
 	var tagIDs []string
 	diags.Append(plan.Tags.ElementsAs(ctx, &tagIDs, false)...)
-	// Check condition.
+	//: Check condition.
 	if diags.HasError() {
-		// Return failure status.
+		//: Return failure status.
 		return
 	}
 
@@ -433,18 +500,23 @@ func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID st
 		TagIdsInner(tagIdsInner).
 		Execute()
 
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				diags.AddError("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		diags.AddError(
 			"Error updating workflow tags",
 			fmt.Sprintf("Could not update tags for workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
 		)
-		// Return failure status.
+		//: Return failure status.
 		return
 	}
 
@@ -460,26 +532,32 @@ func (r *WorkflowResource) updateWorkflowTags(ctx context.Context, workflowID st
 //
 // Returns:
 //   - *n8nsdk.Workflow: Created workflow if successful, nil otherwise
-func (r *WorkflowResource) createWorkflowViaAPI(ctx context.Context, workflowRequest n8nsdk.Workflow, diags *diag.Diagnostics) *n8nsdk.Workflow {
+func (r *WorkflowResource) createWorkflowViaAPI(ctx context.Context, workflowRequest n8nsdk.Workflow, diags diagnostics) (workflow *n8nsdk.Workflow) {
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsPost(ctx).
 		Workflow(workflowRequest).
 		Execute()
 
-	// Check for non-nil HTTP response
+	//: Check for non-nil HTTP response.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				diags.AddError("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for API error
+	//: Check for API error.
 	if err != nil {
 		diags.AddError(
 			"Error creating workflow",
 			fmt.Sprintf("Could not create workflow, unexpected error: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		//: Return nil on error.
 		return nil
 	}
 
-	// Return the created workflow
+	//: Return the created workflow.
 	return workflow
 }
 
@@ -493,26 +571,32 @@ func (r *WorkflowResource) createWorkflowViaAPI(ctx context.Context, workflowReq
 //
 // Returns:
 //   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
-func (r *WorkflowResource) updateWorkflowViaAPI(ctx context.Context, workflowID string, workflowRequest n8nsdk.Workflow, diags *diag.Diagnostics) *n8nsdk.Workflow {
+func (r *WorkflowResource) updateWorkflowViaAPI(ctx context.Context, workflowID string, workflowRequest n8nsdk.Workflow, diags diagnostics) (workflow *n8nsdk.Workflow) {
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdPut(ctx, workflowID).
 		Workflow(workflowRequest).
 		Execute()
 
-	// Check for non-nil HTTP response
+	//: Check for non-nil HTTP response.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				diags.AddError("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for API error
+	//: Check for API error.
 	if err != nil {
 		diags.AddError(
 			"Error updating workflow",
 			fmt.Sprintf("Could not update workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
 		)
+		//: Return nil on error.
 		return nil
 	}
 
-	// Return the updated workflow
+	//: Return the updated workflow.
 	return workflow
 }
 
@@ -526,7 +610,7 @@ func (r *WorkflowResource) updateWorkflowViaAPI(ctx context.Context, workflowID 
 //
 // Returns:
 //   - bool: True if transfer succeeded, false otherwise
-func (r *WorkflowResource) transferWorkflowToProject(ctx context.Context, workflowID, projectID string, diags *diag.Diagnostics) bool {
+func (r *WorkflowResource) transferWorkflowToProject(ctx context.Context, workflowID, projectID string, diags diagnostics) (ok bool) {
 	transferRequest := n8nsdk.WorkflowsIdTransferPutRequest{
 		DestinationProjectId: projectID,
 	}
@@ -536,22 +620,27 @@ func (r *WorkflowResource) transferWorkflowToProject(ctx context.Context, workfl
 		WorkflowsIdTransferPutRequest(transferRequest).
 		Execute()
 
-	// Check for non-nil HTTP response.
+	//: Check for non-nil HTTP response.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				diags.AddError("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		diags.AddError(
 			"Error transferring workflow to project",
 			fmt.Sprintf("Could not transfer workflow ID %s to project %s: %s\nHTTP Response: %v", workflowID, projectID, err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -566,23 +655,25 @@ func (r *WorkflowResource) transferWorkflowToProject(ctx context.Context, workfl
 //
 // Returns:
 //   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
-func (r *WorkflowResource) handlePostCreation(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
-	// Set ID from created workflow
+func (r *WorkflowResource) handlePostCreation(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags diagnostics) (result *n8nsdk.Workflow) {
+	//: Set ID from created workflow.
 	plan.ID = types.StringPointerValue(workflow.Id)
 
-	// Update tags if provided
+	//: Update tags if provided.
 	workflow = r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
-	// Check for tag/project errors
+	//: Check for tag/project errors.
 	if workflow == nil {
+		//: Return nil on error.
 		return nil
 	}
 
-	// Handle workflow activation after creation if requested
+	//: Handle workflow activation after creation if requested.
 	if !r.handlePostCreationActivation(ctx, plan, workflow, diags) {
+		//: Return nil on activation failure.
 		return nil
 	}
 
-	// Return the processed workflow with all post-creation operations applied
+	//: Return the processed workflow with all post-creation operations applied.
 	return workflow
 }
 
@@ -596,31 +687,65 @@ func (r *WorkflowResource) handlePostCreation(ctx context.Context, workflow *n8n
 //
 // Returns:
 //   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
-func (r *WorkflowResource) applyPostCreationTagsAndProject(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
-	// Update tags if provided
-	if !plan.Tags.IsNull() && !plan.Tags.IsUnknown() && workflow.Id != nil {
-		r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, diags)
-		// Check for tag update errors
-		if diags.HasError() {
-			return nil
-		}
+func (r *WorkflowResource) applyPostCreationTagsAndProject(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags diagnostics) (result *n8nsdk.Workflow) {
+	//: Apply tags if provided.
+	if !r.applyTagsIfPresent(ctx, workflow, plan, diags) {
+		//: Return nil on error.
+		return nil
 	}
 
-	// Transfer workflow to project if project_id is specified
-	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() && workflow.Id != nil {
-		updatedWorkflow := r.handleProjectAssignment(ctx, *workflow.Id, plan.ProjectID.ValueString(), diags)
-		// Check if project assignment succeeded
-		if diags.HasError() {
-			return nil
-		}
-		// Use updated workflow if available
-		if updatedWorkflow != nil {
-			workflow = updatedWorkflow
-		}
+	//: Apply project assignment if provided.
+	updated := r.applyProjectIfPresent(ctx, workflow, plan, diags)
+	//: Check for error.
+	if diags.HasError() {
+		//: Return nil on error.
+		return nil
 	}
 
-	// Return the workflow with tags and project applied
-	return workflow
+	//: Return the workflow with tags and project applied.
+	return updated
+}
+
+// applyTagsIfPresent updates workflow tags when tags are specified in the plan.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflow: The created workflow
+//   - plan: The resource model
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - bool: True if tags were applied successfully or skipped, false on error
+func (r *WorkflowResource) applyTagsIfPresent(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags diagnostics) (ok bool) {
+	//: Skip if tags not specified.
+	if plan.Tags.IsNull() || plan.Tags.IsUnknown() || workflow.Id == nil {
+		//: Return success when tags are absent.
+		return true
+	}
+	r.updateWorkflowTags(ctx, *workflow.Id, plan, workflow, diags)
+	//: Return whether tag update succeeded.
+	return !diags.HasError()
+}
+
+// applyProjectIfPresent transfers the workflow to a project when project_id is specified.
+//
+// Params:
+//   - ctx: Context for the API call
+//   - workflow: The created workflow
+//   - plan: The resource model
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: Updated workflow if project was assigned, original workflow otherwise
+func (r *WorkflowResource) applyProjectIfPresent(ctx context.Context, workflow *n8nsdk.Workflow, plan *models.Resource, diags diagnostics) (result *n8nsdk.Workflow) {
+	//: Skip if project not specified.
+	if plan.ProjectID.IsNull() || plan.ProjectID.IsUnknown() || workflow.Id == nil {
+		//: Return original workflow when project is absent.
+		return workflow
+	}
+	updatedWorkflow := r.handleProjectAssignment(ctx, *workflow.Id, plan.ProjectID.ValueString(), diags)
+	//: Return updated workflow if available, otherwise original.
+	return cmp.Or(updatedWorkflow, workflow)
 }
 
 // handleProjectAssignment handles transferring a workflow to a project and re-fetching the workflow.
@@ -634,32 +759,38 @@ func (r *WorkflowResource) applyPostCreationTagsAndProject(ctx context.Context, 
 //
 // Returns:
 //   - *n8nsdk.Workflow: Updated workflow if successful, nil otherwise
-func (r *WorkflowResource) handleProjectAssignment(ctx context.Context, workflowID, projectID string, diags *diag.Diagnostics) *n8nsdk.Workflow {
-	// Transfer workflow to project
+func (r *WorkflowResource) handleProjectAssignment(ctx context.Context, workflowID, projectID string, diags diagnostics) (workflow *n8nsdk.Workflow) {
+	//: Transfer workflow to project.
 	if !r.transferWorkflowToProject(ctx, workflowID, projectID, diags) {
+		//: Return nil on transfer failure.
 		return nil
 	}
 
-	// Re-fetch workflow to get updated project info
+	//: Re-fetch workflow to get updated project info.
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.
 		WorkflowsIdGet(ctx, workflowID).
 		Execute()
 
-	// Check for non-nil HTTP response.
+	//: Check for non-nil HTTP response.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				diags.AddError("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Return nil on re-fetch failure; add diagnostic since transfer
-	// succeeded but workflow couldn't be re-fetched
+	//: Return nil on re-fetch failure; add diagnostic since transfer succeeded but workflow couldn't be re-fetched.
 	if err != nil {
 		diags.AddError(
 			"Error re-fetching workflow after project transfer",
 			fmt.Sprintf("Workflow was transferred to project successfully, but failed to re-fetch workflow ID %s: %s\nHTTP Response: %v", workflowID, err.Error(), httpResp),
 		)
+		//: Return nil on error.
 		return nil
 	}
 
-	// Return the updated workflow with project information
+	//: Return the updated workflow with project information.
 	return workflow
 }

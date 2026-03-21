@@ -1,7 +1,6 @@
 package variable
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -162,14 +161,14 @@ func TestVariablesDataSource_buildAPIRequestWithFilters(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestDataSourcesClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				ds := &VariablesDataSource{client: n8nClient}
 				data := &models.DataSources{
 					ProjectID: types.StringValue("proj-123"),
 				}
 
-				req := ds.buildAPIRequestWithFilters(context.Background(), data)
+				req := ds.buildAPIRequestWithFilters(t.Context(), data)
 				assert.NotNil(t, req)
 			},
 		},
@@ -182,14 +181,14 @@ func TestVariablesDataSource_buildAPIRequestWithFilters(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestDataSourcesClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				ds := &VariablesDataSource{client: n8nClient}
 				data := &models.DataSources{
 					State: types.StringValue("active"),
 				}
 
-				req := ds.buildAPIRequestWithFilters(context.Background(), data)
+				req := ds.buildAPIRequestWithFilters(t.Context(), data)
 				assert.NotNil(t, req)
 			},
 		},
@@ -202,7 +201,7 @@ func TestVariablesDataSource_buildAPIRequestWithFilters(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestDataSourcesClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				ds := &VariablesDataSource{client: n8nClient}
 				data := &models.DataSources{
@@ -210,7 +209,7 @@ func TestVariablesDataSource_buildAPIRequestWithFilters(t *testing.T) {
 					State:     types.StringValue("active"),
 				}
 
-				req := ds.buildAPIRequestWithFilters(context.Background(), data)
+				req := ds.buildAPIRequestWithFilters(t.Context(), data)
 				assert.NotNil(t, req)
 			},
 		},
@@ -223,12 +222,12 @@ func TestVariablesDataSource_buildAPIRequestWithFilters(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestDataSourcesClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				ds := &VariablesDataSource{client: n8nClient}
 				data := &models.DataSources{}
 
-				req := ds.buildAPIRequestWithFilters(context.Background(), data)
+				req := ds.buildAPIRequestWithFilters(t.Context(), data)
 				assert.NotNil(t, req)
 			},
 		},
@@ -309,7 +308,7 @@ func TestVariablesDataSource_populateVariables(t *testing.T) {
 				data := &models.DataSources{}
 
 				variables := make([]n8nsdk.Variable, 100)
-				for i := 0; i < 100; i++ {
+				for i := range 100 {
 					id := fmt.Sprintf("var-%d", i)
 					variables[i] = n8nsdk.Variable{
 						Id:    ptrString(id),
@@ -349,15 +348,13 @@ func TestVariablesDataSource_mapVariableToItem(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := &VariablesDataSource{}
-				typeStr := "string"
-				projectID := "proj-123"
 				variable := &n8nsdk.Variable{
 					Id:    ptrString("var-123"),
 					Key:   "test-key",
 					Value: "test-value",
-					Type:  &typeStr,
+					Type:  new("string"),
 					Project: &n8nsdk.Project{
-						Id: &projectID,
+						Id: new("proj-123"),
 					},
 				}
 

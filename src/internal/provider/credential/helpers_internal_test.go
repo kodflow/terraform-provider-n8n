@@ -1,7 +1,6 @@
 package credential
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -62,7 +61,6 @@ func TestCredentialResource_createNewCredential(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -72,7 +70,7 @@ func TestCredentialResource_createNewCredential(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := diag.Diagnostics{}
 
 			result := r.createNewCredential(ctx, tt.credName, tt.credType, map[string]any{"key": "value"}, &diags)
@@ -177,7 +175,6 @@ func TestCredentialResource_scanAffectedWorkflows(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -187,7 +184,7 @@ func TestCredentialResource_scanAffectedWorkflows(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := diag.Diagnostics{}
 
 			workflows, success := r.scanAffectedWorkflows(ctx, tt.oldCredID, tt.newCredID, &diags)
@@ -234,8 +231,8 @@ func TestCredentialResource_updateAffectedWorkflows(t *testing.T) {
 					Original: &n8nsdk.Workflow{
 						Id:          strPtr("wf-1"),
 						Name:        "Test Workflow",
-						Nodes:       []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-1"}}}},
-						Connections: map[string]interface{}{},
+						Nodes:       []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "old-1"}}}},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -284,7 +281,7 @@ func TestCredentialResource_updateAffectedWorkflows(t *testing.T) {
 						Id:          strPtr("wf-error"),
 						Name:        "Error Workflow",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -321,7 +318,6 @@ func TestCredentialResource_updateAffectedWorkflows(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -331,7 +327,7 @@ func TestCredentialResource_updateAffectedWorkflows(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := diag.Diagnostics{}
 
 			updatedIDs, success := r.updateAffectedWorkflows(ctx, tt.backups, tt.oldCredID, tt.newCredID, &diags)
@@ -376,7 +372,6 @@ func TestCredentialResource_deleteCredentialBestEffort(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -386,7 +381,7 @@ func TestCredentialResource_deleteCredentialBestEffort(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Should not panic regardless of result
 			assert.NotPanics(t, func() {
@@ -433,7 +428,6 @@ func TestCredentialResource_deleteOldCredential(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -443,7 +437,7 @@ func TestCredentialResource_deleteOldCredential(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Should not panic regardless of result
 			assert.NotPanics(t, func() {
@@ -475,8 +469,8 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 					Original: &n8nsdk.Workflow{
 						Id:          strPtr("wf-update-error"),
 						Name:        "Error Workflow",
-						Nodes:       []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-update"}}}},
-						Connections: map[string]interface{}{},
+						Nodes:       []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "old-update"}}}},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -532,8 +526,8 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 					Original: &n8nsdk.Workflow{
 						Id:          strPtr("wf-1"),
 						Name:        "Workflow 1",
-						Nodes:       []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-multi"}}}},
-						Connections: map[string]interface{}{},
+						Nodes:       []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "old-multi"}}}},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -542,8 +536,8 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 					Original: &n8nsdk.Workflow{
 						Id:          strPtr("wf-2"),
 						Name:        "Workflow 2",
-						Nodes:       []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-multi"}}}},
-						Connections: map[string]interface{}{},
+						Nodes:       []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "old-multi"}}}},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -600,7 +594,6 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -610,7 +603,7 @@ func TestCredentialResource_updateAffectedWorkflows_ErrorCases(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := diag.Diagnostics{}
 
 			updatedIDs, success := r.updateAffectedWorkflows(ctx, tt.backups, tt.oldCredID, tt.newCredID, &diags)
@@ -663,11 +656,10 @@ func Test_closeResponseBody(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Should not panic with any input
 			assert.NotPanics(t, func() {
@@ -747,14 +739,14 @@ func Test_convertValueByType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
-			result := convertValueByType(ctx, tt.key, tt.value, tt.propSchema)
+			ctx := t.Context()
+			target := make(map[string]any)
+			convertValueByType(ctx, tt.key, tt.value, tt.propSchema, target)
 
-			assert.Equal(t, tt.expected, result, "Converted value should match expected")
+			assert.Equal(t, tt.expected, target[tt.key], "Converted value should match expected")
 		})
 	}
 }
@@ -872,12 +864,11 @@ func TestCredentialResource_applySchemaTypeConversions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			r := &CredentialResource{}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			result := r.applySchemaTypeConversions(ctx, tt.schema, tt.data)
 
@@ -940,7 +931,6 @@ func TestCredentialResource_convertDataToSchemaTypes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -949,7 +939,7 @@ func TestCredentialResource_convertDataToSchemaTypes(t *testing.T) {
 			defer server.Close()
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			result := r.convertDataToSchemaTypes(ctx, tt.credType, tt.data)
 
@@ -996,7 +986,6 @@ func TestCredentialResource_transferCredentialToProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1005,7 +994,7 @@ func TestCredentialResource_transferCredentialToProject(t *testing.T) {
 			defer server.Close()
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := diag.Diagnostics{}
 
 			result := r.transferCredentialToProject(ctx, tt.credentialID, tt.projectID, &diags)
@@ -1058,7 +1047,6 @@ func Test_mapCredentialProjectID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1073,4 +1061,145 @@ func Test_mapCredentialProjectID(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestCredentialResource_updateSingleWorkflow tests the updateSingleWorkflow method.
+func TestCredentialResource_updateSingleWorkflow(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		setupHandler  func(w http.ResponseWriter, r *http.Request)
+		backup        models.WorkflowBackup
+		params        workflowRotationParams
+		expectOK      bool
+		expectUpdated int
+	}{
+		{
+			name: "success - updates workflow",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				//: Handle GET workflow.
+				if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/workflows/") {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-1",
+						"name":        "Test Workflow",
+						"nodes":       []any{map[string]any{"credentials": map[string]any{"api": map[string]any{"id": "old-cred"}}}},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				//: Handle PUT workflow update.
+				if r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/workflows/") {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-1",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+			},
+			backup: models.WorkflowBackup{ID: "wf-1"},
+			params: workflowRotationParams{
+				OldCredID:    "old-cred",
+				NewCredID:    "new-cred",
+				AllWorkflows: []models.WorkflowBackup{{ID: "wf-1"}},
+			},
+			expectOK:      true,
+			expectUpdated: 1,
+		},
+		{
+			name: "error case - GET workflow fails",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				//: Handle DELETE for rollback.
+				if r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+				//: Fail GET workflow.
+				if r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			},
+			backup: models.WorkflowBackup{ID: "wf-error"},
+			params: workflowRotationParams{
+				OldCredID:    "old-cred",
+				NewCredID:    "new-cred",
+				AllWorkflows: []models.WorkflowBackup{{ID: "wf-error"}},
+			},
+			expectOK:      false,
+			expectUpdated: 0,
+		},
+		{
+			name: "error case - PUT workflow fails",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				//: Handle DELETE for rollback.
+				if r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+				//: Handle GET workflow.
+				if r.Method == http.MethodGet {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-put-error",
+						"name":        "Test",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{},
+					})
+					return
+				}
+				//: Fail PUT workflow update.
+				if r.Method == http.MethodPut {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			},
+			backup: models.WorkflowBackup{ID: "wf-put-error"},
+			params: workflowRotationParams{
+				OldCredID:    "old-cred",
+				NewCredID:    "new-cred",
+				AllWorkflows: []models.WorkflowBackup{{ID: "wf-put-error"}},
+			},
+			expectOK:      false,
+			expectUpdated: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			testClient, server := setupTestClient(t, tt.setupHandler)
+			defer server.Close()
+
+			r := &CredentialResource{client: testClient}
+
+			var diagErrors []string
+			diagMock := &testDiagnosticsCollector{errors: &diagErrors}
+
+			items, ok := r.updateSingleWorkflow(t.Context(), 0, tt.backup, tt.params, []string{}, diagMock)
+			assert.Equal(t, tt.expectOK, ok)
+			assert.Len(t, items, tt.expectUpdated)
+		})
+	}
+}
+
+// testDiagnosticsCollector implements AddErrorrer for testing.
+type testDiagnosticsCollector struct {
+	errors *[]string
+}
+
+// AddError collects error messages for testing purposes.
+func (d *testDiagnosticsCollector) AddError(summary, detail string) {
+	*d.errors = append(*d.errors, summary+": "+detail)
 }

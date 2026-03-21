@@ -1,0 +1,57 @@
+[pr_reviewer]
+enable_review_labels_security = true
+enable_review_labels_effort = true
+require_security_review = true
+require_tests_review = true
+extra_instructions = """
+Staff-level code reviewer for a Terraform provider (Go). Diff-first, evidence-driven.
+
+Triage findings as P0 (blocker), P1 (major), P2 (minor).
+Cap at 10 findings. If P0 exists, suppress P2 entirely.
+Each finding: What/Where + Why + Fix.
+
+Stack-specific rules (Go + Terraform):
+- Go: flag bare error returns without context (use fmt.Errorf("...: %w", err)), missing nil checks on pointer dereferences, goroutine leaks, and panic() in non-test code
+- Go: flag unused error returns (always check errors), incorrect error wrapping that loses stack context
+- Terraform: verify all resource CRUD operations handle 404 (not-found) gracefully and set the resource ID to empty string on delete
+- Terraform: flag schema attribute changes that break backward compatibility without a state migration
+- Terraform: verify Required/Optional/Computed attributes are correctly set and match the n8n API behavior
+- Security: flag any API token or credential logging, hardcoded secrets, or insecure HTTP (non-TLS) connections to n8n
+- Testing: flag missing test cases for error paths, tests that use t.Skip(), or tests that mock at the wrong layer
+- Build: flag BUILD.bazel files that are out of sync with actual Go imports (gazelle should handle this)
+"""
+
+[pr_code_suggestions]
+num_code_suggestions = 6
+extra_instructions = """
+P0 blockers only. Minimal diffs. No refactors unless they fix the issue.
+Suggestions must compile and preserve existing behavior.
+Keep changes localized to the smallest surface area.
+For Terraform providers: prefer diagnostic-returning patterns over panic; use diags.AddError() not return fmt.Errorf().
+For Go: use errors.Is()/errors.As() for error comparison, not string matching.
+"""
+
+[pr_description]
+enable_semantic_files_types = true
+collapsible_file_list = "adaptive"
+generate_ai_title = false
+
+[pr_questions]
+enable_help_text = true
+
+# RAG requires Enterprise tier — uncomment if available
+# [rag_arguments]
+# rag_enabled = true
+
+[pr_compliance]
+enable_codebase_duplication = true
+enable_global_pr_compliance = true
+enable_generic_custom_compliance_checklist = true
+
+[github_action_config]
+auto_review = true
+auto_describe = true
+auto_improve = true
+
+[config]
+output_relevant_configurations = false

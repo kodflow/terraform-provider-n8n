@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -70,27 +71,24 @@ func setupTestDataSourceClient(t *testing.T, handler http.HandlerFunc) (*client.
 
 // TestVariableDataSource_Configure is now in external test file - refactored to test behavior only.
 
+// Compile-time interface satisfaction checks.
+var _ datasource.DataSource = (*VariableDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*VariableDataSource)(nil)
+var _ VariableDataSourceInterface = (*VariableDataSource)(nil)
+
 func TestVariableDataSource_Interfaces(t *testing.T) {
-	t.Helper()
+	t.Parallel()
 
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
 	}{
 		{
-			name: "implements required interfaces",
+			name: "constructor returns non-nil instance",
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := NewVariableDataSource()
-
-				// Test that VariableDataSource implements datasource.DataSource
-				var _ datasource.DataSource = ds
-
-				// Test that VariableDataSource implements datasource.DataSourceWithConfigure
-				var _ datasource.DataSourceWithConfigure = ds
-
-				// Test that VariableDataSource implements VariableDataSourceInterface
-				var _ VariableDataSourceInterface = ds
+				assert.NotNil(t, ds)
 			},
 		},
 		{
@@ -105,12 +103,15 @@ func TestVariableDataSource_Interfaces(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt.testFunc(t)
 		})
 	}
 }
 
 func TestVariableDataSource_ValidateIdentifiers(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -121,22 +122,16 @@ func TestVariableDataSource_ValidateIdentifiers(t *testing.T) {
 			name: "valid with ID provided",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				_ = NewVariableDataSource()
-				_ = &datasource.ReadResponse{}
-
-				// This would normally be populated from the config
-				// For testing, we're directly testing the validation logic
-				// Note: validateIdentifiers is not exported, so we test through Read behavior
-				// This test structure follows the pattern but can't directly test unexported methods
+				ds := NewVariableDataSource()
+				assert.NotNil(t, ds)
 			},
 		},
 		{
 			name: "valid with key provided",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				_ = NewVariableDataSource()
-				_ = &datasource.ReadResponse{}
-				// Similar limitation as above
+				ds := NewVariableDataSource()
+				assert.NotNil(t, ds)
 			},
 		},
 		{
@@ -157,6 +152,8 @@ func TestVariableDataSource_ValidateIdentifiers(t *testing.T) {
 }
 
 func TestVariableDataSourceConcurrency(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -169,21 +166,17 @@ func TestVariableDataSourceConcurrency(t *testing.T) {
 				t.Helper()
 				ds := NewVariableDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						resp := &datasource.MetadataResponse{}
-						ds.Metadata(context.Background(), datasource.MetadataRequest{
+						ds.Metadata(t.Context(), datasource.MetadataRequest{
 							ProviderTypeName: "n8n",
 						}, resp)
 						assert.Equal(t, "n8n_variable", resp.TypeName)
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
@@ -192,44 +185,35 @@ func TestVariableDataSourceConcurrency(t *testing.T) {
 				t.Helper()
 				ds := NewVariableDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						resp := &datasource.SchemaResponse{}
-						ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+						ds.Schema(t.Context(), datasource.SchemaRequest{}, resp)
 						assert.NotNil(t, resp.Schema)
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
-			name: "concurrent configure calls",
+			name: "concurrent configure calls error handling",
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := NewVariableDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Go(func() {
 						resp := &datasource.ConfigureResponse{}
-						mockClient := &client.N8nClient{}
 						req := datasource.ConfigureRequest{
-							ProviderData: mockClient,
+							ProviderData: "invalid",
 						}
-						ds.Configure(context.Background(), req, resp)
-						assert.False(t, resp.Diagnostics.HasError())
-						done <- true
-					}()
+						ds.Configure(t.Context(), req, resp)
+						assert.True(t, resp.Diagnostics.HasError())
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
@@ -238,27 +222,22 @@ func TestVariableDataSourceConcurrency(t *testing.T) {
 				t.Helper()
 				ds := NewVariableDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 50; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Go(func() {
 						resp := &datasource.MetadataResponse{}
-						ds.Metadata(context.Background(), datasource.MetadataRequest{
+						ds.Metadata(t.Context(), datasource.MetadataRequest{
 							ProviderTypeName: "n8n",
 						}, resp)
-						done <- true
-					}()
+					})
 				}
-				for i := 0; i < 50; i++ {
-					go func() {
+				for range 50 {
+					wg.Go(func() {
 						resp := &datasource.SchemaResponse{}
-						ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
-						done <- true
-					}()
+						ds.Schema(t.Context(), datasource.SchemaRequest{}, resp)
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 	}
@@ -273,20 +252,18 @@ func TestVariableDataSourceConcurrency(t *testing.T) {
 func BenchmarkVariableDataSource_Schema(b *testing.B) {
 	ds := NewVariableDataSource()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.SchemaResponse{}
-		ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+		ds.Schema(b.Context(), datasource.SchemaRequest{}, resp)
 	}
 }
 
 func BenchmarkVariableDataSource_Metadata(b *testing.B) {
 	ds := NewVariableDataSource()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.MetadataResponse{}
-		ds.Metadata(context.Background(), datasource.MetadataRequest{
+		ds.Metadata(b.Context(), datasource.MetadataRequest{
 			ProviderTypeName: "n8n",
 		}, resp)
 	}
@@ -296,13 +273,12 @@ func BenchmarkVariableDataSource_Configure(b *testing.B) {
 	ds := NewVariableDataSource()
 	mockClient := &client.N8nClient{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.ConfigureResponse{}
 		req := datasource.ConfigureRequest{
 			ProviderData: mockClient,
 		}
-		ds.Configure(context.Background(), req, resp)
+		ds.Configure(b.Context(), req, resp)
 	}
 }
 
@@ -323,7 +299,6 @@ func TestVariableDataSource_validateIdentifiers(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -397,7 +372,6 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -426,7 +400,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.NotNil(t, variable)
 				assert.Equal(t, "var-123", *variable.Id)
@@ -456,7 +430,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.NotNil(t, variable)
 				assert.Equal(t, "test-key", variable.Key)
@@ -488,7 +462,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.NotNil(t, variable)
 				assert.False(t, resp.Diagnostics.HasError())
@@ -507,7 +481,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.Nil(t, variable)
 				assert.True(t, resp.Diagnostics.HasError())
@@ -530,7 +504,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.Nil(t, variable)
 				assert.True(t, resp.Diagnostics.HasError())
@@ -554,7 +528,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.Nil(t, variable)
 				assert.True(t, resp.Diagnostics.HasError())
@@ -579,7 +553,7 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 				}
 				resp := &datasource.ReadResponse{}
 
-				variable := ds.fetchVariable(context.Background(), data, resp)
+				variable := ds.fetchVariable(t.Context(), data, resp)
 
 				assert.Nil(t, variable)
 				assert.True(t, resp.Diagnostics.HasError())
@@ -589,6 +563,95 @@ func TestVariableDataSource_fetchVariable(t *testing.T) {
 }
 
 // ptrString returns a pointer to the given string.
+//
+//go:fix inline
 func ptrString(s string) *string {
-	return &s
+	return new(s)
+}
+
+// TestVariableDataSource_findVariableInList tests the private findVariableInList method.
+func TestVariableDataSource_findVariableInList(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		variables []n8nsdk.Variable
+		id        string
+		key       string
+		wantNil   bool
+		wantError bool
+	}{
+		{
+			name: "found by ID",
+			variables: []n8nsdk.Variable{
+				{Id: ptrString("var-1"), Key: "key-1", Value: "val-1"},
+				{Id: ptrString("var-2"), Key: "key-2", Value: "val-2"},
+			},
+			id:        "var-1",
+			wantNil:   false,
+			wantError: false,
+		},
+		{
+			name: "found by key",
+			variables: []n8nsdk.Variable{
+				{Id: ptrString("var-1"), Key: "key-1", Value: "val-1"},
+			},
+			key:       "key-1",
+			wantNil:   false,
+			wantError: false,
+		},
+		{
+			name:      "nil variables slice",
+			variables: nil,
+			id:        "var-1",
+			wantNil:   true,
+			wantError: true,
+		},
+		{
+			name:      "empty variables slice",
+			variables: []n8nsdk.Variable{},
+			id:        "var-1",
+			wantNil:   true,
+			wantError: true,
+		},
+		{
+			name: "not found - uses key as fallback identifier",
+			variables: []n8nsdk.Variable{
+				{Id: ptrString("var-1"), Key: "key-1", Value: "val-1"},
+			},
+			key:       "nonexistent",
+			wantNil:   true,
+			wantError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ds := &VariableDataSource{}
+			resp := &datasource.ReadResponse{}
+
+			var data models.DataSource
+			if tt.id != "" {
+				data.ID = types.StringValue(tt.id)
+			} else {
+				data.ID = types.StringNull()
+			}
+			if tt.key != "" {
+				data.Key = types.StringValue(tt.key)
+			} else {
+				data.Key = types.StringNull()
+			}
+
+			result := ds.findVariableInList(tt.variables, &data, resp)
+
+			if tt.wantNil {
+				assert.Nil(t, result)
+			} else {
+				assert.NotNil(t, result)
+			}
+			assert.Equal(t, tt.wantError, resp.Diagnostics.HasError())
+		})
+	}
 }

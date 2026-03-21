@@ -1,0 +1,21 @@
+{
+  "models": {
+    "main": {
+      "provider": "mcp",
+      "modelId": "claude-code"
+    },
+    "research": {
+      "provider": "mcp",
+      "modelId": "claude-code"
+    },
+    "fallback": {
+      "provider": "ollama",
+      "modelId": "llama3.2",
+      "baseURL": "http://host.docker.internal:11434/api"
+    }
+  },
+  "global": {
+    "projectRoot": "/workspace",
+    "logLevel": "info"
+  }
+}

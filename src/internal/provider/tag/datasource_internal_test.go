@@ -1,7 +1,6 @@
 package tag
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -89,7 +88,6 @@ func TestTagDataSource_validateIdentifier(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -125,7 +123,7 @@ func TestTagDataSource_fetchTagByID(t *testing.T) {
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags/tag-123" && r.Method == http.MethodGet {
 					id := "tag-123"
-					response := map[string]interface{}{
+					response := map[string]any{
 						"id":   id,
 						"name": "Test Tag",
 					}
@@ -225,7 +223,6 @@ func TestTagDataSource_fetchTagByID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -237,7 +234,7 @@ func TestTagDataSource_fetchTagByID(t *testing.T) {
 			data.ID = types.StringValue(tt.tagID)
 			resp := &datasource.ReadResponse{}
 
-			tag := d.fetchTagByID(context.Background(), data, resp)
+			tag := d.fetchTagByID(t.Context(), data, resp)
 
 			if tt.expectNil {
 				assert.Nil(t, tag)
@@ -270,9 +267,9 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
 					id := "tag-123"
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   id,
 								"name": "Test Tag",
 							},
@@ -293,9 +290,9 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "Missing Tag",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   "tag-456",
 								"name": "Other Tag",
 							},
@@ -330,8 +327,8 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "Test Tag",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{},
+					response := map[string]any{
+						"data": []any{},
 					}
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)
@@ -348,7 +345,7 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "Test Tag",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{}
+					response := map[string]any{}
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)
 					json.NewEncoder(w).Encode(response)
@@ -364,9 +361,9 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "Test Tag",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   "tag-123",
 								"name": "test tag",
 							},
@@ -387,17 +384,17 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "Second Tag",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   "tag-123",
 								"name": "First Tag",
 							},
-							map[string]interface{}{
+							map[string]any{
 								"id":   "tag-456",
 								"name": "Second Tag",
 							},
-							map[string]interface{}{
+							map[string]any{
 								"id":   "tag-789",
 								"name": "Third Tag",
 							},
@@ -418,9 +415,9 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   "tag-123",
 								"name": "",
 							},
@@ -441,9 +438,9 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "Tag-!@#$%",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   "tag-123",
 								"name": "Tag-!@#$%",
 							},
@@ -464,9 +461,9 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			tagName: "标签测试",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/tags" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":   "tag-123",
 								"name": "标签测试",
 							},
@@ -485,7 +482,6 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -497,7 +493,7 @@ func TestTagDataSource_fetchTagByName(t *testing.T) {
 			data.Name = types.StringValue(tt.tagName)
 			resp := &datasource.ReadResponse{}
 
-			tag := d.fetchTagByName(context.Background(), data, resp)
+			tag := d.fetchTagByName(t.Context(), data, resp)
 
 			if tt.expectNil {
 				assert.Nil(t, tag)

@@ -7,7 +7,6 @@
 package workflow_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,11 +33,7 @@ func TestNewWorkflowConnectionResource(t *testing.T) {
 			res := workflow.NewWorkflowConnectionResource()
 
 			switch tt.name {
-			case "create new resource":
-				if res == nil {
-					t.Error("NewWorkflowConnectionResource returned nil")
-				}
-			case "create new resource returns WorkflowConnectionResource type":
+			case "create new resource", "create new resource returns WorkflowConnectionResource type":
 				if res == nil {
 					t.Error("NewWorkflowConnectionResource returned nil")
 				}
@@ -133,7 +128,7 @@ func TestWorkflowConnectionResource_Metadata(t *testing.T) {
 			resp := &resource.MetadataResponse{}
 
 			// Execute metadata.
-			res.Metadata(context.Background(), req, resp)
+			res.Metadata(t.Context(), req, resp)
 
 			// Verify type name.
 			if resp.TypeName != tt.expectedTypeName {
@@ -212,7 +207,7 @@ func TestWorkflowConnectionResource_Schema(t *testing.T) {
 			resp := &resource.SchemaResponse{}
 
 			// Execute schema.
-			res.Schema(context.Background(), req, resp)
+			res.Schema(t.Context(), req, resp)
 
 			if tt.checkNonEmpty {
 				if len(resp.Schema.Attributes) == 0 {
@@ -240,7 +235,7 @@ func TestWorkflowConnectionResource_Configure(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		providerData interface{}
+		providerData any
 		expectError  bool
 	}{
 		{
@@ -269,7 +264,7 @@ func TestWorkflowConnectionResource_Configure(t *testing.T) {
 			resp := &resource.ConfigureResponse{}
 
 			// Execute configure (should be no-op).
-			res.Configure(context.Background(), req, resp)
+			res.Configure(t.Context(), req, resp)
 
 			// Verify diagnostics match expectation.
 			if tt.expectError && !resp.Diagnostics.HasError() {
@@ -346,7 +341,7 @@ func TestWorkflowConnectionResource_Read(t *testing.T) {
 			resp := &resource.ReadResponse{}
 
 			// Execute read (should be no-op).
-			res.Read(context.Background(), req, resp)
+			res.Read(t.Context(), req, resp)
 
 			// Verify diagnostics match expectation.
 			if tt.expectError && !resp.Diagnostics.HasError() {
@@ -423,7 +418,7 @@ func TestWorkflowConnectionResource_Delete(t *testing.T) {
 			resp := &resource.DeleteResponse{}
 
 			// Execute delete (should be no-op).
-			res.Delete(context.Background(), req, resp)
+			res.Delete(t.Context(), req, resp)
 
 			// Verify diagnostics match expectation.
 			if tt.expectError && !resp.Diagnostics.HasError() {

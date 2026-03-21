@@ -91,58 +91,94 @@ func TestMainFunction(t *testing.T) {
 
 // TestExecuteReturnsExitCode tests that Execute returns proper exit codes.
 func TestExecuteReturnsExitCode(t *testing.T) {
-	// Save original values
-	originalVersion := version
-	originalCmdVersion := cmd.Version
-	originalProviderServe := cmd.ProviderServe
 
-	// Restore after test
-	defer func() {
-		version = originalVersion
-		cmd.Version = originalCmdVersion
-		cmd.ProviderServe = originalProviderServe
-	}()
+	tests := []struct {
+		name         string
+		serveErr     error
+		version      string
+		expectedCode int
+	}{
+		{
+			name:         "returns 0 on success",
+			serveErr:     nil,
+			version:      "test-1.0.0",
+			expectedCode: 0,
+		},
+		{
+			name:         "returns 1 on error",
+			serveErr:     os.ErrInvalid,
+			version:      "test-error-1.0.0",
+			expectedCode: 1,
+		},
+	}
 
-	t.Run("returns 0 on success", func(t *testing.T) {
-		// Mock ProviderServe to succeed
-		cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return nil
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Save original values
+			originalVersion := version
+			originalCmdVersion := cmd.Version
+			originalProviderServe := cmd.ProviderServe
 
-		// Set version
-		version = "test-1.0.0"
-		cmd.SetVersion(version)
+			t.Cleanup(func() {
+				version = originalVersion
+				cmd.Version = originalCmdVersion
+				cmd.ProviderServe = originalProviderServe
+			})
 
-		// Execute should return 0 (success)
-		exitCode := cmd.Execute()
-		if exitCode != 0 {
-			t.Errorf("Expected exit code 0, got %d", exitCode)
-		}
-	})
+			cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
+				return tt.serveErr
+			}
 
-	t.Run("returns 1 on error", func(t *testing.T) {
-		// Mock ProviderServe to fail
-		cmd.ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-			return os.ErrInvalid
-		}
+			version = tt.version
+			cmd.SetVersion(version)
 
-		// Set version
-		version = "test-error-1.0.0"
-		cmd.SetVersion(version)
-
-		// Execute should return 1 (error)
-		exitCode := cmd.Execute()
-		if exitCode != 1 {
-			t.Errorf("Expected exit code 1, got %d", exitCode)
-		}
-	})
+			exitCode := cmd.Execute()
+			if exitCode != tt.expectedCode {
+				t.Errorf("Expected exit code %d, got %d", tt.expectedCode, exitCode)
+			}
+		})
+	}
 }
 
-// TestVersionVariable tests the version variable.
+// TestVersionVariable tests the version variable and its interaction with cmd.SetVersion.
 func TestVersionVariable(t *testing.T) {
-	t.Run("default version is dev", func(t *testing.T) {
-		if version != "dev" {
-			t.Errorf("Expected default version 'dev', got '%s'", version)
-		}
-	})
+
+	tests := []struct {
+		name       string
+		setVersion string
+		expected   string
+	}{
+		{
+			name:       "default version is dev",
+			setVersion: "",
+			expected:   "dev",
+		},
+		{
+			name:       "set version is propagated",
+			setVersion: "1.2.3",
+			expected:   "1.2.3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Save and restore original version
+			originalVersion := version
+			originalCmdVersion := cmd.Version
+			t.Cleanup(func() {
+				version = originalVersion
+				cmd.Version = originalCmdVersion
+			})
+
+			if tt.setVersion != "" {
+				version = tt.setVersion
+				cmd.SetVersion(version)
+				if cmd.Version != tt.expected {
+					t.Errorf("Expected cmd.Version '%s', got '%s'", tt.expected, cmd.Version)
+				}
+			} else if version != tt.expected {
+				t.Errorf("Expected version '%s', got '%s'", tt.expected, version)
+			}
+		})
+	}
 }

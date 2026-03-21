@@ -1,7 +1,6 @@
 package tag_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -101,7 +100,7 @@ func TestTagDataSource_Metadata(t *testing.T) {
 				ds := tag.NewTagDataSource()
 				resp := &datasource.MetadataResponse{}
 
-				ds.Metadata(context.Background(), datasource.MetadataRequest{
+				ds.Metadata(t.Context(), datasource.MetadataRequest{
 					ProviderTypeName: "n8n",
 				}, resp)
 
@@ -115,7 +114,7 @@ func TestTagDataSource_Metadata(t *testing.T) {
 				ds := tag.NewTagDataSource()
 				resp := &datasource.MetadataResponse{}
 
-				ds.Metadata(context.Background(), datasource.MetadataRequest{
+				ds.Metadata(t.Context(), datasource.MetadataRequest{
 					ProviderTypeName: "n8n",
 				}, resp)
 
@@ -146,7 +145,7 @@ func TestTagDataSource_Schema(t *testing.T) {
 				ds := tag.NewTagDataSource()
 				resp := &datasource.SchemaResponse{}
 
-				ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+				ds.Schema(t.Context(), datasource.SchemaRequest{}, resp)
 
 				assert.NotNil(t, resp.Schema)
 				assert.NotEmpty(t, resp.Schema.Attributes)
@@ -159,7 +158,7 @@ func TestTagDataSource_Schema(t *testing.T) {
 				ds := tag.NewTagDataSource()
 				resp := &datasource.SchemaResponse{}
 
-				ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+				ds.Schema(t.Context(), datasource.SchemaRequest{}, resp)
 
 				assert.NotNil(t, resp.Schema)
 				assert.NotEmpty(t, resp.Schema.Attributes)
@@ -180,7 +179,7 @@ func TestTagDataSource_Configure(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		providerData interface{}
+		providerData any
 		wantError    bool
 	}{
 		{
@@ -201,7 +200,6 @@ func TestTagDataSource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -211,7 +209,7 @@ func TestTagDataSource_Configure(t *testing.T) {
 				ProviderData: tt.providerData,
 			}
 
-			ds.Configure(context.Background(), req, resp)
+			ds.Configure(t.Context(), req, resp)
 
 			if tt.wantError {
 				assert.True(t, resp.Diagnostics.HasError())
@@ -223,6 +221,8 @@ func TestTagDataSource_Configure(t *testing.T) {
 }
 
 func TestTagDataSource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -241,11 +241,11 @@ func TestTagDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := tag.NewTagDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -290,7 +290,7 @@ func TestTagDataSource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := tag.NewTagDataSource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
@@ -333,11 +333,11 @@ func TestTagDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := tag.NewTagDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -375,7 +375,7 @@ func TestTagDataSource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := tag.NewTagDataSource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
@@ -425,11 +425,11 @@ func TestTagDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := tag.NewTagDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -483,11 +483,11 @@ func TestTagDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := tag.NewTagDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 

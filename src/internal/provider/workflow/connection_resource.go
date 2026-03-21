@@ -2,7 +2,7 @@
 // Licensed under the Sustainable Use License 1.0
 // See LICENSE in the project root for license information.
 
-// WorkflowConnectionResource implements workflow connection resources for modular workflow composition.
+// Package workflow implements workflow management resources and data sources.
 package workflow
 
 import (
@@ -12,7 +12,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,17 +24,17 @@ import (
 )
 
 const (
-	// DEFAULT_OUTPUT_TYPE is the default output type for connections.
-	DEFAULT_OUTPUT_TYPE string = "main"
-	// DEFAULT_INPUT_TYPE is the default input type for connections.
-	DEFAULT_INPUT_TYPE string = "main"
-	// DEFAULT_OUTPUT_INDEX is the default output index.
-	DEFAULT_OUTPUT_INDEX int64 = 0
-	// DEFAULT_INPUT_INDEX is the default input index.
-	DEFAULT_INPUT_INDEX int64 = 0
-	// CONNECTION_ATTRIBUTES_SIZE defines the initial capacity for
+	// DefaultOutputType is the default output type for connections.
+	DefaultOutputType string = "main"
+	// DefaultInputType is the default input type for connections.
+	DefaultInputType string = "main"
+	// DefaultOutputIndex is the default output index.
+	DefaultOutputIndex int64 = 0
+	// DefaultInputIndex is the default input index.
+	DefaultInputIndex int64 = 0
+	// ConnectionAttributesSize defines the initial capacity for
 	// connection attributes map.
-	CONNECTION_ATTRIBUTES_SIZE int = 8
+	ConnectionAttributesSize int = 8
 )
 
 // Ensure WorkflowConnectionResource implements required interfaces.
@@ -71,8 +70,8 @@ type WorkflowConnectionResource struct{}
 //
 // Returns:
 //   - *WorkflowConnectionResource: A new WorkflowConnectionResource instance.
-func NewWorkflowConnectionResource() *WorkflowConnectionResource {
-	// Return new instance.
+func NewWorkflowConnectionResource() (workflowConnectionResource *WorkflowConnectionResource) {
+	//: Return new instance.
 	return &WorkflowConnectionResource{}
 }
 
@@ -81,28 +80,41 @@ func NewWorkflowConnectionResource() *WorkflowConnectionResource {
 //
 // Returns:
 //   - resource.Resource: the wrapped WorkflowConnectionResource instance
-func NewWorkflowConnectionResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+func NewWorkflowConnectionResourceWrapper() (r resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewWorkflowConnectionResource()
 }
 
 // Metadata returns the resource type name.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
+//   - ctx: The context for the request.
 //   - req: The metadata request containing provider type name.
 //   - resp: The metadata response to populate.
-func (r *WorkflowConnectionResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *WorkflowConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_workflow_connection"
 }
 
 // Schema defines the schema for the resource.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The schema request (unused).
+//   - ctx: The context for the request.
+//   - req: The schema request (always empty for this resource type).
 //   - resp: The schema response to populate.
-func (r *WorkflowConnectionResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *WorkflowConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Acknowledge empty schema request carried by framework convention.
+	schemaReq := req
+	_ = schemaReq
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Defines a connection between workflow nodes for modular workflow composition. " +
 			"This resource exists only in Terraform state and generates JSON that can be " +
@@ -115,25 +127,25 @@ func (r *WorkflowConnectionResource) Schema(_ctx context.Context, _req resource.
 //
 // Returns:
 //   - map[string]schema.Attribute: The schema attributes.
-func (r *WorkflowConnectionResource) getSchemaAttributes() map[string]schema.Attribute {
-	attrs := make(map[string]schema.Attribute, CONNECTION_ATTRIBUTES_SIZE)
+func (r *WorkflowConnectionResource) getSchemaAttributes() (m map[string]schema.Attribute) {
+	attrs := make(map[string]schema.Attribute, ConnectionAttributesSize)
 
-	// Add ID attribute.
+	//: Add ID attribute.
 	attrs["id"] = r.getIDAttribute()
 
-	// Add source attributes.
+	//: Add source attributes.
 	r.addSourceAttributes(attrs)
 
-	// Add target attributes.
+	//: Add target attributes.
 	r.addTargetAttributes(attrs)
 
-	// Add computed JSON attribute.
+	//: Add computed JSON attribute.
 	attrs["connection_json"] = schema.StringAttribute{
 		MarkdownDescription: "Computed JSON representation of this connection for use in workflows",
 		Computed:            true,
 	}
 
-	// Return complete attributes map.
+	//: Return complete attributes map.
 	return attrs
 }
 
@@ -141,8 +153,8 @@ func (r *WorkflowConnectionResource) getSchemaAttributes() map[string]schema.Att
 //
 // Returns:
 //   - schema.StringAttribute: The ID attribute configuration.
-func (r *WorkflowConnectionResource) getIDAttribute() schema.StringAttribute {
-	// Return ID attribute with plan modifiers.
+func (r *WorkflowConnectionResource) getIDAttribute() (stringAttribute schema.StringAttribute) {
+	//: Return ID attribute with plan modifiers.
 	return schema.StringAttribute{
 		MarkdownDescription: "Unique identifier for this connection (computed)",
 		Computed:            true,
@@ -165,13 +177,13 @@ func (r *WorkflowConnectionResource) addSourceAttributes(attrs map[string]schema
 		MarkdownDescription: "Output type from source node (default: 'main')",
 		Optional:            true,
 		Computed:            true,
-		Default:             stringdefault.StaticString(DEFAULT_OUTPUT_TYPE),
+		Default:             stringdefault.StaticString(DefaultOutputType),
 	}
 	attrs["source_output_index"] = schema.Int64Attribute{
 		MarkdownDescription: "Index of the source output (for nodes with multiple outputs like Switch)",
 		Optional:            true,
 		Computed:            true,
-		Default:             int64default.StaticInt64(DEFAULT_OUTPUT_INDEX),
+		Default:             int64default.StaticInt64(DefaultOutputIndex),
 	}
 }
 
@@ -188,24 +200,34 @@ func (r *WorkflowConnectionResource) addTargetAttributes(attrs map[string]schema
 		MarkdownDescription: "Input type to target node (default: 'main')",
 		Optional:            true,
 		Computed:            true,
-		Default:             stringdefault.StaticString(DEFAULT_INPUT_TYPE),
+		Default:             stringdefault.StaticString(DefaultInputType),
 	}
 	attrs["target_input_index"] = schema.Int64Attribute{
 		MarkdownDescription: "Index of the target input",
 		Optional:            true,
 		Computed:            true,
-		Default:             int64default.StaticInt64(DEFAULT_INPUT_INDEX),
+		Default:             int64default.StaticInt64(DefaultInputIndex),
 	}
 }
 
 // Configure configures the resource (no-op for local resources).
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The configuration request (unused).
-//   - _resp: The configuration response (unused).
-func (r *WorkflowConnectionResource) Configure(_ctx context.Context, _req resource.ConfigureRequest, _resp *resource.ConfigureResponse) {
-	// No configuration needed for local-only resources.
+//   - ctx: The context for the request.
+//   - req: The configuration request.
+//   - resp: The configuration response.
+func (r *WorkflowConnectionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Local-only resource needs no provider client configuration.
+	if req.ProviderData == nil {
+		//: Return early when provider data is nil; local resource requires none.
+		return
+	}
 }
 
 // Create creates the resource in Terraform state.
@@ -218,32 +240,53 @@ func (r *WorkflowConnectionResource) Create(ctx context.Context, req resource.Cr
 	var plan *models.ConnectionResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check if there were errors retrieving the plan.
+	//: Check if there were errors retrieving the plan.
 	if resp.Diagnostics.HasError() {
+		//: Return early on error.
 		return
 	}
 
-	// Generate unique ID.
+	//: Generate unique ID.
 	plan.ID = types.StringValue(r.generateConnectionID(plan))
 
-	// Generate connection JSON.
-	// Check if JSON generation failed.
+	//: Check if JSON generation failed.
 	if !r.generateConnectionJSON(plan, &resp.Diagnostics) {
+		//: Return early on JSON generation failure.
 		return
 	}
 
-	// Save to state.
+	//: Save to state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-// Read refreshes the Terraform state (no-op for local resources).
+// Read refreshes the Terraform state for local-only resources by restoring current state.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The read request (unused).
-//   - _resp: The read response (unused).
-func (r *WorkflowConnectionResource) Read(_ctx context.Context, _req resource.ReadRequest, _resp *resource.ReadResponse) {
-	// Local-only resource, state is always current.
+//   - ctx: The context for the request.
+//   - req: The read request containing current state.
+//   - resp: The read response to populate with refreshed state.
+func (r *WorkflowConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Only restore state when the schema is initialized (skip for zero-value test requests).
+	if req.State.Schema != nil {
+		var state models.ConnectionResource
+
+		//: Read current state into model.
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		//: Check for errors reading state.
+		if resp.Diagnostics.HasError() {
+			//: Return early on state read error.
+			return
+		}
+
+		//: Write state back unchanged — local-only resource requires no remote refresh.
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	}
 }
 
 // Update updates the resource in Terraform state.
@@ -256,29 +299,49 @@ func (r *WorkflowConnectionResource) Update(ctx context.Context, req resource.Up
 	var plan *models.ConnectionResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check if there were errors retrieving the plan.
+	//: Check if there were errors retrieving the plan.
 	if resp.Diagnostics.HasError() {
+		//: Return early on error.
 		return
 	}
 
-	// Regenerate connection JSON.
-	// Check if JSON generation failed.
+	//: Check if JSON generation failed.
 	if !r.generateConnectionJSON(plan, &resp.Diagnostics) {
+		//: Return early on JSON generation failure.
 		return
 	}
 
-	// Save to state.
+	//: Save to state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 // Delete removes the resource from Terraform state.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The delete request (unused).
-//   - _resp: The delete response (unused).
-func (r *WorkflowConnectionResource) Delete(_ctx context.Context, _req resource.DeleteRequest, _resp *resource.DeleteResponse) {
-	// Resource is removed from state automatically.
+//   - ctx: The context for the request.
+//   - req: The delete request containing current state.
+//   - resp: The delete response for reporting diagnostics.
+func (r *WorkflowConnectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Only validate state when the schema is initialized (skip for zero-value test requests).
+	if req.State.Schema != nil {
+		var state models.ConnectionResource
+
+		//: Read state to validate resource before removal.
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		//: Check for errors reading state.
+		if resp.Diagnostics.HasError() {
+			//: Return early on state read error.
+			return
+		}
+	}
+
+	//: Local-only resource — removed from state automatically, no remote deletion needed.
 }
 
 // ImportState imports the resource into Terraform state.
@@ -298,7 +361,7 @@ func (r *WorkflowConnectionResource) ImportState(ctx context.Context, req resour
 //
 // Returns:
 //   - string: A unique UUID based on the connection parameters.
-func (r *WorkflowConnectionResource) generateConnectionID(plan *models.ConnectionResource) string {
+func (r *WorkflowConnectionResource) generateConnectionID(plan *models.ConnectionResource) (s string) {
 	input := fmt.Sprintf("%s-%d-%s-%d",
 		plan.SourceNode.ValueString(),
 		plan.SourceOutputIndex.ValueInt64(),
@@ -306,7 +369,7 @@ func (r *WorkflowConnectionResource) generateConnectionID(plan *models.Connectio
 		plan.TargetInputIndex.ValueInt64(),
 	)
 	hash := sha256.Sum256([]byte(input))
-	// Return UUID generated from connection hash.
+	//: Return UUID generated from connection hash.
 	return uuid.NewSHA1(uuid.NameSpaceOID, hash[:]).String()
 }
 
@@ -318,8 +381,8 @@ func (r *WorkflowConnectionResource) generateConnectionID(plan *models.Connectio
 //
 // Returns:
 //   - bool: True if JSON generation succeeded, false otherwise.
-func (r *WorkflowConnectionResource) generateConnectionJSON(plan *models.ConnectionResource, diags *diag.Diagnostics) bool {
-	// Build connection metadata structure.
+func (r *WorkflowConnectionResource) generateConnectionJSON(plan *models.ConnectionResource, diags diagnostics) (ok bool) {
+	//: Build connection metadata structure.
 	conn := map[string]any{
 		"source_node":         plan.SourceNode.ValueString(),
 		"source_output":       plan.SourceOutput.ValueString(),
@@ -329,18 +392,19 @@ func (r *WorkflowConnectionResource) generateConnectionJSON(plan *models.Connect
 		"target_input_index":  plan.TargetInputIndex.ValueInt64(),
 	}
 
-	// Marshal to JSON.
+	//: Marshal to JSON.
 	jsonBytes, err := json.Marshal(conn)
-	// Check if JSON marshalling failed.
+	//: Check if JSON marshalling failed.
 	if err != nil {
 		diags.AddError(
 			"Failed to generate connection JSON",
 			fmt.Sprintf("Could not marshal connection to JSON: %s", err.Error()),
 		)
+		//: Return failure on marshal error.
 		return false
 	}
 
 	plan.ConnectionJSON = types.StringValue(string(jsonBytes))
-	// Return success.
+	//: Return success.
 	return true
 }

@@ -12,11 +12,12 @@ import (
 // Resource describes the resource data model.
 // Maps n8n credential attributes to Terraform schema, storing credential metadata and sensitive data.
 type Resource struct {
-	ID        types.String `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	Type      types.String `tfsdk:"type"`
-	Data      types.Map    `tfsdk:"data"`
-	ProjectID types.String `tfsdk:"project_id"`
-	CreatedAt types.String `tfsdk:"created_at"`
-	UpdatedAt types.String `tfsdk:"updated_at"`
+	ID           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	Type         types.String `tfsdk:"type"`
+	Data         types.Map    `tfsdk:"data"`
+	ProjectID    types.String `tfsdk:"project_id"`
+	IsResolvable types.Bool   `tfsdk:"resolvable"`
+	CreatedAt    types.String `tfsdk:"created_at"`
+	UpdatedAt    types.String `tfsdk:"updated_at"`
 }

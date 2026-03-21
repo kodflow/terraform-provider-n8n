@@ -5,7 +5,6 @@
 package workflow
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -119,7 +118,7 @@ func TestWorkflowNodeResource_generateNodeJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, nodeJSON string) {
 				t.Helper()
 
-				var node map[string]interface{}
+				var node map[string]any
 				err := json.Unmarshal([]byte(nodeJSON), &node)
 				require.NoError(t, err)
 
@@ -128,7 +127,7 @@ func TestWorkflowNodeResource_generateNodeJSON(t *testing.T) {
 				assert.Equal(t, "n8n-nodes-base.webhook", node["type"])
 				assert.Equal(t, float64(1), node["typeVersion"])
 
-				position, ok := node["position"].([]interface{})
+				position, ok := node["position"].([]any)
 				require.True(t, ok)
 				assert.Len(t, position, 2)
 				assert.Equal(t, float64(250), position[0])
@@ -149,11 +148,11 @@ func TestWorkflowNodeResource_generateNodeJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, nodeJSON string) {
 				t.Helper()
 
-				var node map[string]interface{}
+				var node map[string]any
 				err := json.Unmarshal([]byte(nodeJSON), &node)
 				require.NoError(t, err)
 
-				params, ok := node["parameters"].(map[string]interface{})
+				params, ok := node["parameters"].(map[string]any)
 				require.True(t, ok)
 				assert.Equal(t, "runOnceForAllItems", params["mode"])
 				assert.Equal(t, "return items;", params["jsCode"])
@@ -173,7 +172,7 @@ func TestWorkflowNodeResource_generateNodeJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, nodeJSON string) {
 				t.Helper()
 
-				var node map[string]interface{}
+				var node map[string]any
 				err := json.Unmarshal([]byte(nodeJSON), &node)
 				require.NoError(t, err)
 
@@ -195,7 +194,7 @@ func TestWorkflowNodeResource_generateNodeJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, nodeJSON string) {
 				t.Helper()
 
-				var node map[string]interface{}
+				var node map[string]any
 				err := json.Unmarshal([]byte(nodeJSON), &node)
 				require.NoError(t, err)
 
@@ -224,7 +223,7 @@ func TestWorkflowNodeResource_generateNodeJSON(t *testing.T) {
 			r := &WorkflowNodeResource{}
 			var diags diag.Diagnostics
 
-			ctx := context.Background()
+			ctx := t.Context()
 			success := r.generateNodeJSON(ctx, tt.plan, &diags)
 
 			if tt.wantErr {
@@ -466,12 +465,7 @@ func TestWorkflowNodeResource_addOptionalAttributes(t *testing.T) {
 				// Verify all attributes are optional
 				for _, attrName := range []string{"parameters", "webhook_id", "disabled", "notes"} {
 					attr := attrs[attrName]
-					switch a := attr.(type) {
-					case schema.StringAttribute:
-						assert.True(t, a.Optional)
-					case schema.BoolAttribute:
-						assert.True(t, a.Optional)
-					}
+					assert.True(t, attr.IsOptional(), "expected %s to be optional", attrName)
 				}
 			},
 		},
@@ -595,427 +589,546 @@ func getNodeObjectType() tftypes.Object {
 func TestWorkflowNodeResource_Create_Success(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"name":         tftypes.NewValue(tftypes.String, "Webhook"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		nodeName    string
+		nodeType    string
+		expectError bool
+	}{
+		{
+			name:        "basic webhook node creation",
+			nodeName:    "Webhook",
+			nodeType:    "n8n-nodes-base.webhook",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"name":         tftypes.NewValue(tftypes.String, tt.nodeName),
+				"type":         tftypes.NewValue(tftypes.String, tt.nodeType),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
 
-	r.Create(ctx, req, &resp)
+			r.Create(ctx, req, &resp)
 
-	assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Create_WithInvalidParameters(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"name":         tftypes.NewValue(tftypes.String, "Code Node"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.code"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, "{invalid json"),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		parameters  string
+		expectError bool
+	}{
+		{
+			name:        "invalid JSON parameters cause error",
+			parameters:  "{invalid json",
+			expectError: true,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"name":         tftypes.NewValue(tftypes.String, "Code Node"),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.code"),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, tt.parameters),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
 
-	r.Create(ctx, req, &resp)
+			r.Create(ctx, req, &resp)
 
-	assert.True(t, resp.Diagnostics.HasError(), "Create should have errors with invalid JSON")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Create_WithNullParameters(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"name":         tftypes.NewValue(tftypes.String, "Node with null params"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, nil),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		nodeName    string
+		expectError bool
+	}{
+		{
+			name:        "null parameters defaults to empty object",
+			nodeName:    "Node with null params",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"name":         tftypes.NewValue(tftypes.String, tt.nodeName),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, nil),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
 
-	r.Create(ctx, req, &resp)
+			r.Create(ctx, req, &resp)
 
-	assert.False(t, resp.Diagnostics.HasError(), "Create with null parameters should not have errors")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Update_Success(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, "node-123"),
-		"name":         tftypes.NewValue(tftypes.String, "Updated Webhook"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 350), tftypes.NewValue(tftypes.Number, 400)}),
-		"parameters":   tftypes.NewValue(tftypes.String, `{"path":"test"}`),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		nodeID      string
+		nodeName    string
+		expectError bool
+	}{
+		{
+			name:        "update webhook node with parameters",
+			nodeID:      "node-123",
+			nodeName:    "Updated Webhook",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, tt.nodeID),
+				"name":         tftypes.NewValue(tftypes.String, tt.nodeName),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 350), tftypes.NewValue(tftypes.Number, 400)}),
+				"parameters":   tftypes.NewValue(tftypes.String, `{"path":"test"}`),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.UpdateRequest{
-		Plan: plan,
-	}
-	resp := resource.UpdateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.UpdateRequest{Plan: plan}
+			resp := resource.UpdateResponse{State: state}
 
-	r.Update(ctx, req, &resp)
+			r.Update(ctx, req, &resp)
 
-	assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Update_WithNullTypeVersion(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, "node-123"),
-		"name":         tftypes.NewValue(tftypes.String, "Node without version"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
-		"type_version": tftypes.NewValue(tftypes.Number, nil),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		expectError bool
+	}{
+		{
+			name:        "null type version uses default",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, "node-123"),
+				"name":         tftypes.NewValue(tftypes.String, "Node without version"),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
+				"type_version": tftypes.NewValue(tftypes.Number, nil),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.UpdateRequest{
-		Plan: plan,
-	}
-	resp := resource.UpdateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.UpdateRequest{Plan: plan}
+			resp := resource.UpdateResponse{State: state}
 
-	r.Update(ctx, req, &resp)
+			r.Update(ctx, req, &resp)
 
-	assert.False(t, resp.Diagnostics.HasError(), "Update with null type version should not have errors")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Update_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, "node-123"),
-		"name":         tftypes.NewValue(tftypes.String, "Code Node"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.code"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, "{invalid json"),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		parameters  string
+		expectError bool
+	}{
+		{
+			name:        "invalid JSON parameters cause update error",
+			parameters:  "{invalid json",
+			expectError: true,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, "node-123"),
+				"name":         tftypes.NewValue(tftypes.String, "Code Node"),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.code"),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, tt.parameters),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.UpdateRequest{
-		Plan: plan,
-	}
-	resp := resource.UpdateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.UpdateRequest{Plan: plan}
+			resp := resource.UpdateResponse{State: state}
 
-	r.Update(ctx, req, &resp)
+			r.Update(ctx, req, &resp)
 
-	assert.True(t, resp.Diagnostics.HasError(), "Update should have errors with invalid JSON")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_ImportState_Success(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
+	tests := []struct {
+		name        string
+		importID    string
+		expectError bool
+	}{
+		{
+			name:        "import node by id",
+			importID:    "imported-node-id",
+			expectError: false,
+		},
 	}
 
-	req := resource.ImportStateRequest{
-		ID: "imported-node-id",
-	}
-	resp := resource.ImportStateResponse{
-		State: state,
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	r.ImportState(ctx, req, &resp)
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(objectType, nil),
+				Schema: createNodeTestSchema(t),
+			}
 
-	// ImportState uses passthrough so it should set the ID in state.
-	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
+			req := resource.ImportStateRequest{ID: tt.importID}
+			resp := resource.ImportStateResponse{State: state}
+
+			r.ImportState(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_generateNodeJSON_PositionError(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	var diags diag.Diagnostics
-
-	// Create a plan with unknown position to trigger position extraction failure.
-	plan := &models.NodeResource{
-		ID:          types.StringValue("test-id"),
-		Name:        types.StringValue("Test Node"),
-		Type:        types.StringValue("n8n-nodes-base.webhook"),
-		TypeVersion: types.Int64Value(1),
-		Position:    types.ListUnknown(types.Int64Type),
-		Parameters:  types.StringValue("{}"),
+	tests := []struct {
+		name          string
+		position      attr.Value
+		expectSuccess bool
+		expectError   bool
+	}{
+		{
+			name:          "unknown position triggers failure",
+			position:      types.ListUnknown(types.Int64Type),
+			expectSuccess: false,
+			expectError:   true,
+		},
 	}
 
-	success := r.generateNodeJSON(ctx, plan, &diags)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			var diags diag.Diagnostics
 
-	assert.False(t, success)
-	assert.True(t, diags.HasError())
+			plan := &models.NodeResource{
+				ID:          types.StringValue("test-id"),
+				Name:        types.StringValue("Test Node"),
+				Type:        types.StringValue("n8n-nodes-base.webhook"),
+				TypeVersion: types.Int64Value(1),
+				Position:    tt.position.(types.List),
+				Parameters:  types.StringValue("{}"),
+			}
+
+			success := r.generateNodeJSON(ctx, plan, &diags)
+
+			assert.Equal(t, tt.expectSuccess, success)
+			assert.Equal(t, tt.expectError, diags.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Configure_WithData(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-
-	req := resource.ConfigureRequest{
-		ProviderData: nil,
+	tests := []struct {
+		name         string
+		providerData any
+		expectError  bool
+	}{
+		{
+			name:         "nil provider data does not cause errors",
+			providerData: nil,
+			expectError:  false,
+		},
 	}
-	resp := resource.ConfigureResponse{}
 
-	r.Configure(ctx, req, &resp)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
 
-	assert.False(t, resp.Diagnostics.HasError(), "Configure should not have errors")
+			req := resource.ConfigureRequest{ProviderData: tt.providerData}
+			resp := resource.ConfigureResponse{}
+
+			r.Configure(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Read_NoOp(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
+	tests := []struct {
+		name        string
+		expectError bool
+	}{
+		{
+			name:        "read is a no-op without errors",
+			expectError: false,
+		},
+	}
 
-	req := resource.ReadRequest{}
-	resp := resource.ReadResponse{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
 
-	r.Read(ctx, req, &resp)
+			req := resource.ReadRequest{}
+			resp := resource.ReadResponse{}
 
-	assert.False(t, resp.Diagnostics.HasError(), "Read should not have errors")
+			r.Read(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Delete_NoOp(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
+	tests := []struct {
+		name        string
+		expectError bool
+	}{
+		{
+			name:        "delete is a no-op without errors",
+			expectError: false,
+		},
+	}
 
-	req := resource.DeleteRequest{}
-	resp := resource.DeleteResponse{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
 
-	r.Delete(ctx, req, &resp)
+			req := resource.DeleteRequest{}
+			resp := resource.DeleteResponse{}
 
-	assert.False(t, resp.Diagnostics.HasError(), "Delete should not have errors")
+			r.Delete(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Create_WithWebhookID(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"name":         tftypes.NewValue(tftypes.String, "Webhook Trigger"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
-		"webhook_id":   tftypes.NewValue(tftypes.String, "my-webhook-id"),
-		"disabled":     tftypes.NewValue(tftypes.Bool, false),
-		"notes":        tftypes.NewValue(tftypes.String, "Test notes"),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		webhookID   string
+		notes       string
+		expectError bool
+	}{
+		{
+			name:        "create webhook node with explicit webhook id",
+			webhookID:   "my-webhook-id",
+			notes:       "Test notes",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"name":         tftypes.NewValue(tftypes.String, "Webhook Trigger"),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.webhook"),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+				"webhook_id":   tftypes.NewValue(tftypes.String, tt.webhookID),
+				"disabled":     tftypes.NewValue(tftypes.Bool, false),
+				"notes":        tftypes.NewValue(tftypes.String, tt.notes),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
 
-	r.Create(ctx, req, &resp)
+			r.Create(ctx, req, &resp)
 
-	assert.False(t, resp.Diagnostics.HasError(), "Create with webhook ID should not have errors")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowNodeResource_Create_Disabled(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowNodeResource{}
-	ctx := context.Background()
-	objectType := getNodeObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"name":         tftypes.NewValue(tftypes.String, "Disabled Node"),
-		"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
-		"type_version": tftypes.NewValue(tftypes.Number, 1),
-		"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
-		"parameters":   tftypes.NewValue(tftypes.String, "{}"),
-		"webhook_id":   tftypes.NewValue(tftypes.String, nil),
-		"disabled":     tftypes.NewValue(tftypes.Bool, true),
-		"notes":        tftypes.NewValue(tftypes.String, nil),
-		"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		disabled    bool
+		expectError bool
+	}{
+		{
+			name:        "create disabled node succeeds",
+			disabled:    true,
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createNodeTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowNodeResource{}
+			ctx := t.Context()
+			objectType := getNodeObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createNodeTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":           tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"name":         tftypes.NewValue(tftypes.String, "Disabled Node"),
+				"type":         tftypes.NewValue(tftypes.String, "n8n-nodes-base.set"),
+				"type_version": tftypes.NewValue(tftypes.Number, 1),
+				"position":     tftypes.NewValue(tftypes.List{ElementType: tftypes.Number}, []tftypes.Value{tftypes.NewValue(tftypes.Number, 250), tftypes.NewValue(tftypes.Number, 300)}),
+				"parameters":   tftypes.NewValue(tftypes.String, "{}"),
+				"webhook_id":   tftypes.NewValue(tftypes.String, nil),
+				"disabled":     tftypes.NewValue(tftypes.Bool, tt.disabled),
+				"notes":        tftypes.NewValue(tftypes.String, nil),
+				"node_json":    tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{Raw: tftypes.NewValue(objectType, rawPlan), Schema: createNodeTestSchema(t)}
+			state := tfsdk.State{Raw: tftypes.NewValue(objectType, nil), Schema: createNodeTestSchema(t)}
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
 
-	r.Create(ctx, req, &resp)
+			r.Create(ctx, req, &resp)
 
-	assert.False(t, resp.Diagnostics.HasError(), "Create disabled node should not have errors")
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }

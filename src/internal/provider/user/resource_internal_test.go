@@ -1,7 +1,6 @@
 package user
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -151,7 +150,6 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -160,7 +158,7 @@ func TestUserResource_executeCreateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Email: types.StringValue(tt.email),
 			}
@@ -241,7 +239,6 @@ func TestUserResource_executeReadLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -250,7 +247,7 @@ func TestUserResource_executeReadLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.userID),
 			}
@@ -397,7 +394,6 @@ func TestUserResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -406,7 +402,7 @@ func TestUserResource_executeUpdateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				ID:    types.StringValue(tt.userID),
 				Email: types.StringValue(tt.newEmail),
@@ -477,7 +473,6 @@ func TestUserResource_executeDeleteLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -486,7 +481,7 @@ func TestUserResource_executeDeleteLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.userID),
 			}
@@ -531,7 +526,6 @@ func TestUserResource_schemaAttributes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -651,7 +645,6 @@ func TestUserResource_createUser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -660,7 +653,7 @@ func TestUserResource_createUser(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Email: types.StringValue(tt.email),
 			}
@@ -736,7 +729,6 @@ func TestUserResource_fetchFullUserDetails(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -745,7 +737,7 @@ func TestUserResource_fetchFullUserDetails(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			resp := &resource.CreateResponse{
 				State: resource.CreateResponse{}.State,
 			}
@@ -801,7 +793,6 @@ func TestUserResource_validateEmailUnchanged(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -884,7 +875,6 @@ func TestUserResource_updateRoleIfChanged(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -893,7 +883,7 @@ func TestUserResource_updateRoleIfChanged(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				ID:   types.StringValue("user-123"),
 				Role: types.StringValue(tt.planRole),
@@ -969,7 +959,6 @@ func TestUserResource_refreshUserData(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -978,7 +967,7 @@ func TestUserResource_refreshUserData(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
@@ -1032,7 +1021,7 @@ func TestUserResource_createUser_ErrorPaths(t *testing.T) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
 				// n8n API returns an array response with error field populated
-				_ = json.NewEncoder(w).Encode([]map[string]any{
+				json.NewEncoder(w).Encode([]map[string]any{
 					{
 						"user": map[string]any{
 							"id": "",
@@ -1047,7 +1036,6 @@ func TestUserResource_createUser_ErrorPaths(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1056,7 +1044,7 @@ func TestUserResource_createUser_ErrorPaths(t *testing.T) {
 			defer server.Close()
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Email: types.StringValue(tt.email),
 				Role:  types.StringValue(tt.role),
@@ -1097,7 +1085,7 @@ func TestUserResource_createUser_NilHTTPClient(t *testing.T) {
 			setupHandler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
-				_ = json.NewEncoder(w).Encode([]map[string]any{
+				json.NewEncoder(w).Encode([]map[string]any{
 					{
 						"user": map[string]any{
 							"id": "user-from-default-client",
@@ -1112,7 +1100,6 @@ func TestUserResource_createUser_NilHTTPClient(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1137,7 +1124,7 @@ func TestUserResource_createUser_NilHTTPClient(t *testing.T) {
 			}
 
 			r := &UserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Email: types.StringValue(tt.email),
 				Role:  types.StringValue(tt.role),
@@ -1260,7 +1247,7 @@ func TestUserResource_executeUserHTTPRequest(t *testing.T) {
 			r := &UserResource{
 				client: &client.N8nClient{APIClient: apiClient},
 			}
-			ctx := context.Background()
+			ctx := t.Context()
 			jsonBody := []byte(`[{"email":"test@example.com"}]`)
 			resp := &resource.CreateResponse{}
 			body, statusCode := r.executeUserHTTPRequest(ctx, jsonBody, resp)

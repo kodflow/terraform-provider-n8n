@@ -29,17 +29,14 @@ func Test_findProjectByIDOrName(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "find by ID":
-				id1 := "proj-1"
-				id2 := "proj-2"
 				projects := []n8nsdk.Project{
-					{Id: &id1, Name: "Project One"},
-					{Id: &id2, Name: "Project Two"},
+					{Id: new("proj-1"), Name: "Project One"},
+					{Id: new("proj-2"), Name: "Project Two"},
 				}
 				found, ok := findProjectByIDOrName(projects, types.StringValue("proj-2"), types.StringNull())
 				assert.True(t, ok)
@@ -48,11 +45,9 @@ func Test_findProjectByIDOrName(t *testing.T) {
 				assert.Equal(t, "Project Two", found.Name)
 
 			case "find by name":
-				id1 := "proj-1"
-				id2 := "proj-2"
 				projects := []n8nsdk.Project{
-					{Id: &id1, Name: "Project One"},
-					{Id: &id2, Name: "Project Two"},
+					{Id: new("proj-1"), Name: "Project One"},
+					{Id: new("proj-2"), Name: "Project Two"},
 				}
 				found, ok := findProjectByIDOrName(projects, types.StringNull(), types.StringValue("Project One"))
 				assert.True(t, ok)
@@ -61,11 +56,9 @@ func Test_findProjectByIDOrName(t *testing.T) {
 				assert.Equal(t, "Project One", found.Name)
 
 			case "find by ID and name (ID takes precedence)":
-				id1 := "proj-1"
-				id2 := "proj-2"
 				projects := []n8nsdk.Project{
-					{Id: &id1, Name: "Project One"},
-					{Id: &id2, Name: "Project Two"},
+					{Id: new("proj-1"), Name: "Project One"},
+					{Id: new("proj-2"), Name: "Project Two"},
 				}
 				found, ok := findProjectByIDOrName(projects, types.StringValue("proj-1"), types.StringValue("Project Two"))
 				assert.True(t, ok)
@@ -74,8 +67,7 @@ func Test_findProjectByIDOrName(t *testing.T) {
 				assert.Equal(t, "Project One", found.Name)
 
 			case "not found":
-				id1 := "proj-1"
-				projects := []n8nsdk.Project{{Id: &id1, Name: "Project One"}}
+				projects := []n8nsdk.Project{{Id: new("proj-1"), Name: "Project One"}}
 				found, ok := findProjectByIDOrName(projects, types.StringValue("proj-999"), types.StringValue("Non-existent"))
 				assert.False(t, ok)
 				assert.Nil(t, found)
@@ -87,8 +79,7 @@ func Test_findProjectByIDOrName(t *testing.T) {
 				assert.Nil(t, found)
 
 			case "null search parameters":
-				id1 := "proj-1"
-				projects := []n8nsdk.Project{{Id: &id1, Name: "Project One"}}
+				projects := []n8nsdk.Project{{Id: new("proj-1"), Name: "Project One"}}
 				found, ok := findProjectByIDOrName(projects, types.StringNull(), types.StringNull())
 				assert.False(t, ok)
 				assert.Nil(t, found)
@@ -106,8 +97,7 @@ func Test_findProjectByIDOrName(t *testing.T) {
 				assert.Equal(t, "Project Without ID", found.Name)
 
 			case "case sensitive name matching":
-				id1 := "proj-1"
-				projects := []n8nsdk.Project{{Id: &id1, Name: "Project One"}}
+				projects := []n8nsdk.Project{{Id: new("proj-1"), Name: "Project One"}}
 				// Exact match should work
 				found, ok := findProjectByIDOrName(projects, types.StringNull(), types.StringValue("Project One"))
 				assert.True(t, ok)
@@ -141,25 +131,22 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "map with all fields":
 				id := "proj-123"
-				projectType := "personal"
 				createdAt := time.Now()
 				updatedAt := time.Now().Add(1 * time.Hour)
-				icon := "📁"
 				description := "Test project description"
 				project := &n8nsdk.Project{
 					Id:          &id,
 					Name:        "Test Project",
-					Type:        &projectType,
+					Type:        new("personal"),
 					CreatedAt:   &createdAt,
 					UpdatedAt:   &updatedAt,
-					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+					Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: new("📁")}),
 					Description: *n8nsdk.NewNullableString(&description),
 				}
 				data := &models.DataSource{}
@@ -186,7 +173,6 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 
 			case "overwrite existing data":
 				id := "new-id"
-				projectType := "team"
 				data := &models.DataSource{
 					ID:          types.StringValue("old-id"),
 					Name:        types.StringValue("Old Name"),
@@ -197,7 +183,7 @@ func Test_mapProjectToDataSourceModel(t *testing.T) {
 				project := &n8nsdk.Project{
 					Id:   &id,
 					Name: "New Project",
-					Type: &projectType,
+					Type: new("team"),
 				}
 				mapProjectToDataSourceModel(project, data)
 				assert.Equal(t, "new-id", data.ID.ValueString())
@@ -231,7 +217,6 @@ func Test_mapProjectToItem(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -319,6 +304,9 @@ func Test_mapProjectToItem(t *testing.T) {
 	}
 }
 
+// TestHelpersConcurrency verifies that helper functions are safe for concurrent use.
+// Goroutine lifecycle: goroutines are launched in batches, each sends to a done channel,
+// and the test waits for all goroutines to complete via channel receives before returning.
 func TestHelpersConcurrency(t *testing.T) {
 	t.Parallel()
 
@@ -332,20 +320,18 @@ func TestHelpersConcurrency(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// NO t.Parallel() here - goroutines
 
 			switch tt.name {
 			case "concurrent findProjectByIDOrName":
-				id1 := "proj-1"
-				id2 := "proj-2"
 				projects := []n8nsdk.Project{
-					{Id: &id1, Name: "Project One"},
-					{Id: &id2, Name: "Project Two"},
+					{Id: new("proj-1"), Name: "Project One"},
+					{Id: new("proj-2"), Name: "Project Two"},
 				}
 				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
+				for i := range 100 {
+					//: Goroutine terminates after sending result to done channel.
 					go func(i int) {
 						if i%2 == 0 {
 							found, ok := findProjectByIDOrName(projects, types.StringValue("proj-1"), types.StringNull())
@@ -359,22 +345,20 @@ func TestHelpersConcurrency(t *testing.T) {
 						done <- true
 					}(i)
 				}
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					<-done
 				}
 
 			case "concurrent mapProjectToItem":
-				id := "proj-concurrent"
-				projectType := "team"
-				icon := "🔄"
 				project := &n8nsdk.Project{
-					Id:   &id,
+					Id:   new("proj-concurrent"),
 					Name: "Concurrent Project",
-					Type: &projectType,
-					Icon: *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
+					Type: new("team"),
+					Icon: *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: new("🔄")}),
 				}
 				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
+				for range 100 {
+					//: Goroutine terminates after sending result to done channel.
 					go func() {
 						item := mapProjectToItem(project)
 						assert.Equal(t, "proj-concurrent", item.ID.ValueString())
@@ -384,14 +368,15 @@ func TestHelpersConcurrency(t *testing.T) {
 						done <- true
 					}()
 				}
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					<-done
 				}
 
 			case "error case - concurrent validation":
 				projects := []n8nsdk.Project{}
 				done := make(chan bool, 10)
-				for i := 0; i < 10; i++ {
+				for range 10 {
+					//: Goroutine terminates after sending result to done channel.
 					go func() {
 						found, ok := findProjectByIDOrName(projects, types.StringNull(), types.StringNull())
 						assert.False(t, ok)
@@ -399,7 +384,7 @@ func TestHelpersConcurrency(t *testing.T) {
 						done <- true
 					}()
 				}
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					<-done
 				}
 			}
@@ -408,54 +393,136 @@ func TestHelpersConcurrency(t *testing.T) {
 }
 
 func BenchmarkFindProjectByIDOrName(b *testing.B) {
-	id1 := "proj-1"
-	id2 := "proj-2"
-	id3 := "proj-3"
 	projects := []n8nsdk.Project{
-		{Id: &id1, Name: "Project One"},
-		{Id: &id2, Name: "Project Two"},
-		{Id: &id3, Name: "Project Three"},
+		{Id: new("proj-1"), Name: "Project One"},
+		{Id: new("proj-2"), Name: "Project Two"},
+		{Id: new("proj-3"), Name: "Project Three"},
 	}
 
 	b.Run("find by ID", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, _ = findProjectByIDOrName(projects, types.StringValue("proj-2"), types.StringNull())
 		}
 	})
 
 	b.Run("find by name", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, _ = findProjectByIDOrName(projects, types.StringNull(), types.StringValue("Project Two"))
 		}
 	})
 
 	b.Run("not found", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, _ = findProjectByIDOrName(projects, types.StringValue("proj-999"), types.StringNull())
 		}
 	})
 }
 
 func BenchmarkMapProjectToItem(b *testing.B) {
-	id := "proj-bench"
-	projectType := "team"
-	createdAt := time.Now()
-	updatedAt := time.Now()
-	icon := "📊"
-	description := "Benchmark description"
 
 	project := &n8nsdk.Project{
-		Id:          &id,
+		Id:          new("proj-bench"),
 		Name:        "Benchmark Project",
-		Type:        &projectType,
-		CreatedAt:   &createdAt,
-		UpdatedAt:   &updatedAt,
-		Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: &icon}),
-		Description: *n8nsdk.NewNullableString(&description),
+		Type:        new("team"),
+		CreatedAt:   new(time.Now()),
+		UpdatedAt:   new(time.Now()),
+		Icon:        *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: new("📊")}),
+		Description: *n8nsdk.NewNullableString(new("Benchmark description")),
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = mapProjectToItem(project)
+	for b.Loop() {
+		mapProjectToItem(project)
+	}
+}
+
+// TestExtractIconValue verifies the extractIconValue helper function.
+func TestExtractIconValue(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		icon       n8nsdk.NullableProjectIcon
+		expectNull bool
+		expectVal  string
+	}{
+		{
+			name:       "set icon with value",
+			icon:       *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: new("🚀")}),
+			expectNull: false,
+			expectVal:  "🚀",
+		},
+		{
+			name:       "set icon with nil value",
+			icon:       *n8nsdk.NewNullableProjectIcon(&n8nsdk.ProjectIcon{Value: nil}),
+			expectNull: true,
+		},
+		{
+			name:       "nil icon",
+			icon:       *n8nsdk.NewNullableProjectIcon(nil),
+			expectNull: true,
+		},
+		{
+			name:       "error case - unset icon",
+			icon:       n8nsdk.NullableProjectIcon{},
+			expectNull: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := extractIconValue(tt.icon)
+
+			if tt.expectNull {
+				assert.True(t, result.IsNull(), "expected null result")
+			} else {
+				assert.Equal(t, tt.expectVal, result.ValueString())
+			}
+		})
+	}
+}
+
+// TestExtractDescriptionValue verifies the extractDescriptionValue helper function.
+func TestExtractDescriptionValue(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		desc       n8nsdk.NullableString
+		expectNull bool
+		expectVal  string
+	}{
+		{
+			name:       "set description",
+			desc:       *n8nsdk.NewNullableString(new("My project description")),
+			expectNull: false,
+			expectVal:  "My project description",
+		},
+		{
+			name:       "nil description",
+			desc:       *n8nsdk.NewNullableString(nil),
+			expectNull: true,
+		},
+		{
+			name:       "error case - unset description",
+			desc:       n8nsdk.NullableString{},
+			expectNull: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := extractDescriptionValue(tt.desc)
+
+			if tt.expectNull {
+				assert.True(t, result.IsNull(), "expected null result")
+			} else {
+				assert.Equal(t, tt.expectVal, result.ValueString())
+			}
+		})
 	}
 }

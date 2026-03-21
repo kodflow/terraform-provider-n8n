@@ -13,6 +13,8 @@ import (
 
 // TestExecute tests the public Execute function behavior.
 func TestExecute(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -45,6 +47,8 @@ func TestExecute(t *testing.T) {
 
 // TestSetVersion tests the public SetVersion function behavior.
 func TestSetVersion(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		version string
@@ -62,7 +66,6 @@ func TestSetVersion(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// SetVersion is a public function and should accept various version formats
 			assert.NotPanics(t, func() {
@@ -74,6 +77,8 @@ func TestSetVersion(t *testing.T) {
 
 // TestSetVersionConcurrent tests concurrent calls to SetVersion.
 func TestSetVersionConcurrent(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -89,10 +94,10 @@ func TestSetVersionConcurrent(t *testing.T) {
 				}
 
 				for i := range versions {
-					wg.Add(1)
-					go func(v string) {
-						defer wg.Done()
-						cmd.SetVersion(v)
+					func(ver string) {
+						wg.Go(func() {
+							cmd.SetVersion(ver)
+						})
 					}(versions[i])
 				}
 
@@ -107,11 +112,11 @@ func TestSetVersionConcurrent(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				var wg sync.WaitGroup
-				for i := 0; i < 50; i++ {
-					wg.Add(1)
-					go func(v int) {
-						defer wg.Done()
-						cmd.SetVersion(fmt.Sprintf("v%d", v))
+				for i := range 50 {
+					func(n int) {
+						wg.Go(func() {
+							cmd.SetVersion(fmt.Sprintf("v%d", n))
+						})
 					}(i)
 				}
 				wg.Wait()
@@ -146,7 +151,6 @@ func TestSetVersionVariousFormats(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -159,6 +163,8 @@ func TestSetVersionVariousFormats(t *testing.T) {
 
 // TestExecuteOutput tests that Execute produces output.
 func TestExecuteOutput(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)

@@ -8,18 +8,20 @@
 package shared
 
 // Ptr returns a pointer to the given value.
-// This is a generic function that works with any type.
+// This is a generic function that works with any comparable type.
 //
 // Params:
-//   - v: value of any type to convert to pointer
+//   - v: value of any comparable type to convert to pointer
 //
 // Returns:
-//   - *T: pointer to the value
+//   - ptr: pointer to the value
 //
 //go:inline
-func Ptr[T any](v T) *T {
-	// Return pointer to value.
-	return &v
+//go:fix inline
+//go:fix inline
+func Ptr[T comparable](v T) (ptr *T) {
+	//: Return pointer to value.
+	return new(v)
 }
 
 // String returns a pointer to the given string.
@@ -28,12 +30,14 @@ func Ptr[T any](v T) *T {
 //   - s: string value to convert to pointer
 //
 // Returns:
-//   - *string: pointer to the string
+//   - ptr: pointer to the string
 //
 //go:inline
-func String(s string) *string {
-	// Return pointer to string.
-	return &s
+//go:fix inline
+//go:fix inline
+func String(s string) (ptr *string) {
+	//: Return pointer to string.
+	return new(s)
 }
 
 // Bool returns a pointer to the given bool.
@@ -42,12 +46,14 @@ func String(s string) *string {
 //   - b: bool value to convert to pointer
 //
 // Returns:
-//   - *bool: pointer to the bool
+//   - ptr: pointer to the bool
 //
 //go:inline
-func Bool(b bool) *bool {
-	// Return pointer to bool.
-	return &b
+//go:fix inline
+//go:fix inline
+func Bool(b bool) (ptr *bool) {
+	//: Return pointer to bool.
+	return new(b)
 }
 
 // Int returns a pointer to the given int.
@@ -56,12 +62,14 @@ func Bool(b bool) *bool {
 //   - i: int value to convert to pointer
 //
 // Returns:
-//   - *int: pointer to the int
+//   - ptr: pointer to the int
 //
 //go:inline
-func Int(i int) *int {
-	// Return pointer to int.
-	return &i
+//go:fix inline
+//go:fix inline
+func Int(i int) (ptr *int) {
+	//: Return pointer to int.
+	return new(i)
 }
 
 // Int32 returns a pointer to the given int32.
@@ -70,12 +78,14 @@ func Int(i int) *int {
 //   - i: int32 value to convert to pointer
 //
 // Returns:
-//   - *int32: pointer to the int32
+//   - ptr: pointer to the int32
 //
 //go:inline
-func Int32(i int32) *int32 {
-	// Return pointer to int32.
-	return &i
+//go:fix inline
+//go:fix inline
+func Int32(i int32) (ptr *int32) {
+	//: Return pointer to int32.
+	return new(i)
 }
 
 // Float32 returns a pointer to the given float32.
@@ -84,10 +94,12 @@ func Int32(i int32) *int32 {
 //   - f: float32 value to convert to pointer
 //
 // Returns:
-//   - *float32: pointer to the float32
+//   - ptr: pointer to the float32
 //
 //go:inline
-func Float32(f float32) *float32 {
-	// Return pointer to float32.
-	return &f
+//go:fix inline
+//go:fix inline
+func Float32(f float32) (ptr *float32) {
+	//: Return pointer to float32.
+	return new(f)
 }

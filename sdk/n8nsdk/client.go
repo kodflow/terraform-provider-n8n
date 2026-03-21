@@ -53,6 +53,8 @@ type APIClient struct {
 
 	CredentialAPI CredentialAPI
 
+	DataTableAPI DataTableAPI
+
 	ExecutionAPI ExecutionAPI
 
 	ProjectsAPI ProjectsAPI
@@ -86,6 +88,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	// API Services
 	c.AuditAPI = (*AuditAPIService)(&c.common)
 	c.CredentialAPI = (*CredentialAPIService)(&c.common)
+	c.DataTableAPI = (*DataTableAPIService)(&c.common)
 	c.ExecutionAPI = (*ExecutionAPIService)(&c.common)
 	c.ProjectsAPI = (*ProjectsAPIService)(&c.common)
 	c.SourceControlAPI = (*SourceControlAPIService)(&c.common)

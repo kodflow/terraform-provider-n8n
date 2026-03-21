@@ -8,6 +8,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -109,6 +111,61 @@ func Test_getEnvBaseURL(t *testing.T) {
 			result := getEnvBaseURL()
 
 			assert.Equal(t, tt.want, result)
+		})
+	}
+}
+
+// TestN8nProvider_resolveCredentials tests the resolveCredentials method of N8nProvider.
+func TestN8nProvider_resolveCredentials(t *testing.T) {
+	tests := []struct {
+		name    string
+		apiKey  string
+		baseURL string
+		envKey  string
+		envURL  string
+		wantKey string
+		wantURL string
+	}{
+		{
+			name:    "uses config values when set",
+			apiKey:  "config-key",
+			baseURL: "http://config-url",
+			wantKey: "config-key",
+			wantURL: "http://config-url",
+		},
+		{
+			name:    "falls back to env when config empty",
+			apiKey:  "",
+			baseURL: "",
+			envKey:  "env-key",
+			envURL:  "http://env-url",
+			wantKey: "env-key",
+			wantURL: "http://env-url",
+		},
+		{
+			name:    "error case - empty when neither config nor env set",
+			apiKey:  "",
+			baseURL: "",
+			envKey:  "",
+			envURL:  "",
+			wantKey: "",
+			wantURL: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("N8N_API_KEY", tt.envKey)
+			t.Setenv("N8N_API_URL", tt.envURL)
+
+			p := &N8nProvider{}
+			config := &models.N8nProviderModel{}
+			config.APIKey = types.StringValue(tt.apiKey)
+			config.BaseURL = types.StringValue(tt.baseURL)
+
+			apiKey, baseURL := p.resolveCredentials(config)
+			assert.Equal(t, tt.wantKey, apiKey)
+			assert.Equal(t, tt.wantURL, baseURL)
 		})
 	}
 }

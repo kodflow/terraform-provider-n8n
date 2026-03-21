@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,8 +18,8 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/workflow/models"
 )
 
-// WORKFLOW_ATTRIBUTES_SIZE defines the initial capacity for workflow attributes map.
-const WORKFLOW_ATTRIBUTES_SIZE int = 15
+// WorkflowAttributesSize defines the initial capacity for workflow attributes map.
+const WorkflowAttributesSize int = 15
 
 // Ensure WorkflowResource implements required interfaces.
 var (
@@ -30,16 +29,7 @@ var (
 	_ resource.ResourceWithImportState = &WorkflowResource{}
 )
 
-// WorkflowResource defines the resource implementation for n8n workflows.
-// Terraform resource that manages CRUD operations for n8n workflows via the n8n API.
-//
-// Params:
-//   - client: The n8n API client for communicating with n8n server
-//
-// Returns:
-//   - None: This is a struct, not a function
-//
-// WorkflowResourceInterface defines the interface for WorkflowResource.
+// WorkflowResourceInterface defines the complete interface for workflow resources.
 type WorkflowResourceInterface interface {
 	resource.Resource
 	Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse)
@@ -64,8 +54,8 @@ type WorkflowResource struct {
 //
 // Returns:
 //   - resource.Resource: A new WorkflowResource instance
-func NewWorkflowResource() *WorkflowResource {
-	// Return result.
+func NewWorkflowResource() (workflowResource *WorkflowResource) {
+	//: Return result.
 	return &WorkflowResource{}
 }
 
@@ -74,8 +64,8 @@ func NewWorkflowResource() *WorkflowResource {
 //
 // Returns:
 //   - resource.Resource: the wrapped WorkflowResource instance
-func NewWorkflowResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+func NewWorkflowResourceWrapper() (r resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewWorkflowResource()
 }
 
@@ -88,7 +78,12 @@ func NewWorkflowResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - None: Updates resp in-place
-func (r *WorkflowResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *WorkflowResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_workflow"
 }
 
@@ -96,12 +91,20 @@ func (r *WorkflowResource) Metadata(_ctx context.Context, req resource.MetadataR
 //
 // Params:
 //   - ctx: Context for the operation
-//   - req: Schema request
+//   - req: Schema request (unused by framework convention)
 //   - resp: Schema response to populate with resource schema
 //
 // Returns:
 //   - None: Updates resp in-place
-func (r *WorkflowResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *WorkflowResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Acknowledge empty schema request carried by framework convention.
+	schemaReq := req
+	_ = schemaReq
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n workflow resource using generated SDK",
 		Attributes:          r.schemaAttributes(),
@@ -112,14 +115,14 @@ func (r *WorkflowResource) Schema(_ctx context.Context, _req resource.SchemaRequ
 //
 // Returns:
 //   - map[string]schema.Attribute: the resource attribute definitions
-func (r *WorkflowResource) schemaAttributes() map[string]schema.Attribute {
-	attrs := make(map[string]schema.Attribute, WORKFLOW_ATTRIBUTES_SIZE)
+func (r *WorkflowResource) schemaAttributes() (m map[string]schema.Attribute) {
+	attrs := make(map[string]schema.Attribute, WorkflowAttributesSize)
 
 	r.addCoreAttributes(attrs)
 	r.addJSONAttributes(attrs)
 	r.addMetadataAttributes(attrs)
 
-	// Return schema attributes.
+	//: Return schema attributes.
 	return attrs
 }
 
@@ -221,21 +224,27 @@ func (r *WorkflowResource) addMetadataAttributes(attrs map[string]schema.Attribu
 //
 // Returns:
 //   - None: Updates resource in-place, populates resp with errors if any
-func (r *WorkflowResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
+func (r *WorkflowResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check provider data type.
+	//: Check provider data type.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -255,19 +264,19 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check for plan parsing errors.
+	//: Check for plan parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute create logic
+	//: Execute create logic.
 	if !r.executeCreateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Save data into Terraform state.
+	//: Save data into Terraform state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -281,16 +290,16 @@ func (r *WorkflowResource) Create(ctx context.Context, req resource.CreateReques
 //
 // Returns:
 //   - bool: True if creation succeeded, false otherwise
-func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
-	// Parse JSON fields.
+func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (ok bool) {
+	//: Parse JSON fields.
 	nodes, connections, settings := parseWorkflowJSON(plan, &resp.Diagnostics)
-	// Check for JSON parsing errors.
+	//: Check for JSON parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Create workflow (Note: active field is read-only during creation)
+	//: Create workflow (Note: active field is read-only during creation).
 	workflowRequest := n8nsdk.Workflow{
 		Name:        plan.Name.ValueString(),
 		Nodes:       nodes,
@@ -299,23 +308,25 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 	}
 
 	workflow := r.createWorkflowViaAPI(ctx, workflowRequest, &resp.Diagnostics)
-	// Check for API error
+	//: Check for API error.
 	if resp.Diagnostics.HasError() {
+		//: Return failure.
 		return false
 	}
 
-	// Handle post-creation operations (ID, tags, project, activation)
+	//: Handle post-creation operations (ID, tags, project, activation).
 	workflow = r.handlePostCreation(ctx, workflow, plan, &resp.Diagnostics)
-	// Check for post-creation errors
+	//: Check for post-creation errors.
 	if resp.Diagnostics.HasError() || workflow == nil {
+		//: Return failure.
 		return false
 	}
 
-	// Map workflow state to model.
-	// Note: plan.Active retains value from plan or activation result.
+	//: Map workflow state to model.
+	//: Note: plan.Active retains value from plan or activation result.
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -329,44 +340,43 @@ func (r *WorkflowResource) executeCreateLogic(ctx context.Context, plan *models.
 //
 // Returns:
 //   - bool: true if successful or activation not needed, false on error
-func (r *WorkflowResource) handlePostCreationActivation(ctx context.Context, plan *models.Resource, workflow *n8nsdk.Workflow, diags *diag.Diagnostics) bool {
-	// Check if user wants workflow activated
+func (r *WorkflowResource) handlePostCreationActivation(ctx context.Context, plan *models.Resource, workflow *n8nsdk.Workflow, diags diagnostics) (ok bool) {
+	//: Check if user wants workflow activated.
 	wantsActive := !plan.Active.IsNull() && !plan.Active.IsUnknown() && plan.Active.ValueBool()
-	// Activation not requested
+	//: Activation not requested.
 	if !wantsActive {
-		// Return success
+		//: Return success.
 		return true
 	}
 
-	// Check workflow has nodes before activation
+	//: Check workflow has nodes before activation.
 	hasNodes := len(workflow.Nodes) > 0
-	// Cannot activate workflow without nodes
+	//: Cannot activate workflow without nodes.
 	if !hasNodes {
 		diags.AddError(
 			"Cannot activate empty workflow",
 			"Cannot create workflow with active=true because it has no nodes. Either set active=false or add at least one node (trigger, poller, or webhook) to the workflow before activating.",
 		)
-		// Return failure
+		//: Return failure.
 		return false
 	}
 
-	// Prepare state for activation
+	//: Prepare state for activation.
 	currentState := &models.Resource{
 		ID:     plan.ID,
 		Active: types.BoolPointerValue(workflow.Active),
 	}
 
-	// Activate the workflow
+	//: Activate the workflow.
 	r.handleWorkflowActivation(ctx, plan, currentState, diags)
 
-	// Update workflow object to reflect successful activation
-	// This ensures mapWorkflowToModel will use the correct active status
+	//: Update workflow object to reflect successful activation.
+	//: This ensures mapWorkflowToModel will use the correct active status.
 	if !diags.HasError() {
-		activated := true
-		workflow.Active = &activated
+		workflow.Active = new(true)
 	}
 
-	// Return success if no errors occurred
+	//: Return success if no errors occurred.
 	return !diags.HasError()
 }
 
@@ -383,19 +393,19 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check for state parsing errors.
+	//: Check for state parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute read logic
+	//: Execute read logic.
 	if !r.executeReadLogic(ctx, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Save updated data into Terraform state.
+	//: Save updated data into Terraform state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -409,29 +419,34 @@ func (r *WorkflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 //
 // Returns:
 //   - bool: True if read succeeded, false otherwise
-func (r *WorkflowResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
-	// Get workflow from SDK.
+func (r *WorkflowResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) (ok bool) {
+	//: Get workflow from SDK.
 	workflow, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdGet(ctx, state.ID.ValueString()).Execute()
 
-	// Check for non-nil HTTP response.
+	//: Check for non-nil HTTP response.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for API error.
+	//: Check for API error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading workflow",
 			fmt.Sprintf("Could not read workflow ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Map response to state.
+	//: Map response to state.
 	mapWorkflowToModel(ctx, workflow, state, &resp.Diagnostics)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -447,22 +462,22 @@ func (r *WorkflowResource) executeReadLogic(ctx context.Context, state *models.R
 func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state *models.Resource
 
-	// Read Terraform plan and state data.
+	//: Read Terraform plan and state data.
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check for plan/state parsing errors.
+	//: Check for plan/state parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute update logic
+	//: Execute update logic.
 	if !r.executeUpdateLogic(ctx, plan, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Save updated data into Terraform state.
+	//: Save updated data into Terraform state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -477,24 +492,25 @@ func (r *WorkflowResource) Update(ctx context.Context, req resource.UpdateReques
 //
 // Returns:
 //   - bool: True if update succeeded, false otherwise
-func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	// Use state.ID for the workflow ID and copy to plan.
+func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) (ok bool) {
+	//: Use state.ID for the workflow ID and copy to plan.
 	workflowID := state.ID.ValueString()
 	plan.ID = state.ID
 
-	// Execute all update operations in sequence.
+	//: Execute all update operations in sequence.
 	workflow := r.performUpdateOperations(ctx, workflowID, plan, state, &resp.Diagnostics)
-	// Check for any errors during update operations.
+	//: Check for any errors during update operations.
 	if resp.Diagnostics.HasError() {
+		//: Return failure.
 		return false
 	}
 
-	// Finalize state by mapping response and applying fallbacks.
+	//: Finalize state by mapping response and applying fallbacks.
 	applyTimestampFallbacks(plan, state)
 	mapWorkflowToModel(ctx, workflow, plan, &resp.Diagnostics)
 	preserveProjectIDOnUpdate(plan, state)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -509,50 +525,91 @@ func (r *WorkflowResource) executeUpdateLogic(ctx context.Context, plan, state *
 //
 // Returns:
 //   - *n8nsdk.Workflow: The updated workflow or nil on error
-func (r *WorkflowResource) performUpdateOperations(ctx context.Context, workflowID string, plan, state *models.Resource, diags *diag.Diagnostics) *n8nsdk.Workflow {
-	// Parse JSON fields.
+func (r *WorkflowResource) performUpdateOperations(ctx context.Context, workflowID string, plan, state *models.Resource, diags diagnostics) (result *n8nsdk.Workflow) {
+	//: Parse JSON fields.
 	nodes, connections, settings := parseWorkflowJSON(plan, diags)
-	// Check for JSON parsing errors.
+	//: Check for JSON parsing errors.
 	if diags.HasError() {
+		//: Return nil on error.
 		return nil
 	}
 
-	// Handle activation change.
+	//: Handle activation change.
 	r.handleWorkflowActivation(ctx, plan, state, diags)
-	// Check for activation errors.
+	//: Check for activation errors.
 	if diags.HasError() {
+		//: Return nil on error.
 		return nil
 	}
 
-	// Update workflow content via API.
-	workflow := r.updateWorkflowViaAPI(ctx, workflowID, n8nsdk.Workflow{
+	//: Update workflow content and tags via API.
+	workflow := r.updateWorkflowAndTags(ctx, workflowID, plan, &workflowContent{
 		Name: plan.Name.ValueString(), Nodes: nodes, Connections: connections, Settings: settings,
 	}, diags)
-	// Check for API error.
+	//: Check for update errors.
 	if diags.HasError() {
+		//: Return nil on error.
 		return nil
 	}
 
-	// Update tags.
+	//: Apply project transfer if needed.
+	return r.applyProjectTransferIfNeeded(ctx, workflowID, workflow, plan, state, diags)
+}
+
+// updateWorkflowAndTags updates the workflow content and then its tags.
+//
+// Params:
+//   - ctx: Context for the request
+//   - workflowID: The workflow identifier
+//   - plan: The planned resource data
+//   - wc: The parsed workflow content (name, nodes, connections, settings)
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: The updated workflow or nil on error
+func (r *WorkflowResource) updateWorkflowAndTags(ctx context.Context, workflowID string, plan *models.Resource, wc *workflowContent, diags diagnostics) (result *n8nsdk.Workflow) {
+	//: Update workflow content via API.
+	workflow := r.updateWorkflowViaAPI(ctx, workflowID, n8nsdk.Workflow{
+		Name: wc.Name, Nodes: wc.Nodes, Connections: wc.Connections, Settings: wc.Settings,
+	}, diags)
+	//: Check for API error.
+	if diags.HasError() {
+		//: Return nil on error.
+		return nil
+	}
+
+	//: Update tags.
 	r.updateWorkflowTags(ctx, workflowID, plan, workflow, diags)
-	// Check for tag update errors.
-	if diags.HasError() {
-		return nil
-	}
+	//: Return workflow.
+	return workflow
+}
 
-	// Handle project transfer if project_id changed to a valid value.
+// applyProjectTransferIfNeeded transfers the workflow to a new project if project_id changed.
+//
+// Params:
+//   - ctx: Context for the request
+//   - workflowID: The workflow identifier
+//   - workflow: The current workflow
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - *n8nsdk.Workflow: The updated workflow after optional project transfer
+func (r *WorkflowResource) applyProjectTransferIfNeeded(ctx context.Context, workflowID string, workflow *n8nsdk.Workflow, plan, state *models.Resource, diags diagnostics) (result *n8nsdk.Workflow) {
+	//: Check if project transfer is needed.
 	needsTransfer := !plan.ProjectID.Equal(state.ProjectID) && !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown()
-	// Transfer workflow to new project if needed.
+	//: Transfer workflow to new project if needed.
 	if needsTransfer {
 		updated := r.handleProjectAssignment(ctx, workflowID, plan.ProjectID.ValueString(), diags)
-		// Check if project assignment returned updated workflow.
+		//: Check if project assignment returned updated workflow.
 		if updated != nil {
-			// Return updated workflow from project assignment.
+			//: Return updated workflow from project assignment.
 			return updated
 		}
 	}
 
-	// Return current workflow.
+	//: Return current workflow.
 	return workflow
 }
 
@@ -562,11 +619,11 @@ func (r *WorkflowResource) performUpdateOperations(ctx context.Context, workflow
 //   - plan: The planned resource state
 //   - state: The current resource state
 func applyTimestampFallbacks(plan, state *models.Resource) {
-	// Fall back to state created_at when plan value is unknown or null.
+	//: Fall back to state created_at when plan value is unknown or null.
 	if plan.CreatedAt.IsUnknown() || plan.CreatedAt.IsNull() {
 		plan.CreatedAt = state.CreatedAt
 	}
-	// Fall back to state updated_at when plan value is unknown or null.
+	//: Fall back to state updated_at when plan value is unknown or null.
 	if plan.UpdatedAt.IsUnknown() || plan.UpdatedAt.IsNull() {
 		plan.UpdatedAt = state.UpdatedAt
 	}
@@ -584,15 +641,15 @@ func applyTimestampFallbacks(plan, state *models.Resource) {
 func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state *models.Resource
 
-	// Read Terraform prior state data into the model.
+	//: Read Terraform prior state data into the model.
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check for state parsing errors.
+	//: Check for state parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute delete logic
+	//: Execute delete logic.
 	r.executeDeleteLogic(ctx, state, resp)
 }
 
@@ -606,25 +663,30 @@ func (r *WorkflowResource) Delete(ctx context.Context, req resource.DeleteReques
 //
 // Returns:
 //   - bool: True if delete succeeded, false otherwise
-func (r *WorkflowResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
-	// Delete workflow using SDK.
+func (r *WorkflowResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) (ok bool) {
+	//: Delete workflow using SDK.
 	_, httpResp, err := r.client.APIClient.WorkflowAPI.WorkflowsIdDelete(ctx, state.ID.ValueString()).Execute()
-	// Check for non-nil HTTP response.
+	//: Check for non-nil HTTP response.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for API error.
+	//: Check for API error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting workflow",
 			fmt.Sprintf("Could not delete workflow ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 

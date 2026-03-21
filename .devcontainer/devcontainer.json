@@ -3,32 +3,30 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
-  // Mount GPG configuration from host (readonly - keys created by init.sh on host)
-  "mounts": ["source=${localEnv:HOME}/.config/devcontainer-gpg,target=/host-gpg,type=bind,readonly"],
-  // Initialize command runs on host BEFORE container build
-  "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/init.sh",
-  // Features
+  // Features - additional languages (tools are already in base image)
   "features": {
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/aws-cli:1": {
-      "version": "latest"
-    },
+    // ========== LANGUAGES ==========
+    // Node.js enabled by default (required for MCP servers)
+    "./features/languages/nodejs": {},
+    // Go enabled for this Terraform provider project
+    "./features/languages/go": {},
+    // ========== KUBERNETES ==========
+    // Local Kubernetes development with kind (requires docker-outside-of-docker)
+    "./features/kubernetes": {},
+    // ========== INFRASTRUCTURE ==========
+    // Infra tools: terragrunt, tflint, infracost, cfssl, ansible-lint, molecule
+    "./features/infrastructure": {},
+    // ========== TERRAFORM CLI ==========
+    // Terraform CLI (required for provider development)
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "latest"
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers-community/features/bazel:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers-community/npm-features/prettier:1": {
-      "version": "latest"
+    // ========== EXTERNAL ==========
+    // Docker support
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false,
+      "installDockerBuildx": true,
+      "dockerDashComposeVersion": "v2"
     }
   },
   // Configure tool-specific properties
@@ -45,6 +43,11 @@
         "files.eol": "\n",
         "files.insertFinalNewline": true,
         "files.trimTrailingWhitespace": true,
+        "files.exclude": {
+          "**/.grepai": true,
+          "**/.git": true
+        },
+        // Go-specific settings
         "[go]": {
           "editor.formatOnSave": true,
           "editor.codeActionsOnSave": {
@@ -54,29 +57,39 @@
         "go.toolsManagement.autoUpdate": true,
         "go.lintTool": "golangci-lint",
         "go.lintOnSave": "package",
-        "bazel.buildifierExecutable": "/home/vscode/.local/bin/buildifier",
+        // Bazel settings
+        "bazel.buildifierExecutable": "/home/vscode/.cache/go/bin/buildifier",
         "bazel.enableCodeLens": true
       },
       "extensions": [
-        "usernamehw.errorlens", // Affichage inline des erreurs et warnings
-        "vscode-icons-team.vscode-icons", // Icônes pour les fichiers et dossiers
-        "redhat.vscode-yaml", // Support YAML
-        "tamasfe.even-better-toml", // Support TOML
-        "golang.go", // Support Go officiel
-        "hashicorp.terraform", // Support Terraform
-        "bazelbuild.vscode-bazel", // Support Bazel
-        "emeraldwalk.runonsave" // Exécute golangci-lint et ktn-linter à chaque sauvegarde
+        // Base extensions (from template)
+        "vscode-icons-team.vscode-icons",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml",
+        "bierner.markdown-mermaid",
+        "ms-azuretools.vscode-docker",
+        "hashicorp.terraform",
+        // Project-specific extensions
+        "usernamehw.errorlens",
+        "golang.go",
+        "bazelbuild.vscode-bazel",
+        "emeraldwalk.runonsave"
       ]
     }
   },
-  // Post-create command (runs once after container creation)
-  "postCreateCommand": "chmod +x /workspace/.devcontainer/*.sh 2>/dev/null || true && /workspace/.devcontainer/setup-gpg.sh && /workspace/.devcontainer/post-create.sh",
-  // Post-start command (runs every time the container starts)
-  "postStartCommand": "/workspace/.devcontainer/post-start.sh",
-  // Forward ports
+  // ========== LIFECYCLE COMMANDS ==========
+  // All commands check for script existence to avoid failures if scripts are missing
+  "waitFor": "postCreateCommand",
+  "initializeCommand": "[ -f \"${localWorkspaceFolder}/.devcontainer/hooks/lifecycle/initialize.sh\" ] && bash \"${localWorkspaceFolder}/.devcontainer/hooks/lifecycle/initialize.sh\" || true",
+  "onCreateCommand": {
+    "chmod-hooks": "chmod +x /workspace/.devcontainer/hooks/lifecycle/*.sh 2>/dev/null || true",
+    "run-hook": "[ -f /workspace/.devcontainer/hooks/lifecycle/onCreate.sh ] && /workspace/.devcontainer/hooks/lifecycle/onCreate.sh || true"
+  },
+  "updateContentCommand": "[ -f /workspace/.devcontainer/hooks/lifecycle/updateContent.sh ] && /workspace/.devcontainer/hooks/lifecycle/updateContent.sh || true",
+  "postCreateCommand": "[ -f /workspace/.devcontainer/hooks/lifecycle/postCreate.sh ] && /workspace/.devcontainer/hooks/lifecycle/postCreate.sh || true",
+  "postStartCommand": "[ -f /workspace/.devcontainer/hooks/lifecycle/postStart.sh ] && /workspace/.devcontainer/hooks/lifecycle/postStart.sh || true",
+  "postAttachCommand": "[ -f /workspace/.devcontainer/hooks/lifecycle/postAttach.sh ] && /workspace/.devcontainer/hooks/lifecycle/postAttach.sh || true",
   "forwardPorts": [],
-  // Run as user
   "remoteUser": "vscode",
-  // Shutdown action
   "shutdownAction": "none"
 }

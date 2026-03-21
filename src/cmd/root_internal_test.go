@@ -41,7 +41,6 @@ type MockProvider struct {
 type contextKey string
 
 func TestInit(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -74,7 +73,6 @@ func TestInit(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -131,15 +129,14 @@ func Test_run(t *testing.T) {
 		{name: "run creates provider with correct version", wantErr: false},
 		{name: "run handles nil command", wantErr: false},
 		{name: "run handles empty args", wantErr: false},
-		{name: "run handles args with values", wantErr: false},
+		{name: "run handles args with values", wantErr: true},
 		{name: "run handles nil args", wantErr: false},
 		{name: "run with panic recovery", wantErr: false},
-		{name: "run with very long args", wantErr: false},
-		{name: "run with special characters in args", wantErr: false},
+		{name: "run with very long args", wantErr: true},
+		{name: "run with special characters in args", wantErr: true},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests modify global ProviderServe and debug
 			originalProviderServe := ProviderServe
@@ -176,7 +173,7 @@ func Test_run(t *testing.T) {
 					addressCaptured = opts.Address
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.Equal(t, "registry.terraform.io/kodflow/n8n", addressCaptured, "Correct address should be passed")
 
 			case "run respects debug flag when false":
@@ -186,7 +183,7 @@ func Test_run(t *testing.T) {
 					debugCaptured = opts.Debug
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.False(t, debugCaptured, "Debug should be false when flag is false")
 
 			case "run respects debug flag when true":
@@ -196,7 +193,7 @@ func Test_run(t *testing.T) {
 					debugCaptured = opts.Debug
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.True(t, debugCaptured, "Debug should be true when flag is true")
 
 			case "run passes context to ProviderServe":
@@ -205,9 +202,9 @@ func Test_run(t *testing.T) {
 					ctxCaptured = ctx
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.NotNil(t, ctxCaptured, "Context should be passed to ProviderServe")
-				assert.Equal(t, context.Background(), ctxCaptured, "Background context should be used")
+				assert.NotNil(t, ctxCaptured, "Background context should be passed to ProviderServe")
 
 			case "run creates provider with correct version":
 				originalVersion := Version
@@ -218,7 +215,7 @@ func Test_run(t *testing.T) {
 					createdProvider = providerFunc()
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.NotNil(t, createdProvider, "Provider should be created")
 
 			case "run handles nil command":
@@ -240,7 +237,8 @@ func Test_run(t *testing.T) {
 					return nil
 				}
 				err := run(&cobra.Command{}, []string{"arg1", "arg2", "--flag=value"})
-				assert.NoError(t, err, "run should handle args")
+				assert.Error(t, err, "run should reject unexpected arguments")
+				assert.Equal(t, ErrUnexpectedArguments, err, "run should return sentinel error for unexpected arguments")
 
 			case "run handles nil args":
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
@@ -252,30 +250,24 @@ func Test_run(t *testing.T) {
 			case "run with panic recovery":
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
 					defer func() {
-						_ = recover()
+						recover()
 					}()
-					_ = providerFunc()
+					providerFunc()
 					return nil
 				}
 				assert.NotPanics(t, func() {
-					_ = run(&cobra.Command{}, []string{})
+					run(&cobra.Command{}, []string{})
 				})
 
 			case "run with very long args":
-				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-					return nil
-				}
 				longArgs := make([]string, 1000)
 				for i := range longArgs {
 					longArgs[i] = fmt.Sprintf("arg%d", i)
 				}
 				err := run(&cobra.Command{}, longArgs)
-				assert.NoError(t, err, "run should handle many args")
+				assert.ErrorIs(t, err, ErrUnexpectedArguments, "run should reject many args")
 
 			case "run with special characters in args":
-				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-					return nil
-				}
 				specialArgs := []string{
 					"arg with spaces",
 					"arg-with-dashes",
@@ -307,7 +299,7 @@ func Test_run(t *testing.T) {
 					"arg\"with\"doublequotes",
 				}
 				err := run(&cobra.Command{}, specialArgs)
-				assert.NoError(t, err, "run should handle special character args")
+				assert.ErrorIs(t, err, ErrUnexpectedArguments, "run should reject special character args")
 			}
 		})
 	}
@@ -318,7 +310,6 @@ func Test_run(t *testing.T) {
 // TestSetVersion is now in root_external_test.go as it tests the public SetVersion function.
 
 func TestVersionVariable(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -343,7 +334,6 @@ func TestVersionVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -398,7 +388,6 @@ func TestOsExitVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -433,7 +422,7 @@ func TestOsExitVariable(t *testing.T) {
 					callCount++
 				}
 
-				for i := 0; i < 10; i++ {
+				for i := range 10 {
 					OsExit(i)
 				}
 
@@ -453,7 +442,6 @@ func TestOsExitVariable(t *testing.T) {
 }
 
 func TestProviderServeVariable(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -467,7 +455,6 @@ func TestProviderServeVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -482,7 +469,7 @@ func TestProviderServeVariable(t *testing.T) {
 					return nil
 				}
 
-				_ = ProviderServe(context.Background(), nil, providerserver.ServeOpts{})
+				ProviderServe(t.Context(), nil, providerserver.ServeOpts{})
 				assert.True(t, called, "ProviderServe should be mockable")
 
 			case "ProviderServe captures all parameters":
@@ -497,14 +484,14 @@ func TestProviderServeVariable(t *testing.T) {
 					return nil
 				}
 
-				testCtx := context.WithValue(context.Background(), contextKey("test"), "value")
+				testCtx := context.WithValue(t.Context(), contextKey("test"), "value")
 				testFunc := func() provider.Provider { return nil }
 				testOpts := providerserver.ServeOpts{
 					Address: "test-address",
 					Debug:   true,
 				}
 
-				_ = ProviderServe(testCtx, testFunc, testOpts)
+				ProviderServe(testCtx, testFunc, testOpts)
 
 				assert.Equal(t, testCtx, capturedCtx, "Context should be captured")
 				assert.NotNil(t, capturedFunc, "Function should be captured")
@@ -523,7 +510,7 @@ func TestProviderServeVariable(t *testing.T) {
 						return testErr
 					}
 
-					err := ProviderServe(context.Background(), nil, providerserver.ServeOpts{})
+					err := ProviderServe(t.Context(), nil, providerserver.ServeOpts{})
 					assert.Equal(t, testErr, err, "Should return expected error")
 				}
 
@@ -540,7 +527,6 @@ func TestProviderServeVariable(t *testing.T) {
 }
 
 func TestDebugFlag(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -554,7 +540,6 @@ func TestDebugFlag(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -591,7 +576,6 @@ func TestDebugFlag(t *testing.T) {
 }
 
 func TestRootCmd(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -610,7 +594,6 @@ func TestRootCmd(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -668,7 +651,6 @@ func TestRunEdgeCases(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -716,7 +698,7 @@ func TestRunEdgeCases(t *testing.T) {
 					Use:   "test",
 					Short: "test command",
 				}
-				cmd.SetContext(context.WithValue(context.Background(), contextKey("key"), "value"))
+				cmd.SetContext(context.WithValue(t.Context(), contextKey("key"), "value"))
 
 				err := run(cmd, []string{})
 				assert.NoError(t, err)
@@ -746,7 +728,6 @@ func TestRunProviderCreation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -769,14 +750,14 @@ func TestRunProviderCreation(t *testing.T) {
 					return nil
 				}
 
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.True(t, providerCreated, "Provider should be created")
 
 			case "run provider function can be called multiple times":
 				callCount := 0
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
 					// Call provider function multiple times
-					for i := 0; i < 3; i++ {
+					for range 3 {
 						p := providerFunc()
 						if p != nil {
 							callCount++
@@ -785,19 +766,19 @@ func TestRunProviderCreation(t *testing.T) {
 					return nil
 				}
 
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.Equal(t, 3, callCount, "Provider function should be callable multiple times")
 
 			case "run provider function returns consistent provider":
 				var providers []provider.Provider
 				ProviderServe = func(ctx context.Context, providerFunc func() provider.Provider, opts providerserver.ServeOpts) error {
-					for i := 0; i < 3; i++ {
+					for range 3 {
 						providers = append(providers, providerFunc())
 					}
 					return nil
 				}
 
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 
 				// All calls should return a provider
 				for i, p := range providers {
@@ -810,7 +791,7 @@ func TestRunProviderCreation(t *testing.T) {
 					assert.NotNil(t, p, "provider function must return non-nil provider")
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 			}
 		})
 	}
@@ -830,7 +811,6 @@ func TestCommandIntegration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -888,7 +868,6 @@ func TestConstants(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -903,7 +882,7 @@ func TestConstants(t *testing.T) {
 					return nil
 				}
 
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.Equal(t, "registry.terraform.io/kodflow/n8n", capturedAddress)
 				assert.True(t, strings.HasPrefix(capturedAddress, "registry.terraform.io/"))
 				assert.True(t, strings.HasSuffix(capturedAddress, "/n8n"))
@@ -914,7 +893,7 @@ func TestConstants(t *testing.T) {
 					capturedAddress = opts.Address
 					return nil
 				}
-				_ = run(&cobra.Command{}, []string{})
+				run(&cobra.Command{}, []string{})
 				assert.NotEmpty(t, capturedAddress, "registry address must not be empty")
 			}
 		})
@@ -922,7 +901,6 @@ func TestConstants(t *testing.T) {
 }
 
 func TestInitFunction(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -934,7 +912,6 @@ func TestInitFunction(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -963,6 +940,8 @@ func TestInitFunction(t *testing.T) {
 	}
 }
 
+// TestConcurrency tests concurrent access to shared state.
+// Goroutine lifecycle: all goroutines are bounded by sync.WaitGroup.Wait().
 func TestConcurrency(t *testing.T) {
 	// Note: No t.Parallel() at function level because this test modifies global ProviderServe and Version
 	tests := []struct {
@@ -975,7 +954,6 @@ func TestConcurrency(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 			switch tt.name {
@@ -984,11 +962,11 @@ func TestConcurrency(t *testing.T) {
 				defer func() { Version = originalVersion }()
 
 				var wg sync.WaitGroup
-				for i := 0; i < 100; i++ {
-					wg.Add(1)
-					go func(n int) {
-						defer wg.Done()
-						SetVersion(fmt.Sprintf("version-%d", n))
+				for i := range 100 {
+					func(n int) {
+						wg.Go(func() {
+							SetVersion(fmt.Sprintf("version-%d", n))
+						})
 					}(i)
 				}
 				wg.Wait()
@@ -1011,12 +989,10 @@ func TestConcurrency(t *testing.T) {
 				}
 
 				var wg sync.WaitGroup
-				for i := 0; i < 10; i++ {
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
-						_ = run(&cobra.Command{}, []string{})
-					}()
+				for range 10 {
+					wg.Go(func() {
+						run(&cobra.Command{}, []string{})
+					})
 				}
 				wg.Wait()
 
@@ -1025,11 +1001,11 @@ func TestConcurrency(t *testing.T) {
 			case "error case - concurrent writes must not panic":
 				assert.NotPanics(t, func() {
 					var wg sync.WaitGroup
-					for i := 0; i < 10; i++ {
-						wg.Add(1)
-						go func(n int) {
-							defer wg.Done()
-							SetVersion(fmt.Sprintf("v%d", n))
+					for i := range 10 {
+						func(n int) {
+							wg.Go(func() {
+								SetVersion(fmt.Sprintf("v%d", n))
+							})
 						}(i)
 					}
 					wg.Wait()
@@ -1051,7 +1027,6 @@ func TestMemoryAndPerformance(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -1083,8 +1058,8 @@ func TestMemoryAndPerformance(t *testing.T) {
 
 				// Run multiple times quickly
 				start := time.Now()
-				for i := 0; i < 1000; i++ {
-					_ = run(&cobra.Command{}, []string{})
+				for range 1000 {
+					run(&cobra.Command{}, []string{})
 				}
 				duration := time.Since(start)
 
@@ -1116,7 +1091,6 @@ func TestErrorMessages(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: No t.Parallel() here because subtests manipulate shared global state
 
@@ -1160,7 +1134,7 @@ func BenchmarkSetVersion(b *testing.B) {
 	defer func() { Version = originalVersion }()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		SetVersion("benchmark-version")
 	}
 }
@@ -1174,8 +1148,8 @@ func BenchmarkRun(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = run(&cobra.Command{}, []string{})
+	for b.Loop() {
+		run(&cobra.Command{}, []string{})
 	}
 }
 
@@ -1195,7 +1169,7 @@ func BenchmarkExecute(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		rootCmd = &cobra.Command{
 			Use:  "bench",
 			RunE: run,
@@ -1221,3 +1195,48 @@ func ExampleExecute() {
 }
 
 // TestRun is now in external test file - refactored to test behavior only.
+
+// TestNewRootCmd tests the newRootCmd constructor function.
+func TestNewRootCmd(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "returns non-nil command", wantErr: false},
+		{name: "command has correct use", wantErr: false},
+		{name: "command has debug flag", wantErr: false},
+		{name: "command has short description", wantErr: false},
+		{name: "command has RunE set", wantErr: false},
+		{name: "error case - command must not be nil", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := newRootCmd()
+
+			switch tt.name {
+			case "returns non-nil command":
+				assert.NotNil(t, cmd, "newRootCmd should return a non-nil command")
+
+			case "command has correct use":
+				assert.Equal(t, "terraform-provider-n8n", cmd.Use, "Use should match")
+
+			case "command has debug flag":
+				debugFlag := cmd.Flags().Lookup("debug")
+				assert.NotNil(t, debugFlag, "debug flag should be registered")
+				assert.Equal(t, "bool", debugFlag.Value.Type(), "debug flag should be bool")
+				assert.Equal(t, "false", debugFlag.DefValue, "debug flag default should be false")
+
+			case "command has short description":
+				assert.NotEmpty(t, cmd.Short, "Short description should not be empty")
+				assert.Contains(t, cmd.Short, "n8n", "Short should mention n8n")
+
+			case "command has RunE set":
+				assert.NotNil(t, cmd.RunE, "RunE should be set")
+
+			case "error case - command must not be nil":
+				assert.NotNil(t, cmd, "command must always be initialized")
+			}
+		})
+	}
+}

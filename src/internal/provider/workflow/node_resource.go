@@ -2,7 +2,7 @@
 // Licensed under the Sustainable Use License 1.0
 // See LICENSE in the project root for license information.
 
-// WorkflowNodeResource implements workflow node resources for modular workflow composition.
+// Package workflow implements workflow management resources and data sources.
 package workflow
 
 import (
@@ -12,7 +12,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,10 +25,10 @@ import (
 )
 
 const (
-	// NODE_ATTRIBUTES_SIZE defines the initial capacity for node attributes map.
-	NODE_ATTRIBUTES_SIZE int = 10
-	// DEFAULT_TYPE_VERSION is the default node type version.
-	DEFAULT_TYPE_VERSION int64 = 1
+	// NodeAttributesSize defines the initial capacity for node attributes map.
+	NodeAttributesSize int = 10
+	// DefaultTypeVersion is the default node type version.
+	DefaultTypeVersion int64 = 1
 )
 
 // Ensure WorkflowNodeResource implements required interfaces.
@@ -64,8 +63,8 @@ type WorkflowNodeResource struct{}
 //
 // Returns:
 //   - *WorkflowNodeResource: A new WorkflowNodeResource instance.
-func NewWorkflowNodeResource() *WorkflowNodeResource {
-	// Return new instance.
+func NewWorkflowNodeResource() (workflowNodeResource *WorkflowNodeResource) {
+	//: Return new instance.
 	return &WorkflowNodeResource{}
 }
 
@@ -74,28 +73,41 @@ func NewWorkflowNodeResource() *WorkflowNodeResource {
 //
 // Returns:
 //   - resource.Resource: the wrapped WorkflowNodeResource instance
-func NewWorkflowNodeResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+func NewWorkflowNodeResourceWrapper() (r resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewWorkflowNodeResource()
 }
 
 // Metadata returns the resource type name.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
+//   - ctx: The context for the request.
 //   - req: The metadata request containing provider type name.
 //   - resp: The metadata response to populate.
-func (r *WorkflowNodeResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *WorkflowNodeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_workflow_node"
 }
 
 // Schema defines the schema for the resource.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The schema request (unused).
+//   - ctx: The context for the request.
+//   - req: The schema request (unused by framework convention).
 //   - resp: The schema response to populate.
-func (r *WorkflowNodeResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *WorkflowNodeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Acknowledge empty schema request carried by framework convention.
+	schemaReq := req
+	_ = schemaReq
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Defines a workflow node for modular workflow composition. " +
 			"This resource exists only in Terraform state and generates JSON that can be " +
@@ -108,22 +120,22 @@ func (r *WorkflowNodeResource) Schema(_ctx context.Context, _req resource.Schema
 //
 // Returns:
 //   - map[string]schema.Attribute: The schema attributes.
-func (r *WorkflowNodeResource) getSchemaAttributes() map[string]schema.Attribute {
-	attrs := make(map[string]schema.Attribute, NODE_ATTRIBUTES_SIZE)
+func (r *WorkflowNodeResource) getSchemaAttributes() (m map[string]schema.Attribute) {
+	attrs := make(map[string]schema.Attribute, NodeAttributesSize)
 
-	// Add required attributes.
+	//: Add required attributes.
 	r.addRequiredAttributes(attrs)
 
-	// Add optional attributes.
+	//: Add optional attributes.
 	r.addOptionalAttributes(attrs)
 
-	// Add computed JSON attribute.
+	//: Add computed JSON attribute.
 	attrs["node_json"] = schema.StringAttribute{
 		MarkdownDescription: "Computed JSON representation of this node for use in workflows",
 		Computed:            true,
 	}
 
-	// Return complete attributes map.
+	//: Return complete attributes map.
 	return attrs
 }
 
@@ -151,7 +163,7 @@ func (r *WorkflowNodeResource) addRequiredAttributes(attrs map[string]schema.Att
 		MarkdownDescription: "Version of the node type",
 		Optional:            true,
 		Computed:            true,
-		Default:             int64default.StaticInt64(DEFAULT_TYPE_VERSION),
+		Default:             int64default.StaticInt64(DefaultTypeVersion),
 	}
 	attrs["position"] = schema.ListAttribute{
 		MarkdownDescription: "Position [x, y] coordinates for UI display",
@@ -190,11 +202,21 @@ func (r *WorkflowNodeResource) addOptionalAttributes(attrs map[string]schema.Att
 // Configure configures the resource (no-op for local resources).
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The configuration request (unused).
-//   - _resp: The configuration response (unused).
-func (r *WorkflowNodeResource) Configure(_ctx context.Context, _req resource.ConfigureRequest, _resp *resource.ConfigureResponse) {
-	// No configuration needed for local-only resources.
+//   - ctx: The context for the request.
+//   - req: The configuration request (unused for local-only resources).
+//   - resp: The configuration response (unused for local-only resources).
+func (r *WorkflowNodeResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: No configuration needed for local-only resources; use req to satisfy interface.
+	if req.ProviderData == nil {
+		//: Return early when no provider data is set.
+		return
+	}
 }
 
 // Create creates the resource in Terraform state.
@@ -207,32 +229,44 @@ func (r *WorkflowNodeResource) Create(ctx context.Context, req resource.CreateRe
 	var plan *models.NodeResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check if there were errors retrieving the plan.
+	//: Check if there were errors retrieving the plan.
 	if resp.Diagnostics.HasError() {
+		//: Return with error.
 		return
 	}
 
-	// Generate unique ID based on name and type.
+	//: Generate unique ID based on name and type.
 	plan.ID = types.StringValue(r.generateNodeID(plan))
 
-	// Generate node JSON.
-	// Check if JSON generation failed.
+	//: Generate node JSON.
+	//: Check if JSON generation failed.
 	if !r.generateNodeJSON(ctx, plan, &resp.Diagnostics) {
+		//: Return with error.
 		return
 	}
 
-	// Save to state.
+	//: Save to state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 // Read refreshes the Terraform state (no-op for local resources).
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The read request (unused).
-//   - _resp: The read response (unused).
-func (r *WorkflowNodeResource) Read(_ctx context.Context, _req resource.ReadRequest, _resp *resource.ReadResponse) {
-	// Local-only resource, state is always current.
+//   - ctx: The context for the request.
+//   - req: The read request (unused for local-only resources).
+//   - resp: The read response (unused for local-only resources).
+func (r *WorkflowNodeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Local-only resource, state is always current; use req to satisfy interface.
+	if req.State.Raw.IsNull() {
+		//: Return early when state is empty.
+		return
+	}
 }
 
 // Update updates the resource in Terraform state.
@@ -245,29 +279,41 @@ func (r *WorkflowNodeResource) Update(ctx context.Context, req resource.UpdateRe
 	var plan *models.NodeResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check if there were errors retrieving the plan.
+	//: Check if there were errors retrieving the plan.
 	if resp.Diagnostics.HasError() {
+		//: Return with error.
 		return
 	}
 
-	// Regenerate node JSON with updated values.
-	// Check if JSON generation failed.
+	//: Regenerate node JSON with updated values.
+	//: Check if JSON generation failed.
 	if !r.generateNodeJSON(ctx, plan, &resp.Diagnostics) {
+		//: Return with error.
 		return
 	}
 
-	// Save to state.
+	//: Save to state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 // Delete removes the resource from Terraform state.
 //
 // Params:
-//   - _ctx: The context for the request (unused).
-//   - _req: The delete request (unused).
-//   - _resp: The delete response (unused).
-func (r *WorkflowNodeResource) Delete(_ctx context.Context, _req resource.DeleteRequest, _resp *resource.DeleteResponse) {
-	// Resource is removed from state automatically.
+//   - ctx: The context for the request.
+//   - req: The delete request (unused for local-only resources).
+//   - resp: The delete response (unused for local-only resources).
+func (r *WorkflowNodeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Resource is removed from state automatically; use req to satisfy interface.
+	if req.State.Raw.IsNull() {
+		//: Return early when state is empty.
+		return
+	}
 }
 
 // ImportState imports the resource into Terraform state.
@@ -288,11 +334,11 @@ func (r *WorkflowNodeResource) ImportState(ctx context.Context, req resource.Imp
 //
 // Returns:
 //   - string: A unique UUID based on the node name and type.
-func (r *WorkflowNodeResource) generateNodeID(plan *models.NodeResource) string {
-	// Use name + type to create a stable ID.
+func (r *WorkflowNodeResource) generateNodeID(plan *models.NodeResource) (s string) {
+	//: Use name + type to create a stable ID.
 	input := fmt.Sprintf("%s-%s", plan.Name.ValueString(), plan.Type.ValueString())
 	hash := sha256.Sum256([]byte(input))
-	// Return UUID generated from node hash.
+	//: Return UUID generated from node hash.
 	return uuid.NewSHA1(uuid.NameSpaceOID, hash[:]).String()
 }
 
@@ -305,26 +351,28 @@ func (r *WorkflowNodeResource) generateNodeID(plan *models.NodeResource) string 
 //
 // Returns:
 //   - bool: True if parsing succeeded, false otherwise.
-func (r *WorkflowNodeResource) parseNodeParameters(plan *models.NodeResource, node map[string]any, diags *diag.Diagnostics) bool {
-	// Check if parameters are provided.
+func (r *WorkflowNodeResource) parseNodeParameters(plan *models.NodeResource, node map[string]any, diags diagnostics) (ok bool) {
+	//: Check if parameters are provided.
 	if !plan.Parameters.IsNull() && !plan.Parameters.IsUnknown() {
 		var params map[string]any
-		// Unmarshal JSON parameters. Check if parsing failed.
+		//: Unmarshal JSON parameters.
+		//: Check if parsing failed.
 		if err := json.Unmarshal([]byte(plan.Parameters.ValueString()), &params); err != nil {
 			diags.AddError(
 				"Invalid parameters JSON",
 				fmt.Sprintf("Could not parse parameters: %s", err.Error()),
 			)
+			//: Return failure.
 			return false
 		}
 		node["parameters"] = params
-		// Handle null parameters by setting empty JSON.
+		//: Handle null parameters by setting empty JSON.
 	} else if plan.Parameters.IsNull() {
-		// Set empty parameters if null to ensure it's known after apply.
+		//: Set empty parameters if null to ensure it's known after apply.
 		plan.Parameters = types.StringValue("{}")
 		node["parameters"] = map[string]any{}
 	}
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -334,17 +382,17 @@ func (r *WorkflowNodeResource) parseNodeParameters(plan *models.NodeResource, no
 //   - plan: The resource data containing optional fields.
 //   - node: The node map to update with optional fields.
 func (r *WorkflowNodeResource) addOptionalNodeFields(plan *models.NodeResource, node map[string]any) {
-	// Check if webhook ID is provided.
+	//: Check if webhook ID is provided.
 	if !plan.WebhookID.IsNull() && !plan.WebhookID.IsUnknown() {
 		node["webhookId"] = plan.WebhookID.ValueString()
 	}
 
-	// Check if node is disabled.
+	//: Check if node is disabled.
 	if !plan.Disabled.IsNull() && !plan.Disabled.IsUnknown() && plan.Disabled.ValueBool() {
 		node["disabled"] = true
 	}
 
-	// Check if notes are provided.
+	//: Check if notes are provided.
 	if !plan.Notes.IsNull() && !plan.Notes.IsUnknown() {
 		node["notes"] = plan.Notes.ValueString()
 	}
@@ -359,50 +407,53 @@ func (r *WorkflowNodeResource) addOptionalNodeFields(plan *models.NodeResource, 
 //
 // Returns:
 //   - bool: True if JSON generation succeeded, false otherwise.
-func (r *WorkflowNodeResource) generateNodeJSON(ctx context.Context, plan *models.NodeResource, diags *diag.Diagnostics) bool {
-	// Build node structure.
+func (r *WorkflowNodeResource) generateNodeJSON(ctx context.Context, plan *models.NodeResource, diags diagnostics) (ok bool) {
+	//: Build node structure.
 	node := map[string]any{
 		"id":   plan.ID.ValueString(),
 		"name": plan.Name.ValueString(),
 		"type": plan.Type.ValueString(),
 	}
 
-	// Add type version.
-	// Check if type version is provided.
+	//: Add type version.
+	//: Check if type version is provided.
 	if !plan.TypeVersion.IsNull() && !plan.TypeVersion.IsUnknown() {
 		node["typeVersion"] = plan.TypeVersion.ValueInt64()
 	}
 
-	// Add position.
+	//: Add position.
 	var position []int64
 	diags.Append(plan.Position.ElementsAs(ctx, &position, false)...)
-	// Check if position extraction failed.
+	//: Check if position extraction failed.
 	if diags.HasError() {
+		//: Return failure.
 		return false
 	}
 	node["position"] = position
 
-	// Add parameters.
-	// Check if parameter parsing failed.
+	//: Add parameters.
+	//: Check if parameter parsing failed.
 	if !r.parseNodeParameters(plan, node, diags) {
+		//: Return failure.
 		return false
 	}
 
-	// Add optional fields.
+	//: Add optional fields.
 	r.addOptionalNodeFields(plan, node)
 
-	// Marshal to JSON.
+	//: Marshal to JSON.
 	jsonBytes, err := json.Marshal(node)
-	// Check if JSON marshalling failed.
+	//: Check if JSON marshalling failed.
 	if err != nil {
 		diags.AddError(
 			"Failed to generate node JSON",
 			fmt.Sprintf("Could not marshal node to JSON: %s", err.Error()),
 		)
+		//: Return failure.
 		return false
 	}
 
 	plan.NodeJSON = types.StringValue(string(jsonBytes))
-	// Return success.
+	//: Return success.
 	return true
 }

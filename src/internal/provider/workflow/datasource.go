@@ -42,9 +42,9 @@ type WorkflowDataSource struct {
 // NewWorkflowDataSource creates and returns a new WorkflowDataSource instance.
 //
 // Returns:
-//   - datasource.DataSource: a new WorkflowDataSource instance
-func NewWorkflowDataSource() *WorkflowDataSource {
-	// Return result.
+//   - *WorkflowDataSource: a new WorkflowDataSource instance
+func NewWorkflowDataSource() (workflowDataSource *WorkflowDataSource) {
+	//: Return result.
 	return &WorkflowDataSource{}
 }
 
@@ -53,8 +53,8 @@ func NewWorkflowDataSource() *WorkflowDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped WorkflowDataSource instance
-func NewWorkflowDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewWorkflowDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewWorkflowDataSource()
 }
 
@@ -64,7 +64,12 @@ func NewWorkflowDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the operation
 //   - req: metadata request from Terraform
 //   - resp: metadata response to populate
-func (d *WorkflowDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *WorkflowDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_workflow"
 }
 
@@ -74,7 +79,15 @@ func (d *WorkflowDataSource) Metadata(_ctx context.Context, req datasource.Metad
 //   - ctx: context for the operation
 //   - req: schema request from Terraform
 //   - resp: schema response to populate
-func (d *WorkflowDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *WorkflowDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Acknowledge the empty schema request carried by framework convention.
+	schemaReq := req
+	_ = schemaReq
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n workflow by ID",
 
@@ -101,21 +114,27 @@ func (d *WorkflowDataSource) Schema(_ctx context.Context, _req datasource.Schema
 //   - ctx: context for the operation
 //   - req: configure request from Terraform
 //   - resp: configure response to populate
-func (d *WorkflowDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *WorkflowDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		resp.Diagnostics.AddError("context cancelled", ctx.Err().Error())
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Return early when provider data is nil.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return early without error when provider data is nil.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return early on type mismatch.
 		return
 	}
 
@@ -132,30 +151,35 @@ func (d *WorkflowDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var data models.DataSource
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	workflow, httpResp, err := d.client.APIClient.WorkflowAPI.WorkflowsIdGet(ctx, data.ID.ValueString()).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil HTTP response to close body.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Handle body close error.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading workflow",
 			fmt.Sprintf("Could not read workflow ID %s: %s\nHTTP Response: %v", data.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	data.Name = types.StringValue(workflow.Name)
-	// Check for non-nil value.
+	//: Check for non-nil active value.
 	if workflow.Active != nil {
 		data.Active = types.BoolPointerValue(workflow.Active)
 	}

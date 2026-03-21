@@ -1,0 +1,36 @@
+{
+  "id": "infrastructure",
+  "version": "1.0.0",
+  "name": "Infrastructure Development Tools",
+  "description": "Terragrunt, TFLint, Infracost, cfssl, and Python infra tools (ansible-lint, molecule)",
+  "documentationURL": "https://terragrunt.gruntwork.io/",
+  "options": {
+    "terragruntVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Terragrunt version to install (e.g., 0.77.5 or latest)"
+    },
+    "tflintVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "TFLint version to install (e.g., 0.55.0 or latest)"
+    },
+    "infracostVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Infracost version to install (e.g., 0.10.40 or latest)"
+    },
+    "enableCfssl": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install cfssl and cfssljson for PKI/TLS certificate management"
+    },
+    "enableAnsibleTools": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install ansible-lint and molecule via pip (requires Python)"
+    }
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/docker-outside-of-docker"],
+  "privileged": false
+}

@@ -1,0 +1,44 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "execution",
+    srcs = [
+        "helpers.go",
+        "tags_resource.go",
+    ],
+    importpath = "github.com/kodflow/terraform-provider-n8n/src/internal/provider/execution",
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/execution/models",
+        "//src/internal/provider/shared/client",
+        "//src/internal/provider/shared/constants",
+        "@com_github_hashicorp_terraform_plugin_framework//diag",
+        "@com_github_hashicorp_terraform_plugin_framework//path",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//resource/schema",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+    ],
+)
+
+go_test(
+    name = "execution_test",
+    srcs = [
+        "helpers_external_test.go",
+        "helpers_internal_test.go",
+        "tags_resource_external_test.go",
+        "tags_resource_internal_test.go",
+    ],
+    embed = [":execution"],
+    deps = [
+        "//sdk/n8nsdk",
+        "//src/internal/provider/execution/models",
+        "//src/internal/provider/shared/client",
+        "@com_github_hashicorp_terraform_plugin_framework//diag",
+        "@com_github_hashicorp_terraform_plugin_framework//resource",
+        "@com_github_hashicorp_terraform_plugin_framework//tfsdk",
+        "@com_github_hashicorp_terraform_plugin_framework//types",
+        "@com_github_hashicorp_terraform_plugin_go//tftypes",
+        "@com_github_stretchr_testify//assert",
+    ],
+)

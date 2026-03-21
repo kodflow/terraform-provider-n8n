@@ -8,6 +8,7 @@ package credential
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -21,8 +22,8 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
 
-// ROTATION_THROTTLE_MILLISECONDS is the delay between workflow updates during credential rotation.
-const ROTATION_THROTTLE_MILLISECONDS int = 100
+// RotationThrottleMilliseconds is the delay between workflow updates during credential rotation.
+const RotationThrottleMilliseconds int = 100
 
 // Ensure CredentialResource implements required interfaces.
 var (
@@ -56,8 +57,8 @@ type CredentialResource struct {
 //
 // Returns:
 //   - *CredentialResource: A new CredentialResource instance
-func NewCredentialResource() *CredentialResource {
-	// Return result.
+func NewCredentialResource() (credentialResource *CredentialResource) {
+	//: Return result.
 	return &CredentialResource{}
 }
 
@@ -65,9 +66,9 @@ func NewCredentialResource() *CredentialResource {
 // This wrapper function is used by the provider to maintain compatibility with the framework.
 //
 // Returns:
-//   - resource.Resource: the wrapped CredentialResource instance
-func NewCredentialResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+//   - res: the wrapped CredentialResource instance
+func NewCredentialResourceWrapper() (res resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewCredentialResource()
 }
 
@@ -77,7 +78,12 @@ func NewCredentialResourceWrapper() resource.Resource {
 //   - ctx: Context for the request
 //   - req: Metadata request
 //   - resp: Metadata response
-func (r *CredentialResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *CredentialResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_credential"
 }
 
@@ -87,7 +93,12 @@ func (r *CredentialResource) Metadata(_ctx context.Context, req resource.Metadat
 //   - ctx: Context for the request
 //   - req: Schema request
 //   - resp: Schema response
-func (r *CredentialResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *CredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n credential resource with automatic rotation on update.\n\n" +
 			"**Update Behavior**: When updated, the credential is rotated:\n" +
@@ -103,8 +114,8 @@ func (r *CredentialResource) Schema(_ctx context.Context, _req resource.SchemaRe
 // schemaAttributes returns the attribute definitions for the credential resource schema.
 //
 // Returns:
-//   - map[string]schema.Attribute: the resource attribute definitions
-func (r *CredentialResource) schemaAttributes() map[string]schema.Attribute {
+//   - m: the resource attribute definitions
+func (r *CredentialResource) schemaAttributes() (m map[string]schema.Attribute) {
 	// Data attribute description with type conversion info.
 	dataDesc := "Credential data (secrets, passwords, API keys, etc.). " +
 		"String values are automatically converted to the correct type (number, boolean) " +
@@ -112,15 +123,16 @@ func (r *CredentialResource) schemaAttributes() map[string]schema.Attribute {
 	// Project ID attribute description.
 	projectDesc := "Project ID to assign the credential to. " +
 		"If not set, credential is created in personal space (General)."
-	// Return credential schema attributes.
+	//: Return credential schema attributes.
 	return map[string]schema.Attribute{
-		"id":         schema.StringAttribute{MarkdownDescription: "Credential identifier", Computed: true},
-		"name":       schema.StringAttribute{MarkdownDescription: "Credential name", Required: true},
-		"type":       schema.StringAttribute{MarkdownDescription: "Credential type (e.g., httpHeaderAuth)", Required: true},
+		"id":         schema.StringAttribute{MarkdownDescription: "Credential identifier.", Computed: true},
+		"name":       schema.StringAttribute{MarkdownDescription: "Credential name.", Required: true},
+		"type":       schema.StringAttribute{MarkdownDescription: "Credential type (e.g., httpHeaderAuth).", Required: true},
 		"data":       schema.MapAttribute{MarkdownDescription: dataDesc, ElementType: types.StringType, Required: true, Sensitive: true},
 		"project_id": schema.StringAttribute{MarkdownDescription: projectDesc, Optional: true, Computed: true},
-		"created_at": schema.StringAttribute{MarkdownDescription: "Timestamp when the credential was created", Computed: true},
-		"updated_at": schema.StringAttribute{MarkdownDescription: "Timestamp when the credential was last updated", Computed: true},
+		"resolvable": schema.BoolAttribute{MarkdownDescription: "Whether this credential has resolvable fields (n8n 2.x+).", Optional: true, Computed: true},
+		"created_at": schema.StringAttribute{MarkdownDescription: "Timestamp when the credential was created.", Computed: true},
+		"updated_at": schema.StringAttribute{MarkdownDescription: "Timestamp when the credential was last updated.", Computed: true},
 	}
 }
 
@@ -130,21 +142,26 @@ func (r *CredentialResource) schemaAttributes() map[string]schema.Attribute {
 //   - ctx: Context for the request
 //   - req: Configure request with provider data
 //   - resp: Configure response
-func (r *CredentialResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Check for nil value.
+func (r *CredentialResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check if provider data is the expected client type.
+	//: Check if provider data is the expected client type.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -161,19 +178,24 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check if plan read succeeded.
+	//: Check if plan read succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute create logic
+	//: Execute create logic.
 	if !r.executeCreateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// ElementsAsser is a minimal interface for map-type values with element extraction.
+type ElementsAsser interface {
+	ElementsAs(ctx context.Context, target any, allowUnhandled bool) diag.Diagnostics
 }
 
 // extractCredentialData extracts credential data from Terraform types.Map.
@@ -181,30 +203,30 @@ func (r *CredentialResource) Create(ctx context.Context, req resource.CreateRequ
 //
 // Params:
 //   - ctx: Context for the request
-//   - data: The Terraform types.Map containing credential data
+//   - data: The Terraform map value containing credential data
 //
 // Returns:
-//   - map[string]any: The extracted credential data
-//   - diag.Diagnostics: Any diagnostics from the conversion
-func extractCredentialData(ctx context.Context, data types.Map) (map[string]any, diag.Diagnostics) {
+//   - m: The extracted credential data
+//   - diagnostics: Any diagnostics from the conversion
+func extractCredentialData(ctx context.Context, data ElementsAsser) (m map[string]any, diagnostics diag.Diagnostics) {
 	// First convert to map[string]string since schema ElementType is types.StringType
 	var credDataString map[string]string
 	var diags diag.Diagnostics
 	diags.Append(data.ElementsAs(ctx, &credDataString, false)...)
-	// Check if conversion succeeded.
+	//: Check if conversion succeeded.
 	if diags.HasError() {
-		// Return empty map with diagnostics on conversion error.
+		//: Return empty map with diagnostics on conversion error.
 		return map[string]any{}, diags
 	}
 
 	// Convert map[string]string to map[string]any for API compatibility
-	credData := make(map[string]any, len(credDataString))
-	// Iterate over credential data to convert string values to any.
+	credData := maps.Clone(make(map[string]any, len(credDataString)))
+	//: Iterate over credential data to convert string values to any.
 	for key, value := range credDataString {
 		credData[key] = value
 	}
 
-	// Return extracted data and diagnostics.
+	//: Return extracted data and diagnostics.
 	return credData, diags
 }
 
@@ -217,18 +239,18 @@ func extractCredentialData(ctx context.Context, data types.Map) (map[string]any,
 //   - resp: Create response
 //
 // Returns:
-//   - bool: True if creation succeeded, false otherwise
-func (r *CredentialResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
-	// Extract credential data from Terraform types
+//   - ok: True if creation succeeded, false otherwise
+func (r *CredentialResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (ok bool) {
+	//: Extract credential data from Terraform types.
 	credData, diags := extractCredentialData(ctx, plan.Data)
 	resp.Diagnostics.Append(diags...)
-	// Check if credential data extraction succeeded.
+	//: Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Execute creation with extracted data
+	//: Execute creation with extracted data.
 	return r.executeCreateLogicWithData(ctx, plan, credData, resp)
 }
 
@@ -242,44 +264,49 @@ func (r *CredentialResource) executeCreateLogic(ctx context.Context, plan *model
 //   - resp: The create response to populate with diagnostics
 //
 // Returns:
-//   - bool: True if creation succeeded, false otherwise
-func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, plan *models.Resource, credData map[string]any, resp *resource.CreateResponse) bool {
-	// Convert string values to proper types based on credential schema.
+//   - ok: True if creation succeeded, false otherwise
+func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, plan *models.Resource, credData map[string]any, resp *resource.CreateResponse) (ok bool) {
+	//: Convert string values to proper types based on credential schema.
 	convertedData := r.convertDataToSchemaTypes(ctx, plan.Type.ValueString(), credData)
 
-	// Create credential via API
+	//: Create credential via API.
 	createResp, httpResp, err := r.executeCreate(ctx, plan.Name.ValueString(), plan.Type.ValueString(), convertedData)
-	// Close HTTP response body if present.
+	//: Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
 
-	// Check if credential creation failed.
+	//: Check if credential creation failed.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating credential",
 			fmt.Sprintf("Could not create credential: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Map response to plan
+	//: Map response to plan.
 	r.mapCreateResponseToPlan(plan, createResp)
 
-	// Handle project assignment if project_id is specified.
+	//: Handle project assignment if project_id is specified.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
-		// Transfer credential to the specified project.
+		//: Transfer credential to the specified project.
 		if !r.transferCredentialToProject(ctx, createResp.Id, plan.ProjectID.ValueString(), &resp.Diagnostics) {
-			// Return failure - project assignment failed.
+			//: Return failure - project assignment failed.
 			return false
 		}
 	}
 
-	// Map project_id to plan (keep the requested value).
+	//: Map project_id to plan (keep the requested value).
 	mapCredentialProjectID(plan, plan.ProjectID)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -293,17 +320,17 @@ func (r *CredentialResource) executeCreateLogicWithData(ctx context.Context, pla
 //   - data: Credential data
 //
 // Returns:
-//   - *n8nsdk.CreateCredentialResponse: The created credential
-//   - *http.Response: The HTTP response
-//   - error: Error if any
-func (r *CredentialResource) executeCreate(ctx context.Context, name, credType string, data map[string]any) (*n8nsdk.CreateCredentialResponse, *http.Response, error) {
+//   - createCredentialResponse: The created credential
+//   - response: The HTTP response
+//   - err: Error if any
+func (r *CredentialResource) executeCreate(ctx context.Context, name, credType string, data map[string]any) (createCredentialResponse *n8nsdk.CreateCredentialResponse, response *http.Response, err error) {
 	credRequest := n8nsdk.Credential{
 		Name: name,
 		Type: credType,
 		Data: data,
 	}
 
-	// Execute API call and return result.
+	//: Execute API call and return result.
 	return r.client.APIClient.CredentialAPI.CredentialsPost(ctx).
 		Credential(credRequest).
 		Execute()
@@ -340,9 +367,9 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check if state read succeeded.
+	//: Check if state read succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -369,15 +396,15 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check if plan and state read succeeded.
+	//: Check if plan and state read succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute update logic
+	//: Execute update logic.
 	if !r.executeUpdateLogic(ctx, plan, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -394,18 +421,18 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 //   - resp: Update response
 //
 // Returns:
-//   - bool: True if update succeeded, false otherwise
-func (r *CredentialResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	// Extract credential data from Terraform types
+//   - ok: True if update succeeded, false otherwise
+func (r *CredentialResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) (ok bool) {
+	//: Extract credential data from Terraform types.
 	credData, diags := extractCredentialData(ctx, plan.Data)
 	resp.Diagnostics.Append(diags...)
-	// Check if credential data extraction succeeded.
+	//: Check if credential data extraction succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Execute update with extracted data
+	//: Execute update with extracted data.
 	return r.executeUpdateLogicWithData(ctx, plan, state, credData, resp)
 }
 
@@ -420,72 +447,123 @@ func (r *CredentialResource) executeUpdateLogic(ctx context.Context, plan, state
 //   - resp: Update response
 //
 // Returns:
-//   - bool: True if update succeeded, false otherwise
-func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, plan, state *models.Resource, credData map[string]any, resp *resource.UpdateResponse) bool {
+//   - ok: True if update succeeded, false otherwise
+func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, plan, state *models.Resource, credData map[string]any, resp *resource.UpdateResponse) (ok bool) {
 	oldCredID := state.ID.ValueString()
 	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
 
-	// Convert string values to proper types based on credential schema.
+	//: Convert string values to proper types based on credential schema.
 	convertedData := r.convertDataToSchemaTypes(ctx, plan.Type.ValueString(), credData)
 
-	// STEP 1: Create new credential
+	//: STEP 1: Create new credential.
 	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), convertedData, &resp.Diagnostics)
-	// Check if new credential creation succeeded.
+	//: Check if new credential creation succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	newCredID := newCred.Id
 	tflog.Info(ctx, fmt.Sprintf("Created new credential %s", newCredID))
 
-	// STEP 2: Scan workflows using old credential
+	//: STEP 2: Scan workflows using old credential.
 	affectedWorkflows, success := r.scanAffectedWorkflows(ctx, oldCredID, newCredID, &resp.Diagnostics)
-	// Check if workflow scan succeeded.
+	//: Check if workflow scan succeeded.
 	if !success {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// STEP 3: Update each workflow
-	updatedWorkflows, success := r.updateAffectedWorkflows(ctx, affectedWorkflows, oldCredID, newCredID, &resp.Diagnostics)
-	// Check if all workflow updates succeeded.
+	//: STEP 3: Update each workflow.
+	_, success = r.updateAffectedWorkflows(ctx, affectedWorkflows, oldCredID, newCredID, &resp.Diagnostics)
+	//: Check if all workflow updates succeeded.
 	if !success {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// STEP 4: Delete old credential
+	//: Finalize the rotation by updating the plan with new values.
+	return r.finalizeRotation(ctx, plan, newCred, newCredID, oldCredID, &resp.Diagnostics)
+}
+
+// finalizeRotation completes the credential rotation by updating the plan.
+//
+// Params:
+//   - ctx: Context for logging
+//   - plan: The planned resource data to update
+//   - newCred: The newly created credential response
+//   - newCredID: The new credential ID
+//   - oldCredID: The old credential ID (for logging)
+//   - diags: Diagnostics collector for error propagation
+//
+// Returns:
+//   - ok: True if finalization succeeded, false otherwise
+func (r *CredentialResource) finalizeRotation(ctx context.Context, plan *models.Resource, newCred *n8nsdk.CreateCredentialResponse, newCredID, oldCredID string, diags AddErrorrer) (ok bool) {
+	//: STEP 4: Delete old credential.
 	r.deleteOldCredential(ctx, oldCredID, newCredID)
 
-	// STEP 5: Handle project assignment if project_id changed or is set.
+	//: STEP 5: Handle project assignment if project_id changed or is set.
 	// Note: On update with rotation, the new credential needs to be transferred
 	// to the target project since it was created in personal space.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
-		// Transfer the new credential to the specified project.
-		if !r.transferCredentialToProject(ctx, newCredID, plan.ProjectID.ValueString(), &resp.Diagnostics) {
-			// Return failure - project assignment failed.
+		//: Check if transfer to project succeeded.
+		if !r.transferCredentialToProject(ctx, newCredID, plan.ProjectID.ValueString(), diags) {
+			//: Return failure - project assignment failed.
 			return false
 		}
 	}
 
-	// STEP 6: Update plan with new values
+	//: STEP 6: Update plan with new values.
 	plan.ID = types.StringValue(newCredID)
 	plan.Name = types.StringValue(newCred.Name)
 	plan.Type = types.StringValue(newCred.Type)
 	plan.CreatedAt = types.StringValue(newCred.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	plan.UpdatedAt = types.StringValue(newCred.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 
-	// Map project_id to plan (keep the requested value).
+	//: Map project_id to plan (keep the requested value).
 	mapCredentialProjectID(plan, plan.ProjectID)
 
 	tflog.Info(ctx, fmt.Sprintf(
-		"Credential rotated successfully: %s → %s (%d workflows updated)",
-		oldCredID, newCredID, len(updatedWorkflows),
+		"Credential rotated successfully: %s -> %s",
+		oldCredID, newCredID,
 	))
 
-	// Return success.
+	//: Return success.
 	return true
+}
+
+// executeDeleteCredential performs the actual credential deletion API call and handles the response.
+//
+// Params:
+//   - ctx: Context for the request
+//   - credID: The credential ID to delete
+//   - resp: Delete response for error reporting
+func (r *CredentialResource) executeDeleteCredential(ctx context.Context, credID string, resp *resource.DeleteResponse) {
+	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, credID).Execute()
+	//: Close HTTP response body if present.
+	if httpResp != nil && httpResp.Body != nil {
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
+	}
+
+	//: Return on success HTTP status codes.
+	if httpResp != nil && (httpResp.StatusCode == http.StatusOK || httpResp.StatusCode == http.StatusNoContent) {
+		tflog.Info(ctx, fmt.Sprintf("Deleted credential %s", credID))
+		//: Return on success status.
+		return
+	}
+
+	//: Check if credential deletion failed.
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting credential",
+			fmt.Sprintf("Could not delete credential ID %s: %s\nHTTP Response: %v", credID, err.Error(), httpResp),
+		)
+	}
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -498,32 +576,14 @@ func (r *CredentialResource) Delete(ctx context.Context, req resource.DeleteRequ
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check if state read succeeded.
+	//: Check if state read succeeded.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, state.ID.ValueString()).Execute()
-	// Close HTTP response body if present.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-
-	// Check HTTP status code first - 200/204 means success even if SDK parsing fails.
-	if httpResp != nil && (httpResp.StatusCode == http.StatusOK || httpResp.StatusCode == http.StatusNoContent) {
-		tflog.Info(ctx, fmt.Sprintf("Deleted credential %s", state.ID.ValueString()))
-		// Return success.
-		return
-	}
-
-	// Check if credential deletion failed.
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting credential",
-			fmt.Sprintf("Could not delete credential ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
-		)
-	}
+	//: Execute the credential deletion API call.
+	r.executeDeleteCredential(ctx, state.ID.ValueString(), resp)
 }
 
 // ImportState imports the resource into Terraform state.
@@ -571,15 +631,20 @@ func (r *CredentialResource) rollbackRotation(
 //   - newCredID: ID of the new credential to delete
 func (r *CredentialResource) deleteNewCredential(ctx context.Context, newCredID string) {
 	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
-	// Close HTTP response body if present.
+	//: Close HTTP response body if present.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
-	// Check if credential deletion failed during rollback.
+	//: Check if credential deletion failed during rollback.
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("CRITICAL: Failed to delete new credential %s during rollback: %s", newCredID, err.Error()))
-		// Handle alternative case.
 	} else {
+		//: Log success.
 		tflog.Info(ctx, fmt.Sprintf("Deleted new credential %s during rollback", newCredID))
 	}
 }
@@ -592,28 +657,28 @@ func (r *CredentialResource) deleteNewCredential(ctx context.Context, newCredID 
 //   - updatedWorkflows: List of workflows that were updated
 //
 // Returns:
-//   - restoredCount: Number of workflows successfully restored
+//   - n: Number of workflows successfully restored
 func (r *CredentialResource) restoreWorkflows(
 	ctx context.Context,
 	affectedWorkflows []models.WorkflowBackup,
 	updatedWorkflows []string,
-) int {
+) (n int) {
 	restoredCount := 0
-	// Iterate through each updated workflow to restore it.
+	//: Iterate through each updated workflow to restore it.
 	for _, workflowID := range updatedWorkflows {
 		original := r.findWorkflowBackup(affectedWorkflows, workflowID)
-		// Check if workflow backup was found.
+		//: Check if workflow backup was found.
 		if original == nil {
 			tflog.Error(ctx, fmt.Sprintf("Cannot find original for workflow %s", workflowID))
 			continue
 		}
 
-		// Restore workflow to original state.
+		//: Restore workflow to original state.
 		if r.restoreWorkflow(ctx, workflowID, original) {
 			restoredCount++
 		}
 	}
-	// Return count of successfully restored workflows.
+	//: Return count of successfully restored workflows.
 	return restoredCount
 }
 
@@ -624,20 +689,20 @@ func (r *CredentialResource) restoreWorkflows(
 //   - workflowID: ID of the workflow to find
 //
 // Returns:
-//   - original: Pointer to the original workflow, nil if not found
+//   - workflow: Pointer to the original workflow, nil if not found
 func (r *CredentialResource) findWorkflowBackup(
 	affectedWorkflows []models.WorkflowBackup,
 	workflowID string,
-) *n8nsdk.Workflow {
-	// Iterate through backups to find matching workflow.
+) (workflow *n8nsdk.Workflow) {
+	//: Iterate through backups to find matching workflow.
 	for _, backup := range affectedWorkflows {
-		// Check if this backup matches the workflow being restored.
+		//: Check if this backup matches the workflow being restored.
 		if backup.ID == workflowID {
-			// Return the original workflow from backup.
+			//: Return the original workflow from backup.
 			return backup.Original
 		}
 	}
-	// Return nil if no backup found.
+	//: Return nil if no backup found.
 	return nil
 }
 
@@ -649,30 +714,35 @@ func (r *CredentialResource) findWorkflowBackup(
 //   - original: Original workflow state
 //
 // Returns:
-//   - success: True if workflow was restored successfully
+//   - ok: True if workflow was restored successfully
 func (r *CredentialResource) restoreWorkflow(
 	ctx context.Context,
 	workflowID string,
 	original *n8nsdk.Workflow,
-) bool {
+) (ok bool) {
 	_, httpRespRestore, errRestore := r.client.APIClient.WorkflowAPI.
 		WorkflowsIdPut(ctx, workflowID).
 		Workflow(*original).
 		Execute()
-	// Close HTTP response body if present.
+	//: Close HTTP response body if present.
 	if httpRespRestore != nil && httpRespRestore.Body != nil {
-		defer httpRespRestore.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpRespRestore.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
 
-	// Check if workflow restoration failed.
+	//: Check if workflow restoration failed.
 	if errRestore != nil {
 		tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, errRestore.Error()))
-		// Return failure status.
+		//: Return failure status.
 		return false
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("Restored workflow %s", workflowID))
-	// Return success status.
+	//: Return success status.
 	return true
 }
 
@@ -683,38 +753,58 @@ func (r *CredentialResource) restoreWorkflow(
 //   - credentialID: The credential ID to search for
 //
 // Returns:
-//   - bool: True if workflow uses the credential, false otherwise
-func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
-	// Check if workflow is nil first.
+//   - ok: True if workflow uses the credential, false otherwise
+func usesCredential(workflow *n8nsdk.Workflow, credentialID string) (ok bool) {
+	//: Check if workflow is nil first.
 	if workflow == nil {
+		//: Return result.
 		return false
 	}
 
-	// Check if workflow nodes are available.
+	//: Check if workflow nodes are available.
 	if workflow.Nodes == nil {
-		// Return result.
+		//: Return result.
 		return false
 	}
 
-	// Iterate through workflow nodes to check for credential usage.
+	//: Iterate through workflow nodes to check for credential usage.
 	for _, node := range workflow.Nodes {
-		// Check if node has credentials defined.
-		if node.Credentials != nil {
-			// node.Credentials is already map[string]any
-			for _, credValue := range node.Credentials {
-				// Check if credential value is a map.
-				if credInfo, okMap := credValue.(map[string]any); okMap {
-					// Check if credential ID matches the target credential.
-					if id, okID := credInfo["id"].(string); okID && id == credentialID {
-						// Return result.
-						return true
-					}
-				}
-			}
+		//: Check if node has credentials defined.
+		if node.Credentials == nil {
+			continue
+		}
+		//: Check credential entries for a match.
+		if credentialMatchesNode(node.Credentials, credentialID) {
+			//: Return result.
+			return true
 		}
 	}
 
-	// Return result.
+	//: Return result.
+	return false
+}
+
+// credentialMatchesNode checks if any credential in a node matches the given ID.
+//
+// Params:
+//   - credentials: Map of credentials from the node
+//   - credentialID: The credential ID to search for
+//
+// Returns:
+//   - ok: True if any credential matches the ID
+func credentialMatchesNode(credentials map[string]any, credentialID string) (ok bool) {
+	//: Iterate through node credentials.
+	for _, credValue := range credentials {
+		//: Check if credential value is a map.
+		if credInfo, okMap := credValue.(map[string]any); okMap {
+			//: Check if credential ID matches the target credential.
+			if id, okID := credInfo["id"].(string); okID && id == credentialID {
+				//: Return result.
+				return true
+			}
+		}
+	}
+	//: Return false when no match found.
 	return false
 }
 
@@ -726,39 +816,50 @@ func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
 //   - newCredID: The new credential ID to use
 //
 // Returns:
-//   - *n8nsdk.Workflow: The modified workflow
-func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) *n8nsdk.Workflow {
-	// Check if workflow is nil first.
+//   - result: The modified workflow
+func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) (result *n8nsdk.Workflow) {
+	//: Check if workflow is nil first.
 	if workflow == nil {
+		//: Return result.
 		return nil
 	}
 
-	// Check if workflow nodes are available.
+	//: Check if workflow nodes are available.
 	if workflow.Nodes == nil {
-		// Return result.
+		//: Return result.
 		return workflow
 	}
 
-	// Iterate through workflow nodes to replace credentials.
+	//: Iterate through workflow nodes to replace credentials.
 	for i := range workflow.Nodes {
 		node := &workflow.Nodes[i]
 
-		// Check if node has credentials defined.
+		//: Check if node has credentials defined.
 		if node.Credentials != nil {
-			// node.Credentials is already map[string]any
-			for credType, credValue := range node.Credentials {
-				// Check if credential value is a map.
-				if credInfo, okMap := credValue.(map[string]any); okMap {
-					// Check if credential ID matches the old credential.
-					if id, okID := credInfo["id"].(string); okID && id == oldCredID {
-						credInfo["id"] = newCredID
-						node.Credentials[credType] = credInfo
-					}
-				}
-			}
+			replaceCredentialsInNode(node.Credentials, oldCredID, newCredID)
 		}
 	}
 
-	// Return result.
+	//: Return result.
 	return workflow
+}
+
+// replaceCredentialsInNode replaces credential references in a node's credentials map.
+//
+// Params:
+//   - credentials: Map of credentials from the node
+//   - oldCredID: The old credential ID to replace
+//   - newCredID: The new credential ID to use
+func replaceCredentialsInNode(credentials map[string]any, oldCredID, newCredID string) {
+	//: Iterate through node credentials.
+	for credType, credValue := range credentials {
+		//: Check if credential value is a map.
+		if credInfo, okMap := credValue.(map[string]any); okMap {
+			//: Check if credential ID matches the old credential.
+			if id, okID := credInfo["id"].(string); okID && id == oldCredID {
+				credInfo["id"] = newCredID
+				credentials[credType] = credInfo
+			}
+		}
+	}
 }

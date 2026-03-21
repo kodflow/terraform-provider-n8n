@@ -1,0 +1,34 @@
+{
+  "id": "nodejs",
+  "version": "1.0.0",
+  "name": "Node.js Development Environment",
+  "description": "Installs Node.js via NVM, npm, yarn, pnpm and common development tools",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "lts/*",
+      "description": "Node.js version to install via NVM"
+    },
+    "installYarn": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install Yarn package manager"
+    },
+    "installPnpm": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install pnpm package manager"
+    },
+    "globalPackages": {
+      "type": "string",
+      "default": "typescript,ts-node,eslint,prettier,vite,npm-check-updates,nodemon,pm2",
+      "description": "Comma-separated list of global npm packages to install"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"]
+    }
+  },
+  "installsAfter": []
+}

@@ -1,7 +1,6 @@
 package project_test
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +28,6 @@ func TestNewProjectUserResource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -60,16 +58,11 @@ func TestNewProjectUserResourceWrapper(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
-			case "creates valid resource wrapper":
-				wrapper := project.NewProjectUserResourceWrapper()
-				assert.NotNil(t, wrapper)
-
-			case "error case - validation checks":
+			case "creates valid resource wrapper", "error case - validation checks":
 				wrapper := project.NewProjectUserResourceWrapper()
 				assert.NotNil(t, wrapper)
 			}
@@ -99,7 +92,6 @@ func TestProjectUserResource_Metadata(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -109,7 +101,7 @@ func TestProjectUserResource_Metadata(t *testing.T) {
 			}
 			resp := &resource.MetadataResponse{}
 
-			r.Metadata(context.Background(), req, resp)
+			r.Metadata(t.Context(), req, resp)
 
 			assert.Equal(t, tt.expectedTypeName, resp.TypeName)
 		})
@@ -127,7 +119,6 @@ func TestProjectUserResource_Schema(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -135,7 +126,7 @@ func TestProjectUserResource_Schema(t *testing.T) {
 			req := resource.SchemaRequest{}
 			resp := &resource.SchemaResponse{}
 
-			r.Schema(context.Background(), req, resp)
+			r.Schema(t.Context(), req, resp)
 
 			assert.NotNil(t, resp.Schema)
 			assert.Contains(t, resp.Schema.MarkdownDescription, "user")
@@ -164,7 +155,6 @@ func TestProjectUserResource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -175,7 +165,7 @@ func TestProjectUserResource_Configure(t *testing.T) {
 					ProviderData: &client.N8nClient{},
 				}
 				resp := &resource.ConfigureResponse{}
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - nil provider data":
@@ -184,7 +174,7 @@ func TestProjectUserResource_Configure(t *testing.T) {
 					ProviderData: nil,
 				}
 				resp := &resource.ConfigureResponse{}
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - wrong provider data type":
@@ -193,7 +183,7 @@ func TestProjectUserResource_Configure(t *testing.T) {
 					ProviderData: "wrong type",
 				}
 				resp := &resource.ConfigureResponse{}
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 				assert.True(t, resp.Diagnostics.HasError())
 				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
 			}
@@ -233,12 +223,11 @@ func TestProjectUserResource_ImportState(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			r := project.NewProjectUserResource()
-			ctx := context.Background()
+			ctx := t.Context()
 
 			schemaResp := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -311,7 +300,6 @@ func TestProjectUserResource_Create(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -321,9 +309,9 @@ func TestProjectUserResource_Create(t *testing.T) {
 			r := project.NewProjectUserResource()
 			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
 			configResp := &resource.ConfigureResponse{}
-			r.Configure(context.Background(), configReq, configResp)
+			r.Configure(t.Context(), configReq, configResp)
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Build schema and plan
 			schemaResp := resource.SchemaResponse{}
@@ -377,9 +365,9 @@ func TestProjectUserResource_Read(t *testing.T) {
 			name: "successful read",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":    "user-456",
 								"email": "user@example.com",
 								"role":  "project:admin",
@@ -413,7 +401,6 @@ func TestProjectUserResource_Read(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -423,9 +410,9 @@ func TestProjectUserResource_Read(t *testing.T) {
 			r := project.NewProjectUserResource()
 			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
 			configResp := &resource.ConfigureResponse{}
-			r.Configure(context.Background(), configReq, configResp)
+			r.Configure(t.Context(), configReq, configResp)
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Build schema and state
 			schemaResp := resource.SchemaResponse{}
@@ -484,9 +471,9 @@ func TestProjectUserResource_Update(t *testing.T) {
 					return
 				}
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":    "user-456",
 								"email": "user@example.com",
 								"role":  "project:editor",
@@ -530,7 +517,6 @@ func TestProjectUserResource_Update(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -540,9 +526,9 @@ func TestProjectUserResource_Update(t *testing.T) {
 			r := project.NewProjectUserResource()
 			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
 			configResp := &resource.ConfigureResponse{}
-			r.Configure(context.Background(), configReq, configResp)
+			r.Configure(t.Context(), configReq, configResp)
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Build schema and plan/state
 			schemaResp := resource.SchemaResponse{}
@@ -647,7 +633,6 @@ func TestProjectUserResource_Delete(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -657,9 +642,9 @@ func TestProjectUserResource_Delete(t *testing.T) {
 			r := project.NewProjectUserResource()
 			configReq := resource.ConfigureRequest{ProviderData: n8nClient}
 			configResp := &resource.ConfigureResponse{}
-			r.Configure(context.Background(), configReq, configResp)
+			r.Configure(t.Context(), configReq, configResp)
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			// Build schema and state
 			schemaResp := resource.SchemaResponse{}

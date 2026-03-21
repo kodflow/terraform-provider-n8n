@@ -1,7 +1,6 @@
 package credential_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -52,7 +51,6 @@ func TestCredentialResource_Metadata(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -64,7 +62,7 @@ func TestCredentialResource_Metadata(t *testing.T) {
 				}
 				resp := &resource.MetadataResponse{}
 
-				r.Metadata(context.Background(), req, resp)
+				r.Metadata(t.Context(), req, resp)
 
 				assert.Equal(t, "n8n_credential", resp.TypeName)
 
@@ -75,7 +73,7 @@ func TestCredentialResource_Metadata(t *testing.T) {
 				}
 				resp := &resource.MetadataResponse{}
 
-				r.Metadata(context.Background(), req, resp)
+				r.Metadata(t.Context(), req, resp)
 
 				assert.Equal(t, "custom_credential", resp.TypeName)
 
@@ -86,7 +84,7 @@ func TestCredentialResource_Metadata(t *testing.T) {
 				}
 				resp := &resource.MetadataResponse{}
 
-				r.Metadata(context.Background(), req, resp)
+				r.Metadata(t.Context(), req, resp)
 
 				assert.NotEmpty(t, resp.TypeName, "TypeName must be set")
 			}
@@ -106,7 +104,6 @@ func TestCredentialResource_Schema(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -116,7 +113,7 @@ func TestCredentialResource_Schema(t *testing.T) {
 				req := resource.SchemaRequest{}
 				resp := &resource.SchemaResponse{}
 
-				r.Schema(context.Background(), req, resp)
+				r.Schema(t.Context(), req, resp)
 
 				assert.NotNil(t, resp.Schema)
 				assert.Contains(t, resp.Schema.MarkdownDescription, "credential resource")
@@ -128,7 +125,7 @@ func TestCredentialResource_Schema(t *testing.T) {
 				req := resource.SchemaRequest{}
 				resp := &resource.SchemaResponse{}
 
-				r.Schema(context.Background(), req, resp)
+				r.Schema(t.Context(), req, resp)
 
 				assert.NotNil(t, resp.Schema, "Schema must not be nil")
 				assert.NotEmpty(t, resp.Schema.Attributes, "Schema attributes must not be empty")
@@ -149,14 +146,13 @@ func TestCredentialResource_ImportState(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "import state":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				// Create schema for state
 				schemaResp := resource.SchemaResponse{}
@@ -176,6 +172,7 @@ func TestCredentialResource_ImportState(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.ImportStateRequest{
@@ -197,7 +194,7 @@ func TestCredentialResource_ImportState(t *testing.T) {
 
 			case "error case - import must set ID":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 				state := tfsdk.State{
@@ -211,6 +208,7 @@ func TestCredentialResource_ImportState(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 				req := resource.ImportStateRequest{
 					ID: "test-id",
@@ -239,22 +237,18 @@ func TestNewCredentialResource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
-			case "create new resource":
-				resource := credential.NewCredentialResource()
-				assert.NotNil(t, resource)
-				assert.IsType(t, &credential.CredentialResource{}, resource)
-
-			case "create new resource returns CredentialResource type":
+			case "create new resource", "create new resource returns CredentialResource type":
+				//: Verify resource is created with correct type.
 				resource := credential.NewCredentialResource()
 				assert.NotNil(t, resource)
 				assert.IsType(t, &credential.CredentialResource{}, resource)
 
 			case "error case - resource must not be nil":
+				//: Verify resource is not nil.
 				resource := credential.NewCredentialResource()
 				assert.NotNil(t, resource, "NewCredentialResource must not return nil")
 			}
@@ -276,7 +270,6 @@ func TestNewCredentialResourceWrapper(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -313,7 +306,6 @@ func TestCredentialResource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -325,7 +317,7 @@ func TestCredentialResource_Configure(t *testing.T) {
 				}
 				resp := &resource.ConfigureResponse{}
 
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 
 				// Should not error with nil provider data
 				assert.False(t, resp.Diagnostics.HasError())
@@ -337,7 +329,7 @@ func TestCredentialResource_Configure(t *testing.T) {
 				}
 				resp := &resource.ConfigureResponse{}
 
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 
 				// Configure should accept any provider data
 				assert.NotNil(t, resp)
@@ -350,7 +342,7 @@ func TestCredentialResource_Configure(t *testing.T) {
 				resp := &resource.ConfigureResponse{}
 
 				assert.NotPanics(t, func() {
-					r.Configure(context.Background(), req, resp)
+					r.Configure(t.Context(), req, resp)
 				})
 			}
 		})
@@ -365,19 +357,66 @@ func TestCredentialResource_Create(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
+		{name: "success - create credential", wantErr: false},
 		{name: "error - invalid plan", wantErr: true},
 		{name: "error - API create fails", wantErr: true},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
+			case "success - create credential":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/credentials/schema/") {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
+					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusCreated)
+						w.Write([]byte(`{"id":"new-cred-123","name":"test-credential","type":"httpHeaderAuth","createdAt":"2024-01-01T00:00:00.000Z","updatedAt":"2024-01-01T00:00:00.000Z"}`))
+						return
+					}
+				})
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := credential.NewCredentialResource()
+				r.Configure(t.Context(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := t.Context()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, nil),
+					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
+				})
+				req := resource.CreateRequest{
+					Plan: tfsdk.Plan{Raw: planRaw, Schema: schemaResp.Schema},
+				}
+				resp := &resource.CreateResponse{
+					State: tfsdk.State{Schema: schemaResp.Schema},
+				}
+				r.Create(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors on successful create")
+
 			case "error - invalid plan":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -416,11 +455,11 @@ func TestCredentialResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := credential.NewCredentialResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -436,6 +475,7 @@ func TestCredentialResource_Create(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.CreateRequest{
@@ -468,14 +508,13 @@ func TestCredentialResource_Read(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "success - read keeps state as-is":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -491,6 +530,7 @@ func TestCredentialResource_Read(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.ReadRequest{
@@ -510,7 +550,7 @@ func TestCredentialResource_Read(t *testing.T) {
 
 			case "error - invalid state":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -540,19 +580,87 @@ func TestCredentialResource_Update(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
+		{name: "success - update credential", wantErr: false},
 		{name: "error - invalid plan", wantErr: true},
 		{name: "error - invalid state", wantErr: true},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
+			case "success - update credential":
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/credentials/schema/") {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
+					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusCreated)
+						w.Write([]byte(`{"id":"new-cred-456","name":"test-credential","type":"httpHeaderAuth","createdAt":"2024-01-02T00:00:00.000Z","updatedAt":"2024-01-02T00:00:00.000Z"}`))
+						return
+					}
+					if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"data":[],"nextCursor":null}`))
+						return
+					}
+					if r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/credentials/") {
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+				})
+				n8nClient, server := setupTestClient(t, handler)
+				defer server.Close()
+
+				r := credential.NewCredentialResource()
+				r.Configure(t.Context(), resource.ConfigureRequest{
+					ProviderData: n8nClient,
+				}, &resource.ConfigureResponse{})
+
+				ctx := t.Context()
+				schemaResp := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+				dataMap := map[string]tftypes.Value{
+					"key": tftypes.NewValue(tftypes.String, "value"),
+				}
+				planRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+					"created_at": tftypes.NewValue(tftypes.String, nil),
+					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
+				})
+				stateRaw2 := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+					"id":         tftypes.NewValue(tftypes.String, "cred-123"),
+					"name":       tftypes.NewValue(tftypes.String, "test-credential"),
+					"type":       tftypes.NewValue(tftypes.String, "httpHeaderAuth"),
+					"data":       tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, dataMap),
+					"project_id": tftypes.NewValue(tftypes.String, nil),
+					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
+				})
+				req := resource.UpdateRequest{
+					Plan:  tfsdk.Plan{Raw: planRaw, Schema: schemaResp.Schema},
+					State: tfsdk.State{Raw: stateRaw2, Schema: schemaResp.Schema},
+				}
+				resp := &resource.UpdateResponse{
+					State: tfsdk.State{Schema: schemaResp.Schema},
+				}
+				r.Update(ctx, req, resp)
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no errors on successful update")
+
 			case "error - invalid plan":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -568,6 +676,7 @@ func TestCredentialResource_Update(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.UpdateRequest{
@@ -589,7 +698,7 @@ func TestCredentialResource_Update(t *testing.T) {
 
 			case "error - invalid state":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -605,6 +714,7 @@ func TestCredentialResource_Update(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.UpdateRequest{
@@ -641,14 +751,13 @@ func TestCredentialResource_Delete(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
 			case "error - invalid state":
 				r := &credential.CredentialResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -677,11 +786,11 @@ func TestCredentialResource_Delete(t *testing.T) {
 				n8nClient, _ := setupTestClient(t, handler)
 
 				r := credential.NewCredentialResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -696,6 +805,7 @@ func TestCredentialResource_Delete(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.DeleteRequest{

@@ -21,7 +21,6 @@ func TestPtr(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			switch tc.name {
@@ -30,6 +29,7 @@ func TestPtr(t *testing.T) {
 				ptr := shared.Ptr(s)
 				if ptr == nil {
 					t.Fatal("shared.Ptr() returned nil")
+					return
 				}
 				if *ptr != s {
 					t.Errorf("shared.Ptr() = %v, want %v", *ptr, s)
@@ -39,6 +39,7 @@ func TestPtr(t *testing.T) {
 				ptr := shared.Ptr(i)
 				if ptr == nil {
 					t.Fatal("shared.Ptr() returned nil")
+					return
 				}
 				if *ptr != i {
 					t.Errorf("shared.Ptr() = %v, want %v", *ptr, i)
@@ -48,6 +49,7 @@ func TestPtr(t *testing.T) {
 				ptr := shared.Ptr(b)
 				if ptr == nil {
 					t.Fatal("shared.Ptr() returned nil")
+					return
 				}
 				if *ptr != b {
 					t.Errorf("shared.Ptr() = %v, want %v", *ptr, b)
@@ -57,6 +59,7 @@ func TestPtr(t *testing.T) {
 				ptr := shared.Ptr(s)
 				if ptr == nil {
 					t.Fatal("shared.Ptr() returned nil")
+					return
 				}
 				if *ptr != s {
 					t.Errorf("shared.Ptr() = %v, want %v", *ptr, s)
@@ -83,12 +86,12 @@ func TestString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := shared.String(tt.input)
 			if ptr == nil {
 				t.Fatal("shared.String() returned nil")
+				return
 			}
 			if *ptr != tt.want {
 				t.Errorf("shared.String() = %v, want %v", *ptr, tt.want)
@@ -113,12 +116,12 @@ func TestBool(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := shared.Bool(tt.input)
 			if ptr == nil {
 				t.Fatal("shared.Bool() returned nil")
+				return
 			}
 			if *ptr != tt.want {
 				t.Errorf("shared.Bool() = %v, want %v", *ptr, tt.want)
@@ -144,12 +147,12 @@ func TestInt(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := shared.Int(tt.input)
 			if ptr == nil {
 				t.Fatal("shared.Int() returned nil")
+				return
 			}
 			if *ptr != tt.want {
 				t.Errorf("shared.Int() = %v, want %v", *ptr, tt.want)
@@ -175,12 +178,12 @@ func TestInt32(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := shared.Int32(tt.input)
 			if ptr == nil {
 				t.Fatal("shared.Int32() returned nil")
+				return
 			}
 			if *ptr != tt.want {
 				t.Errorf("shared.Int32() = %v, want %v", *ptr, tt.want)
@@ -206,12 +209,12 @@ func TestFloat32(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ptr := shared.Float32(tt.input)
 			if ptr == nil {
 				t.Fatal("shared.Float32() returned nil")
+				return
 			}
 			if *ptr != tt.want {
 				t.Errorf("shared.Float32() = %v, want %v", *ptr, tt.want)
@@ -238,7 +241,6 @@ func TestPointerFunctions(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			switch tc.name {
@@ -295,7 +297,7 @@ func BenchmarkString(b *testing.B) {
 	s := "test"
 	b.ResetTimer()
 	for b.Loop() {
-		_ = shared.String(s)
+		shared.String(s)
 	}
 }
 
@@ -304,7 +306,7 @@ func BenchmarkBool(b *testing.B) {
 	v := true
 	b.ResetTimer()
 	for b.Loop() {
-		_ = shared.Bool(v)
+		shared.Bool(v)
 	}
 }
 
@@ -313,7 +315,7 @@ func BenchmarkInt(b *testing.B) {
 	v := 42
 	b.ResetTimer()
 	for b.Loop() {
-		_ = shared.Int(v)
+		shared.Int(v)
 	}
 }
 
@@ -322,7 +324,7 @@ func BenchmarkPtr(b *testing.B) {
 	s := "test"
 	b.ResetTimer()
 	for b.Loop() {
-		_ = shared.Ptr(s)
+		shared.Ptr(s)
 	}
 }
 

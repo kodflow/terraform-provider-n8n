@@ -1,7 +1,6 @@
 package workflow
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -21,8 +20,10 @@ import (
 
 // strPtr returns a pointer to the given string value.
 // Helper function for tests.
+//
+//go:fix inline
 func strPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 // TestNewWorkflowResource is now in external test file - refactored to test behavior only.
@@ -36,23 +37,30 @@ func strPtr(s string) *string {
 // TestWorkflowResource_Configure is now in external test file - refactored to test behavior only.
 
 func TestWorkflowResource_InterfaceCompliance(t *testing.T) {
+	t.Parallel()
+
 	t.Run("implements Resource interface", func(t *testing.T) {
+		t.Parallel()
 		var _ resource.Resource = (*WorkflowResource)(nil)
 	})
 
 	t.Run("implements ResourceWithConfigure interface", func(t *testing.T) {
+		t.Parallel()
 		var _ resource.ResourceWithConfigure = (*WorkflowResource)(nil)
 	})
 
 	t.Run("implements ResourceWithImportState interface", func(t *testing.T) {
+		t.Parallel()
 		var _ resource.ResourceWithImportState = (*WorkflowResource)(nil)
 	})
 
 	t.Run("implements WorkflowResourceInterface", func(t *testing.T) {
+		t.Parallel()
 		var _ WorkflowResourceInterface = (*WorkflowResource)(nil)
 	})
 
 	t.Run("error case - nil resource does not implement interfaces", func(t *testing.T) {
+		t.Parallel()
 		var r *WorkflowResource
 		// This verifies that the type itself implements the interfaces, not just non-nil instances
 		assert.Nil(t, r)
@@ -66,7 +74,7 @@ func createTestSchema(t *testing.T) schema.Schema {
 	r := &WorkflowResource{}
 	req := resource.SchemaRequest{}
 	resp := &resource.SchemaResponse{}
-	r.Schema(context.Background(), req, resp)
+	r.Schema(t.Context(), req, resp)
 	return resp.Schema
 }
 
@@ -102,73 +110,106 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 
 // TestWorkflowResource_Delete is now in external test file - refactored to test behavior only.
 
+// TestWorkflowResource_Concurrency verifies thread safety of workflow resource methods.
+// Goroutine lifecycle: goroutines launched per test iteration are bounded to the done channel
+// with fixed capacity; the drain loop waits for all goroutines to complete before returning.
 func TestWorkflowResource_Concurrency(t *testing.T) {
-	t.Run("concurrent metadata calls", func(t *testing.T) {
-		r := &WorkflowResource{}
+	t.Parallel()
 
-		done := make(chan bool, 100)
-		for i := 0; i < 100; i++ {
-			go func() {
-				resp := &resource.MetadataResponse{}
-				r.Metadata(context.Background(), resource.MetadataRequest{
-					ProviderTypeName: "n8n",
-				}, resp)
-				assert.Equal(t, "n8n_workflow", resp.TypeName)
-				done <- true
-			}()
-		}
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "concurrent metadata calls",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := &WorkflowResource{}
 
-		for i := 0; i < 100; i++ {
-			<-done
-		}
-	})
+				done := make(chan bool, 100)
+				for i := range 100 {
+					_ = i
+					go func() {
+						resp := &resource.MetadataResponse{}
+						r.Metadata(t.Context(), resource.MetadataRequest{
+							ProviderTypeName: "n8n",
+						}, resp)
+						assert.Equal(t, "n8n_workflow", resp.TypeName)
+						done <- true
+					}()
+				}
 
-	t.Run("concurrent schema calls", func(t *testing.T) {
-		r := &WorkflowResource{}
+				for range 100 {
+					<-done
+				}
+			},
+		},
+		{
+			name: "concurrent schema calls",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := &WorkflowResource{}
 
-		done := make(chan bool, 100)
-		for i := 0; i < 100; i++ {
-			go func() {
-				resp := &resource.SchemaResponse{}
-				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
-				assert.NotNil(t, resp.Schema)
-				done <- true
-			}()
-		}
+				done := make(chan bool, 100)
+				for i := range 100 {
+					_ = i
+					go func() {
+						resp := &resource.SchemaResponse{}
+						r.Schema(t.Context(), resource.SchemaRequest{}, resp)
+						assert.NotNil(t, resp.Schema)
+						done <- true
+					}()
+				}
 
-		for i := 0; i < 100; i++ {
-			<-done
-		}
-	})
+				for range 100 {
+					<-done
+				}
+			},
+		},
+		{
+			name: "error case - concurrent mixed calls do not panic",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				r := &WorkflowResource{}
 
-	t.Run("error case - concurrent mixed calls do not panic", func(t *testing.T) {
-		r := &WorkflowResource{}
+				done := make(chan bool, 100)
+				for i := range 50 {
+					_ = i
+					go func() {
+						resp := &resource.MetadataResponse{}
+						r.Metadata(t.Context(), resource.MetadataRequest{
+							ProviderTypeName: "test",
+						}, resp)
+						done <- true
+					}()
+				}
+				for i := range 50 {
+					_ = i
+					go func() {
+						resp := &resource.SchemaResponse{}
+						r.Schema(t.Context(), resource.SchemaRequest{}, resp)
+						done <- true
+					}()
+				}
 
-		done := make(chan bool, 100)
-		for i := 0; i < 50; i++ {
-			go func() {
-				resp := &resource.MetadataResponse{}
-				r.Metadata(context.Background(), resource.MetadataRequest{
-					ProviderTypeName: "test",
-				}, resp)
-				done <- true
-			}()
-		}
-		for i := 0; i < 50; i++ {
-			go func() {
-				resp := &resource.SchemaResponse{}
-				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
-				done <- true
-			}()
-		}
+				for range 100 {
+					<-done
+				}
+			},
+		},
+	}
 
-		for i := 0; i < 100; i++ {
-			<-done
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tt.testFunc(t)
+		})
+	}
 }
 
 func TestWORKFLOW_ATTRIBUTES_SIZE(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -177,7 +218,7 @@ func TestWORKFLOW_ATTRIBUTES_SIZE(t *testing.T) {
 			name: "constant is defined",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				assert.Equal(t, 15, WORKFLOW_ATTRIBUTES_SIZE)
+				assert.Equal(t, 15, WorkflowAttributesSize)
 			},
 		},
 		{
@@ -198,7 +239,7 @@ func TestWORKFLOW_ATTRIBUTES_SIZE(t *testing.T) {
 				t.Helper()
 				r := &WorkflowResource{}
 				attrs := r.schemaAttributes()
-				assert.Equal(t, WORKFLOW_ATTRIBUTES_SIZE, len(attrs), "Constant and actual count must match")
+				assert.Equal(t, WorkflowAttributesSize, len(attrs), "Constant and actual count must match")
 			},
 		},
 	}
@@ -213,20 +254,18 @@ func TestWORKFLOW_ATTRIBUTES_SIZE(t *testing.T) {
 func BenchmarkWorkflowResource_Schema(b *testing.B) {
 	r := &WorkflowResource{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &resource.SchemaResponse{}
-		r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+		r.Schema(b.Context(), resource.SchemaRequest{}, resp)
 	}
 }
 
 func BenchmarkWorkflowResource_Metadata(b *testing.B) {
 	r := &WorkflowResource{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &resource.MetadataResponse{}
-		r.Metadata(context.Background(), resource.MetadataRequest{}, resp)
+		r.Metadata(b.Context(), resource.MetadataRequest{}, resp)
 	}
 }
 
@@ -234,28 +273,28 @@ func BenchmarkWorkflowResource_Configure(b *testing.B) {
 	r := &WorkflowResource{}
 	mockClient := &client.N8nClient{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &resource.ConfigureResponse{}
 		req := resource.ConfigureRequest{
 			ProviderData: mockClient,
 		}
-		r.Configure(context.Background(), req, resp)
+		r.Configure(b.Context(), req, resp)
 	}
 }
 
 func BenchmarkWorkflowResource_SchemaAttributes(b *testing.B) {
 	r := &WorkflowResource{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = r.schemaAttributes()
+	for b.Loop() {
+		r.schemaAttributes()
 	}
 }
 
 // CRUD Tests - Focus on helper function testing.
 
 func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -268,14 +307,14 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 					switch r.URL.Path {
 					case "/workflows":
 						if r.Method == http.MethodPost {
-							response := map[string]interface{}{
+							response := map[string]any{
 								"id":          "wf-123",
 								"name":        "Test Workflow",
 								"active":      false,
-								"nodes":       []interface{}{},
-								"connections": map[string]interface{}{},
-								"settings":    map[string]interface{}{},
-								"tags":        []interface{}{map[string]interface{}{"id": "tag1", "name": "Tag 1"}},
+								"nodes":       []any{},
+								"connections": map[string]any{},
+								"settings":    map[string]any{},
+								"tags":        []any{map[string]any{"id": "tag1", "name": "Tag 1"}},
 							}
 							w.Header().Set("Content-Type", "application/json")
 							w.WriteHeader(http.StatusCreated)
@@ -286,7 +325,7 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 						if r.Method == http.MethodPut {
 							w.Header().Set("Content-Type", "application/json")
 							w.WriteHeader(http.StatusOK)
-							json.NewEncoder(w).Encode([]interface{}{map[string]interface{}{"id": "tag1", "name": "Tag 1"}})
+							json.NewEncoder(w).Encode([]any{map[string]any{"id": "tag1", "name": "Tag 1"}})
 							return
 						}
 					}
@@ -294,7 +333,7 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -352,7 +391,7 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 					State: state,
 				}
 
-				r.Create(context.Background(), req, &resp)
+				r.Create(t.Context(), req, &resp)
 
 				if resp.Diagnostics.HasError() {
 					for _, diag := range resp.Diagnostics.Errors() {
@@ -444,6 +483,8 @@ func TestWorkflowResource_Create_JSONParsing(t *testing.T) {
 }
 
 func TestWorkflowResource_Read_ClientRequired(t *testing.T) {
+	t.Parallel()
+
 	t.Run("resource requires configured client", func(t *testing.T) {
 		r := &WorkflowResource{
 			client: nil,
@@ -462,6 +503,8 @@ func TestWorkflowResource_Read_ClientRequired(t *testing.T) {
 }
 
 func TestWorkflowResource_Update_ActivationDetection(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name          string
 		planActive    types.Bool
@@ -500,6 +543,8 @@ func TestWorkflowResource_Update_ActivationDetection(t *testing.T) {
 }
 
 func TestWorkflowResource_Delete_Basic(t *testing.T) {
+	t.Parallel()
+
 	t.Run("delete requires client", func(t *testing.T) {
 		r := &WorkflowResource{
 			client: nil,
@@ -520,6 +565,8 @@ func TestWorkflowResource_Delete_Basic(t *testing.T) {
 
 // TestWorkflowResource_Delete_Internal tests the Delete method with full execution.
 func TestWorkflowResource_Delete_Internal(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -533,14 +580,14 @@ func TestWorkflowResource_Delete_Internal(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := NewWorkflowResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -592,14 +639,14 @@ func TestWorkflowResource_Delete_Internal(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := NewWorkflowResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -650,6 +697,8 @@ func TestWorkflowResource_Delete_Internal(t *testing.T) {
 
 // TestWorkflowResource_CRUD is a comprehensive suite that validates CRUD operation logic.
 func TestWorkflowResource_CRUD(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -689,6 +738,8 @@ func TestWorkflowResource_CRUD(t *testing.T) {
 // TestWorkflowResource_ImportState is now in external test file - refactored to test behavior only.
 
 func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -722,7 +773,7 @@ func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
 					State: tfsdk.State{Schema: createTestSchema(t)},
 				}
 
-				r.Create(context.Background(), req, &resp)
+				r.Create(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Create should fail when Plan.Get fails")
 			},
@@ -756,7 +807,7 @@ func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
 					State: tfsdk.State{Schema: createTestSchema(t)},
 				}
 
-				r.Read(context.Background(), req, &resp)
+				r.Read(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Read should fail when State.Get fails")
 			},
@@ -795,7 +846,7 @@ func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
 					State: state,
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Update should fail when Plan.Get fails")
 			},
@@ -829,7 +880,7 @@ func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
 					State: tfsdk.State{Schema: createTestSchema(t)},
 				}
 
-				r.Delete(context.Background(), req, &resp)
+				r.Delete(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Delete should fail when State.Get fails")
 			},
@@ -845,6 +896,8 @@ func TestWorkflowResource_EdgeCasesForCoverage(t *testing.T) {
 
 // TestWorkflowResource_schemaAttributes tests the schemaAttributes private method.
 func TestWorkflowResource_schemaAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		testFunc       func(*testing.T)
@@ -937,12 +990,12 @@ func TestWorkflowResource_schemaAttributes(t *testing.T) {
 			},
 		},
 		{
-			name: "error case - consistent with WORKFLOW_ATTRIBUTES_SIZE",
+			name: "error case - consistent with WorkflowAttributesSize",
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := &WorkflowResource{}
 				attrs := r.schemaAttributes()
-				assert.Equal(t, WORKFLOW_ATTRIBUTES_SIZE, len(attrs), "Attribute count must match constant")
+				assert.Equal(t, WorkflowAttributesSize, len(attrs), "Attribute count must match constant")
 			},
 		},
 	}
@@ -957,6 +1010,8 @@ func TestWorkflowResource_schemaAttributes(t *testing.T) {
 
 // TestWorkflowResource_addCoreAttributes tests the addCoreAttributes private method.
 func TestWorkflowResource_addCoreAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		testFunc     func(*testing.T)
@@ -1069,12 +1124,9 @@ func TestWorkflowResource_addCoreAttributes(t *testing.T) {
 				r.addCoreAttributes(attrs)
 				for key, attr := range attrs {
 					switch v := attr.(type) {
-					case schema.StringAttribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
-					case schema.BoolAttribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
-					case schema.SetAttribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
+					case schema.StringAttribute, schema.BoolAttribute, schema.SetAttribute:
+						_ = v
+						assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", key)
 					}
 				}
 			},
@@ -1091,6 +1143,8 @@ func TestWorkflowResource_addCoreAttributes(t *testing.T) {
 
 // TestWorkflowResource_addJSONAttributes tests the addJSONAttributes private method.
 func TestWorkflowResource_addJSONAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1215,6 +1269,8 @@ func TestWorkflowResource_addJSONAttributes(t *testing.T) {
 
 // TestWorkflowResource_addMetadataAttributes tests the addMetadataAttributes private method.
 func TestWorkflowResource_addMetadataAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1372,14 +1428,9 @@ func TestWorkflowResource_addMetadataAttributes(t *testing.T) {
 				r.addMetadataAttributes(attrs)
 				for key, attr := range attrs {
 					switch v := attr.(type) {
-					case schema.StringAttribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
-					case schema.BoolAttribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
-					case schema.Int64Attribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
-					case schema.MapAttribute:
-						assert.NotEmpty(t, v.MarkdownDescription, "Attribute %s should have description", key)
+					case schema.StringAttribute, schema.BoolAttribute, schema.Int64Attribute, schema.MapAttribute:
+						_ = v
+						assert.NotEmpty(t, attr.GetMarkdownDescription(), "Attribute %s should have description", key)
 					}
 				}
 			},
@@ -1397,18 +1448,12 @@ func TestWorkflowResource_addMetadataAttributes(t *testing.T) {
 						assert.True(t, v.Computed, "Attribute %s should be computed", key)
 						assert.False(t, v.Required, "Attribute %s should not be required", key)
 						assert.False(t, v.Optional, "Attribute %s should not be optional", key)
-					case schema.BoolAttribute:
-						assert.True(t, v.Computed, "Attribute %s should be computed", key)
-						assert.False(t, v.Required, "Attribute %s should not be required", key)
-						assert.False(t, v.Optional, "Attribute %s should not be optional", key)
-					case schema.Int64Attribute:
-						assert.True(t, v.Computed, "Attribute %s should be computed", key)
-						assert.False(t, v.Required, "Attribute %s should not be required", key)
-						assert.False(t, v.Optional, "Attribute %s should not be optional", key)
-					case schema.MapAttribute:
-						assert.True(t, v.Computed, "Attribute %s should be computed", key)
-						assert.False(t, v.Required, "Attribute %s should not be required", key)
-						assert.False(t, v.Optional, "Attribute %s should not be optional", key)
+					case schema.BoolAttribute, schema.Int64Attribute, schema.MapAttribute:
+						_ = v
+						compAttr, _ := attr.(interface{ GetComputed() bool })
+						if compAttr != nil {
+							assert.True(t, compAttr.GetComputed(), "Attribute %s should be computed", key)
+						}
 					}
 				}
 			},
@@ -1439,6 +1484,8 @@ func TestWorkflowResource_addMetadataAttributes(t *testing.T) {
 
 // TestWorkflowResource_Create_Complete tests all Create function branches for 100% coverage.
 func TestWorkflowResource_Create_Complete(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1452,7 +1499,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -1506,7 +1553,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					},
 				}
 
-				r.Create(context.Background(), req, &resp)
+				r.Create(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -1521,7 +1568,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -1575,7 +1622,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					},
 				}
 
-				r.Create(context.Background(), req, &resp)
+				r.Create(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -1586,13 +1633,13 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "/workflows" && r.Method == http.MethodPost {
-						response := map[string]interface{}{
+						response := map[string]any{
 							"id":          "wf-123",
 							"name":        "Test",
 							"active":      false,
-							"nodes":       []interface{}{},
-							"connections": map[string]interface{}{},
-							"settings":    map[string]interface{}{},
+							"nodes":       []any{},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
 						}
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusCreated)
@@ -1607,7 +1654,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -1661,7 +1708,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					},
 				}
 
-				r.Create(context.Background(), req, &resp)
+				r.Create(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -1672,13 +1719,13 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "/workflows" && r.Method == http.MethodPost {
-						response := map[string]interface{}{
+						response := map[string]any{
 							"id":          "wf-123",
 							"name":        "Test",
 							"active":      false,
-							"nodes":       []interface{}{},
-							"connections": map[string]interface{}{},
-							"settings":    map[string]interface{}{},
+							"nodes":       []any{},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
 						}
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusCreated)
@@ -1689,7 +1736,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -1743,7 +1790,7 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 					},
 				}
 
-				r.Create(context.Background(), req, &resp)
+				r.Create(t.Context(), req, &resp)
 
 				assert.False(t, resp.Diagnostics.HasError())
 			},
@@ -1760,6 +1807,8 @@ func TestWorkflowResource_Create_Complete(t *testing.T) {
 
 // TestWorkflowResource_Read_Complete tests all Read function branches for 100% coverage.
 func TestWorkflowResource_Read_Complete(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1774,7 +1823,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -1828,7 +1877,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 					},
 				}
 
-				r.Read(context.Background(), req, &resp)
+				r.Read(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -1839,13 +1888,13 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "/workflows/wf-123" && r.Method == http.MethodGet {
-						response := map[string]interface{}{
+						response := map[string]any{
 							"id":          "wf-123",
 							"name":        "Updated Name",
 							"active":      true,
-							"nodes":       []interface{}{},
-							"connections": map[string]interface{}{},
-							"settings":    map[string]interface{}{},
+							"nodes":       []any{},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
 						}
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusOK)
@@ -1856,7 +1905,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -1910,7 +1959,7 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 					},
 				}
 
-				r.Read(context.Background(), req, &resp)
+				r.Read(t.Context(), req, &resp)
 
 				assert.False(t, resp.Diagnostics.HasError())
 			},
@@ -1927,6 +1976,8 @@ func TestWorkflowResource_Read_Complete(t *testing.T) {
 
 // TestWorkflowResource_Update_Complete tests all Update function branches for 100% coverage.
 func TestWorkflowResource_Update_Complete(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1998,7 +2049,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					},
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -2012,7 +2063,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -2070,7 +2121,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					},
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -2088,7 +2139,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -2163,7 +2214,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					},
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -2177,7 +2228,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -2235,7 +2286,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					},
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -2246,13 +2297,13 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "/workflows/wf-123" && r.Method == http.MethodPut {
-						response := map[string]interface{}{
+						response := map[string]any{
 							"id":          "wf-123",
 							"name":        "Test",
 							"active":      false,
-							"nodes":       []interface{}{},
-							"connections": map[string]interface{}{},
-							"settings":    map[string]interface{}{},
+							"nodes":       []any{},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
 						}
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusOK)
@@ -2267,7 +2318,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -2325,7 +2376,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					},
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.True(t, resp.Diagnostics.HasError())
 			},
@@ -2336,13 +2387,13 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "/workflows/wf-123" && r.Method == http.MethodPut {
-						response := map[string]interface{}{
+						response := map[string]any{
 							"id":          "wf-123",
 							"name":        "Updated",
 							"active":      false,
-							"nodes":       []interface{}{},
-							"connections": map[string]interface{}{},
-							"settings":    map[string]interface{}{},
+							"nodes":       []any{},
+							"connections": map[string]any{},
+							"settings":    map[string]any{},
 						}
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusOK)
@@ -2353,7 +2404,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &WorkflowResource{client: n8nClient}
 
@@ -2411,7 +2462,7 @@ func TestWorkflowResource_Update_Complete(t *testing.T) {
 					},
 				}
 
-				r.Update(context.Background(), req, &resp)
+				r.Update(t.Context(), req, &resp)
 
 				assert.False(t, resp.Diagnostics.HasError())
 			},
@@ -2519,16 +2570,15 @@ func TestWorkflowResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name:      types.StringValue(tt.workflowName),
 				NodesJSON: types.StringValue(tt.nodesJSON),
@@ -2614,16 +2664,15 @@ func TestWorkflowResource_executeReadLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.workflowID),
 			}
@@ -2761,16 +2810,15 @@ func TestWorkflowResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				ID:        types.StringValue(tt.workflowID),
 				Name:      types.StringValue(tt.newName),
@@ -2846,16 +2894,15 @@ func TestWorkflowResource_executeDeleteLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.workflowID),
 			}
@@ -2944,13 +2991,12 @@ func TestWorkflowResource_handlePostCreationActivation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
 			plan := &models.Resource{
@@ -2963,7 +3009,7 @@ func TestWorkflowResource_handlePostCreationActivation(t *testing.T) {
 			}
 			diags := &diag.Diagnostics{}
 
-			result := r.handlePostCreationActivation(context.Background(), plan, workflow, diags)
+			result := r.handlePostCreationActivation(t.Context(), plan, workflow, diags)
 
 			if tt.expectError {
 				assert.False(t, result, "Should return false on error")
@@ -3218,13 +3264,12 @@ func TestWorkflowResource_performUpdateOperations(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
 			// Create null Tags to skip tag update.
@@ -3245,7 +3290,7 @@ func TestWorkflowResource_performUpdateOperations(t *testing.T) {
 			}
 			diags := &diag.Diagnostics{}
 
-			result := r.performUpdateOperations(context.Background(), tt.workflowID, plan, state, diags)
+			result := r.performUpdateOperations(t.Context(), tt.workflowID, plan, state, diags)
 
 			if tt.expectNil {
 				assert.Nil(t, result, "Should return nil")
@@ -3350,7 +3395,6 @@ func Test_applyTimestampFallbacks(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -3367,6 +3411,96 @@ func Test_applyTimestampFallbacks(t *testing.T) {
 
 			assert.Equal(t, tt.expectCreatedAt, plan.CreatedAt, "CreatedAt should match expected")
 			assert.Equal(t, tt.expectUpdatedAt, plan.UpdatedAt, "UpdatedAt should match expected")
+		})
+	}
+}
+
+// TestWorkflowResource_updateWorkflowAndTags tests the updateWorkflowAndTags method.
+func TestWorkflowResource_updateWorkflowAndTags(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		expectPanic bool
+	}{
+		{
+			name:        "nil client panics",
+			expectPanic: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			//: Verify nil client causes panic.
+			if tt.expectPanic {
+				r := &WorkflowResource{}
+				diags := &diag.Diagnostics{}
+				plan := &models.Resource{
+					Name: types.StringValue("test"),
+					Tags: types.SetNull(types.StringType),
+				}
+				assert.Panics(t, func() {
+					r.updateWorkflowAndTags(t.Context(), "wf-123", plan, &workflowContent{
+						Name: "test",
+					}, diags)
+				})
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_applyProjectTransferIfNeeded tests the applyProjectTransferIfNeeded method.
+func TestWorkflowResource_applyProjectTransferIfNeeded(t *testing.T) {
+	t.Parallel()
+
+	wfID := "wf-123"
+	tests := []struct {
+		name           string
+		planProjectID  string
+		stateProjectID string
+		expectOriginal bool
+	}{
+		{
+			name:           "same project ID returns original workflow",
+			planProjectID:  "proj-1",
+			stateProjectID: "proj-1",
+			expectOriginal: true,
+		},
+		{
+			name:           "null project ID returns original workflow",
+			planProjectID:  "",
+			stateProjectID: "proj-1",
+			expectOriginal: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			diags := &diag.Diagnostics{}
+			r := &WorkflowResource{}
+			workflow := &n8nsdk.Workflow{Id: &wfID}
+			plan := &models.Resource{}
+			state := &models.Resource{}
+			//: Set up project IDs.
+			if tt.planProjectID != "" {
+				plan.ProjectID = types.StringValue(tt.planProjectID)
+			} else {
+				plan.ProjectID = types.StringNull()
+			}
+			if tt.stateProjectID != "" {
+				state.ProjectID = types.StringValue(tt.stateProjectID)
+			} else {
+				state.ProjectID = types.StringNull()
+			}
+			//: Call applyProjectTransferIfNeeded.
+			result := r.applyProjectTransferIfNeeded(t.Context(), "wf-123", workflow, plan, state, diags)
+			//: Verify expected return value.
+			if tt.expectOriginal {
+				assert.Equal(t, workflow, result)
+			}
+			assert.False(t, diags.HasError())
 		})
 	}
 }

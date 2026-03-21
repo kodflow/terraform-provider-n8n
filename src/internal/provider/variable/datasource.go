@@ -43,8 +43,8 @@ type VariableDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: New VariableDataSource instance
-func NewVariableDataSource() *VariableDataSource {
-	// Return result.
+func NewVariableDataSource() (variableDataSource *VariableDataSource) {
+	//: Return result.
 	return &VariableDataSource{}
 }
 
@@ -53,8 +53,8 @@ func NewVariableDataSource() *VariableDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped VariableDataSource instance
-func NewVariableDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewVariableDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewVariableDataSource()
 }
 
@@ -67,7 +67,12 @@ func NewVariableDataSourceWrapper() datasource.DataSource {
 //
 // Returns:
 //   - None
-func (d *VariableDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *VariableDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_variable"
 }
 
@@ -80,7 +85,12 @@ func (d *VariableDataSource) Metadata(_ctx context.Context, req datasource.Metad
 //
 // Returns:
 //   - None
-func (d *VariableDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *VariableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n variable by ID or key. Since the n8n API doesn't provide a GET /variables/{id} endpoint, this datasource uses the LIST endpoint with client-side filtering.",
 
@@ -122,21 +132,26 @@ func (d *VariableDataSource) Schema(_ctx context.Context, _req datasource.Schema
 //
 // Returns:
 //   - None
-func (d *VariableDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *VariableDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -156,24 +171,24 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
-	// Check if diagnostics have errors
+	//: Check if diagnostics have errors
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	// Validate identifiers
-	// Return early if validation failed.
+	//: Return early if validation failed.
 	if !d.validateIdentifiers(data, resp) {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	// Fetch variable from API
 	variable := d.fetchVariable(ctx, data, resp)
-	// Return early if fetch failed.
+	//: Return early if fetch failed.
 	if variable == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -191,15 +206,17 @@ func (d *VariableDataSource) Read(ctx context.Context, req datasource.ReadReques
 //
 // Returns:
 //   - bool: true if valid, false otherwise
-func (d *VariableDataSource) validateIdentifiers(data *models.DataSource, resp *datasource.ReadResponse) bool {
-	// Check for non-null value.
+func (d *VariableDataSource) validateIdentifiers(data *models.DataSource, resp *datasource.ReadResponse) (ok bool) {
+	//: Check for non-null value.
 	if data.ID.IsNull() && data.Key.IsNull() {
 		resp.Diagnostics.AddError(
 			"Missing Required Attribute",
 			"Either 'id' or 'key' must be specified",
 		)
+		//: Return failure.
 		return false
 	}
+	//: Return success.
 	return true
 }
 
@@ -212,43 +229,59 @@ func (d *VariableDataSource) validateIdentifiers(data *models.DataSource, resp *
 //
 // Returns:
 //   - *n8nsdk.Variable: the variable or nil if error occurred
-func (d *VariableDataSource) fetchVariable(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) *n8nsdk.Variable {
-	// Build API request
+func (d *VariableDataSource) fetchVariable(ctx context.Context, data *models.DataSource, resp *datasource.ReadResponse) (result *n8nsdk.Variable) {
+	//: Build API request with optional project filter.
 	apiReq := d.client.APIClient.VariablesAPI.VariablesGet(ctx)
-
-	// If project_id is provided, filter by it
+	//: If project_id is provided, filter by it
 	if !data.ProjectID.IsNull() {
 		apiReq = apiReq.ProjectId(data.ProjectID.ValueString())
 	}
 
-	// List all variables and filter client-side (API limitation)
 	variableList, httpResp, err := apiReq.Execute()
-	// Close HTTP response body if present
+	//: Close HTTP response body if present
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Handle API errors
+	//: Handle API errors
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing variables",
 			fmt.Sprintf("Could not list variables: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
-	// Find variable by ID or key
+	//: Search variable list and report error if not found.
+	return d.findVariableInList(variableList.Data, data, resp)
+}
+
+// findVariableInList searches a variable list by ID or key, reporting an error if not found.
+//
+// Params:
+//   - variables: slice of variables from API response (may be nil)
+//   - data: variable data source model containing search identifiers
+//   - resp: read response for error diagnostics
+//
+// Returns:
+//   - *n8nsdk.Variable: matched variable or nil if not found
+func (d *VariableDataSource) findVariableInList(variables []n8nsdk.Variable, data *models.DataSource, resp *datasource.ReadResponse) (result *n8nsdk.Variable) {
 	var variable *n8nsdk.Variable
 	var found bool
-	// Check if variable data exists in response
-	if variableList.Data != nil {
-		variable, found = findVariableByIDOrKey(variableList.Data, data.ID, data.Key)
+	//: Check if variable data exists in response
+	if variables != nil {
+		variable, found = findVariableByIDOrKey(variables, data.ID, data.Key)
 	}
 
-	// Verify variable was found
+	//: Verify variable was found
 	if !found {
 		identifier := data.ID.ValueString()
-		// Use key as fallback identifier
+		//: Use key as fallback identifier
 		if identifier == "" {
 			identifier = data.Key.ValueString()
 		}
@@ -256,10 +289,10 @@ func (d *VariableDataSource) fetchVariable(ctx context.Context, data *models.Dat
 			"Variable Not Found",
 			fmt.Sprintf("Could not find variable with identifier: %s", identifier),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
-	// Return result.
+	//: Return result.
 	return variable
 }

@@ -1,0 +1,284 @@
+# GrepAI Configuration - Optimized for DevContainer (12 languages)
+# Model: bge-m3 (best RAG accuracy 72%, 1024d, multi-granularity retrieval)
+# Hybrid search enabled for mixed semantic + identifier queries
+#
+# Endpoint is auto-detected by postStart.sh (host GPU-accelerated)
+# Override: set OLLAMA_HOST env var in .devcontainer/.env
+
+version: 1
+
+embedder:
+  provider: ollama
+  model: bge-m3
+  endpoint: http://localhost:11434 # Auto-replaced by postStart.sh
+  dimensions: 1024 # Reduced from 4096 max for efficiency
+
+store:
+  backend: gob
+
+chunking:
+  size: 1024 # Larger chunks for better semantic context
+  overlap: 100 # Better context overlap
+
+watch:
+  debounce_ms: 2000 # Reduced CPU: wait 2s before re-indexing
+
+search:
+  hybrid:
+    enabled: true # RRF combines vector + keyword search
+    k: 60 # Balanced weighting
+
+  boost:
+    enabled: true
+    bonuses:
+      # Source code priority
+      - pattern: /src/
+        factor: 1.2
+      - pattern: /lib/
+        factor: 1.15
+      - pattern: /app/
+        factor: 1.15
+      - pattern: /pkg/
+        factor: 1.15
+      - pattern: /internal/
+        factor: 1.1
+      - pattern: /cmd/
+        factor: 1.1
+    penalties:
+      # Test files (lower priority)
+      - pattern: /tests/
+        factor: 0.5
+      - pattern: /test/
+        factor: 0.5
+      - pattern: __tests__/
+        factor: 0.5
+      - pattern: _test.
+        factor: 0.5
+      - pattern: .test.
+        factor: 0.5
+      - pattern: .spec.
+        factor: 0.5
+      - pattern: test_
+        factor: 0.5
+      - pattern: _spec.
+        factor: 0.5
+      # Mocks and fixtures
+      - pattern: /mocks/
+        factor: 0.4
+      - pattern: /mock/
+        factor: 0.4
+      - pattern: .mock.
+        factor: 0.4
+      - pattern: /fixtures/
+        factor: 0.4
+      - pattern: /testdata/
+        factor: 0.4
+      - pattern: /stubs/
+        factor: 0.4
+      # Generated code
+      - pattern: /generated/
+        factor: 0.3
+      - pattern: .generated.
+        factor: 0.3
+      - pattern: .gen.
+        factor: 0.3
+      - pattern: .pb.
+        factor: 0.3
+      - pattern: _pb2.
+        factor: 0.3
+      # Documentation (lower but not excluded)
+      - pattern: .md
+        factor: 0.6
+      - pattern: /docs/
+        factor: 0.6
+      # Vendored code
+      - pattern: /vendor/
+        factor: 0.2
+      - pattern: /third_party/
+        factor: 0.2
+
+trace:
+  mode: fast
+  enabled_languages:
+    # Go
+    - .go
+    # Node.js / TypeScript
+    - .js
+    - .ts
+    - .jsx
+    - .tsx
+    - .mjs
+    - .cjs
+    # Python
+    - .py
+    - .pyx
+    - .pyi
+    # Rust
+    - .rs
+    # Elixir
+    - .ex
+    - .exs
+    # Java
+    - .java
+    # PHP
+    - .php
+    # Ruby
+    - .rb
+    - .rake
+    # Scala
+    - .scala
+    - .sc
+    - .sbt
+    # Dart / Flutter
+    - .dart
+    # C / C++
+    - .c
+    - .h
+    - .cpp
+    - .hpp
+    - .cc
+    - .cxx
+    - .hxx
+    # Carbon
+    - .carbon
+  exclude_patterns:
+    # Go tests
+    - "*_test.go"
+    # JS/TS tests
+    - "*.spec.ts"
+    - "*.spec.js"
+    - "*.spec.tsx"
+    - "*.spec.jsx"
+    - "*.test.ts"
+    - "*.test.js"
+    - "*.test.tsx"
+    - "*.test.jsx"
+    - "__tests__/*"
+    # Python tests
+    - "test_*.py"
+    - "*_test.py"
+    - "conftest.py"
+    # Rust tests
+    - "**/tests/*.rs"
+    # Elixir tests
+    - "*_test.exs"
+    # Java tests
+    - "*Test.java"
+    - "*Tests.java"
+    # PHP tests
+    - "*Test.php"
+    - "*_test.php"
+    # Ruby tests
+    - "*_spec.rb"
+    - "*_test.rb"
+    # Scala tests
+    - "*Spec.scala"
+    - "*Test.scala"
+    # Dart tests
+    - "*_test.dart"
+
+update:
+  check_on_startup: false
+
+ignore:
+  # Version control
+  - .git
+  - .svn
+  - .hg
+
+  # GrepAI
+  - .grepai
+
+  # Claude Code (logs change constantly, causing infinite re-indexing)
+  - .claude
+
+  # IDE / Editors
+  - .idea
+  - .vscode
+  - "*.swp"
+  - "*.swo"
+  - .DS_Store
+
+  # Node.js
+  - node_modules
+  - .npm
+  - .yarn
+  - .pnpm-store
+  - package-lock.json
+  - yarn.lock
+  - pnpm-lock.yaml
+
+  # Python
+  - __pycache__
+  - .venv
+  - venv
+  - .env
+  - "*.pyc"
+  - "*.pyo"
+  - .mypy_cache
+  - .pytest_cache
+  - .ruff_cache
+  - "*.egg-info"
+  - dist
+  - build
+
+  # Go
+  - vendor
+  - go.sum
+
+  # Rust
+  - target
+  - Cargo.lock
+
+  # Java / Scala
+  - .gradle
+  - .m2
+  - "*.class"
+  - "*.jar"
+
+  # C / C++
+  - "*.o"
+  - "*.obj"
+  - "*.a"
+  - "*.so"
+  - "*.dylib"
+  - cmake-build-*
+  - CMakeFiles
+
+  # Dart / Flutter
+  - .dart_tool
+  - .packages
+  - pubspec.lock
+  - .flutter-plugins
+  - .flutter-plugins-dependencies
+
+  # Elixir
+  - _build
+  - deps
+  - .elixir_ls
+
+  # Ruby
+  - .bundle
+  - Gemfile.lock
+
+  # PHP
+  - vendor
+  - composer.lock
+
+  # Build outputs
+  - bin
+  - out
+  - dist
+  - build
+  - release
+
+  # Carbon (experimental)
+  - bazel-*
+
+  # Misc
+  - coverage
+  - .coverage
+  - "*.log"
+  - tmp
+  - temp
+  - .cache

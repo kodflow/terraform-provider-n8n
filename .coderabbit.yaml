@@ -1,0 +1,149 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE in the project root for license information.
+
+language: "en-US"
+tone_instructions: "Be concise, technical, and Go-idiomatic. Flag Go anti-patterns, Terraform misconfigurations, and Bazel build issues. Prefer precision over verbosity."
+early_access: true
+enable_free_tier: true
+inheritance: false
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_instructions: "Summarize what changed in the Terraform provider: which resources/data sources were affected, any SDK changes, and testing impact. Keep it to 3-5 bullet points."
+  auto_title_instructions: "Generate conventional commit titles using scopes from: provider, workflow, credential, execution, tag, user, variable, project, sourcecontrol, sdk, ci, build"
+  labeling_instructions:
+    - label: "dependencies"
+      instructions: "Apply when go.mod, go.sum, WORKSPACE, or Bazel dependency files change"
+    - label: "breaking-change"
+      instructions: "Apply when Terraform resource schema changes in a way that requires state migration or destroys existing resources"
+    - label: "security"
+      instructions: "Apply when authentication, API tokens, credential handling, or sensitive data management changes"
+    - label: "concurrency"
+      instructions: "Apply when goroutines, mutexes, channels, or concurrent state management is modified"
+    - label: "performance"
+      instructions: "Apply when HTTP client configuration, retry logic, or bulk API operations change"
+    - label: "shell"
+      instructions: "Apply when Makefile targets, shell scripts, or CI pipeline scripts are modified"
+    - label: "correctness"
+      instructions: "Apply when error handling, resource state logic, or provider schema validation changes"
+    - label: "terraform"
+      instructions: "Apply when Terraform schema definitions, CRUD operations, or provider configuration changes"
+    - label: "testing"
+      instructions: "Apply when test files, mock implementations, or test coverage changes"
+    - label: "sdk"
+      instructions: "Apply when the n8n SDK (sdk/n8nsdk/) or OpenAPI generation changes"
+    - label: "build"
+      instructions: "Apply when Bazel BUILD files, WORKSPACE, or build configuration changes"
+  auto_apply_labels: true
+  path_filters:
+    - "!**/*.out"
+    - "!bazel-*/**"
+    - "!**/.terraform/**"
+    - "!**/vendor/**"
+    - "!**/*.pb.go"
+    - "!docs/**"
+  path_instructions:
+    - path: "**/*.go"
+      instructions: "Review Go code for: idiomatic error handling (no bare returns, wrap errors with context), goroutine safety, nil pointer risks, unused variables/imports, proper resource cleanup with defer, and conformance to Terraform provider patterns (schema types, state management, diagnostics). Flag any panic() calls in non-test code."
+    - path: "src/internal/provider/**/*.go"
+      instructions: "Review Terraform provider logic for: correct use of schema.ResourceData, proper diagnostics (not raw errors), import functionality, state consistency between Create/Read/Update, and handling of optional vs required attributes. Verify all CRUD operations handle not-found (404) gracefully."
+    - path: "sdk/n8nsdk/**/*.go"
+      instructions: "This is generated SDK code. Focus on: correct HTTP method usage, proper error response handling, authentication header injection, and request/response struct alignment with the n8n OpenAPI spec."
+    - path: "**/*.tf"
+      instructions: "Review Terraform examples for correctness, use of required_providers, provider version pinning, and sensible defaults. Flag any hardcoded credentials or non-example sensitive values."
+    - path: "**/*.sh"
+      instructions: "Validate shell safety: strict mode (set -euo pipefail), proper variable quoting, no unquoted expansions, shellcheck compliance, and safe use of temporary files."
+    - path: "**/Makefile"
+      instructions: "Verify Makefile targets are idempotent, properly ordered, and use $(MAKE) for recursive calls. Flag missing .PHONY declarations."
+    - path: "**/Dockerfile*"
+      instructions: "Check hadolint compliance, non-root user execution, minimal base image, multi-stage build usage, and no secrets baked into image layers."
+    - path: "**/*.yml"
+      instructions: "Validate CI/CD configuration for correct job dependencies, secret handling, and workflow triggers. Flag any missing timeout settings."
+    - path: "**/*.yaml"
+      instructions: "Validate YAML syntax and structure. For GitHub Actions workflows, check for pinned action versions and proper secret references."
+    - path: "**/BUILD.bazel"
+      instructions: "Verify Bazel BUILD files: correct visibility, deps completeness, and that gazelle-managed sections are not manually modified in ways that conflict with go_library/go_test rules."
+    - path: "**/*.md"
+      instructions: "Check documentation accuracy against the actual code. Flag outdated examples, incorrect command syntax, or missing required fields."
+  auto_review:
+    enabled: true
+    base_branches:
+      - "main"
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+  pre_merge_checks:
+    title:
+      mode: "error"
+    description:
+      mode: "error"
+  tools:
+    github-checks:
+      enabled: true
+    languagetool:
+      enabled: true
+    biome:
+      enabled: true
+    hadolint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    golangci-lint:
+      enabled: true
+    ast-grep:
+      essential_rules: true
+    checkov:
+      enabled: true
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    yamllint:
+      enabled: true
+    buf:
+      enabled: true
+    ruff:
+      enabled: true
+chat:
+  art: false
+  auto_reply: true
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - "**/*.go"
+      - "**/*.tf"
+      - "**/*.sh"
+      - "**/Makefile"
+      - "**/Dockerfile*"
+      - "**/*.yml"
+      - "**/*.yaml"
+      - "**/BUILD.bazel"
+code_generation:
+  docstrings:
+    path_instructions:
+      - path: "**/*.go"
+        instructions: "Generate Go doc comments following godoc conventions. For Terraform resource functions (Create, Read, Update, Delete), document the n8n API endpoint called and any important state management considerations."
+  unit_tests:
+    path_instructions:
+      - path: "**/*.go"
+        instructions: "Generate pure unit tests using mock HTTP clients. Follow the project pattern: mock the APIClient interface, test all error paths, use table-driven tests with t.Run(), and aim for 100% branch coverage. Never use t.Skip()."
+issue_enrichment:
+  planning:
+    enabled: true
+  labeling:
+    labeling_instructions:
+      - label: "bug"
+        instructions: "Apply when describing incorrect provider behavior, state drift, or API communication failures"
+      - label: "enhancement"
+        instructions: "Apply when requesting new Terraform resources, data sources, or additional attributes on existing resources"
+      - label: "documentation"
+        instructions: "Apply when requesting clarification or improvements to provider docs or examples"
+      - label: "sdk"
+        instructions: "Apply when the issue relates to the generated n8n SDK or OpenAPI spec discrepancies"
+    auto_apply_labels: true

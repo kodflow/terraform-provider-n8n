@@ -1,7 +1,6 @@
 package project_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -51,7 +50,6 @@ func TestNewProjectResource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -82,16 +80,11 @@ func TestNewProjectResourceWrapper(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			switch tt.name {
-			case "creates valid resource wrapper":
-				wrapper := project.NewProjectResourceWrapper()
-				assert.NotNil(t, wrapper)
-
-			case "error case - validation checks":
+			case "creates valid resource wrapper", "error case - validation checks":
 				wrapper := project.NewProjectResourceWrapper()
 				assert.NotNil(t, wrapper)
 			}
@@ -112,7 +105,6 @@ func TestProjectResource_Metadata(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -123,7 +115,7 @@ func TestProjectResource_Metadata(t *testing.T) {
 					ProviderTypeName: "n8n",
 				}
 				resp := &resource.MetadataResponse{}
-				r.Metadata(context.Background(), req, resp)
+				r.Metadata(t.Context(), req, resp)
 				assert.Equal(t, "n8n_project", resp.TypeName)
 
 			case "error case - validation checks":
@@ -132,7 +124,7 @@ func TestProjectResource_Metadata(t *testing.T) {
 					ProviderTypeName: "n8n",
 				}
 				resp := &resource.MetadataResponse{}
-				r.Metadata(context.Background(), req, resp)
+				r.Metadata(t.Context(), req, resp)
 				assert.NotEmpty(t, resp.TypeName)
 			}
 		})
@@ -152,7 +144,6 @@ func TestProjectResource_Schema(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -161,7 +152,7 @@ func TestProjectResource_Schema(t *testing.T) {
 				r := project.NewProjectResource()
 				req := resource.SchemaRequest{}
 				resp := &resource.SchemaResponse{}
-				r.Schema(context.Background(), req, resp)
+				r.Schema(t.Context(), req, resp)
 				assert.NotNil(t, resp.Schema)
 				assert.NotEmpty(t, resp.Schema.Attributes)
 
@@ -169,7 +160,7 @@ func TestProjectResource_Schema(t *testing.T) {
 				r := project.NewProjectResource()
 				req := resource.SchemaRequest{}
 				resp := &resource.SchemaResponse{}
-				r.Schema(context.Background(), req, resp)
+				r.Schema(t.Context(), req, resp)
 				assert.NotNil(t, resp.Schema)
 			}
 		})
@@ -190,7 +181,6 @@ func TestProjectResource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -201,7 +191,7 @@ func TestProjectResource_Configure(t *testing.T) {
 					ProviderData: &client.N8nClient{},
 				}
 				resp := &resource.ConfigureResponse{}
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - nil provider data":
@@ -210,7 +200,7 @@ func TestProjectResource_Configure(t *testing.T) {
 					ProviderData: nil,
 				}
 				resp := &resource.ConfigureResponse{}
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - wrong provider data type":
@@ -219,7 +209,7 @@ func TestProjectResource_Configure(t *testing.T) {
 					ProviderData: "wrong type",
 				}
 				resp := &resource.ConfigureResponse{}
-				r.Configure(context.Background(), req, resp)
+				r.Configure(t.Context(), req, resp)
 				assert.True(t, resp.Diagnostics.HasError())
 				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Resource Configure Type")
 			}
@@ -229,6 +219,8 @@ func TestProjectResource_Configure(t *testing.T) {
 
 // TestProjectResource_Create tests the Create method with full execution.
 func TestProjectResource_Create(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -257,11 +249,11 @@ func TestProjectResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -300,7 +292,7 @@ func TestProjectResource_Create(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := project.NewProjectResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -337,11 +329,11 @@ func TestProjectResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -382,6 +374,8 @@ func TestProjectResource_Create(t *testing.T) {
 
 // TestProjectResource_Read tests the Read method with full execution.
 func TestProjectResource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -400,11 +394,11 @@ func TestProjectResource_Read(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -439,7 +433,7 @@ func TestProjectResource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := project.NewProjectResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -476,11 +470,11 @@ func TestProjectResource_Read(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -517,6 +511,8 @@ func TestProjectResource_Read(t *testing.T) {
 
 // TestProjectResource_Update tests the Update method with full execution.
 func TestProjectResource_Update(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -545,11 +541,11 @@ func TestProjectResource_Update(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -597,7 +593,7 @@ func TestProjectResource_Update(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := project.NewProjectResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -647,11 +643,11 @@ func TestProjectResource_Update(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -700,6 +696,8 @@ func TestProjectResource_Update(t *testing.T) {
 
 // TestProjectResource_Delete tests the Delete method with full execution.
 func TestProjectResource_Delete(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -716,11 +714,11 @@ func TestProjectResource_Delete(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -753,7 +751,7 @@ func TestProjectResource_Delete(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := project.NewProjectResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -790,11 +788,11 @@ func TestProjectResource_Delete(t *testing.T) {
 				defer server.Close()
 
 				r := project.NewProjectResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -829,35 +827,46 @@ func TestProjectResource_Delete(t *testing.T) {
 
 // TestProjectResource_ImportState tests the ImportState method.
 func TestProjectResource_ImportState(t *testing.T) {
-	t.Run("import state passthrough", func(t *testing.T) {
-		t.Helper()
-		r := project.NewProjectResource()
-		ctx := context.Background()
+	t.Parallel()
 
-		schemaResp := resource.SchemaResponse{}
-		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	tests := []struct {
+		name string
+		id   string
+	}{
+		{name: "import state passthrough", id: "proj-123"},
+	}
 
-		// Build empty state
-		emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-			"id":   tftypes.NewValue(tftypes.String, nil),
-			"name": tftypes.NewValue(tftypes.String, nil),
-			"type": tftypes.NewValue(tftypes.String, nil),
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := project.NewProjectResource()
+			ctx := t.Context()
+
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			// Build empty state
+			emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":   tftypes.NewValue(tftypes.String, nil),
+				"name": tftypes.NewValue(tftypes.String, nil),
+				"type": tftypes.NewValue(tftypes.String, nil),
+			})
+
+			req := resource.ImportStateRequest{
+				ID: tt.id,
+			}
+			resp := &resource.ImportStateResponse{
+				State: tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    emptyValue,
+				},
+			}
+
+			// Call ImportState
+			r.ImportState(ctx, req, resp)
+
+			// Verify no errors (ImportStatePassthroughID doesn't return errors for valid IDs)
+			assert.False(t, resp.Diagnostics.HasError())
 		})
-
-		req := resource.ImportStateRequest{
-			ID: "proj-123",
-		}
-		resp := &resource.ImportStateResponse{
-			State: tfsdk.State{
-				Schema: schemaResp.Schema,
-				Raw:    emptyValue,
-			},
-		}
-
-		// Call ImportState
-		r.ImportState(ctx, req, resp)
-
-		// Verify no errors (ImportStatePassthroughID doesn't return errors for valid IDs)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+	}
 }

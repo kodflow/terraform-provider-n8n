@@ -1,7 +1,6 @@
 package user_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -97,7 +96,7 @@ func TestUserDataSource_Metadata(t *testing.T) {
 				}
 				resp := &datasource.MetadataResponse{}
 
-				ds.Metadata(context.Background(), req, resp)
+				ds.Metadata(t.Context(), req, resp)
 
 				assert.Equal(t, "n8n_user", resp.TypeName, "TypeName should be set correctly")
 			},
@@ -112,7 +111,7 @@ func TestUserDataSource_Metadata(t *testing.T) {
 				}
 				resp := &datasource.MetadataResponse{}
 
-				ds.Metadata(context.Background(), req, resp)
+				ds.Metadata(t.Context(), req, resp)
 
 				assert.Equal(t, "n8n_user", resp.TypeName, "TypeName should be set correctly")
 			},
@@ -141,7 +140,7 @@ func TestUserDataSource_Schema(t *testing.T) {
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
 
-				ds.Schema(context.Background(), req, resp)
+				ds.Schema(t.Context(), req, resp)
 
 				assert.NotNil(t, resp.Schema, "Schema should not be nil")
 				assert.NotNil(t, resp.Schema.Attributes, "Schema attributes should not be nil")
@@ -155,7 +154,7 @@ func TestUserDataSource_Schema(t *testing.T) {
 				req := datasource.SchemaRequest{}
 				resp := &datasource.SchemaResponse{}
 
-				ds.Schema(context.Background(), req, resp)
+				ds.Schema(t.Context(), req, resp)
 
 				assert.NotNil(t, resp.Schema, "Schema should not be nil")
 				assert.NotNil(t, resp.Schema.Attributes, "Schema attributes should not be nil")
@@ -175,7 +174,7 @@ func TestUserDataSource_Configure(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		providerData interface{}
+		providerData any
 		expectError  bool
 	}{
 		{
@@ -205,7 +204,7 @@ func TestUserDataSource_Configure(t *testing.T) {
 			}
 			resp := &datasource.ConfigureResponse{}
 
-			ds.Configure(context.Background(), req, resp)
+			ds.Configure(t.Context(), req, resp)
 
 			if tt.expectError {
 				assert.True(t, resp.Diagnostics.HasError(), "Configure should return error for invalid provider data")
@@ -219,6 +218,8 @@ func TestUserDataSource_Configure(t *testing.T) {
 // TestUserDataSource_Read tests the Read method.
 
 func TestUserDataSource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -237,11 +238,11 @@ func TestUserDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := user.NewUserDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -290,7 +291,7 @@ func TestUserDataSource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := user.NewUserDataSource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
@@ -333,11 +334,11 @@ func TestUserDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := user.NewUserDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -379,7 +380,7 @@ func TestUserDataSource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := user.NewUserDataSource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)

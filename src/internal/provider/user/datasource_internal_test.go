@@ -2,6 +2,10 @@ package user
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -44,52 +48,47 @@ func (m *MockUserDataSourceInterface) Read(ctx context.Context, req datasource.R
 
 // TestUserDataSource_Configure is now in external test file - refactored to test behavior only.
 
+// Compile-time interface satisfaction checks.
+var _ datasource.DataSource = (*UserDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*UserDataSource)(nil)
+var _ UserDataSourceInterface = (*UserDataSource)(nil)
+
 func TestUserDataSource_Interfaces(t *testing.T) {
-	t.Helper()
+	t.Parallel()
 
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
 	}{
 		{
-			name: "implements required interfaces",
+			name: "constructor returns non-nil instance",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-
 				ds := NewUserDataSource()
-
-				// Test that UserDataSource implements datasource.DataSource
-				var _ datasource.DataSource = ds
-
-				// Test that UserDataSource implements datasource.DataSourceWithConfigure
-				var _ datasource.DataSourceWithConfigure = ds
-
-				// Test that UserDataSource implements UserDataSourceInterface
-				var _ UserDataSourceInterface = ds
+				assert.NotNil(t, ds)
 			},
 		},
 		{
 			name: "interface implementation error case",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-
 				ds := NewUserDataSource()
-
-				// This test ensures the type assertions don't panic
 				assert.NotNil(t, ds)
-				var _ datasource.DataSource = ds
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt.testFunc(t)
 		})
 	}
 }
 
 func TestUserDataSourceConcurrency(t *testing.T) {
+	t.Parallel()
+
 	t.Helper()
 
 	tests := []struct {
@@ -103,21 +102,17 @@ func TestUserDataSourceConcurrency(t *testing.T) {
 
 				ds := NewUserDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						resp := &datasource.MetadataResponse{}
-						ds.Metadata(context.Background(), datasource.MetadataRequest{
+						ds.Metadata(t.Context(), datasource.MetadataRequest{
 							ProviderTypeName: "n8n",
 						}, resp)
 						assert.Equal(t, "n8n_user", resp.TypeName)
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
@@ -127,19 +122,15 @@ func TestUserDataSourceConcurrency(t *testing.T) {
 
 				ds := NewUserDataSource()
 
-				done := make(chan bool, 100)
-				for i := 0; i < 100; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 100 {
+					wg.Go(func() {
 						resp := &datasource.SchemaResponse{}
-						ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+						ds.Schema(t.Context(), datasource.SchemaRequest{}, resp)
 						assert.NotNil(t, resp.Schema)
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 100; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 		{
@@ -149,22 +140,18 @@ func TestUserDataSourceConcurrency(t *testing.T) {
 
 				ds := NewUserDataSource()
 
-				done := make(chan bool, 50)
-				for i := 0; i < 50; i++ {
-					go func() {
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Go(func() {
 						resp := &datasource.ConfigureResponse{}
 						req := datasource.ConfigureRequest{
 							ProviderData: "invalid",
 						}
-						ds.Configure(context.Background(), req, resp)
+						ds.Configure(t.Context(), req, resp)
 						assert.True(t, resp.Diagnostics.HasError())
-						done <- true
-					}()
+					})
 				}
-
-				for i := 0; i < 50; i++ {
-					<-done
-				}
+				wg.Wait()
 			},
 		},
 	}
@@ -179,20 +166,18 @@ func TestUserDataSourceConcurrency(t *testing.T) {
 func BenchmarkUserDataSource_Schema(b *testing.B) {
 	ds := NewUserDataSource()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.SchemaResponse{}
-		ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+		ds.Schema(b.Context(), datasource.SchemaRequest{}, resp)
 	}
 }
 
 func BenchmarkUserDataSource_Metadata(b *testing.B) {
 	ds := NewUserDataSource()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.MetadataResponse{}
-		ds.Metadata(context.Background(), datasource.MetadataRequest{}, resp)
+		ds.Metadata(b.Context(), datasource.MetadataRequest{}, resp)
 	}
 }
 
@@ -200,13 +185,12 @@ func BenchmarkUserDataSource_Configure(b *testing.B) {
 	ds := NewUserDataSource()
 	mockClient := &client.N8nClient{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp := &datasource.ConfigureResponse{}
 		req := datasource.ConfigureRequest{
 			ProviderData: mockClient,
 		}
-		ds.Configure(context.Background(), req, resp)
+		ds.Configure(b.Context(), req, resp)
 	}
 }
 
@@ -283,7 +267,6 @@ func TestUserDataSource_getIdentifier(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -304,33 +287,77 @@ func TestUserDataSource_getIdentifier(t *testing.T) {
 }
 
 // TestUserDataSource_fetchUser tests the private fetchUser method.
+// setupUserDataSourceTestClient creates a test datasource with httptest server.
+func setupUserDataSourceTestClient(t *testing.T, handler http.HandlerFunc) (*UserDataSource, *httptest.Server) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+
+	cfg := n8nsdk.NewConfiguration()
+	cfg.Servers = n8nsdk.ServerConfigurations{{URL: server.URL, Description: "Test server"}}
+	cfg.HTTPClient = server.Client()
+	cfg.AddDefaultHeader("X-N8N-API-KEY", "test-key")
+
+	apiClient := n8nsdk.NewAPIClient(cfg)
+	n8nClient := &client.N8nClient{APIClient: apiClient}
+
+	ds := &UserDataSource{client: n8nClient}
+	return ds, server
+}
+
 func TestUserDataSource_fetchUser(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name        string
-		identifier  string
-		expectError bool
+		name         string
+		identifier   string
+		setupHandler func(w http.ResponseWriter, r *http.Request)
+		expectNil    bool
+		expectError  bool
 	}{
 		{
-			name:        "empty identifier",
-			identifier:  "",
+			name:       "success - user found",
+			identifier: "user-123",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				userID := "user-123"
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]any{
+					"id":    userID,
+					"email": "test@example.com",
+				})
+			},
+			expectNil:   false,
+			expectError: false,
+		},
+		{
+			name:       "error - user not found",
+			identifier: "nonexistent",
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"message": "User not found"}`))
+			},
+			expectNil:   true,
 			expectError: true,
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Note: Cannot test fetchUser() with nil client as it would panic
-			// due to nil pointer dereference. In production, the client is always
-			// properly initialized via Configure().
-			// This test just verifies that the method exists and can be called
-			// with a properly configured datasource.
-			ds := &UserDataSource{}
-			assert.NotNil(t, ds, "UserDataSource should not be nil")
+			ds, server := setupUserDataSourceTestClient(t, http.HandlerFunc(tt.setupHandler))
+			t.Cleanup(server.Close)
+
+			resp := &datasource.ReadResponse{}
+			user := ds.fetchUser(t.Context(), tt.identifier, resp)
+
+			if tt.expectNil {
+				assert.Nil(t, user)
+			} else {
+				assert.NotNil(t, user)
+			}
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
 		})
 	}
 }
@@ -432,7 +459,6 @@ func TestUserDataSource_populateUserData(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -450,11 +476,15 @@ func TestUserDataSource_populateUserData(t *testing.T) {
 }
 
 // stringPtr is a helper function to create string pointers.
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 // boolPtr is a helper function to create bool pointers.
+//
+//go:fix inline
 func boolPtr(b bool) *bool {
-	return &b
+	return new(b)
 }

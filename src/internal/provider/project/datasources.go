@@ -43,8 +43,8 @@ type ProjectsDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: a new ProjectsDataSource instance configured for accessing n8n projects
-func NewProjectsDataSource() *ProjectsDataSource {
-	// Return result.
+func NewProjectsDataSource() (projectsDataSource *ProjectsDataSource) {
+	//: Return new empty ProjectsDataSource instance.
 	return &ProjectsDataSource{}
 }
 
@@ -53,8 +53,8 @@ func NewProjectsDataSource() *ProjectsDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped ProjectsDataSource instance
-func NewProjectsDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewProjectsDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewProjectsDataSource()
 }
 
@@ -64,7 +64,12 @@ func NewProjectsDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the request
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to populate
-func (d *ProjectsDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Return early if context is cancelled.
+	if ctx.Err() != nil {
+		//: Return when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_projects"
 }
 
@@ -74,24 +79,31 @@ func (d *ProjectsDataSource) Metadata(_ctx context.Context, req datasource.Metad
 //   - ctx: context for the request
 //   - req: schema request from the framework
 //   - resp: schema response to populate with schema definition
-func (d *ProjectsDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ProjectsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Return early if context is cancelled.
+	if ctx.Err() != nil {
+		//: Return when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n projects",
-		Attributes:          d.schemaAttributes(),
+		//: Return schema attributes for the projects datasource.
+		Attributes: d.schemaAttributes(),
 	}
 }
 
 // schemaAttributes returns the attribute definitions for this datasource.
 //
 // Returns:
-//   - map[string]schema.Attribute: the datasource attribute definitions
-func (d *ProjectsDataSource) schemaAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+//   - m: the datasource attribute definitions
+func (d *ProjectsDataSource) schemaAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes for the projects list.
 	return map[string]schema.Attribute{
 		"projects": schema.ListNestedAttribute{
 			MarkdownDescription: "List of projects",
 			Computed:            true,
 			NestedObject: schema.NestedAttributeObject{
+				//: Return nested project item attributes.
 				Attributes: d.projectAttributes(),
 			},
 		},
@@ -101,9 +113,9 @@ func (d *ProjectsDataSource) schemaAttributes() map[string]schema.Attribute {
 // projectAttributes returns the attribute definitions for a project item.
 //
 // Returns:
-//   - map[string]schema.Attribute: the project item attribute definitions
-func (d *ProjectsDataSource) projectAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+//   - m: the project item attribute definitions
+func (d *ProjectsDataSource) projectAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes for a single project item.
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			MarkdownDescription: "Project identifier",
@@ -142,21 +154,26 @@ func (d *ProjectsDataSource) projectAttributes() map[string]schema.Attribute {
 //   - ctx: context for the request
 //   - req: configure request containing provider data
 //   - resp: configure response to report errors
-func (d *ProjectsDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Return early if context is cancelled.
+	if ctx.Err() != nil {
+		//: Return when context is cancelled.
+		return
+	}
+	//: Skip configuration when provider data is not yet available.
 	if req.ProviderData == nil {
-		// Return with error.
+		//: Return early when no provider data is set.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Validate the provider data type is the expected N8nClient.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return after reporting the type mismatch error.
 		return
 	}
 
@@ -169,28 +186,33 @@ func (d *ProjectsDataSource) Configure(_ctx context.Context, req datasource.Conf
 //   - ctx: context for the request
 //   - req: read request from Terraform
 //   - resp: read response to populate with data
-func (d *ProjectsDataSource) Read(ctx context.Context, _req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data models.DataSources
 
 	projectList, httpResp, err := d.client.APIClient.ProjectsAPI.ProjectsGet(ctx).Execute()
-	// Close the HTTP response body if it is not nil to prevent resource leaks.
+	//: Close the HTTP response body if it is not nil to prevent resource leaks.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error from the list API call.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing projects",
 			fmt.Sprintf("Could not list projects: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
+		//: Return after reporting the API error.
 		return
 	}
 
-	data.Projects = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
-	// Iterate through all projects and convert them to the model format.
+	data.Projects = make([]models.Item, 0, constants.DefaultListCapacity)
+	//: Iterate through all projects and convert them to the model format.
 	if projectList.Data != nil {
-		// Convert each project from the API response to the Item format.
+		//: Convert each project from the API response to the Item format.
 		for _, project := range projectList.Data {
 			item := mapProjectToItem(&project)
 			data.Projects = append(data.Projects, item)

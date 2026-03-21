@@ -27,7 +27,9 @@ type Credential struct {
 	Type string                 `json:"type"`
 	Data map[string]interface{} `json:"data"`
 	// Whether the credential is managed by n8n
-	IsManaged            *bool      `json:"isManaged,omitempty"`
+	IsManaged *bool `json:"isManaged,omitempty"`
+	// Whether this credential has resolvable fields
+	IsResolvable         *bool      `json:"isResolvable,omitempty"`
 	CreatedAt            *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt            *time.Time `json:"updatedAt,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -274,6 +276,9 @@ func (o Credential) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.IsManaged) {
 		toSerialize["isManaged"] = o.IsManaged
 	}
+	if !IsNil(o.IsResolvable) {
+		toSerialize["isResolvable"] = o.IsResolvable
+	}
 	if !IsNil(o.CreatedAt) {
 		toSerialize["createdAt"] = o.CreatedAt
 	}
@@ -330,6 +335,7 @@ func (o *Credential) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "type")
 		delete(additionalProperties, "data")
 		delete(additionalProperties, "isManaged")
+		delete(additionalProperties, "isResolvable")
 		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "updatedAt")
 		o.AdditionalProperties = additionalProperties

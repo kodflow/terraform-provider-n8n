@@ -1,7 +1,6 @@
 package user_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -58,29 +57,57 @@ func TestNewUserResourceWrapper(t *testing.T) {
 func TestUserResource_Metadata(t *testing.T) {
 	t.Parallel()
 
-	r := user.NewUserResource()
-	req := resource.MetadataRequest{
-		ProviderTypeName: "n8n",
+	tests := []struct {
+		name             string
+		providerTypeName string
+		expectTypeName   string
+	}{
+		{
+			name:             "sets correct type name",
+			providerTypeName: "n8n",
+			expectTypeName:   "n8n_user",
+		},
 	}
-	resp := &resource.MetadataResponse{}
 
-	r.Metadata(context.Background(), req, resp)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := user.NewUserResource()
+			req := resource.MetadataRequest{
+				ProviderTypeName: tt.providerTypeName,
+			}
+			resp := &resource.MetadataResponse{}
 
-	assert.Equal(t, "n8n_user", resp.TypeName, "TypeName should be set correctly")
+			r.Metadata(t.Context(), req, resp)
+
+			assert.Equal(t, tt.expectTypeName, resp.TypeName, "TypeName should be set correctly")
+		})
+	}
 }
 
 // TestUserResource_Schema tests the Schema method.
 func TestUserResource_Schema(t *testing.T) {
 	t.Parallel()
 
-	r := user.NewUserResource()
-	req := resource.SchemaRequest{}
-	resp := &resource.SchemaResponse{}
+	tests := []struct {
+		name string
+	}{
+		{name: "schema is not nil and has attributes"},
+	}
 
-	r.Schema(context.Background(), req, resp)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := user.NewUserResource()
+			req := resource.SchemaRequest{}
+			resp := &resource.SchemaResponse{}
 
-	assert.NotNil(t, resp.Schema, "Schema should not be nil")
-	assert.NotNil(t, resp.Schema.Attributes, "Schema attributes should not be nil")
+			r.Schema(t.Context(), req, resp)
+
+			assert.NotNil(t, resp.Schema, "Schema should not be nil")
+			assert.NotNil(t, resp.Schema.Attributes, "Schema attributes should not be nil")
+		})
+	}
 }
 
 // TestUserResource_Configure tests the Configure method.
@@ -89,7 +116,7 @@ func TestUserResource_Configure(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		providerData interface{}
+		providerData any
 		expectError  bool
 	}{
 		{
@@ -119,7 +146,7 @@ func TestUserResource_Configure(t *testing.T) {
 			}
 			resp := &resource.ConfigureResponse{}
 
-			r.Configure(context.Background(), req, resp)
+			r.Configure(t.Context(), req, resp)
 
 			if tt.expectError {
 				assert.True(t, resp.Diagnostics.HasError(), "Configure should return error for invalid provider data")
@@ -132,6 +159,8 @@ func TestUserResource_Configure(t *testing.T) {
 
 // TestUserResource_Create tests the Create method with full execution.
 func TestUserResource_Create(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -158,11 +187,11 @@ func TestUserResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -206,7 +235,7 @@ func TestUserResource_Create(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := user.NewUserResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -243,11 +272,11 @@ func TestUserResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -293,6 +322,8 @@ func TestUserResource_Create(t *testing.T) {
 
 // TestUserResource_Read tests the Read method with full execution.
 func TestUserResource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -311,11 +342,11 @@ func TestUserResource_Read(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -355,7 +386,7 @@ func TestUserResource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := user.NewUserResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -392,11 +423,11 @@ func TestUserResource_Read(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -438,6 +469,8 @@ func TestUserResource_Read(t *testing.T) {
 
 // TestUserResource_Update tests the Update method with full execution.
 func TestUserResource_Update(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -456,11 +489,11 @@ func TestUserResource_Update(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -518,7 +551,7 @@ func TestUserResource_Update(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := user.NewUserResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -575,11 +608,11 @@ func TestUserResource_Update(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -638,6 +671,8 @@ func TestUserResource_Update(t *testing.T) {
 
 // TestUserResource_Delete tests the Delete method with full execution.
 func TestUserResource_Delete(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -654,11 +689,11 @@ func TestUserResource_Delete(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -696,7 +731,7 @@ func TestUserResource_Delete(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := user.NewUserResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -733,11 +768,11 @@ func TestUserResource_Delete(t *testing.T) {
 				defer server.Close()
 
 				r := user.NewUserResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -779,40 +814,52 @@ func TestUserResource_Delete(t *testing.T) {
 func TestUserResource_ImportState(t *testing.T) {
 	t.Parallel()
 
-	r := &user.UserResource{}
-	ctx := context.Background()
-
-	// Create schema for state
-	schemaResp := resource.SchemaResponse{}
-	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-
-	// Create an empty state with the schema
-	state := tfsdk.State{
-		Schema: schemaResp.Schema,
+	tests := []struct {
+		name string
+		id   string
+	}{
+		{name: "import state passthrough", id: "user-123"},
 	}
 
-	// Initialize the raw value with required attributes
-	state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-		"id":         tftypes.NewValue(tftypes.String, nil),
-		"email":      tftypes.NewValue(tftypes.String, nil),
-		"first_name": tftypes.NewValue(tftypes.String, nil),
-		"last_name":  tftypes.NewValue(tftypes.String, nil),
-		"role":       tftypes.NewValue(tftypes.String, nil),
-		"is_pending": tftypes.NewValue(tftypes.Bool, nil),
-		"created_at": tftypes.NewValue(tftypes.String, nil),
-		"updated_at": tftypes.NewValue(tftypes.String, nil),
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &user.UserResource{}
+			ctx := t.Context()
 
-	req := resource.ImportStateRequest{
-		ID: "user-123",
+			// Create schema for state
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			// Create an empty state with the schema
+			state := tfsdk.State{
+				Schema: schemaResp.Schema,
+			}
+
+			// Initialize the raw value with required attributes
+			state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, nil),
+				"email":      tftypes.NewValue(tftypes.String, nil),
+				"first_name": tftypes.NewValue(tftypes.String, nil),
+				"last_name":  tftypes.NewValue(tftypes.String, nil),
+				"role":       tftypes.NewValue(tftypes.String, nil),
+				"is_pending": tftypes.NewValue(tftypes.Bool, nil),
+				"created_at": tftypes.NewValue(tftypes.String, nil),
+				"updated_at": tftypes.NewValue(tftypes.String, nil),
+			})
+
+			req := resource.ImportStateRequest{
+				ID: tt.id,
+			}
+			resp := &resource.ImportStateResponse{
+				State: state,
+			}
+
+			r.ImportState(ctx, req, resp)
+
+			// Check that import succeeded
+			assert.NotNil(t, resp)
+			assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
+		})
 	}
-	resp := &resource.ImportStateResponse{
-		State: state,
-	}
-
-	r.ImportState(ctx, req, resp)
-
-	// Check that import succeeded
-	assert.NotNil(t, resp)
-	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
 }

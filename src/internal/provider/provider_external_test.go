@@ -198,7 +198,7 @@ func TestNew_FactoryMultipleCalls(t *testing.T) {
 	}
 }
 
-func TestMetadata(t *testing.T) {
+func TestN8nProvider_Metadata(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -253,7 +253,7 @@ func TestMetadata(t *testing.T) {
 			req := provider.MetadataRequest{}
 			resp := &provider.MetadataResponse{}
 
-			prov.Metadata(context.Background(), req, resp)
+			prov.Metadata(t.Context(), req, resp)
 
 			assert.Equal(t, tt.wantTypeName, resp.TypeName, "TypeName should match")
 			assert.Equal(t, tt.wantVersion, resp.Version, "Version should match")
@@ -261,7 +261,7 @@ func TestMetadata(t *testing.T) {
 	}
 }
 
-func TestMetadata_WithContext(t *testing.T) {
+func TestN8nProvider_Metadata_WithContext(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -273,7 +273,7 @@ func TestMetadata_WithContext(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				ctx := context.WithValue(context.Background(), contextKey("test"), "value")
+				ctx := context.WithValue(t.Context(), contextKey("test"), "value")
 
 				req := provider.MetadataRequest{}
 				resp := &provider.MetadataResponse{}
@@ -288,7 +288,7 @@ func TestMetadata_WithContext(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				ctx, cancel := context.WithCancel(context.Background())
+				ctx, cancel := context.WithCancel(t.Context())
 				cancel()
 
 				req := provider.MetadataRequest{}
@@ -309,7 +309,7 @@ func TestMetadata_WithContext(t *testing.T) {
 	}
 }
 
-func TestSchema(t *testing.T) {
+func TestN8nProvider_Schema(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -341,7 +341,7 @@ func TestSchema(t *testing.T) {
 			req := provider.SchemaRequest{}
 			resp := &provider.SchemaResponse{}
 
-			prov.Schema(context.Background(), req, resp)
+			prov.Schema(t.Context(), req, resp)
 
 			// Verify schema exists
 			assert.NotNil(t, resp.Schema, "Schema should be defined")
@@ -380,7 +380,7 @@ func TestSchema(t *testing.T) {
 	}
 }
 
-func TestConfigure(t *testing.T) {
+func TestN8nProvider_Configure(t *testing.T) {
 	// Note: Cannot use t.Parallel() because subtests use t.Setenv
 	// When TF_ACC is set, only run the success case because env vars will be picked up
 	// and tests expecting failures will pass with actual credentials.
@@ -488,7 +488,7 @@ func TestConfigure(t *testing.T) {
 
 			// Get schema
 			schemaResp := &provider.SchemaResponse{}
-			prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+			prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 
 			config := tfsdk.Config{
 				Schema: schemaResp.Schema,
@@ -500,7 +500,7 @@ func TestConfigure(t *testing.T) {
 			}
 			resp := &provider.ConfigureResponse{}
 
-			prov.Configure(context.Background(), req, resp)
+			prov.Configure(t.Context(), req, resp)
 
 			// Verify results
 			if tt.wantErr {
@@ -526,7 +526,7 @@ func TestConfigure(t *testing.T) {
 	}
 }
 
-func TestConfigure_InvalidConfig(t *testing.T) {
+func TestN8nProvider_Configure_InvalidConfig(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -543,7 +543,7 @@ func TestConfigure_InvalidConfig(t *testing.T) {
 				configValue := tftypes.NewValue(tftypes.String, "invalid")
 
 				schemaResp := &provider.SchemaResponse{}
-				prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+				prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 
 				config := tfsdk.Config{
 					Schema: schemaResp.Schema,
@@ -555,7 +555,7 @@ func TestConfigure_InvalidConfig(t *testing.T) {
 				}
 				resp := &provider.ConfigureResponse{}
 
-				prov.Configure(context.Background(), req, resp)
+				prov.Configure(t.Context(), req, resp)
 
 				assert.True(t, resp.Diagnostics.HasError(), "Configure should fail with invalid config")
 				assert.Nil(t, resp.ResourceData, "ResourceData should not be set on error")
@@ -569,14 +569,14 @@ func TestConfigure_InvalidConfig(t *testing.T) {
 				prov := p.NewN8nProvider("1.0.0")
 				configValue := tftypes.NewValue(tftypes.String, "invalid")
 				schemaResp := &provider.SchemaResponse{}
-				prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+				prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 				config := tfsdk.Config{
 					Schema: schemaResp.Schema,
 					Raw:    configValue,
 				}
 				req := provider.ConfigureRequest{Config: config}
 				resp := &provider.ConfigureResponse{}
-				prov.Configure(context.Background(), req, resp)
+				prov.Configure(t.Context(), req, resp)
 				assert.NotNil(t, resp.Diagnostics, "Diagnostics must not be nil")
 			},
 		},
@@ -590,7 +590,7 @@ func TestConfigure_InvalidConfig(t *testing.T) {
 	}
 }
 
-func TestConfigure_ContextCancellation(t *testing.T) {
+func TestN8nProvider_Configure_ContextCancellation(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -602,7 +602,7 @@ func TestConfigure_ContextCancellation(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				ctx, cancel := context.WithCancel(context.Background())
+				ctx, cancel := context.WithCancel(t.Context())
 				cancel() // Cancel immediately
 
 				configValue := tftypes.NewValue(
@@ -619,7 +619,7 @@ func TestConfigure_ContextCancellation(t *testing.T) {
 				)
 
 				schemaResp := &provider.SchemaResponse{}
-				prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+				prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 
 				config := tfsdk.Config{
 					Schema: schemaResp.Schema,
@@ -641,7 +641,7 @@ func TestConfigure_ContextCancellation(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				ctx := context.Background()
+				ctx := t.Context()
 
 				configValue := tftypes.NewValue(
 					tftypes.Object{
@@ -657,7 +657,7 @@ func TestConfigure_ContextCancellation(t *testing.T) {
 				)
 
 				schemaResp := &provider.SchemaResponse{}
-				prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+				prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 
 				config := tfsdk.Config{
 					Schema: schemaResp.Schema,
@@ -681,7 +681,7 @@ func TestConfigure_ContextCancellation(t *testing.T) {
 	}
 }
 
-func TestResources(t *testing.T) {
+func TestN8nProvider_Resources(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -712,7 +712,7 @@ func TestResources(t *testing.T) {
 			t.Parallel()
 
 			prov := p.NewN8nProvider(tt.version)
-			resources := prov.Resources(context.Background())
+			resources := prov.Resources(t.Context())
 
 			assert.NotNil(t, resources, "Resources should not be nil")
 			assert.GreaterOrEqual(t, len(resources), tt.wantMinResourceCount, "Should return minimum resource count")
@@ -733,7 +733,7 @@ func TestResources(t *testing.T) {
 	}
 }
 
-func TestResources_Stability(t *testing.T) {
+func TestN8nProvider_Resources_Stability(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -745,9 +745,9 @@ func TestResources_Stability(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				resources1 := prov.Resources(context.Background())
-				resources2 := prov.Resources(context.Background())
-				resources3 := prov.Resources(context.Background())
+				resources1 := prov.Resources(t.Context())
+				resources2 := prov.Resources(t.Context())
+				resources3 := prov.Resources(t.Context())
 
 				assert.Equal(t, len(resources1), len(resources2), "Resource count should be stable")
 				assert.Equal(t, len(resources2), len(resources3), "Resource count should be stable")
@@ -758,7 +758,7 @@ func TestResources_Stability(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				resources := prov.Resources(context.Background())
+				resources := prov.Resources(t.Context())
 				assert.NotNil(t, resources, "Resources must not be nil")
 			},
 		},
@@ -772,7 +772,7 @@ func TestResources_Stability(t *testing.T) {
 	}
 }
 
-func TestDataSources(t *testing.T) {
+func TestN8nProvider_DataSources(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -803,7 +803,7 @@ func TestDataSources(t *testing.T) {
 			t.Parallel()
 
 			prov := p.NewN8nProvider(tt.version)
-			dataSources := prov.DataSources(context.Background())
+			dataSources := prov.DataSources(t.Context())
 
 			assert.NotNil(t, dataSources, "DataSources should not be nil")
 			assert.GreaterOrEqual(t, len(dataSources), tt.wantMinDataSourceCount, "Should return minimum data source count")
@@ -824,7 +824,7 @@ func TestDataSources(t *testing.T) {
 	}
 }
 
-func TestDataSources_Stability(t *testing.T) {
+func TestN8nProvider_DataSources_Stability(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -836,9 +836,9 @@ func TestDataSources_Stability(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				dataSources1 := prov.DataSources(context.Background())
-				dataSources2 := prov.DataSources(context.Background())
-				dataSources3 := prov.DataSources(context.Background())
+				dataSources1 := prov.DataSources(t.Context())
+				dataSources2 := prov.DataSources(t.Context())
+				dataSources3 := prov.DataSources(t.Context())
 
 				assert.Equal(t, len(dataSources1), len(dataSources2), "DataSource count should be stable")
 				assert.Equal(t, len(dataSources2), len(dataSources3), "DataSource count should be stable")
@@ -849,7 +849,7 @@ func TestDataSources_Stability(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				prov := p.NewN8nProvider("1.0.0")
-				dataSources := prov.DataSources(context.Background())
+				dataSources := prov.DataSources(t.Context())
 				assert.NotNil(t, dataSources, "DataSources must not be nil")
 			},
 		},
@@ -924,24 +924,24 @@ func TestValidateProvider_AllMethods(t *testing.T) {
 				// Test Metadata
 				metadataResp := &provider.MetadataResponse{}
 				assert.NotPanics(t, func() {
-					validated.Metadata(context.Background(), provider.MetadataRequest{}, metadataResp)
+					validated.Metadata(t.Context(), provider.MetadataRequest{}, metadataResp)
 				})
 
 				// Test Schema
 				schemaResp := &provider.SchemaResponse{}
 				assert.NotPanics(t, func() {
-					validated.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+					validated.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 				})
 
 				// Test Resources
 				assert.NotPanics(t, func() {
-					resources := validated.Resources(context.Background())
+					resources := validated.Resources(t.Context())
 					assert.NotNil(t, resources)
 				})
 
 				// Test DataSources
 				assert.NotPanics(t, func() {
-					dataSources := validated.DataSources(context.Background())
+					dataSources := validated.DataSources(t.Context())
 					assert.NotNil(t, dataSources)
 				})
 			},
@@ -988,7 +988,7 @@ func TestProviderVersionHandling(t *testing.T) {
 
 			prov := p.NewN8nProvider(tt.version)
 			resp := &provider.MetadataResponse{}
-			prov.Metadata(context.Background(), provider.MetadataRequest{}, resp)
+			prov.Metadata(t.Context(), provider.MetadataRequest{}, resp)
 
 			assert.Equal(t, tt.version, resp.Version, "Version should be set correctly")
 		})
@@ -1055,37 +1055,54 @@ func TestN8nProviderModelStructure(t *testing.T) {
 func TestN8nProviderModelUsage(t *testing.T) {
 	t.Parallel()
 
-	prov := p.NewN8nProvider("1.0.0")
-
-	configValue := tftypes.NewValue(
-		tftypes.Object{
-			AttributeTypes: map[string]tftypes.Type{
-				"api_key":  tftypes.String,
-				"base_url": tftypes.String,
-			},
+	tests := []struct {
+		name    string
+		apiKey  string
+		baseURL string
+	}{
+		{
+			name:    "configure with valid credentials",
+			apiKey:  "test-key",
+			baseURL: "https://test.com",
 		},
-		map[string]tftypes.Value{
-			"api_key":  tftypes.NewValue(tftypes.String, "test-key"),
-			"base_url": tftypes.NewValue(tftypes.String, "https://test.com"),
-		},
-	)
-
-	schemaResp := &provider.SchemaResponse{}
-	prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
-
-	config := tfsdk.Config{
-		Schema: schemaResp.Schema,
-		Raw:    configValue,
 	}
 
-	req := provider.ConfigureRequest{
-		Config: config,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			prov := p.NewN8nProvider("1.0.0")
+
+			configValue := tftypes.NewValue(
+				tftypes.Object{
+					AttributeTypes: map[string]tftypes.Type{
+						"api_key":  tftypes.String,
+						"base_url": tftypes.String,
+					},
+				},
+				map[string]tftypes.Value{
+					"api_key":  tftypes.NewValue(tftypes.String, tt.apiKey),
+					"base_url": tftypes.NewValue(tftypes.String, tt.baseURL),
+				},
+			)
+
+			schemaResp := &provider.SchemaResponse{}
+			prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
+
+			config := tfsdk.Config{
+				Schema: schemaResp.Schema,
+				Raw:    configValue,
+			}
+
+			req := provider.ConfigureRequest{
+				Config: config,
+			}
+			resp := &provider.ConfigureResponse{}
+
+			prov.Configure(t.Context(), req, resp)
+
+			require.False(t, resp.Diagnostics.HasError())
+		})
 	}
-	resp := &provider.ConfigureResponse{}
-
-	prov.Configure(context.Background(), req, resp)
-
-	require.False(t, resp.Diagnostics.HasError())
 }
 
 func TestProviderContextUsage(t *testing.T) {
@@ -1101,7 +1118,7 @@ func TestProviderContextUsage(t *testing.T) {
 			name:    "Metadata accepts context",
 			version: "1.0.0",
 			setupCtx: func() context.Context {
-				return context.WithValue(context.Background(), contextKey("test-key"), "test-value")
+				return context.WithValue(t.Context(), contextKey("test-key"), "test-value")
 			},
 			wantPanics: false,
 		},
@@ -1109,7 +1126,7 @@ func TestProviderContextUsage(t *testing.T) {
 			name:    "Schema accepts context",
 			version: "1.0.0",
 			setupCtx: func() context.Context {
-				return context.WithValue(context.Background(), contextKey("test-key"), "test-value")
+				return context.WithValue(t.Context(), contextKey("test-key"), "test-value")
 			},
 			wantPanics: false,
 		},
@@ -1117,7 +1134,7 @@ func TestProviderContextUsage(t *testing.T) {
 			name:    "Resources accepts context",
 			version: "1.0.0",
 			setupCtx: func() context.Context {
-				return context.WithValue(context.Background(), contextKey("test-key"), "test-value")
+				return context.WithValue(t.Context(), contextKey("test-key"), "test-value")
 			},
 			wantPanics: false,
 		},
@@ -1125,7 +1142,7 @@ func TestProviderContextUsage(t *testing.T) {
 			name:    "DataSources accepts context",
 			version: "1.0.0",
 			setupCtx: func() context.Context {
-				return context.WithValue(context.Background(), contextKey("test-key"), "test-value")
+				return context.WithValue(t.Context(), contextKey("test-key"), "test-value")
 			},
 			wantPanics: false,
 		},
@@ -1133,7 +1150,7 @@ func TestProviderContextUsage(t *testing.T) {
 			name:    "handles TODO context",
 			version: "1.0.0",
 			setupCtx: func() context.Context {
-				return context.TODO()
+				return t.Context()
 			},
 			wantPanics: false,
 		},
@@ -1141,7 +1158,7 @@ func TestProviderContextUsage(t *testing.T) {
 			name:    "error case - handles canceled context",
 			version: "1.0.0",
 			setupCtx: func() context.Context {
-				ctx, cancel := context.WithCancel(context.Background())
+				ctx, cancel := context.WithCancel(t.Context())
 				cancel()
 				return ctx
 			},
@@ -1175,12 +1192,12 @@ func TestProviderContextUsage(t *testing.T) {
 
 			// Test Resources
 			assert.NotPanics(t, func() {
-				_ = prov.Resources(ctx)
+				prov.Resources(ctx)
 			})
 
 			// Test DataSources
 			assert.NotPanics(t, func() {
-				_ = prov.DataSources(ctx)
+				prov.DataSources(ctx)
 			})
 		})
 	}
@@ -1235,7 +1252,7 @@ func TestConfigureClientCreation(t *testing.T) {
 			)
 
 			schemaResp := &provider.SchemaResponse{}
-			prov.Schema(context.Background(), provider.SchemaRequest{}, schemaResp)
+			prov.Schema(t.Context(), provider.SchemaRequest{}, schemaResp)
 
 			config := tfsdk.Config{
 				Schema: schemaResp.Schema,
@@ -1247,7 +1264,7 @@ func TestConfigureClientCreation(t *testing.T) {
 			}
 			resp := &provider.ConfigureResponse{}
 
-			prov.Configure(context.Background(), req, resp)
+			prov.Configure(t.Context(), req, resp)
 
 			if tt.wantErr {
 				assert.True(t, resp.Diagnostics.HasError())
@@ -1263,6 +1280,8 @@ func TestConfigureClientCreation(t *testing.T) {
 }
 
 // stringPtr is a helper function to get a pointer to a string.
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
 }

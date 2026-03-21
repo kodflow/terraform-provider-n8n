@@ -18,43 +18,43 @@ import (
 //
 // Returns:
 //   - models.Item: The mapped user item model
-func mapUserToItem(user *n8nsdk.User) models.Item {
-	// Initialize model with pointer.
-	item := &models.Item{
+func mapUserToItem(user *n8nsdk.User) (item models.Item) {
+	//: Initialize model with pointer.
+	result := &models.Item{
 		Email: types.StringValue(user.Email),
 	}
 
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.Id != nil {
-		item.ID = types.StringValue(*user.Id)
+		result.ID = types.StringValue(*user.Id)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.FirstName != nil {
-		item.FirstName = types.StringPointerValue(user.FirstName)
+		result.FirstName = types.StringPointerValue(user.FirstName)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.LastName != nil {
-		item.LastName = types.StringPointerValue(user.LastName)
+		result.LastName = types.StringPointerValue(user.LastName)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.IsPending != nil {
-		item.IsPending = types.BoolPointerValue(user.IsPending)
+		result.IsPending = types.BoolPointerValue(user.IsPending)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.CreatedAt != nil {
-		item.CreatedAt = types.StringValue(user.CreatedAt.String())
+		result.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.UpdatedAt != nil {
-		item.UpdatedAt = types.StringValue(user.UpdatedAt.String())
+		result.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.Role != nil {
-		item.Role = types.StringPointerValue(user.Role)
+		result.Role = types.StringPointerValue(user.Role)
 	}
 
-	// Return result.
-	return *item
+	//: Return result.
+	return *result
 }
 
 // mapUserToResourceModel maps an SDK user to the user resource model.
@@ -65,38 +65,38 @@ func mapUserToItem(user *n8nsdk.User) models.Item {
 //   - user: The SDK user to map
 //   - data: The resource model to populate
 func mapUserToResourceModel(user *n8nsdk.User, data *models.Resource) {
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.Id != nil {
 		data.ID = types.StringValue(*user.Id)
 	}
 	data.Email = types.StringValue(user.Email)
-	// FirstName may be nil for pending users.
+	//: FirstName may be nil for pending users.
 	if user.FirstName != nil {
 		data.FirstName = types.StringPointerValue(user.FirstName)
 	} else {
-		// Set explicit Null instead of leaving unknown.
+		//: Set explicit Null instead of leaving unknown.
 		data.FirstName = types.StringNull()
 	}
-	// LastName may be nil for pending users.
+	//: LastName may be nil for pending users.
 	if user.LastName != nil {
 		data.LastName = types.StringPointerValue(user.LastName)
 	} else {
-		// Set explicit Null instead of leaving unknown.
+		//: Set explicit Null instead of leaving unknown.
 		data.LastName = types.StringNull()
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.Role != nil {
 		data.Role = types.StringPointerValue(user.Role)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.IsPending != nil {
 		data.IsPending = types.BoolPointerValue(user.IsPending)
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.CreatedAt != nil {
 		data.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if user.UpdatedAt != nil {
 		data.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}

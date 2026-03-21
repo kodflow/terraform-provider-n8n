@@ -1,7 +1,6 @@
 package workflow
 
 import (
-	"context"
 	"encoding/json"
 	"math/big"
 	"net/http"
@@ -43,6 +42,8 @@ func setupTestClientForHelpers(t *testing.T, handler http.HandlerFunc) (*client.
 }
 
 func Test_parseWorkflowJSON(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -251,6 +252,8 @@ func Test_parseWorkflowJSON(t *testing.T) {
 }
 
 func Test_mapTagsFromWorkflow(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -259,22 +262,20 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 			name: "map tags with valid IDs",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				tag1ID := "tag-1"
-				tag2ID := "tag-2"
 				workflow := &n8nsdk.Workflow{
 					Tags: []n8nsdk.Tag{
-						{Id: &tag1ID},
-						{Id: &tag2ID},
+						{Id: new("tag-1")},
+						{Id: new("tag-2")},
 					},
 				}
 				diags := &diag.Diagnostics{}
 
-				result := mapTagsFromWorkflow(context.Background(), workflow, diags)
+				result := mapTagsFromWorkflow(t.Context(), workflow, diags)
 
 				assert.False(t, diags.HasError())
 				assert.False(t, result.IsNull())
 				var tagIDs []string
-				diags.Append(result.ElementsAs(context.Background(), &tagIDs, false)...)
+				diags.Append(result.ElementsAs(t.Context(), &tagIDs, false)...)
 				assert.Len(t, tagIDs, 2)
 				assert.Contains(t, tagIDs, "tag-1")
 				assert.Contains(t, tagIDs, "tag-2")
@@ -284,20 +285,19 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 			name: "map tags with nil ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				tag1ID := "tag-1"
 				workflow := &n8nsdk.Workflow{
 					Tags: []n8nsdk.Tag{
-						{Id: &tag1ID},
+						{Id: new("tag-1")},
 						{Id: nil},
 					},
 				}
 				diags := &diag.Diagnostics{}
 
-				result := mapTagsFromWorkflow(context.Background(), workflow, diags)
+				result := mapTagsFromWorkflow(t.Context(), workflow, diags)
 
 				assert.False(t, diags.HasError())
 				var tagIDs []string
-				diags.Append(result.ElementsAs(context.Background(), &tagIDs, false)...)
+				diags.Append(result.ElementsAs(t.Context(), &tagIDs, false)...)
 				assert.Len(t, tagIDs, 1)
 				assert.Equal(t, "tag-1", tagIDs[0])
 			},
@@ -311,7 +311,7 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 				}
 				diags := &diag.Diagnostics{}
 
-				result := mapTagsFromWorkflow(context.Background(), workflow, diags)
+				result := mapTagsFromWorkflow(t.Context(), workflow, diags)
 
 				assert.False(t, diags.HasError())
 				// Returns null to avoid inconsistent result errors when plan had null.
@@ -327,7 +327,7 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 				}
 				diags := &diag.Diagnostics{}
 
-				result := mapTagsFromWorkflow(context.Background(), workflow, diags)
+				result := mapTagsFromWorkflow(t.Context(), workflow, diags)
 
 				assert.False(t, diags.HasError())
 				// Returns null to avoid inconsistent result errors when plan had null.
@@ -345,6 +345,8 @@ func Test_mapTagsFromWorkflow(t *testing.T) {
 
 // TestmapWorkflowBasicFields tests the exact function name expected by KTN-TEST-003.
 func Test_mapWorkflowBasicFields(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -353,15 +355,11 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "maps all basic fields when provided",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				active := true
-				versionID := "v1"
-				isArchived := false
-				triggerCount := float32(5)
 				workflow := &n8nsdk.Workflow{
-					Active:       &active,
-					VersionId:    &versionID,
-					IsArchived:   &isArchived,
-					TriggerCount: &triggerCount,
+					Active:       new(true),
+					VersionId:    new("v1"),
+					IsArchived:   new(false),
+					TriggerCount: new(float32(5)),
 				}
 				plan := &models.Resource{}
 				mapWorkflowBasicFields(workflow, plan)
@@ -399,9 +397,8 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "maps active field only",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				active := false
 				workflow := &n8nsdk.Workflow{
-					Active: &active,
+					Active: new(false),
 				}
 				plan := &models.Resource{}
 				mapWorkflowBasicFields(workflow, plan)
@@ -415,9 +412,8 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "maps trigger count with zero value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				triggerCount := float32(0)
 				workflow := &n8nsdk.Workflow{
-					TriggerCount: &triggerCount,
+					TriggerCount: new(float32(0)),
 				}
 				plan := &models.Resource{}
 				mapWorkflowBasicFields(workflow, plan)
@@ -454,11 +450,9 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "error case - overwrites existing plan values",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				active := false
-				versionID := "new-version"
 				workflow := &n8nsdk.Workflow{
-					Active:    &active,
-					VersionId: &versionID,
+					Active:    new(false),
+					VersionId: new("new-version"),
 				}
 				plan := &models.Resource{
 					Active:    types.BoolValue(true),
@@ -473,9 +467,8 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 			name: "error case - maps archived status correctly",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				isArchived := true
 				workflow := &n8nsdk.Workflow{
-					IsArchived: &isArchived,
+					IsArchived: new(true),
 				}
 				plan := &models.Resource{}
 				mapWorkflowBasicFields(workflow, plan)
@@ -493,6 +486,8 @@ func Test_mapWorkflowBasicFields(t *testing.T) {
 }
 
 func Test_mapWorkflowTimestamps(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -501,11 +496,9 @@ func Test_mapWorkflowTimestamps(t *testing.T) {
 			name: "map both timestamps",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				createdAt := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
-				updatedAt := time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC)
 				workflow := &n8nsdk.Workflow{
-					CreatedAt: &createdAt,
-					UpdatedAt: &updatedAt,
+					CreatedAt: new(time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)),
+					UpdatedAt: new(time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC)),
 				}
 				plan := &models.Resource{}
 
@@ -519,10 +512,9 @@ func Test_mapWorkflowTimestamps(t *testing.T) {
 			name: "map with nil created at",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				updatedAt := time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC)
 				workflow := &n8nsdk.Workflow{
 					CreatedAt: nil,
-					UpdatedAt: &updatedAt,
+					UpdatedAt: new(time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC)),
 				}
 				plan := &models.Resource{}
 
@@ -536,9 +528,8 @@ func Test_mapWorkflowTimestamps(t *testing.T) {
 			name: "map with nil updated at",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				createdAt := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
 				workflow := &n8nsdk.Workflow{
-					CreatedAt: &createdAt,
+					CreatedAt: new(time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)),
 					UpdatedAt: nil,
 				}
 				plan := &models.Resource{}
@@ -570,9 +561,8 @@ func Test_mapWorkflowTimestamps(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				loc := time.FixedZone("EST", -5*60*60)
-				createdAt := time.Date(2024, 1, 1, 12, 0, 0, 0, loc)
 				workflow := &n8nsdk.Workflow{
-					CreatedAt: &createdAt,
+					CreatedAt: new(time.Date(2024, 1, 1, 12, 0, 0, 0, loc)),
 				}
 				plan := &models.Resource{}
 
@@ -616,6 +606,8 @@ func Test_mapWorkflowTimestamps(t *testing.T) {
 }
 
 func Test_mapWorkflowToModel(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -624,16 +616,12 @@ func Test_mapWorkflowToModel(t *testing.T) {
 			name: "map complete workflow",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				active := true
-				versionID := "v1"
-				tagID := "tag-1"
-				createdAt := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
 				workflow := &n8nsdk.Workflow{
 					Name:        "Test Workflow",
-					Active:      &active,
-					VersionId:   &versionID,
-					Tags:        []n8nsdk.Tag{{Id: &tagID}},
-					CreatedAt:   &createdAt,
+					Active:      new(true),
+					VersionId:   new("v1"),
+					Tags:        []n8nsdk.Tag{{Id: new("tag-1")}},
+					CreatedAt:   new(time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)),
 					Nodes:       []n8nsdk.Node{},
 					Connections: map[string]any{},
 					Settings:    n8nsdk.WorkflowSettings{},
@@ -641,7 +629,7 @@ func Test_mapWorkflowToModel(t *testing.T) {
 				plan := &models.Resource{}
 				diags := &diag.Diagnostics{}
 
-				mapWorkflowToModel(context.Background(), workflow, plan, diags)
+				mapWorkflowToModel(t.Context(), workflow, plan, diags)
 
 				assert.False(t, diags.HasError())
 				assert.Equal(t, "Test Workflow", plan.Name.ValueString())
@@ -661,7 +649,7 @@ func Test_mapWorkflowToModel(t *testing.T) {
 				plan := &models.Resource{}
 				diags := &diag.Diagnostics{}
 
-				mapWorkflowToModel(context.Background(), workflow, plan, diags)
+				mapWorkflowToModel(t.Context(), workflow, plan, diags)
 
 				assert.False(t, diags.HasError())
 				assert.False(t, plan.Meta.IsNull())
@@ -678,7 +666,7 @@ func Test_mapWorkflowToModel(t *testing.T) {
 				plan := &models.Resource{}
 				diags := &diag.Diagnostics{}
 
-				mapWorkflowToModel(context.Background(), workflow, plan, diags)
+				mapWorkflowToModel(t.Context(), workflow, plan, diags)
 
 				assert.False(t, diags.HasError())
 				assert.False(t, plan.PinData.IsNull())
@@ -695,7 +683,7 @@ func Test_mapWorkflowToModel(t *testing.T) {
 				plan := &models.Resource{}
 				diags := &diag.Diagnostics{}
 
-				mapWorkflowToModel(context.Background(), workflow, plan, diags)
+				mapWorkflowToModel(t.Context(), workflow, plan, diags)
 
 				assert.False(t, diags.HasError())
 				assert.True(t, plan.Meta.IsNull())
@@ -712,7 +700,7 @@ func Test_mapWorkflowToModel(t *testing.T) {
 				plan := &models.Resource{}
 				diags := &diag.Diagnostics{}
 
-				mapWorkflowToModel(context.Background(), workflow, plan, diags)
+				mapWorkflowToModel(t.Context(), workflow, plan, diags)
 
 				assert.False(t, diags.HasError())
 				assert.True(t, plan.PinData.IsNull())
@@ -728,6 +716,8 @@ func Test_mapWorkflowToModel(t *testing.T) {
 }
 
 func Test_serializeWorkflowJSON(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -736,10 +726,9 @@ func Test_serializeWorkflowJSON(t *testing.T) {
 			name: "serialize all JSON fields",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				nodeName := "Start"
 				workflow := &n8nsdk.Workflow{
 					Nodes: []n8nsdk.Node{
-						{Name: &nodeName},
+						{Name: new("Start")},
 					},
 					Connections: map[string]any{"Node1": "Node2"},
 					Settings:    n8nsdk.WorkflowSettings{},
@@ -845,6 +834,8 @@ func Test_serializeWorkflowJSON(t *testing.T) {
 }
 
 func Test_convertTagIDsToTagIdsInner(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -918,6 +909,8 @@ func Test_convertTagIDsToTagIdsInner(t *testing.T) {
 }
 
 func Test_isActivationChanged(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1054,6 +1047,8 @@ func Test_isActivationChanged(t *testing.T) {
 }
 
 func Test_getActivationAction(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1117,7 +1112,6 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1134,7 +1128,7 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 				}
 				diags := &diag.Diagnostics{}
 
-				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+				r.handleWorkflowActivation(t.Context(), plan, state, diags)
 
 				assert.False(t, diags.HasError())
 
@@ -1150,7 +1144,7 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 				}
 				diags := &diag.Diagnostics{}
 
-				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+				r.handleWorkflowActivation(t.Context(), plan, state, diags)
 
 				// No change detected because state.Active is null, returns early
 				assert.False(t, diags.HasError())
@@ -1167,7 +1161,7 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 				}
 				diags := &diag.Diagnostics{}
 
-				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+				r.handleWorkflowActivation(t.Context(), plan, state, diags)
 
 				// No change detected because state.Active is null, returns early
 				assert.False(t, diags.HasError())
@@ -1184,7 +1178,7 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 				}
 				diags := &diag.Diagnostics{}
 
-				r.handleWorkflowActivation(context.Background(), plan, state, diags)
+				r.handleWorkflowActivation(t.Context(), plan, state, diags)
 
 				// No change detected because state.Active is unknown, returns early
 				assert.False(t, diags.HasError())
@@ -1197,6 +1191,8 @@ func TestWorkflowResource_handleWorkflowActivation(t *testing.T) {
 // Note: Full integration testing is done in resource_test.go.
 // This test ensures the function exists and covers the early return paths.
 func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1212,7 +1208,7 @@ func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
 				workflow := &n8nsdk.Workflow{}
 				diags := &diag.Diagnostics{}
 
-				r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+				r.updateWorkflowTags(t.Context(), "wf-123", plan, workflow, diags)
 
 				assert.False(t, diags.HasError())
 			},
@@ -1228,7 +1224,7 @@ func TestWorkflowResource_updateWorkflowTags(t *testing.T) {
 				workflow := &n8nsdk.Workflow{}
 				diags := &diag.Diagnostics{}
 
-				r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+				r.updateWorkflowTags(t.Context(), "wf-123", plan, workflow, diags)
 
 				assert.False(t, diags.HasError())
 			},
@@ -1326,13 +1322,12 @@ func TestHandleWorkflowActivation_FullCoverage(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
 			plan := &models.Resource{
@@ -1345,7 +1340,7 @@ func TestHandleWorkflowActivation_FullCoverage(t *testing.T) {
 			}
 			diags := &diag.Diagnostics{}
 
-			r.handleWorkflowActivation(context.Background(), plan, state, diags)
+			r.handleWorkflowActivation(t.Context(), plan, state, diags)
 
 			if tt.expectError {
 				assert.True(t, diags.HasError())
@@ -1411,13 +1406,12 @@ func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
 			plan := &models.Resource{
@@ -1426,7 +1420,7 @@ func TestUpdateWorkflowTags_FullCoverage(t *testing.T) {
 			workflow := &n8nsdk.Workflow{}
 			diags := &diag.Diagnostics{}
 
-			r.updateWorkflowTags(context.Background(), "wf-123", plan, workflow, diags)
+			r.updateWorkflowTags(t.Context(), "wf-123", plan, workflow, diags)
 
 			if tt.expectError {
 				assert.True(t, diags.HasError())
@@ -1449,9 +1443,8 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "removes default callerPolicy value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := CALLER_POLICY_DEFAULT
 				settings := n8nsdk.WorkflowSettings{
-					CallerPolicy: &callerPolicy,
+					CallerPolicy: new(CallerPolicyDefault),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1463,9 +1456,8 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "keeps non-default callerPolicy value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := "any"
 				settings := n8nsdk.WorkflowSettings{
-					CallerPolicy: &callerPolicy,
+					CallerPolicy: new("any"),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1478,9 +1470,8 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "removes default availableInMCP value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				availableInMCP := false
 				settings := n8nsdk.WorkflowSettings{
-					AvailableInMCP: &availableInMCP,
+					AvailableInMCP: new(false),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1492,9 +1483,8 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "keeps non-default availableInMCP value",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				availableInMCP := true
 				settings := n8nsdk.WorkflowSettings{
-					AvailableInMCP: &availableInMCP,
+					AvailableInMCP: new(true),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1519,11 +1509,9 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "removes both defaults at once",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := CALLER_POLICY_DEFAULT
-				availableInMCP := false
 				settings := n8nsdk.WorkflowSettings{
-					CallerPolicy:   &callerPolicy,
-					AvailableInMCP: &availableInMCP,
+					CallerPolicy:   new(CallerPolicyDefault),
+					AvailableInMCP: new(false),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1536,11 +1524,9 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "keeps mixed non-default and default values",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := CALLER_POLICY_DEFAULT
-				availableInMCP := true
 				settings := n8nsdk.WorkflowSettings{
-					CallerPolicy:   &callerPolicy,
-					AvailableInMCP: &availableInMCP,
+					CallerPolicy:   new(CallerPolicyDefault),
+					AvailableInMCP: new(true),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1556,7 +1542,7 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 				t.Helper()
 				// Test that other fields are preserved.
 				settings := n8nsdk.WorkflowSettings{
-					AdditionalProperties: map[string]interface{}{
+					AdditionalProperties: map[string]any{
 						"customField": "value",
 					},
 				}
@@ -1572,9 +1558,8 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			name: "error case - empty string callerPolicy is not removed",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callerPolicy := ""
 				settings := n8nsdk.WorkflowSettings{
-					CallerPolicy: &callerPolicy,
+					CallerPolicy: new(""),
 				}
 
 				result := normalizeWorkflowSettings(settings)
@@ -1667,10 +1652,9 @@ func Test_mapWorkflowProjectID(t *testing.T) {
 			name: "error case - handles empty string project ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				emptyID := ""
 				workflow := &n8nsdk.Workflow{
 					Shared: []n8nsdk.SharedWorkflow{
-						{ProjectId: &emptyID},
+						{ProjectId: new("")},
 					},
 				}
 				plan := &models.Resource{}
@@ -1686,11 +1670,10 @@ func Test_mapWorkflowProjectID(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				projectID1 := "project-1"
-				projectID2 := "project-2"
 				workflow := &n8nsdk.Workflow{
 					Shared: []n8nsdk.SharedWorkflow{
 						{ProjectId: &projectID1},
-						{ProjectId: &projectID2},
+						{ProjectId: new("project-2")},
 					},
 				}
 				plan := &models.Resource{}
@@ -1872,7 +1855,7 @@ func TestWorkflowResource_createWorkflowViaAPI(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 				workflowRequest := n8nsdk.Workflow{}
 
@@ -1888,7 +1871,7 @@ func TestWorkflowResource_createWorkflowViaAPI(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 				workflowRequest := n8nsdk.Workflow{Name: "test"}
 
@@ -1923,7 +1906,7 @@ func TestWorkflowResource_updateWorkflowViaAPI(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 				workflowRequest := n8nsdk.Workflow{}
 
@@ -1939,7 +1922,7 @@ func TestWorkflowResource_updateWorkflowViaAPI(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 				workflowRequest := n8nsdk.Workflow{Name: "updated"}
 
@@ -1954,7 +1937,7 @@ func TestWorkflowResource_updateWorkflowViaAPI(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 				workflowRequest := n8nsdk.Workflow{}
 
@@ -1992,18 +1975,13 @@ func TestWorkflowResource_transferWorkflowToProject(t *testing.T) {
 
 				// Verify method exists by checking it can be called
 				// (will fail with nil client, but that's expected)
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 
-				// This will panic with nil client, so we defer recover
-				defer func() {
-					if r := recover(); r != nil {
-						// Expected to panic with nil client
-						assert.NotNil(t, r)
-					}
-				}()
-
-				_ = r.transferWorkflowToProject(ctx, "workflow-123", "project-456", diags)
+				// This will panic with nil client, which is expected
+				assert.Panics(t, func() {
+					r.transferWorkflowToProject(ctx, "workflow-123", "project-456", diags)
+				})
 			},
 		},
 		{
@@ -2012,7 +1990,7 @@ func TestWorkflowResource_transferWorkflowToProject(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 
 				// Should panic with nil client
@@ -2027,7 +2005,7 @@ func TestWorkflowResource_transferWorkflowToProject(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 
 				// Should panic with nil client (API call would fail anyway)
@@ -2065,18 +2043,13 @@ func TestWorkflowResource_handleProjectAssignment(t *testing.T) {
 
 				// Verify method exists by checking it can be called
 				// (will fail with nil client, but that's expected)
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 
-				// This will panic with nil client, so we defer recover
-				defer func() {
-					if r := recover(); r != nil {
-						// Expected to panic with nil client
-						assert.NotNil(t, r)
-					}
-				}()
-
-				_ = r.handleProjectAssignment(ctx, "workflow-123", "project-456", diags)
+				// This will panic with nil client, which is expected
+				assert.Panics(t, func() {
+					r.handleProjectAssignment(ctx, "workflow-123", "project-456", diags)
+				})
 			},
 		},
 		{
@@ -2085,7 +2058,7 @@ func TestWorkflowResource_handleProjectAssignment(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 
 				// Should panic with nil client
@@ -2100,7 +2073,7 @@ func TestWorkflowResource_handleProjectAssignment(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 
 				// Should panic with nil client
@@ -2137,22 +2110,18 @@ func TestWorkflowResource_handlePostCreation(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
-				workflowID := "workflow-123"
-				workflow := &n8nsdk.Workflow{Id: &workflowID}
+				workflow := &n8nsdk.Workflow{Id: new("workflow-123")}
 				plan := &models.Resource{}
 
-				// Function will either complete or panic depending on whether tags/project are set
-				// We just verify that ID gets set
-				defer func() {
-					_ = recover() // Ignore any panic
-				}()
+				// Function sets ID first; with no tags/project in plan, returns workflow without panic.
+				result := r.handlePostCreation(ctx, workflow, plan, diags)
 
-				r.handlePostCreation(ctx, workflow, plan, diags)
-
-				// ID should be set regardless of panic
-				assert.Equal(t, workflowID, plan.ID.ValueString())
+				// ID should be set
+				assert.Equal(t, "workflow-123", plan.ID.ValueString())
+				// Result is not nil (no activation requested either)
+				assert.NotNil(t, result)
 			},
 		},
 		{
@@ -2161,19 +2130,18 @@ func TestWorkflowResource_handlePostCreation(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
 				workflow := &n8nsdk.Workflow{Id: nil}
 				plan := &models.Resource{}
 
-				defer func() {
-					_ = recover() // Ignore any panic
-				}()
-
-				r.handlePostCreation(ctx, workflow, plan, diags)
+				// Function sets ID from nil workflow.Id, resulting in null string value.
+				// With no tags/project, no API calls occur so no panic.
+				result := r.handlePostCreation(ctx, workflow, plan, diags)
 
 				// ID should be null when workflow ID is nil
 				assert.True(t, plan.ID.IsNull())
+				assert.NotNil(t, result)
 			},
 		},
 		{
@@ -2182,21 +2150,14 @@ func TestWorkflowResource_handlePostCreation(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
-				workflowID := "workflow-456"
-				workflow := &n8nsdk.Workflow{Id: &workflowID}
+				workflow := &n8nsdk.Workflow{Id: new("workflow-456")}
 				plan := &models.Resource{}
 
-				defer func() {
-					_ = recover() // Ignore any panic
-				}()
-
-				// Verify method signature compiles and can be called
+				// Verify method signature compiles and returns non-nil with valid inputs.
 				result := r.handlePostCreation(ctx, workflow, plan, diags)
-
-				// Result may be nil or non-nil depending on execution path
-				_ = result
+				assert.NotNil(t, result)
 			},
 		},
 	}
@@ -2225,37 +2186,72 @@ func TestWorkflowResource_applyPostCreationTagsAndProject(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
-				workflowID := "workflow-123"
-				workflow := &n8nsdk.Workflow{Id: &workflowID}
+				workflow := &n8nsdk.Workflow{Id: new("workflow-123")}
 				plan := &models.Resource{}
 
-				// Should not panic when no tags/project are set
 				result := r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
 
-				// Should return the original workflow
 				assert.NotNil(t, result)
 				assert.Equal(t, workflow, result)
+				assert.False(t, diags.HasError())
 			},
 		},
 		{
-			name: "error case - function exists with correct signature",
+			name: "returns workflow when tags are null",
 			testFunc: func(t *testing.T) {
 				t.Helper()
 
 				r := &WorkflowResource{}
-				ctx := context.Background()
+				ctx := t.Context()
 				diags := &diag.Diagnostics{}
-				workflowID := "workflow-456"
-				workflow := &n8nsdk.Workflow{Id: &workflowID}
-				plan := &models.Resource{}
+				workflow := &n8nsdk.Workflow{Id: new("workflow-456")}
+				plan := &models.Resource{
+					Tags: types.SetNull(types.StringType),
+				}
 
-				// Verify method signature compiles and can be called
 				result := r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
 
-				// Result should be non-nil when no tags/project are provided
 				assert.NotNil(t, result)
+				assert.False(t, diags.HasError())
+			},
+		},
+		{
+			name: "returns workflow when project_id is null",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				r := &WorkflowResource{}
+				ctx := t.Context()
+				diags := &diag.Diagnostics{}
+				workflow := &n8nsdk.Workflow{Id: new("workflow-789")}
+				plan := &models.Resource{
+					ProjectID: types.StringNull(),
+				}
+
+				result := r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
+
+				assert.NotNil(t, result)
+				assert.False(t, diags.HasError())
+			},
+		},
+		{
+			name: "returns workflow when workflow ID is nil",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+
+				r := &WorkflowResource{}
+				ctx := t.Context()
+				diags := &diag.Diagnostics{}
+				workflow := &n8nsdk.Workflow{Id: nil}
+				plan := &models.Resource{}
+
+				// With nil ID, tags/project conditions require workflow.Id != nil, so skip.
+				result := r.applyPostCreationTagsAndProject(ctx, workflow, plan, diags)
+
+				assert.NotNil(t, result)
+				assert.False(t, diags.HasError())
 			},
 		},
 	}
@@ -2306,16 +2302,15 @@ func TestWorkflowResource_transferWorkflowToProject_WithMock(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClientForHelpers(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := &diag.Diagnostics{}
 
 			result := r.transferWorkflowToProject(ctx, tt.workflowID, tt.projectID, diags)
@@ -2409,16 +2404,15 @@ func TestWorkflowResource_handleProjectAssignment_WithMock(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClientForHelpers(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := &diag.Diagnostics{}
 
 			result := r.handleProjectAssignment(ctx, tt.workflowID, tt.projectID, diags)
@@ -2493,20 +2487,18 @@ func TestWorkflowResource_applyPostCreationTagsAndProject_WithMock(t *testing.T)
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClientForHelpers(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &WorkflowResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			diags := &diag.Diagnostics{}
 
-			workflowID := "workflow-123"
-			workflow := &n8nsdk.Workflow{Id: &workflowID}
+			workflow := &n8nsdk.Workflow{Id: new("workflow-123")}
 			plan := &models.Resource{
 				ProjectID: types.StringValue(tt.projectID),
 			}
@@ -2523,6 +2515,266 @@ func TestWorkflowResource_applyPostCreationTagsAndProject_WithMock(t *testing.T)
 				assert.Nil(t, result, "Should return nil on error")
 			} else {
 				assert.NotNil(t, result, "Should return workflow on success")
+			}
+		})
+	}
+}
+
+// TestParseNodesJSON tests the parseNodesJSON function.
+func TestParseNodesJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		nodesJSON   string
+		isNull      bool
+		expectError bool
+		expectNil   bool
+	}{
+		{
+			name:        "null field returns nil nodes",
+			isNull:      true,
+			expectError: false,
+			expectNil:   true,
+		},
+		{
+			name:        "valid JSON returns nodes",
+			nodesJSON:   `[]`,
+			expectError: false,
+			expectNil:   false,
+		},
+		{
+			name:        "invalid JSON returns error",
+			nodesJSON:   `not-json`,
+			expectError: true,
+			expectNil:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			diags := &diag.Diagnostics{}
+			plan := &models.Resource{}
+			//: Set up plan field.
+			if tt.isNull {
+				plan.NodesJSON = types.StringNull()
+			} else {
+				plan.NodesJSON = types.StringValue(tt.nodesJSON)
+			}
+			//: Call parseNodesJSON.
+			nodes, ok := parseNodesJSON(plan, diags)
+			//: Verify expected results.
+			if tt.expectError {
+				assert.False(t, ok)
+				assert.True(t, diags.HasError())
+			} else {
+				assert.True(t, ok)
+				assert.False(t, diags.HasError())
+			}
+			if tt.expectNil {
+				assert.Nil(t, nodes)
+			}
+		})
+	}
+}
+
+// TestParseConnectionsJSON tests the parseConnectionsJSON function.
+func TestParseConnectionsJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		connectionsJSON string
+		isNull          bool
+		expectError     bool
+		expectEmpty     bool
+	}{
+		{
+			name:        "null field returns empty map",
+			isNull:      true,
+			expectError: false,
+			expectEmpty: true,
+		},
+		{
+			name:            "valid JSON returns connections",
+			connectionsJSON: `{}`,
+			expectError:     false,
+			expectEmpty:     true,
+		},
+		{
+			name:            "invalid JSON returns error",
+			connectionsJSON: `not-json`,
+			expectError:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			diags := &diag.Diagnostics{}
+			plan := &models.Resource{}
+			//: Set up plan field.
+			if tt.isNull {
+				plan.ConnectionsJSON = types.StringNull()
+			} else {
+				plan.ConnectionsJSON = types.StringValue(tt.connectionsJSON)
+			}
+			//: Call parseConnectionsJSON.
+			connections, ok := parseConnectionsJSON(plan, diags)
+			//: Verify expected results.
+			if tt.expectError {
+				assert.False(t, ok)
+				assert.True(t, diags.HasError())
+			} else {
+				assert.True(t, ok)
+				assert.False(t, diags.HasError())
+				assert.NotNil(t, connections)
+			}
+		})
+	}
+}
+
+// TestParseSettingsJSON tests the parseSettingsJSON function.
+func TestParseSettingsJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		settingsJSON string
+		isNull       bool
+		expectError  bool
+	}{
+		{
+			name:        "null field returns empty settings",
+			isNull:      true,
+			expectError: false,
+		},
+		{
+			name:         "valid JSON returns settings",
+			settingsJSON: `{}`,
+			expectError:  false,
+		},
+		{
+			name:         "invalid JSON returns error",
+			settingsJSON: `not-json`,
+			expectError:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			diags := &diag.Diagnostics{}
+			plan := &models.Resource{}
+			//: Set up plan field.
+			if tt.isNull {
+				plan.SettingsJSON = types.StringNull()
+			} else {
+				plan.SettingsJSON = types.StringValue(tt.settingsJSON)
+			}
+			//: Call parseSettingsJSON.
+			_, ok := parseSettingsJSON(plan, diags)
+			//: Verify expected results.
+			if tt.expectError {
+				assert.False(t, ok)
+				assert.True(t, diags.HasError())
+			} else {
+				assert.True(t, ok)
+				assert.False(t, diags.HasError())
+			}
+		})
+	}
+}
+
+// TestWorkflowResource_applyTagsIfPresent tests the applyTagsIfPresent method.
+func TestWorkflowResource_applyTagsIfPresent(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		tagsNull   bool
+		workflowID *string
+		expectTrue bool
+	}{
+		{
+			name:       "null tags returns true (skip)",
+			tagsNull:   true,
+			workflowID: new("wf-123"),
+			expectTrue: true,
+		},
+		{
+			name:       "nil workflow ID returns true (skip)",
+			tagsNull:   false,
+			workflowID: nil,
+			expectTrue: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			diags := &diag.Diagnostics{}
+			r := &WorkflowResource{}
+			workflow := &n8nsdk.Workflow{Id: tt.workflowID}
+			plan := &models.Resource{}
+			//: Set up tags field.
+			if tt.tagsNull {
+				plan.Tags = types.SetNull(types.StringType)
+			} else {
+				plan.Tags = types.SetValueMust(types.StringType, []attr.Value{})
+			}
+			//: Call applyTagsIfPresent.
+			ok := r.applyTagsIfPresent(t.Context(), workflow, plan, diags)
+			//: Verify expected results.
+			assert.Equal(t, tt.expectTrue, ok)
+			assert.False(t, diags.HasError())
+		})
+	}
+}
+
+// TestWorkflowResource_applyProjectIfPresent tests the applyProjectIfPresent method.
+func TestWorkflowResource_applyProjectIfPresent(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		projectIDNull  bool
+		workflowID     *string
+		expectOriginal bool
+	}{
+		{
+			name:           "null project_id returns original workflow",
+			projectIDNull:  true,
+			workflowID:     new("wf-123"),
+			expectOriginal: true,
+		},
+		{
+			name:           "nil workflow ID returns original workflow",
+			projectIDNull:  false,
+			workflowID:     nil,
+			expectOriginal: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			diags := &diag.Diagnostics{}
+			r := &WorkflowResource{}
+			workflow := &n8nsdk.Workflow{Id: tt.workflowID}
+			plan := &models.Resource{}
+			//: Set up project ID field.
+			if tt.projectIDNull {
+				plan.ProjectID = types.StringNull()
+			} else {
+				plan.ProjectID = types.StringValue("proj-1")
+			}
+			//: Call applyProjectIfPresent.
+			result := r.applyProjectIfPresent(t.Context(), workflow, plan, diags)
+			//: Verify original workflow returned.
+			if tt.expectOriginal {
+				assert.Equal(t, workflow, result)
 			}
 		})
 	}

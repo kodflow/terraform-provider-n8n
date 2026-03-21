@@ -50,8 +50,8 @@ type TagResource struct {
 //
 // Returns:
 //   - resource.Resource: new TagResource instance
-func NewTagResource() *TagResource {
-	// Return result.
+func NewTagResource() (tagResource *TagResource) {
+	//: Return result.
 	return &TagResource{}
 }
 
@@ -59,9 +59,9 @@ func NewTagResource() *TagResource {
 // This wrapper function is used by the provider to maintain compatibility with the framework.
 //
 // Returns:
-//   - resource.Resource: the wrapped TagResource instance
-func NewTagResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+//   - r resource.Resource: the wrapped TagResource instance
+func NewTagResourceWrapper() (r resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewTagResource()
 }
 
@@ -74,7 +74,12 @@ func NewTagResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - none
-func (r *TagResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *TagResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_tag"
 }
 
@@ -87,7 +92,12 @@ func (r *TagResource) Metadata(_ctx context.Context, req resource.MetadataReques
 //
 // Returns:
 //   - none
-func (r *TagResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *TagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n tag resource using generated SDK",
 
@@ -121,21 +131,26 @@ func (r *TagResource) Schema(_ctx context.Context, _req resource.SchemaRequest, 
 //
 // Returns:
 //   - none
-func (r *TagResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Check for nil value.
+func (r *TagResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -155,15 +170,15 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute create logic
+	//: Execute create logic.
 	if !r.executeCreateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -180,7 +195,7 @@ func (r *TagResource) Create(ctx context.Context, req resource.CreateRequest, re
 //
 // Returns:
 //   - bool: True if creation succeeded, false otherwise
-func (r *TagResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
+func (r *TagResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (ok bool) {
 	tagRequest := n8nsdk.Tag{
 		Name: plan.Name.ValueString(),
 	}
@@ -188,33 +203,38 @@ func (r *TagResource) executeCreateLogic(ctx context.Context, plan *models.Resou
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsPost(ctx).
 		Tag(tagRequest).
 		Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating tag",
 			fmt.Sprintf("Could not create tag: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	plan.ID = types.StringPointerValue(tag.Id)
 	plan.Name = types.StringValue(tag.Name)
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -231,15 +251,15 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute read logic
+	//: Execute read logic.
 	if !r.executeReadLogic(ctx, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -256,34 +276,39 @@ func (r *TagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 //
 // Returns:
 //   - bool: True if read succeeded, false otherwise
-func (r *TagResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
+func (r *TagResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) (ok bool) {
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdGet(ctx, state.ID.ValueString()).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading tag",
 			fmt.Sprintf("Could not read tag ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	state.Name = types.StringValue(tag.Name)
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.CreatedAt != nil {
 		state.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		state.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -301,15 +326,15 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute update logic
+	//: Execute update logic.
 	if !r.executeUpdateLogic(ctx, plan, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -327,12 +352,8 @@ func (r *TagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 //
 // Returns:
 //   - bool: True if update succeeded, false otherwise
-func (r *TagResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) bool {
-	// Use state.ID for the tag ID since plan.ID may be Unknown
-	// for Computed attributes.
+func (r *TagResource) executeUpdateLogic(ctx context.Context, plan, state *models.Resource, resp *resource.UpdateResponse) (ok bool) {
 	tagID := state.ID.ValueString()
-
-	// Copy ID from state to plan for consistency.
 	plan.ID = state.ID
 
 	tagRequest := n8nsdk.Tag{
@@ -342,40 +363,60 @@ func (r *TagResource) executeUpdateLogic(ctx context.Context, plan, state *model
 	tag, httpResp, err := r.client.APIClient.TagsAPI.TagsIdPut(ctx, tagID).
 		Tag(tagRequest).
 		Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating tag",
 			fmt.Sprintf("Could not update tag ID %s: %s\nHTTP Response: %v", tagID, err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	plan.Name = types.StringValue(tag.Name)
-	// Copy created_at from API response or fall back to state value.
-	// The PUT API may not return created_at.
+	applyTagTimestamps(tag, plan, state)
+
+	//: Return success.
+	return true
+}
+
+// applyTagTimestamps applies tag timestamps from the API response to the plan,
+// falling back to the state value if the API response doesn't include a timestamp.
+//
+// Params:
+//   - tag: The API response tag
+//   - plan: The plan to update
+//   - state: The current state to fall back to
+//
+// Returns:
+//   - none
+func applyTagTimestamps(tag *n8nsdk.Tag, plan, state *models.Resource) {
+	//: Check for non-nil value.
 	if tag.CreatedAt != nil {
 		plan.CreatedAt = types.StringValue(tag.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
+		//: Handle alternative case.
 	} else {
-		// Fall back to state value when API response doesn't include timestamp.
+		//: Fall back to state value when API response doesn't include timestamp.
 		plan.CreatedAt = state.CreatedAt
 	}
-	// Copy updated_at from API response or fall back to state value.
+	//: Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		plan.UpdatedAt = types.StringValue(tag.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
+		//: Handle alternative case.
 	} else {
-		// Fall back to state value when API response doesn't include timestamp.
+		//: Fall back to state value when API response doesn't include timestamp.
 		plan.UpdatedAt = state.UpdatedAt
 	}
-
-	// Return success.
-	return true
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -391,13 +432,13 @@ func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute delete logic
+	//: Execute delete logic.
 	r.executeDeleteLogic(ctx, state, resp)
 }
 
@@ -411,24 +452,29 @@ func (r *TagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 //
 // Returns:
 //   - bool: True if delete succeeded, false otherwise
-func (r *TagResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
+func (r *TagResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) (ok bool) {
 	_, httpResp, err := r.client.APIClient.TagsAPI.TagsIdDelete(ctx, state.ID.ValueString()).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				_ = closeErr
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting tag",
 			fmt.Sprintf("Could not delete tag ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 

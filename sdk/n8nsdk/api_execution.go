@@ -80,6 +80,36 @@ type ExecutionAPI interface {
 	// ExecutionsIdRetryPostExecute executes the request
 	//  @return Execution
 	ExecutionsIdRetryPostExecute(r ExecutionAPIExecutionsIdRetryPostRequest) (*Execution, *http.Response, error)
+
+	/*
+		ExecutionsIdTagsGet Get execution annotation tags
+
+		Get annotation tags for an execution.
+
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the execution.
+		@return ExecutionAPIExecutionsIdTagsGetRequest
+	*/
+	ExecutionsIdTagsGet(ctx context.Context, id float32) ExecutionAPIExecutionsIdTagsGetRequest
+
+	// ExecutionsIdTagsGetExecute executes the request
+	//  @return []Tag
+	ExecutionsIdTagsGetExecute(r ExecutionAPIExecutionsIdTagsGetRequest) ([]Tag, *http.Response, error)
+
+	/*
+		ExecutionsIdTagsPut Set execution annotation tags
+
+		Update annotation tags of an execution.
+
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@param id The ID of the execution.
+		@return ExecutionAPIExecutionsIdTagsPutRequest
+	*/
+	ExecutionsIdTagsPut(ctx context.Context, id float32) ExecutionAPIExecutionsIdTagsPutRequest
+
+	// ExecutionsIdTagsPutExecute executes the request
+	//  @return []Tag
+	ExecutionsIdTagsPutExecute(r ExecutionAPIExecutionsIdTagsPutRequest) ([]Tag, *http.Response, error)
 }
 
 // ExecutionAPIService ExecutionAPI service
@@ -596,6 +626,197 @@ func (a *ExecutionAPIService) ExecutionsIdRetryPostExecute(r ExecutionAPIExecuti
 			}
 		}
 	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+// ExecutionAPIExecutionsIdTagsGetRequest is the request for getting execution tags.
+type ExecutionAPIExecutionsIdTagsGetRequest struct {
+	ctx        context.Context
+	ApiService ExecutionAPI
+	id         float32
+}
+
+// Execute executes the request.
+//
+//	@return []Tag
+func (r ExecutionAPIExecutionsIdTagsGetRequest) Execute() ([]Tag, *http.Response, error) {
+	return r.ApiService.ExecutionsIdTagsGetExecute(r)
+}
+
+// ExecutionsIdTagsGet returns a request builder for getting execution annotation tags.
+func (a *ExecutionAPIService) ExecutionsIdTagsGet(ctx context.Context, id float32) ExecutionAPIExecutionsIdTagsGetRequest {
+	return ExecutionAPIExecutionsIdTagsGetRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+	}
+}
+
+// ExecutionsIdTagsGetExecute executes the get execution tags request.
+func (a *ExecutionAPIService) ExecutionsIdTagsGetExecute(r ExecutionAPIExecutionsIdTagsGetRequest) ([]Tag, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue []Tag
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ExecutionAPIService.ExecutionsIdTagsGet")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/executions/" + parameterValueToString(r.id, "id") + "/tags"
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	localVarHTTPContentTypes := []string{}
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+// ExecutionAPIExecutionsIdTagsPutRequest is the request for setting execution tags.
+type ExecutionAPIExecutionsIdTagsPutRequest struct {
+	ctx        context.Context
+	ApiService ExecutionAPI
+	id         float32
+	tagIds     *[]string
+}
+
+// TagIds sets the list of tag IDs to assign.
+func (r ExecutionAPIExecutionsIdTagsPutRequest) TagIds(tagIds []string) ExecutionAPIExecutionsIdTagsPutRequest {
+	r.tagIds = &tagIds
+	return r
+}
+
+// Execute executes the request.
+//
+//	@return []Tag
+func (r ExecutionAPIExecutionsIdTagsPutRequest) Execute() ([]Tag, *http.Response, error) {
+	return r.ApiService.ExecutionsIdTagsPutExecute(r)
+}
+
+// ExecutionsIdTagsPut returns a request builder for setting execution annotation tags.
+func (a *ExecutionAPIService) ExecutionsIdTagsPut(ctx context.Context, id float32) ExecutionAPIExecutionsIdTagsPutRequest {
+	return ExecutionAPIExecutionsIdTagsPutRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+	}
+}
+
+// ExecutionsIdTagsPutExecute executes the put execution tags request.
+func (a *ExecutionAPIService) ExecutionsIdTagsPutExecute(r ExecutionAPIExecutionsIdTagsPutRequest) ([]Tag, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodPut
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue []Tag
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ExecutionAPIService.ExecutionsIdTagsPut")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/executions/" + parameterValueToString(r.id, "id") + "/tags"
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	localVarHTTPContentTypes := []string{"application/json"}
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	localVarPostBody = r.tagIds
+
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

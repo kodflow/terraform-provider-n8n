@@ -5,7 +5,6 @@
 package workflow
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -127,7 +126,7 @@ func TestWorkflowConnectionResource_generateConnectionJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, connJSON string) {
 				t.Helper()
 
-				var conn map[string]interface{}
+				var conn map[string]any
 				err := json.Unmarshal([]byte(connJSON), &conn)
 				require.NoError(t, err)
 
@@ -153,7 +152,7 @@ func TestWorkflowConnectionResource_generateConnectionJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, connJSON string) {
 				t.Helper()
 
-				var conn map[string]interface{}
+				var conn map[string]any
 				err := json.Unmarshal([]byte(connJSON), &conn)
 				require.NoError(t, err)
 
@@ -176,7 +175,7 @@ func TestWorkflowConnectionResource_generateConnectionJSON(t *testing.T) {
 			checkJSON: func(t *testing.T, connJSON string) {
 				t.Helper()
 
-				var conn map[string]interface{}
+				var conn map[string]any
 				err := json.Unmarshal([]byte(connJSON), &conn)
 				require.NoError(t, err)
 
@@ -448,146 +447,209 @@ func getConnectionObjectType() tftypes.Object {
 func TestWorkflowConnectionResource_Create_Success(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowConnectionResource{}
-	ctx := context.Background()
-	objectType := getConnectionObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":                  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"source_node":         tftypes.NewValue(tftypes.String, "Webhook"),
-		"source_output":       tftypes.NewValue(tftypes.String, "main"),
-		"source_output_index": tftypes.NewValue(tftypes.Number, 0),
-		"target_node":         tftypes.NewValue(tftypes.String, "Process"),
-		"target_input":        tftypes.NewValue(tftypes.String, "main"),
-		"target_input_index":  tftypes.NewValue(tftypes.Number, 0),
-		"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		srcNode     string
+		tgtNode     string
+		expectError bool
+	}{
+		{
+			name:        "basic connection from Webhook to Process",
+			srcNode:     "Webhook",
+			tgtNode:     "Process",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createConnectionTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowConnectionResource{}
+			ctx := t.Context()
+			objectType := getConnectionObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createConnectionTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":                  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"source_node":         tftypes.NewValue(tftypes.String, tt.srcNode),
+				"source_output":       tftypes.NewValue(tftypes.String, "main"),
+				"source_output_index": tftypes.NewValue(tftypes.Number, 0),
+				"target_node":         tftypes.NewValue(tftypes.String, tt.tgtNode),
+				"target_input":        tftypes.NewValue(tftypes.String, "main"),
+				"target_input_index":  tftypes.NewValue(tftypes.Number, 0),
+				"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{
+				Raw:    tftypes.NewValue(objectType, rawPlan),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	r.Create(ctx, req, &resp)
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(objectType, nil),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	assert.False(t, resp.Diagnostics.HasError(), "Create should not have errors")
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
+
+			r.Create(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowConnectionResource_Create_WithMultipleOutputs(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowConnectionResource{}
-	ctx := context.Background()
-	objectType := getConnectionObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":                  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-		"source_node":         tftypes.NewValue(tftypes.String, "Switch"),
-		"source_output":       tftypes.NewValue(tftypes.String, "main"),
-		"source_output_index": tftypes.NewValue(tftypes.Number, 2),
-		"target_node":         tftypes.NewValue(tftypes.String, "Handler"),
-		"target_input":        tftypes.NewValue(tftypes.String, "main"),
-		"target_input_index":  tftypes.NewValue(tftypes.Number, 1),
-		"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name           string
+		srcNode        string
+		srcOutputIndex int
+		tgtNode        string
+		tgtInputIndex  int
+		expectError    bool
+	}{
+		{
+			name:           "switch node with multiple outputs",
+			srcNode:        "Switch",
+			srcOutputIndex: 2,
+			tgtNode:        "Handler",
+			tgtInputIndex:  1,
+			expectError:    false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createConnectionTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowConnectionResource{}
+			ctx := t.Context()
+			objectType := getConnectionObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createConnectionTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":                  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+				"source_node":         tftypes.NewValue(tftypes.String, tt.srcNode),
+				"source_output":       tftypes.NewValue(tftypes.String, "main"),
+				"source_output_index": tftypes.NewValue(tftypes.Number, tt.srcOutputIndex),
+				"target_node":         tftypes.NewValue(tftypes.String, tt.tgtNode),
+				"target_input":        tftypes.NewValue(tftypes.String, "main"),
+				"target_input_index":  tftypes.NewValue(tftypes.Number, tt.tgtInputIndex),
+				"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.CreateRequest{
-		Plan: plan,
-	}
-	resp := resource.CreateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{
+				Raw:    tftypes.NewValue(objectType, rawPlan),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	r.Create(ctx, req, &resp)
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(objectType, nil),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	assert.False(t, resp.Diagnostics.HasError(), "Create with multiple outputs should not have errors")
+			req := resource.CreateRequest{Plan: plan}
+			resp := resource.CreateResponse{State: state}
+
+			r.Create(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowConnectionResource_Update_Success(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowConnectionResource{}
-	ctx := context.Background()
-	objectType := getConnectionObjectType()
-
-	rawPlan := map[string]tftypes.Value{
-		"id":                  tftypes.NewValue(tftypes.String, "conn-123"),
-		"source_node":         tftypes.NewValue(tftypes.String, "UpdatedWebhook"),
-		"source_output":       tftypes.NewValue(tftypes.String, "main"),
-		"source_output_index": tftypes.NewValue(tftypes.Number, 0),
-		"target_node":         tftypes.NewValue(tftypes.String, "UpdatedProcess"),
-		"target_input":        tftypes.NewValue(tftypes.String, "main"),
-		"target_input_index":  tftypes.NewValue(tftypes.Number, 0),
-		"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+	tests := []struct {
+		name        string
+		connID      string
+		srcNode     string
+		tgtNode     string
+		expectError bool
+	}{
+		{
+			name:        "update existing connection",
+			connID:      "conn-123",
+			srcNode:     "UpdatedWebhook",
+			tgtNode:     "UpdatedProcess",
+			expectError: false,
+		},
 	}
 
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, rawPlan),
-		Schema: createConnectionTestSchema(t),
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowConnectionResource{}
+			ctx := t.Context()
+			objectType := getConnectionObjectType()
 
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createConnectionTestSchema(t),
-	}
+			rawPlan := map[string]tftypes.Value{
+				"id":                  tftypes.NewValue(tftypes.String, tt.connID),
+				"source_node":         tftypes.NewValue(tftypes.String, tt.srcNode),
+				"source_output":       tftypes.NewValue(tftypes.String, "main"),
+				"source_output_index": tftypes.NewValue(tftypes.Number, 0),
+				"target_node":         tftypes.NewValue(tftypes.String, tt.tgtNode),
+				"target_input":        tftypes.NewValue(tftypes.String, "main"),
+				"target_input_index":  tftypes.NewValue(tftypes.Number, 0),
+				"connection_json":     tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}
 
-	req := resource.UpdateRequest{
-		Plan: plan,
-	}
-	resp := resource.UpdateResponse{
-		State: state,
-	}
+			plan := tfsdk.Plan{
+				Raw:    tftypes.NewValue(objectType, rawPlan),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	r.Update(ctx, req, &resp)
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(objectType, nil),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	assert.False(t, resp.Diagnostics.HasError(), "Update should not have errors")
+			req := resource.UpdateRequest{Plan: plan}
+			resp := resource.UpdateResponse{State: state}
+
+			r.Update(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowConnectionResource_ImportState_Success(t *testing.T) {
 	t.Parallel()
 
-	r := &WorkflowConnectionResource{}
-	ctx := context.Background()
-	objectType := getConnectionObjectType()
-
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(objectType, nil),
-		Schema: createConnectionTestSchema(t),
+	tests := []struct {
+		name        string
+		importID    string
+		expectError bool
+	}{
+		{
+			name:        "import connection by id",
+			importID:    "imported-connection-id",
+			expectError: false,
+		},
 	}
 
-	req := resource.ImportStateRequest{
-		ID: "imported-connection-id",
-	}
-	resp := resource.ImportStateResponse{
-		State: state,
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := &WorkflowConnectionResource{}
+			ctx := t.Context()
+			objectType := getConnectionObjectType()
 
-	r.ImportState(ctx, req, &resp)
+			state := tfsdk.State{
+				Raw:    tftypes.NewValue(objectType, nil),
+				Schema: createConnectionTestSchema(t),
+			}
 
-	// ImportState uses passthrough so it should set the ID in state.
-	assert.False(t, resp.Diagnostics.HasError(), "ImportState should not have errors")
+			req := resource.ImportStateRequest{ID: tt.importID}
+			resp := resource.ImportStateResponse{State: state}
+
+			r.ImportState(ctx, req, &resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
+		})
+	}
 }
 
 func TestWorkflowConnectionResource_generateConnectionJSON_Error(t *testing.T) {

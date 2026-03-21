@@ -1,7 +1,6 @@
 package tag_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -124,7 +123,7 @@ func TestTagResource_Metadata(t *testing.T) {
 				r := tag.NewTagResource()
 				resp := &resource.MetadataResponse{}
 
-				r.Metadata(context.Background(), resource.MetadataRequest{
+				r.Metadata(t.Context(), resource.MetadataRequest{
 					ProviderTypeName: "n8n",
 				}, resp)
 
@@ -138,7 +137,7 @@ func TestTagResource_Metadata(t *testing.T) {
 				r := tag.NewTagResource()
 				resp := &resource.MetadataResponse{}
 
-				r.Metadata(context.Background(), resource.MetadataRequest{
+				r.Metadata(t.Context(), resource.MetadataRequest{
 					ProviderTypeName: "n8n",
 				}, resp)
 
@@ -169,7 +168,7 @@ func TestTagResource_Schema(t *testing.T) {
 				r := tag.NewTagResource()
 				resp := &resource.SchemaResponse{}
 
-				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+				r.Schema(t.Context(), resource.SchemaRequest{}, resp)
 
 				assert.NotNil(t, resp.Schema)
 				assert.NotEmpty(t, resp.Schema.Attributes)
@@ -182,7 +181,7 @@ func TestTagResource_Schema(t *testing.T) {
 				r := tag.NewTagResource()
 				resp := &resource.SchemaResponse{}
 
-				r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+				r.Schema(t.Context(), resource.SchemaRequest{}, resp)
 
 				assert.NotNil(t, resp.Schema)
 				assert.NotEmpty(t, resp.Schema.Attributes)
@@ -203,7 +202,7 @@ func TestTagResource_Configure(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		providerData interface{}
+		providerData any
 		wantError    bool
 	}{
 		{
@@ -224,7 +223,6 @@ func TestTagResource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -234,7 +232,7 @@ func TestTagResource_Configure(t *testing.T) {
 				ProviderData: tt.providerData,
 			}
 
-			r.Configure(context.Background(), req, resp)
+			r.Configure(t.Context(), req, resp)
 
 			if tt.wantError {
 				assert.True(t, resp.Diagnostics.HasError())
@@ -247,6 +245,8 @@ func TestTagResource_Configure(t *testing.T) {
 
 // TestTagResource_Create tests the Create method with full execution.
 func TestTagResource_Create(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -265,11 +265,11 @@ func TestTagResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -309,7 +309,7 @@ func TestTagResource_Create(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := tag.NewTagResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -346,11 +346,11 @@ func TestTagResource_Create(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -392,6 +392,8 @@ func TestTagResource_Create(t *testing.T) {
 
 // TestTagResource_Read tests the Read method with full execution.
 func TestTagResource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -410,11 +412,11 @@ func TestTagResource_Read(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -450,7 +452,7 @@ func TestTagResource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := tag.NewTagResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -487,11 +489,11 @@ func TestTagResource_Read(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -529,6 +531,8 @@ func TestTagResource_Read(t *testing.T) {
 
 // TestTagResource_Update tests the Update method with full execution.
 func TestTagResource_Update(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -547,11 +551,11 @@ func TestTagResource_Update(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -601,7 +605,7 @@ func TestTagResource_Update(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := tag.NewTagResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -652,11 +656,11 @@ func TestTagResource_Update(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -707,6 +711,8 @@ func TestTagResource_Update(t *testing.T) {
 
 // TestTagResource_Delete tests the Delete method with full execution.
 func TestTagResource_Delete(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -723,11 +729,11 @@ func TestTagResource_Delete(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -761,7 +767,7 @@ func TestTagResource_Delete(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				r := tag.NewTagResource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
@@ -798,11 +804,11 @@ func TestTagResource_Delete(t *testing.T) {
 				defer server.Close()
 
 				r := tag.NewTagResource()
-				r.Configure(context.Background(), resource.ConfigureRequest{
+				r.Configure(t.Context(), resource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &resource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := resource.SchemaResponse{}
 				r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 
@@ -838,36 +844,47 @@ func TestTagResource_Delete(t *testing.T) {
 
 // TestTagResource_ImportState tests the ImportState method.
 func TestTagResource_ImportState(t *testing.T) {
-	t.Run("import state passthrough", func(t *testing.T) {
-		t.Helper()
-		r := tag.NewTagResource()
-		ctx := context.Background()
+	t.Parallel()
 
-		schemaResp := resource.SchemaResponse{}
-		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	tests := []struct {
+		name string
+		id   string
+	}{
+		{name: "import state passthrough", id: "tag-123"},
+	}
 
-		// Build empty state
-		emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
-			"id":         tftypes.NewValue(tftypes.String, nil),
-			"name":       tftypes.NewValue(tftypes.String, nil),
-			"created_at": tftypes.NewValue(tftypes.String, nil),
-			"updated_at": tftypes.NewValue(tftypes.String, nil),
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := tag.NewTagResource()
+			ctx := t.Context()
+
+			schemaResp := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+			// Build empty state
+			emptyValue := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"id":         tftypes.NewValue(tftypes.String, nil),
+				"name":       tftypes.NewValue(tftypes.String, nil),
+				"created_at": tftypes.NewValue(tftypes.String, nil),
+				"updated_at": tftypes.NewValue(tftypes.String, nil),
+			})
+
+			req := resource.ImportStateRequest{
+				ID: tt.id,
+			}
+			resp := &resource.ImportStateResponse{
+				State: tfsdk.State{
+					Schema: schemaResp.Schema,
+					Raw:    emptyValue,
+				},
+			}
+
+			// Call ImportState
+			r.ImportState(ctx, req, resp)
+
+			// Verify no errors (ImportStatePassthroughID doesn't return errors for valid IDs)
+			assert.False(t, resp.Diagnostics.HasError())
 		})
-
-		req := resource.ImportStateRequest{
-			ID: "tag-123",
-		}
-		resp := &resource.ImportStateResponse{
-			State: tfsdk.State{
-				Schema: schemaResp.Schema,
-				Raw:    emptyValue,
-			},
-		}
-
-		// Call ImportState
-		r.ImportState(ctx, req, resp)
-
-		// Verify no errors (ImportStatePassthroughID doesn't return errors for valid IDs)
-		assert.False(t, resp.Diagnostics.HasError())
-	})
+	}
 }

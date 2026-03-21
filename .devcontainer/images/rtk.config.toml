@@ -1,0 +1,11 @@
+# RTK (Rust Token Killer) Configuration
+# Synced from /etc/rtk/config.toml at container start via postStart.sh
+# See: https://github.com/rtk-ai/rtk
+
+[hooks]
+exclude_commands = []  # Skip rewrite for specific commands
+
+[tee]
+enabled = true
+mode = "failures"
+max_files = 20

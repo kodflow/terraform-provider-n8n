@@ -51,6 +51,7 @@ linters:
       disabled-checks:
         - whyNoLint
         - unnamedResult
+        - commentFormatting
       enabled-tags:
         - diagnostic
         - style
@@ -107,6 +108,8 @@ linters:
           disabled: false # Prevent defer in loops to avoid resource leaks
         - name: exported
           disabled: true # Terraform providers have specific naming conventions
+        - name: comment-spacings
+          disabled: true # Conflicts with ktn-linter KTN-COMMENT-BLOCK requirement (//: pattern)
   exclusions:
     generated: lax
     presets:

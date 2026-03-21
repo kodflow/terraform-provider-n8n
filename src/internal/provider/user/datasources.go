@@ -44,8 +44,8 @@ type UsersDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: the initialized UsersDataSource as a DataSource interface
-func NewUsersDataSource() *UsersDataSource {
-	// Return result.
+func NewUsersDataSource() (usersDataSource *UsersDataSource) {
+	//: Return result.
 	return &UsersDataSource{}
 }
 
@@ -54,8 +54,8 @@ func NewUsersDataSource() *UsersDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped UsersDataSource instance
-func NewUsersDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewUsersDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewUsersDataSource()
 }
 
@@ -64,7 +64,12 @@ func NewUsersDataSourceWrapper() datasource.DataSource {
 //   - ctx: context for the request
 //   - req: metadata request containing provider type name
 //   - resp: metadata response to be populated with the datasource type name
-func (d *UsersDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_users"
 }
 
@@ -73,7 +78,12 @@ func (d *UsersDataSource) Metadata(_ctx context.Context, req datasource.Metadata
 //   - ctx: context for the request
 //   - req: schema request for the data source
 //   - resp: schema response to be populated with the datasource schema
-func (d *UsersDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *UsersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a list of all n8n users. Only available for instance owners.",
 		Attributes:          d.schemaAttributes(),
@@ -84,8 +94,8 @@ func (d *UsersDataSource) Schema(_ctx context.Context, _req datasource.SchemaReq
 //
 // Returns:
 //   - map[string]schema.Attribute: the data source attribute definitions
-func (d *UsersDataSource) schemaAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+func (d *UsersDataSource) schemaAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes.
 	return map[string]schema.Attribute{
 		"users": schema.ListNestedAttribute{
 			MarkdownDescription: "List of users",
@@ -99,8 +109,8 @@ func (d *UsersDataSource) schemaAttributes() map[string]schema.Attribute {
 //
 // Returns:
 //   - map[string]schema.Attribute: the user item attribute definitions
-func (d *UsersDataSource) userItemAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+func (d *UsersDataSource) userItemAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes.
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			MarkdownDescription: "User identifier",
@@ -142,21 +152,26 @@ func (d *UsersDataSource) userItemAttributes() map[string]schema.Attribute {
 //   - ctx: context for the request
 //   - req: configure request containing the provider data
 //   - resp: configure response for diagnostics
-func (d *UsersDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *UsersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -168,28 +183,33 @@ func (d *UsersDataSource) Configure(_ctx context.Context, req datasource.Configu
 //   - ctx: context for the request
 //   - req: read request containing current state
 //   - resp: read response to be populated with latest data
-func (d *UsersDataSource) Read(ctx context.Context, _req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data models.DataSources
 
 	userList, httpResp, err := d.client.APIClient.UserAPI.UsersGet(ctx).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing users",
 			fmt.Sprintf("Could not list users: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
-	data.Users = make([]models.Item, 0, constants.DEFAULT_LIST_CAPACITY)
-	// Check if user data is present.
+	data.Users = make([]models.Item, 0, constants.DefaultListCapacity)
+	//: Check if user data is present.
 	if userList.Data != nil {
-		// Iterate through each user in the list and map to item model.
+		//: Iterate through each user in the list and map to item model.
 		for _, user := range userList.Data {
 			item := mapUserToItem(&user)
 			data.Users = append(data.Users, item)

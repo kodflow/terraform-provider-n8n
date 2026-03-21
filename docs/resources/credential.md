@@ -29,15 +29,16 @@ n8n credential resource with automatic rotation on update.
 ### Required
 
 - `data` (Map of String, Sensitive) Credential data (secrets, passwords, API keys, etc.). String values are automatically converted to the correct type (number, boolean) based on the credential schema.
-- `name` (String) Credential name
-- `type` (String) Credential type (e.g., httpHeaderAuth)
+- `name` (String) Credential name.
+- `type` (String) Credential type (e.g., httpHeaderAuth).
 
 ### Optional
 
 - `project_id` (String) Project ID to assign the credential to. If not set, credential is created in personal space (General).
+- `resolvable` (Boolean) Whether this credential has resolvable fields (n8n 2.x+).
 
 ### Read-Only
 
-- `created_at` (String) Timestamp when the credential was created
-- `id` (String) Credential identifier
-- `updated_at` (String) Timestamp when the credential was last updated
+- `created_at` (String) Timestamp when the credential was created.
+- `id` (String) Credential identifier.
+- `updated_at` (String) Timestamp when the credential was last updated.

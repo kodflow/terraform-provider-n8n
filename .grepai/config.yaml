@@ -1,0 +1,198 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE in the project root for license information.
+
+version: 1
+embedder:
+  provider: ollama
+  model: bge-m3
+  endpoint: http://host.docker.internal:11434
+  dimensions: 1024
+  parallelism: 4
+store:
+  backend: gob
+chunking:
+  size: 1024
+  overlap: 100
+watch:
+  debounce_ms: 2000
+  last_index_time: 2026-03-18T00:21:59.30451967Z
+  rpg_persist_interval_ms: 1000
+  rpg_derived_debounce_ms: 300
+  rpg_full_reconcile_interval_sec: 300
+  rpg_max_dirty_files_per_batch: 128
+search:
+  boost:
+    enabled: true
+    penalties:
+      - pattern: /tests/
+        factor: 0.5
+      - pattern: /test/
+        factor: 0.5
+      - pattern: __tests__/
+        factor: 0.5
+      - pattern: _test.
+        factor: 0.5
+      - pattern: .test.
+        factor: 0.5
+      - pattern: .spec.
+        factor: 0.5
+      - pattern: test_
+        factor: 0.5
+      - pattern: _spec.
+        factor: 0.5
+      - pattern: /mocks/
+        factor: 0.4
+      - pattern: /mock/
+        factor: 0.4
+      - pattern: .mock.
+        factor: 0.4
+      - pattern: /fixtures/
+        factor: 0.4
+      - pattern: /testdata/
+        factor: 0.4
+      - pattern: /stubs/
+        factor: 0.4
+      - pattern: /generated/
+        factor: 0.3
+      - pattern: .generated.
+        factor: 0.3
+      - pattern: .gen.
+        factor: 0.3
+      - pattern: .pb.
+        factor: 0.3
+      - pattern: _pb2.
+        factor: 0.3
+      - pattern: .md
+        factor: 0.6
+      - pattern: /docs/
+        factor: 0.6
+      - pattern: /vendor/
+        factor: 0.2
+      - pattern: /third_party/
+        factor: 0.2
+    bonuses:
+      - pattern: /src/
+        factor: 1.2
+      - pattern: /lib/
+        factor: 1.15
+      - pattern: /app/
+        factor: 1.15
+      - pattern: /pkg/
+        factor: 1.15
+      - pattern: /internal/
+        factor: 1.1
+      - pattern: /cmd/
+        factor: 1.1
+  hybrid:
+    enabled: true
+    k: 60
+trace:
+  mode: fast
+  enabled_languages:
+    - .go
+  exclude_patterns:
+    - "*_test.go"
+    - "*.spec.ts"
+    - "*.spec.js"
+    - "*.spec.tsx"
+    - "*.spec.jsx"
+    - "*.test.ts"
+    - "*.test.js"
+    - "*.test.tsx"
+    - "*.test.jsx"
+    - __tests__/*
+    - test_*.py
+    - "*_test.py"
+    - conftest.py
+    - "**/tests/*.rs"
+    - "*_test.exs"
+    - "*Test.java"
+    - "*Tests.java"
+    - "*Test.php"
+    - "*_test.php"
+    - "*_spec.rb"
+    - "*_test.rb"
+    - "*Spec.scala"
+    - "*Test.scala"
+    - "*_test.dart"
+rpg:
+  enabled: false
+  feature_mode: local
+  drift_threshold: 0.35
+  max_traversal_depth: 3
+  llm_provider: ollama
+  llm_endpoint: http://localhost:11434/v1
+  llm_timeout_ms: 8000
+  feature_group_strategy: sample
+update:
+  check_on_startup: false
+ignore:
+  - .git
+  - .svn
+  - .hg
+  - .grepai
+  - .claude
+  - .idea
+  - .vscode
+  - "*.swp"
+  - "*.swo"
+  - .DS_Store
+  - node_modules
+  - .npm
+  - .yarn
+  - .pnpm-store
+  - package-lock.json
+  - yarn.lock
+  - pnpm-lock.yaml
+  - __pycache__
+  - .venv
+  - venv
+  - .env
+  - "*.pyc"
+  - "*.pyo"
+  - .mypy_cache
+  - .pytest_cache
+  - .ruff_cache
+  - "*.egg-info"
+  - dist
+  - build
+  - vendor
+  - go.sum
+  - target
+  - Cargo.lock
+  - .gradle
+  - .m2
+  - "*.class"
+  - "*.jar"
+  - "*.o"
+  - "*.obj"
+  - "*.a"
+  - "*.so"
+  - "*.dylib"
+  - cmake-build-*
+  - CMakeFiles
+  - .dart_tool
+  - .packages
+  - pubspec.lock
+  - .flutter-plugins
+  - .flutter-plugins-dependencies
+  - _build
+  - deps
+  - .elixir_ls
+  - .bundle
+  - Gemfile.lock
+  - vendor
+  - composer.lock
+  - bin
+  - out
+  - dist
+  - build
+  - release
+  - bazel-*
+  - coverage
+  - .coverage
+  - "*.log"
+  - tmp
+  - temp
+  - .cache

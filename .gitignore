@@ -209,3 +209,5 @@ codacy_issues_analysis.json
 .n8n-repo-cache/
 NODES_SYNC.md
 WORKFLOWS_TEST_RESULTS.md
+.grepai/*.gob
+.grepai/*.gob.lock

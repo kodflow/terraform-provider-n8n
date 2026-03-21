@@ -64,6 +64,20 @@ type CredentialAPI interface {
 	CredentialsSchemaCredentialTypeNameGetExecute(r CredentialAPICredentialsSchemaCredentialTypeNameGetRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
+		CredentialsGet List credentials
+
+		Retrieve all credentials from your instance.
+
+		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		@return CredentialAPICredentialsGetRequest
+	*/
+	CredentialsGet(ctx context.Context) CredentialAPICredentialsGetRequest
+
+	// CredentialsGetExecute executes the request
+	//  @return CredentialList
+	CredentialsGetExecute(r CredentialAPICredentialsGetRequest) (*CredentialList, *http.Response, error)
+
+	/*
 		DeleteCredential Delete credential by ID
 
 		Deletes a credential from your instance. You must be the owner of the credentials
@@ -523,6 +537,116 @@ func (a *CredentialAPIService) DeleteCredentialExecute(r CredentialAPIDeleteCred
 			}
 		}
 	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+// CredentialAPICredentialsGetRequest is the request for listing credentials.
+type CredentialAPICredentialsGetRequest struct {
+	ctx        context.Context
+	ApiService CredentialAPI
+	limit      *float32
+	cursor     *string
+}
+
+// Limit sets the page size.
+func (r CredentialAPICredentialsGetRequest) Limit(limit float32) CredentialAPICredentialsGetRequest {
+	r.limit = &limit
+	return r
+}
+
+// Cursor sets the pagination cursor.
+func (r CredentialAPICredentialsGetRequest) Cursor(cursor string) CredentialAPICredentialsGetRequest {
+	r.cursor = &cursor
+	return r
+}
+
+// Execute executes the list credentials request.
+//
+//	@return CredentialList
+func (r CredentialAPICredentialsGetRequest) Execute() (*CredentialList, *http.Response, error) {
+	return r.ApiService.CredentialsGetExecute(r)
+}
+
+// CredentialsGet returns a request builder for listing credentials.
+func (a *CredentialAPIService) CredentialsGet(ctx context.Context) CredentialAPICredentialsGetRequest {
+	return CredentialAPICredentialsGetRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+// CredentialsGetExecute executes the list credentials request.
+func (a *CredentialAPIService) CredentialsGetExecute(r CredentialAPICredentialsGetRequest) (*CredentialList, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *CredentialList
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CredentialAPIService.CredentialsGet")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/credentials"
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	if r.limit != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "limit", r.limit, "form", "")
+	}
+	if r.cursor != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "cursor", r.cursor, "form", "")
+	}
+
+	localVarHTTPContentTypes := []string{}
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

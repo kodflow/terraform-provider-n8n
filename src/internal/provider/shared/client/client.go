@@ -30,7 +30,7 @@ type N8nClient struct {
 //
 // Returns:
 //   - *N8nClient: configured client ready for API calls
-func NewN8nClient(baseURL, apiKey string) *N8nClient {
+func NewN8nClient(baseURL, apiKey string) (n8nClient *N8nClient) {
 	// Create SDK configuration
 	cfg := n8nsdk.NewConfiguration()
 
@@ -48,7 +48,7 @@ func NewN8nClient(baseURL, apiKey string) *N8nClient {
 	// Create the API client
 	apiClient := n8nsdk.NewAPIClient(cfg)
 
-	// Return result.
+	//: Return result.
 	return &N8nClient{
 		APIClient: apiClient,
 		BaseURL:   baseURL,

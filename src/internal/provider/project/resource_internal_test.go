@@ -1,7 +1,6 @@
 package project
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -125,7 +124,6 @@ func TestProjectResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -134,7 +132,7 @@ func TestProjectResource_executeCreateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.projectName),
 			}
@@ -204,7 +202,6 @@ func TestProjectResource_executeReadLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -213,7 +210,7 @@ func TestProjectResource_executeReadLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.projectID),
 			}
@@ -325,7 +322,6 @@ func TestProjectResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -334,7 +330,7 @@ func TestProjectResource_executeUpdateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.newName),
 			}
@@ -402,7 +398,6 @@ func TestProjectResource_executeDeleteLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -411,7 +406,7 @@ func TestProjectResource_executeDeleteLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.projectID),
 			}
@@ -485,7 +480,6 @@ func TestProjectUserResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -494,7 +488,7 @@ func TestProjectUserResource_executeCreateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectUserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.UserResource{
 				ProjectID: types.StringValue(tt.projectID),
 				UserID:    types.StringValue(tt.userID),
@@ -569,7 +563,6 @@ func TestProjectUserResource_executeReadLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -578,7 +571,7 @@ func TestProjectUserResource_executeReadLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectUserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.UserResource{
 				ProjectID: types.StringValue(tt.projectID),
 				UserID:    types.StringValue(tt.userID),
@@ -689,7 +682,6 @@ func TestProjectUserResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -698,7 +690,7 @@ func TestProjectUserResource_executeUpdateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectUserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.UserResource{
 				ProjectID: types.StringValue(tt.planProject),
 				UserID:    types.StringValue(tt.planUser),
@@ -773,7 +765,6 @@ func TestProjectUserResource_executeDeleteLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -782,7 +773,7 @@ func TestProjectUserResource_executeDeleteLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectUserResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.UserResource{
 				ProjectID: types.StringValue(tt.projectID),
 				UserID:    types.StringValue(tt.userID),
@@ -847,7 +838,6 @@ func TestProjectResource_createProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -856,7 +846,7 @@ func TestProjectResource_createProject(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.projectName),
 			}
@@ -939,7 +929,6 @@ func TestProjectResource_findCreatedProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -948,7 +937,7 @@ func TestProjectResource_findCreatedProject(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.projectName),
 			}
@@ -1017,7 +1006,6 @@ func TestProjectResource_updatePlanFromProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1097,7 +1085,6 @@ func TestProjectResource_findProjectByID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1106,7 +1093,7 @@ func TestProjectResource_findProjectByID(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.projectID),
 			}
@@ -1165,7 +1152,6 @@ func TestProjectResource_updateStateFromProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1244,7 +1230,6 @@ func TestProjectResource_executeProjectUpdate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1253,7 +1238,7 @@ func TestProjectResource_executeProjectUpdate(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Name: types.StringValue(tt.projectName),
 			}
@@ -1336,7 +1321,6 @@ func TestProjectResource_findProjectAfterUpdate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1345,7 +1329,7 @@ func TestProjectResource_findProjectAfterUpdate(t *testing.T) {
 			defer server.Close()
 
 			r := &ProjectResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
@@ -1401,7 +1385,6 @@ func TestProjectResource_updateModelFromProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1434,6 +1417,98 @@ func TestProjectResource_updateModelFromProject(t *testing.T) {
 }
 
 // stringPtr is a helper function to create string pointers for tests.
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
+}
+
+// TestProjectResource_listProjects tests the listProjects helper method.
+func TestProjectResource_listProjects(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectCount int
+		expectError bool
+	}{
+		{
+			name: "successful list with projects",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"data": []any{
+							map[string]any{"id": "proj-1", "name": "Project One"},
+							map[string]any{"id": "proj-2", "name": "Project Two"},
+						},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectCount: 2,
+			expectError: false,
+		},
+		{
+			name: "empty project list",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{"data": []any{}})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectCount: 0,
+			expectError: false,
+		},
+		{
+			name: "API error",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"message": "Internal server error"}`))
+			}),
+			expectCount: 0,
+			expectError: true,
+		},
+		{
+			name: "error case - nil data in response",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/projects" && r.Method == http.MethodGet {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			}),
+			expectCount: 0,
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			n8nClient, server := setupTestClient(t, tt.handler)
+			defer server.Close()
+
+			r := &ProjectResource{client: n8nClient}
+
+			projects, err := r.listProjects(t.Context())
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Nil(t, projects)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, projects, tt.expectCount)
+			}
+		})
+	}
 }

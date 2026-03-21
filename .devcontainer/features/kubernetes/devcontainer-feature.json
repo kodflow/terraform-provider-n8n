@@ -1,0 +1,50 @@
+{
+  "id": "kubernetes",
+  "version": "1.0.0",
+  "name": "Kubernetes Development Environment (kind)",
+  "description": "Installs kind, kubectl, and Helm for local Kubernetes development",
+  "documentationURL": "https://kind.sigs.k8s.io/",
+  "options": {
+    "kindVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "kind version to install (e.g., 0.31.0 or latest)"
+    },
+    "kubectlVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "kubectl version to install (e.g., 1.35.0 or latest)"
+    },
+    "helmVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Helm version to install (e.g., 4.0.4 or latest)"
+    },
+    "enableHelm": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install Helm package manager"
+    },
+    "enableRegistry": {
+      "type": "boolean",
+      "default": true,
+      "description": "Configure local Docker registry for kind"
+    },
+    "clusterName": {
+      "type": "string",
+      "default": "dev",
+      "description": "Default kind cluster name"
+    }
+  },
+  "containerEnv": {
+    "KUBECONFIG": "/home/vscode/.kube/config",
+    "KIND_EXPERIMENTAL_PROVIDER": "docker"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/docker-outside-of-docker"],
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-kubernetes-tools.vscode-kubernetes-tools"]
+    }
+  },
+  "privileged": false
+}

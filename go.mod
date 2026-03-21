@@ -1,6 +1,6 @@
 module github.com/kodflow/terraform-provider-n8n
 
-go 1.25.4
+go 1.26.1
 
 require (
 	github.com/google/uuid v1.6.0

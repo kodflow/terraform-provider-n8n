@@ -12,6 +12,12 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/variable/models"
 )
 
+// stringValue is a minimal interface for string value types supporting null checks.
+type stringValue interface {
+	IsNull() bool
+	ValueString() string
+}
+
 // findVariableByIDOrKey searches for a variable by ID or key in a variable list.
 // Returns the found variable and a boolean indicating if it was found.
 //
@@ -23,21 +29,21 @@ import (
 // Returns:
 //   - *n8nsdk.Variable: Pointer to found variable or nil
 //   - bool: True if variable was found, false otherwise
-func findVariableByIDOrKey(variables []n8nsdk.Variable, id, key types.String) (*n8nsdk.Variable, bool) {
-	// Iterate over items.
+func findVariableByIDOrKey(variables []n8nsdk.Variable, id, key stringValue) (variable *n8nsdk.Variable, ok bool) {
+	//: Iterate over items.
 	for _, variable := range variables {
 		// Check for null value.
 		matchByID := !id.IsNull() && variable.Id != nil && *variable.Id == id.ValueString()
 		// Check for null value.
 		matchByKey := !key.IsNull() && variable.Key == key.ValueString()
 
-		// Check condition.
+		//: Check condition.
 		if matchByID || matchByKey {
-			// Return result.
+			//: Return result.
 			return &variable, true
 		}
 	}
-	// Return result.
+	//: Return result.
 	return nil, false
 }
 
@@ -51,16 +57,16 @@ func findVariableByIDOrKey(variables []n8nsdk.Variable, id, key types.String) (*
 // Returns:
 //   - *n8nsdk.Variable: Pointer to found variable or nil
 //   - bool: True if variable was found, false otherwise
-func findVariableByID(variables []n8nsdk.Variable, id string) (*n8nsdk.Variable, bool) {
-	// Iterate over items.
+func findVariableByID(variables []n8nsdk.Variable, id string) (variable *n8nsdk.Variable, ok bool) {
+	//: Iterate over items.
 	for _, variable := range variables {
-		// Check for non-nil value.
+		//: Check for non-nil value.
 		if variable.Id != nil && *variable.Id == id {
-			// Return result.
+			//: Return result.
 			return &variable, true
 		}
 	}
-	// Return result.
+	//: Return result.
 	return nil, false
 }
 
@@ -74,16 +80,16 @@ func findVariableByID(variables []n8nsdk.Variable, id string) (*n8nsdk.Variable,
 // Returns:
 //   - *n8nsdk.Variable: Pointer to found variable or nil
 //   - bool: True if variable was found, false otherwise
-func findVariableByKey(variables []n8nsdk.Variable, key string) (*n8nsdk.Variable, bool) {
-	// Iterate over items.
+func findVariableByKey(variables []n8nsdk.Variable, key string) (variable *n8nsdk.Variable, ok bool) {
+	//: Iterate over items.
 	for _, variable := range variables {
-		// Check condition.
+		//: Check condition.
 		if variable.Key == key {
-			// Return result.
+			//: Return result.
 			return &variable, true
 		}
 	}
-	// Return result.
+	//: Return result.
 	return nil, false
 }
 
@@ -96,18 +102,18 @@ func findVariableByKey(variables []n8nsdk.Variable, key string) (*n8nsdk.Variabl
 // Returns:
 //   - No return value, modifies data parameter in place
 func mapVariableToDataSourceModel(variable *n8nsdk.Variable, data *models.DataSource) {
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if variable.Id != nil {
 		data.ID = types.StringValue(*variable.Id)
 	}
 	data.Key = types.StringValue(variable.Key)
 	data.Value = types.StringValue(variable.Value)
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if variable.Type != nil {
 		data.Type = types.StringPointerValue(variable.Type)
 	}
 	// Project is a nested object, extract ID if present
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if variable.Project != nil && variable.Project.Id != nil {
 		data.ProjectID = types.StringPointerValue(variable.Project.Id)
 	}
@@ -122,24 +128,26 @@ func mapVariableToDataSourceModel(variable *n8nsdk.Variable, data *models.DataSo
 // Returns:
 //   - No return value, modifies data parameter in place
 func mapVariableToResourceModel(variable *n8nsdk.Variable, data *models.Resource) {
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if variable.Id != nil {
 		data.ID = types.StringPointerValue(variable.Id)
 	}
 	data.Key = types.StringValue(variable.Key)
 	data.Value = types.StringValue(variable.Value)
-	// Set Type - use null if not present to ensure known value after apply.
+	//: Set Type - use null if not present to ensure known value after apply.
 	if variable.Type != nil {
 		data.Type = types.StringPointerValue(variable.Type)
 	} else {
+		//: Handle alternate case.
 		// Type not present in API response, set to null.
 		data.Type = types.StringNull()
 	}
 	// Project is a nested object, extract ID if present.
-	// Set ProjectID - use null if not present to ensure known value after apply.
+	//: Set ProjectID - use null if not present to ensure known value after apply.
 	if variable.Project != nil && variable.Project.Id != nil {
 		data.ProjectID = types.StringPointerValue(variable.Project.Id)
 	} else {
+		//: Handle alternate case.
 		// Project not present in API response, set to null.
 		data.ProjectID = types.StringNull()
 	}
@@ -152,7 +160,7 @@ func mapVariableToResourceModel(variable *n8nsdk.Variable, data *models.Resource
 //
 // Returns:
 //   - n8nsdk.VariableCreate: API request structure for variable creation
-func buildVariableRequest(plan *models.Resource) n8nsdk.VariableCreate {
+func buildVariableRequest(plan *models.Resource) (variableCreate n8nsdk.VariableCreate) {
 	variableRequest := n8nsdk.VariableCreate{
 		Key:   plan.Key.ValueString(),
 		Value: plan.Value.ValueString(),
@@ -160,11 +168,11 @@ func buildVariableRequest(plan *models.Resource) n8nsdk.VariableCreate {
 
 	// Add optional fields
 	// Note: type is computed by n8n API, not settable in request
-	// Check condition.
+	//: Check condition.
 	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
 		variableRequest.ProjectId = *n8nsdk.NewNullableString(shared.String(plan.ProjectID.ValueString()))
 	}
 
-	// Return result.
+	//: Return result.
 	return variableRequest
 }

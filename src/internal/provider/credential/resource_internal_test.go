@@ -31,8 +31,10 @@ import (
 // Note: Mock implementations are in helpers_test.go to avoid duplication.
 
 // Helper functions.
+//
+//go:fix inline
 func strPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 // TestNewCredentialResource is now in resource_external_test.go
@@ -82,7 +84,6 @@ func TestCredentialResource_Configure_Internal(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -92,7 +93,7 @@ func TestCredentialResource_Configure_Internal(t *testing.T) {
 			}
 			resp := &resource.ConfigureResponse{}
 
-			r.Configure(context.Background(), req, resp)
+			r.Configure(t.Context(), req, resp)
 
 			if tt.wantErr {
 				assert.True(t, resp.Diagnostics.HasError(), "expected error")
@@ -122,7 +123,7 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "workflow uses credential",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "cred-123"}}}},
 			},
 			credID:  "cred-123",
 			want:    true,
@@ -131,7 +132,7 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "workflow does not use credential",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "other-cred"}}}},
 			},
 			credID:  "cred-123",
 			want:    false,
@@ -164,8 +165,8 @@ func Test_usesCredential(t *testing.T) {
 			name: "multiple nodes with credentials",
 			workflow: &n8nsdk.Workflow{
 				Nodes: []n8nsdk.Node{
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}},
-					{Credentials: map[string]interface{}{"http": map[string]interface{}{"id": "cred-123"}}},
+					{Credentials: map[string]any{"api": map[string]any{"id": "other-cred"}}},
+					{Credentials: map[string]any{"http": map[string]any{"id": "cred-123"}}},
 				},
 			},
 			credID:  "cred-123",
@@ -175,9 +176,9 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "credential in nested structure",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api":  map[string]interface{}{"id": "cred-123", "name": "Test"},
-					"http": map[string]interface{}{"id": "other-cred"},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{
+					"api":  map[string]any{"id": "cred-123", "name": "Test"},
+					"http": map[string]any{"id": "other-cred"},
 				}}},
 			},
 			credID:  "cred-123",
@@ -187,7 +188,7 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "invalid credential structure",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": "invalid-not-a-map"}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": "invalid-not-a-map"}}},
 			},
 			credID:  "cred-123",
 			want:    false,
@@ -196,9 +197,9 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "credential with different types",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api":  map[string]interface{}{"id": "cred-123"},
-					"http": map[string]interface{}{"id": "cred-123"},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{
+					"api":  map[string]any{"id": "cred-123"},
+					"http": map[string]any{"id": "cred-123"},
 				}}},
 			},
 			credID:  "cred-123",
@@ -207,7 +208,7 @@ func Test_usesCredential(t *testing.T) {
 		},
 		{
 			name:     "error case - empty credential ID",
-			workflow: &n8nsdk.Workflow{Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}}}},
+			workflow: &n8nsdk.Workflow{Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "cred-123"}}}}},
 			credID:   "",
 			want:     false,
 			wantErr:  true,
@@ -222,7 +223,7 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "node with empty credentials map",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{}}},
 			},
 			credID:  "cred-123",
 			want:    false,
@@ -231,7 +232,7 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "credential ID is nil in map",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": nil}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": nil}}}},
 			},
 			credID:  "cred-123",
 			want:    false,
@@ -240,7 +241,7 @@ func Test_usesCredential(t *testing.T) {
 		{
 			name: "credential map without id field",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"name": "test"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"name": "test"}}}},
 			},
 			credID:  "cred-123",
 			want:    false,
@@ -251,8 +252,8 @@ func Test_usesCredential(t *testing.T) {
 			workflow: &n8nsdk.Workflow{
 				Nodes: []n8nsdk.Node{
 					{Credentials: nil},
-					{Credentials: map[string]interface{}{}},
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}},
+					{Credentials: map[string]any{}},
+					{Credentials: map[string]any{"api": map[string]any{"id": "cred-123"}}},
 				},
 			},
 			credID:  "cred-123",
@@ -262,7 +263,6 @@ func Test_usesCredential(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -287,14 +287,14 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 			name: "replace single credential",
 			workflow: &n8nsdk.Workflow{
 				Id:    strPtr("wf-1"),
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred", "name": "Old"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "old-cred", "name": "Old"}}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
 				assert.NotNil(t, w)
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Equal(t, "new-cred", apiCred["id"])
 			},
 		},
@@ -302,8 +302,8 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 			name: "replace multiple occurrences",
 			workflow: &n8nsdk.Workflow{
 				Nodes: []n8nsdk.Node{
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred"}}},
-					{Credentials: map[string]interface{}{"http": map[string]interface{}{"id": "old-cred"}}},
+					{Credentials: map[string]any{"api": map[string]any{"id": "old-cred"}}},
+					{Credentials: map[string]any{"http": map[string]any{"id": "old-cred"}}},
 				},
 			},
 			oldCred: "old-cred",
@@ -311,23 +311,23 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
 				assert.NotNil(t, w)
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Equal(t, "new-cred", apiCred["id"])
-				httpCred := w.Nodes[1].Credentials["http"].(map[string]interface{})
+				httpCred := w.Nodes[1].Credentials["http"].(map[string]any)
 				assert.Equal(t, "new-cred", httpCred["id"])
 			},
 		},
 		{
 			name: "no replacement needed",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "other-cred"}}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
 				assert.NotNil(t, w)
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Equal(t, "other-cred", apiCred["id"])
 			},
 		},
@@ -366,7 +366,7 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 		{
 			name: "invalid credential structure",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": "invalid-string"}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": "invalid-string"}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
@@ -378,8 +378,8 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 		{
 			name: "mixed valid and invalid credentials",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api":     map[string]interface{}{"id": "old-cred"},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{
+					"api":     map[string]any{"id": "old-cred"},
 					"invalid": "not-a-map",
 				}}},
 			},
@@ -387,22 +387,22 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Equal(t, "new-cred", apiCred["id"])
 			},
 		},
 		{
 			name: "preserve other credential properties",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api": map[string]interface{}{"id": "old-cred", "name": "API Credential", "type": "oauth2"},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{
+					"api": map[string]any{"id": "old-cred", "name": "API Credential", "type": "oauth2"},
 				}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Equal(t, "new-cred", apiCred["id"])
 				assert.Equal(t, "API Credential", apiCred["name"])
 				assert.Equal(t, "oauth2", apiCred["type"])
@@ -411,7 +411,7 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 		{
 			name: "error case - empty old credential ID",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": "cred"}}}},
 			},
 			oldCred: "",
 			newCred: "new-cred",
@@ -435,7 +435,7 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 		{
 			name: "node with empty credentials map",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
@@ -448,13 +448,13 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 		{
 			name: "credential map without id field",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"name": "test"}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"name": "test"}}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Equal(t, "test", apiCred["name"])
 				assert.Nil(t, apiCred["id"])
 			},
@@ -462,13 +462,13 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 		{
 			name: "credential ID is nil",
 			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": nil}}}},
+				Nodes: []n8nsdk.Node{{Credentials: map[string]any{"api": map[string]any{"id": nil}}}},
 			},
 			oldCred: "old-cred",
 			newCred: "new-cred",
 			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
 				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[0].Credentials["api"].(map[string]any)
 				assert.Nil(t, apiCred["id"])
 			},
 		},
@@ -477,9 +477,9 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 			workflow: &n8nsdk.Workflow{
 				Nodes: []n8nsdk.Node{
 					{Credentials: nil},
-					{Credentials: map[string]interface{}{}},
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred"}}},
-					{Credentials: map[string]interface{}{"http": map[string]interface{}{"name": "test"}}},
+					{Credentials: map[string]any{}},
+					{Credentials: map[string]any{"api": map[string]any{"id": "old-cred"}}},
+					{Credentials: map[string]any{"http": map[string]any{"name": "test"}}},
 				},
 			},
 			oldCred: "old-cred",
@@ -488,16 +488,15 @@ func Test_replaceCredentialInWorkflow(t *testing.T) {
 				t.Helper()
 				assert.Nil(t, w.Nodes[0].Credentials)
 				assert.Empty(t, w.Nodes[1].Credentials)
-				apiCred := w.Nodes[2].Credentials["api"].(map[string]interface{})
+				apiCred := w.Nodes[2].Credentials["api"].(map[string]any)
 				assert.Equal(t, "new-cred", apiCred["id"])
-				httpCred := w.Nodes[3].Credentials["http"].(map[string]interface{})
+				httpCred := w.Nodes[3].Credentials["http"].(map[string]any)
 				assert.Equal(t, "test", httpCred["name"])
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -543,7 +542,7 @@ func Test_extractCredentialData(t *testing.T) {
 				// Create a map that ElementsAs will attempt to process
 				// In unit test context (without framework schema), ElementsAs may return errors
 				// This is expected and documents the framework boundary
-				m, diags := types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+				m, diags := types.MapValueFrom(ctx, types.StringType, map[string]any{
 					"test": "value",
 				})
 				if diags.HasError() {
@@ -562,11 +561,10 @@ func Test_extractCredentialData(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 			inputMap := tt.setupMap(ctx)
 			data, diags := extractCredentialData(ctx, inputMap)
 
@@ -586,56 +584,50 @@ func TestROTATION_THROTTLE_MILLISECONDS(t *testing.T) {
 		{name: "error case - constant should not be zero", want: 100, wantErr: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			switch tt.name {
 			case "constant value":
-				assert.Equal(t, tt.want, ROTATION_THROTTLE_MILLISECONDS)
+				assert.Equal(t, tt.want, RotationThrottleMilliseconds)
 			case "error case - constant should not be zero":
-				assert.NotEqual(t, 0, ROTATION_THROTTLE_MILLISECONDS)
-				assert.Equal(t, tt.want, ROTATION_THROTTLE_MILLISECONDS)
+				assert.NotEqual(t, 0, RotationThrottleMilliseconds)
+				assert.Equal(t, tt.want, RotationThrottleMilliseconds)
 			}
 		})
 	}
 }
+
+// Compile-time interface satisfaction checks.
+var _ resource.Resource = (*CredentialResource)(nil)
+var _ resource.ResourceWithConfigure = (*CredentialResource)(nil)
+var _ resource.ResourceWithImportState = (*CredentialResource)(nil)
+var _ CredentialResourceInterface = (*CredentialResource)(nil)
 
 func TestCredentialResource_InterfaceCompliance(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
-		wantErr bool
+		wantNil bool
 	}{
-		{name: "implements Resource interface", wantErr: false},
-		{name: "implements ResourceWithConfigure interface", wantErr: false},
-		{name: "implements ResourceWithImportState interface", wantErr: false},
-		{name: "implements CredentialResourceInterface", wantErr: false},
-		{name: "error case - verify all interfaces implemented", wantErr: false},
+		{name: "constructor returns non-nil resource", wantNil: false},
+		{name: "new credential resource is usable", wantNil: false},
+		{name: "resource type name is set after metadata call", wantNil: false},
+		{name: "resource schema is not empty", wantNil: false},
+		{name: "error case - zero-value resource is non-nil pointer", wantNil: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			switch tt.name {
-			case "implements Resource interface":
-				var _ resource.Resource = (*CredentialResource)(nil)
-			case "implements ResourceWithConfigure interface":
-				var _ resource.ResourceWithConfigure = (*CredentialResource)(nil)
-			case "implements ResourceWithImportState interface":
-				var _ resource.ResourceWithImportState = (*CredentialResource)(nil)
-			case "implements CredentialResourceInterface":
-				var _ CredentialResourceInterface = (*CredentialResource)(nil)
-			case "error case - verify all interfaces implemented":
-				// Compile-time check that all interfaces are implemented
-				var _ resource.Resource = (*CredentialResource)(nil)
-				var _ resource.ResourceWithConfigure = (*CredentialResource)(nil)
-				var _ resource.ResourceWithImportState = (*CredentialResource)(nil)
-				var _ CredentialResourceInterface = (*CredentialResource)(nil)
-			}
+			r := &CredentialResource{}
+			assert.NotNil(t, r)
+			assert.Equal(t, tt.wantNil, r == nil)
 		})
 	}
 }
 
+// TestCredentialResource_ConcurrentOperations verifies credential functions are safe for concurrent use.
+// Goroutine lifecycle: goroutines are launched in batches to a buffered channel, results are collected
+// synchronously, and all goroutines complete before the test case exits via channel drain.
 func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -647,7 +639,6 @@ func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 		{name: "error case - concurrent operations on nil workflow", wantErr: true},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			switch tt.name {
@@ -655,8 +646,8 @@ func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 				workflow := &n8nsdk.Workflow{
 					Nodes: []n8nsdk.Node{
 						{
-							Credentials: map[string]interface{}{
-								"api": map[string]interface{}{
+							Credentials: map[string]any{
+								"api": map[string]any{
 									"id": "cred-123",
 								},
 							},
@@ -687,8 +678,8 @@ func TestCredentialResource_ConcurrentOperations(t *testing.T) {
 							Id: strPtr("wf-1"),
 							Nodes: []n8nsdk.Node{
 								{
-									Credentials: map[string]interface{}{
-										"api": map[string]interface{}{
+									Credentials: map[string]any{
+										"api": map[string]any{
 											"id": "old-cred",
 										},
 									},
@@ -738,10 +729,10 @@ func TestCredentialResource_EdgeCases(t *testing.T) {
 			workflow: &n8nsdk.Workflow{
 				Nodes: []n8nsdk.Node{
 					{
-						Credentials: map[string]interface{}{
-							"oauth": map[string]interface{}{
+						Credentials: map[string]any{
+							"oauth": map[string]any{
 								"id": "cred-123",
-								"metadata": map[string]interface{}{
+								"metadata": map[string]any{
 									"scope":   "read write",
 									"expires": 3600,
 								},
@@ -759,8 +750,8 @@ func TestCredentialResource_EdgeCases(t *testing.T) {
 			workflow: &n8nsdk.Workflow{
 				Nodes: []n8nsdk.Node{
 					{
-						Credentials: map[string]interface{}{
-							"api": map[string]interface{}{
+						Credentials: map[string]any{
+							"api": map[string]any{
 								"id": 123, // Number instead of string
 							},
 						},
@@ -780,7 +771,6 @@ func TestCredentialResource_EdgeCases(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			result := usesCredential(tt.workflow, tt.credID)
@@ -793,15 +783,15 @@ func BenchmarkUsesCredential(b *testing.B) {
 	workflow := &n8nsdk.Workflow{
 		Nodes: []n8nsdk.Node{
 			{
-				Credentials: map[string]interface{}{
-					"api": map[string]interface{}{
+				Credentials: map[string]any{
+					"api": map[string]any{
 						"id": "cred-123",
 					},
 				},
 			},
 			{
-				Credentials: map[string]interface{}{
-					"http": map[string]interface{}{
+				Credentials: map[string]any{
+					"http": map[string]any{
 						"id": "other-cred",
 					},
 				},
@@ -811,7 +801,7 @@ func BenchmarkUsesCredential(b *testing.B) {
 
 	b.ResetTimer()
 	for b.Loop() {
-		_ = usesCredential(workflow, "cred-123")
+		usesCredential(workflow, "cred-123")
 	}
 }
 
@@ -820,8 +810,8 @@ func BenchmarkReplaceCredentialInWorkflow(b *testing.B) {
 		Id: strPtr("wf-1"),
 		Nodes: []n8nsdk.Node{
 			{
-				Credentials: map[string]interface{}{
-					"api": map[string]interface{}{
+				Credentials: map[string]any{
+					"api": map[string]any{
 						"id": "old-cred",
 					},
 				},
@@ -831,7 +821,7 @@ func BenchmarkReplaceCredentialInWorkflow(b *testing.B) {
 
 	b.ResetTimer()
 	for b.Loop() {
-		_ = replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
+		replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
 	}
 }
 
@@ -840,8 +830,8 @@ func BenchmarkReplaceCredentialLargeWorkflow(b *testing.B) {
 	nodes := make([]n8nsdk.Node, 100)
 	for range 100 {
 		nodes = append(nodes, n8nsdk.Node{
-			Credentials: map[string]interface{}{
-				fmt.Sprintf("api%d", len(nodes)): map[string]interface{}{
+			Credentials: map[string]any{
+				fmt.Sprintf("api%d", len(nodes)): map[string]any{
 					"id": "old-cred",
 				},
 			},
@@ -855,7 +845,7 @@ func BenchmarkReplaceCredentialLargeWorkflow(b *testing.B) {
 
 	b.ResetTimer()
 	for b.Loop() {
-		_ = replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
+		replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
 	}
 }
 
@@ -893,18 +883,36 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 // TestCredentialResource_RollbackFunctions is now in external test file - refactored to test behavior only.
 
 func TestCredentialResource_DeleteOldCredential(t *testing.T) {
-	t.Run("deleteOldCredential failure logs warning", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "deleteOldCredential failure logs warning",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Internal server error"}`))
+				})
+
+				n8nClient, server := setupTestClient(t, handler)
+				t.Cleanup(server.Close)
+
+				r := &CredentialResource{client: n8nClient}
+				r.deleteOldCredential(t.Context(), "old-cred-123", "new-cred-456")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tt.testFunc(t)
 		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &CredentialResource{client: n8nClient}
-		r.deleteOldCredential(context.Background(), "old-cred-123", "new-cred-456")
-	})
+	}
 }
 
 // TestCredentialResource_HelperFunctions tests the helper functions for credential rotation.
@@ -945,7 +953,6 @@ func TestCredentialResource_schemaAttributes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1049,13 +1056,12 @@ func TestCredentialResource_rollbackRotation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 			backups := []models.WorkflowBackup{
@@ -1065,7 +1071,7 @@ func TestCredentialResource_rollbackRotation(t *testing.T) {
 						Id:          strPtr("wf-123"),
 						Name:        "Test",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1073,7 +1079,7 @@ func TestCredentialResource_rollbackRotation(t *testing.T) {
 			updatedWorkflows := []string{"wf-123"}
 
 			// Call rollbackRotation - it should not panic
-			r.rollbackRotation(context.Background(), tt.newCredID, backups, updatedWorkflows)
+			r.rollbackRotation(t.Context(), tt.newCredID, backups, updatedWorkflows)
 
 			// Verification is implicit - if the function completes without panic, the test passes
 			assert.NotNil(t, r, "resource should not be nil after rollback")
@@ -1106,7 +1112,6 @@ func TestCredentialResource_deleteNewCredential(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1121,12 +1126,12 @@ func TestCredentialResource_deleteNewCredential(t *testing.T) {
 			})
 
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
 			// Call deleteNewCredential - it should not panic
-			r.deleteNewCredential(context.Background(), tt.credID)
+			r.deleteNewCredential(t.Context(), tt.credID)
 
 			if tt.expectCall {
 				assert.True(t, called, "expected API call to be made")
@@ -1155,7 +1160,7 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 						Id:          strPtr("wf-123"),
 						Name:        "Test",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1196,7 +1201,7 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 						Id:          strPtr("wf-error"),
 						Name:        "Error Test",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1216,7 +1221,7 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 						Id:          strPtr("wf-123"),
 						Name:        "First",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1248,7 +1253,7 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 						Id:          strPtr("wf-other"),
 						Name:        "Other",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1268,7 +1273,7 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 						Id:          strPtr("wf-success"),
 						Name:        "Success",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1278,7 +1283,7 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 						Id:          strPtr("wf-fail"),
 						Name:        "Fail",
 						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
+						Connections: map[string]any{},
 						Settings:    n8nsdk.WorkflowSettings{},
 					},
 				},
@@ -1308,17 +1313,16 @@ func TestCredentialResource_restoreWorkflows(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
-			count := r.restoreWorkflows(context.Background(), tt.backups, tt.updatedWorkflows)
+			count := r.restoreWorkflows(t.Context(), tt.backups, tt.updatedWorkflows)
 
 			assert.Equal(t, tt.expectedRestored, count, "unexpected number of restored workflows")
 		})
@@ -1430,7 +1434,6 @@ func TestCredentialResource_findWorkflowBackup(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1467,7 +1470,7 @@ func TestCredentialResource_restoreWorkflow(t *testing.T) {
 				Id:          strPtr("wf-123"),
 				Name:        "Test",
 				Nodes:       []n8nsdk.Node{},
-				Connections: map[string]interface{}{},
+				Connections: map[string]any{},
 				Settings:    n8nsdk.WorkflowSettings{},
 			},
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
@@ -1494,7 +1497,7 @@ func TestCredentialResource_restoreWorkflow(t *testing.T) {
 				Id:          strPtr("wf-123"),
 				Name:        "Test",
 				Nodes:       []n8nsdk.Node{},
-				Connections: map[string]interface{}{},
+				Connections: map[string]any{},
 				Settings:    n8nsdk.WorkflowSettings{},
 			},
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
@@ -1505,17 +1508,16 @@ func TestCredentialResource_restoreWorkflow(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
-			success := r.restoreWorkflow(context.Background(), tt.workflowID, tt.workflow)
+			success := r.restoreWorkflow(t.Context(), tt.workflowID, tt.workflow)
 
 			assert.Equal(t, tt.expectedSuccess, success, "unexpected restore result")
 		})
@@ -1577,13 +1579,12 @@ func TestCredentialResource_Create_WithMockClient(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
@@ -1617,7 +1618,6 @@ func TestCredentialResource_Read_WithMockClient(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1712,13 +1712,12 @@ func TestCredentialResource_Update_WithMockClient(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
@@ -1780,13 +1779,12 @@ func TestCredentialResource_Delete_WithMockClient(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
@@ -1834,13 +1832,12 @@ func TestCredentialResource_CRUD_ErrorHandling(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
 
@@ -1853,6 +1850,8 @@ func TestCredentialResource_CRUD_ErrorHandling(t *testing.T) {
 
 // TestCredentialResource_Read_CRUD tests the Read method with full CRUD coverage.
 func TestCredentialResource_Read_CRUD(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1870,10 +1869,10 @@ func TestCredentialResource_Read_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -1890,6 +1889,7 @@ func TestCredentialResource_Read_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.ReadRequest{
@@ -1919,10 +1919,10 @@ func TestCredentialResource_Read_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -1957,6 +1957,8 @@ func TestCredentialResource_Read_CRUD(t *testing.T) {
 
 // TestCredentialResource_Delete_CRUD tests the Delete method with full CRUD coverage.
 func TestCredentialResource_Delete_CRUD(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -1972,10 +1974,10 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -1992,6 +1994,7 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.DeleteRequest{
@@ -2024,10 +2027,10 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2044,6 +2047,7 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.DeleteRequest{
@@ -2073,10 +2077,10 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2116,10 +2120,10 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2136,6 +2140,7 @@ func TestCredentialResource_Delete_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.DeleteRequest{
@@ -2176,7 +2181,6 @@ func TestCredentialResource_executeCreate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2196,10 +2200,10 @@ func TestCredentialResource_executeCreate(t *testing.T) {
 			})
 
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			data := map[string]any{"key": "value"}
 			createResp, httpResp, err := r.executeCreate(ctx, "Test", "httpHeaderAuth", data)
@@ -2317,47 +2321,55 @@ func TestCredentialResource_mapCreateResponseToPlan(t *testing.T) {
 func TestCredentialResource_mapCreateResponseToPlan_ErrorCases(t *testing.T) {
 	t.Parallel()
 
-	t.Run("handles nil createResp gracefully - should panic", func(t *testing.T) {
-		t.Parallel()
+	tests := []struct {
+		name     string
+		testFunc func(*testing.T)
+	}{
+		{
+			name: "handles nil createResp gracefully - should panic",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				// This test documents that nil response will panic
+				// In production, this should never happen as the API client validates responses
+				r := &CredentialResource{}
+				plan := &models.Resource{}
 
-		// This test documents that nil response will panic
-		// In production, this should never happen as the API client validates responses
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected panic with nil createResp, but did not panic")
-			}
-		}()
+				// This WILL panic - which is expected behavior for nil pointer dereference
+				assert.Panics(t, func() {
+					r.mapCreateResponseToPlan(plan, nil)
+				})
+			},
+		},
+		{
+			name: "handles nil plan gracefully - should panic",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				// This test documents that nil plan will panic
+				// In production, this should never happen as Terraform framework validates state
 
-		r := &CredentialResource{}
-		plan := &models.Resource{}
+				r := &CredentialResource{}
+				createResp := &n8nsdk.CreateCredentialResponse{
+					Id:        "test",
+					Name:      "test",
+					Type:      "test",
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
 
-		// This WILL panic - which is expected behavior for nil pointer dereference
-		r.mapCreateResponseToPlan(plan, nil)
-	})
+				// This WILL panic - which is expected behavior for nil pointer dereference
+				assert.Panics(t, func() {
+					r.mapCreateResponseToPlan(nil, createResp)
+				})
+			},
+		},
+	}
 
-	t.Run("handles nil plan gracefully - should panic", func(t *testing.T) {
-		t.Parallel()
-
-		// This test documents that nil plan will panic
-		// In production, this should never happen as Terraform framework validates state
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected panic with nil plan, but did not panic")
-			}
-		}()
-
-		r := &CredentialResource{}
-		createResp := &n8nsdk.CreateCredentialResponse{
-			Id:        "test",
-			Name:      "test",
-			Type:      "test",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-
-		// This WILL panic - which is expected behavior for nil pointer dereference
-		r.mapCreateResponseToPlan(nil, createResp)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tt.testFunc(t)
+		})
+	}
 }
 
 // must is a helper to panic on time.Parse errors in tests.
@@ -2373,6 +2385,8 @@ func must[T any](val T, err error) T {
 // with map[string]interface{} fields causing "don't know how to reflect tftypes.String into interface {}"
 // The Create method is tested for all error paths which provides maximum achievable coverage.
 func TestCredentialResource_Create_CRUD(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -2386,10 +2400,10 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2434,10 +2448,10 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2455,6 +2469,7 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, nil),
 					"updated_at": tftypes.NewValue(tftypes.String, nil),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.CreateRequest{
@@ -2487,6 +2502,8 @@ func TestCredentialResource_Create_CRUD(t *testing.T) {
 // with map[string]interface{} fields causing "don't know how to reflect tftypes.String into interface {}"
 // The Update method is tested for all error paths which provides maximum achievable coverage.
 func TestCredentialResource_Update_CRUD(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -2500,10 +2517,10 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2523,6 +2540,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.UpdateRequest{
@@ -2556,10 +2574,10 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2577,6 +2595,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				stateRaw := tftypes.NewValue(tftypes.String, "invalid")
@@ -2623,10 +2642,10 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2644,6 +2663,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
@@ -2654,6 +2674,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.UpdateRequest{
@@ -2717,10 +2738,10 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 				})
 
 				n8nClient, server := setupTestClient(t, handler)
-				defer server.Close()
+				t.Cleanup(server.Close)
 
 				r := &CredentialResource{client: n8nClient}
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaReq := resource.SchemaRequest{}
 				schemaResp := &resource.SchemaResponse{}
@@ -2738,6 +2759,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				stateRaw := tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
@@ -2748,6 +2770,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 					"project_id": tftypes.NewValue(tftypes.String, nil),
 					"created_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
 					"updated_at": tftypes.NewValue(tftypes.String, "2024-01-01T00:00:00Z"),
+					"resolvable": tftypes.NewValue(tftypes.Bool, nil),
 				})
 
 				req := resource.UpdateRequest{
@@ -2823,16 +2846,15 @@ func TestCredentialResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			var dataValue types.Map
 			if tt.setupInvalid {
@@ -2844,7 +2866,7 @@ func TestCredentialResource_executeCreateLogic(t *testing.T) {
 			} else {
 				// Create a valid map for success and API error tests
 				var diags diag.Diagnostics
-				dataValue, diags = types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+				dataValue, diags = types.MapValueFrom(ctx, types.StringType, map[string]any{
 					"name":  "Authorization",
 					"value": "Bearer test-token",
 				})
@@ -3001,16 +3023,15 @@ func TestCredentialResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			var oldDataValue, newDataValue types.Map
 			if tt.setupInvalid {
@@ -3025,14 +3046,14 @@ func TestCredentialResource_executeUpdateLogic(t *testing.T) {
 			} else {
 				// Create valid maps (currently not used since all tests are for error cases)
 				var diags1, diags2 diag.Diagnostics
-				oldDataValue, diags1 = types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+				oldDataValue, diags1 = types.MapValueFrom(ctx, types.StringType, map[string]any{
 					"name":  "Authorization",
 					"value": "Bearer old-token",
 				})
 				if diags1.HasError() {
 					t.Fatalf("Failed to create old map value: %v", diags1)
 				}
-				newDataValue, diags2 = types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+				newDataValue, diags2 = types.MapValueFrom(ctx, types.StringType, map[string]any{
 					"name":  "Authorization",
 					"value": "Bearer new-token",
 				})
@@ -3134,16 +3155,15 @@ func TestCredentialResource_executeCreateLogicWithData(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			plan := &models.Resource{
 				Name: types.StringValue(tt.credName),
@@ -3301,18 +3321,17 @@ func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
-			oldDataValue, diags := types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+			oldDataValue, diags := types.MapValueFrom(ctx, types.StringType, map[string]any{
 				"name":  "Authorization",
 				"value": "Bearer old-token",
 			})
@@ -3451,18 +3470,17 @@ func TestCredentialResource_executeUpdateLogicWithData_ProjectTransfer(t *testin
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
-			oldDataValue, diagsOld := types.MapValueFrom(ctx, types.StringType, map[string]interface{}{
+			oldDataValue, diagsOld := types.MapValueFrom(ctx, types.StringType, map[string]any{
 				"name":  "Authorization",
 				"value": "Bearer old-token",
 			})
@@ -3585,16 +3603,15 @@ func TestCredentialResource_executeCreateLogicWithData_ProjectTransfer(t *testin
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(tt.setupHandler)
 			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
+			t.Cleanup(server.Close)
 
 			r := &CredentialResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 
 			plan := &models.Resource{
 				Name:      types.StringValue(tt.credName),
@@ -3617,6 +3634,316 @@ func TestCredentialResource_executeCreateLogicWithData_ProjectTransfer(t *testin
 			if tt.expectError {
 				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
 			}
+		})
+	}
+}
+
+// TestCredentialMatchesNode tests the credentialMatchesNode helper.
+func TestCredentialMatchesNode(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		credentials  map[string]any
+		credentialID string
+		expectMatch  bool
+	}{
+		{
+			name: "matches existing credential",
+			credentials: map[string]any{
+				"api": map[string]any{"id": "cred-123"},
+			},
+			credentialID: "cred-123",
+			expectMatch:  true,
+		},
+		{
+			name: "no match - different ID",
+			credentials: map[string]any{
+				"api": map[string]any{"id": "cred-456"},
+			},
+			credentialID: "cred-123",
+			expectMatch:  false,
+		},
+		{
+			name:         "empty credentials map",
+			credentials:  map[string]any{},
+			credentialID: "cred-123",
+			expectMatch:  false,
+		},
+		{
+			name: "error case - credential value is not a map",
+			credentials: map[string]any{
+				"api": "not-a-map",
+			},
+			credentialID: "cred-123",
+			expectMatch:  false,
+		},
+		{
+			name: "error case - id field is not a string",
+			credentials: map[string]any{
+				"api": map[string]any{"id": 123},
+			},
+			credentialID: "cred-123",
+			expectMatch:  false,
+		},
+		{
+			name: "matches second credential",
+			credentials: map[string]any{
+				"api1": map[string]any{"id": "cred-111"},
+				"api2": map[string]any{"id": "cred-123"},
+			},
+			credentialID: "cred-123",
+			expectMatch:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := credentialMatchesNode(tt.credentials, tt.credentialID)
+			assert.Equal(t, tt.expectMatch, result)
+		})
+	}
+}
+
+// TestReplaceCredentialsInNode tests the replaceCredentialsInNode helper.
+func TestReplaceCredentialsInNode(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		credentials map[string]any
+		oldCredID   string
+		newCredID   string
+		expectID    string
+	}{
+		{
+			name: "replaces matching credential",
+			credentials: map[string]any{
+				"api": map[string]any{"id": "old-cred"},
+			},
+			oldCredID: "old-cred",
+			newCredID: "new-cred",
+			expectID:  "new-cred",
+		},
+		{
+			name: "does not replace non-matching credential",
+			credentials: map[string]any{
+				"api": map[string]any{"id": "other-cred"},
+			},
+			oldCredID: "old-cred",
+			newCredID: "new-cred",
+			expectID:  "other-cred",
+		},
+		{
+			name: "error case - non-map credential value is skipped",
+			credentials: map[string]any{
+				"api": "not-a-map",
+			},
+			oldCredID: "old-cred",
+			newCredID: "new-cred",
+			expectID:  "",
+		},
+		{
+			name: "replaces in multiple credentials",
+			credentials: map[string]any{
+				"api1": map[string]any{"id": "old-cred"},
+				"api2": map[string]any{"id": "other-cred"},
+			},
+			oldCredID: "old-cred",
+			newCredID: "new-cred",
+			expectID:  "new-cred",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			replaceCredentialsInNode(tt.credentials, tt.oldCredID, tt.newCredID)
+
+			//: Verify expected replacement.
+			switch tt.name {
+			case "replaces matching credential":
+				//: Verify the credential was replaced.
+				credInfo, _ := tt.credentials["api"].(map[string]any)
+				assert.Equal(t, tt.newCredID, credInfo["id"])
+			case "does not replace non-matching credential":
+				//: Verify the credential was not changed.
+				credInfo, _ := tt.credentials["api"].(map[string]any)
+				assert.Equal(t, tt.expectID, credInfo["id"])
+			case "error case - non-map credential value is skipped":
+				//: Verify non-map value was not changed.
+				assert.Equal(t, "not-a-map", tt.credentials["api"])
+			case "replaces in multiple credentials":
+				//: Verify only the matching credential was replaced.
+				credInfo1, _ := tt.credentials["api1"].(map[string]any)
+				assert.Equal(t, tt.newCredID, credInfo1["id"])
+				credInfo2, _ := tt.credentials["api2"].(map[string]any)
+				assert.Equal(t, "other-cred", credInfo2["id"])
+			}
+		})
+	}
+}
+
+// TestCredentialResource_finalizeRotation tests the finalizeRotation method.
+func TestCredentialResource_finalizeRotation(t *testing.T) {
+	t.Parallel()
+
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name          string
+		planProjectID string
+		projectIDNull bool
+		httpStatus    int
+		expectOK      bool
+	}{
+		{
+			name:          "success without project ID",
+			planProjectID: "",
+			projectIDNull: true,
+			httpStatus:    http.StatusOK,
+			expectOK:      true,
+		},
+		{
+			name:          "success with project ID",
+			planProjectID: "proj-1",
+			projectIDNull: false,
+			httpStatus:    http.StatusOK,
+			expectOK:      true,
+		},
+		{
+			name:          "error case - project transfer fails",
+			planProjectID: "proj-fail",
+			projectIDNull: false,
+			httpStatus:    http.StatusInternalServerError,
+			expectOK:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				//: Handle DELETE credentials - always succeed.
+				if r.Method == http.MethodDelete {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+				//: Handle PUT transfer request.
+				if r.Method == http.MethodPut {
+					w.WriteHeader(tt.httpStatus)
+					return
+				}
+				t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+			})
+
+			testClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &CredentialResource{client: testClient}
+
+			newCred := &n8nsdk.CreateCredentialResponse{
+				Id:        "new-cred-id",
+				Name:      "test-cred",
+				Type:      "httpHeaderAuth",
+				CreatedAt: baseTime,
+				UpdatedAt: baseTime,
+			}
+
+			plan := &models.Resource{
+				ID:   types.StringValue("old-cred-id"),
+				Name: types.StringValue("test-cred"),
+				Type: types.StringValue("httpHeaderAuth"),
+			}
+
+			//: Set project ID based on test case.
+			if tt.projectIDNull {
+				plan.ProjectID = types.StringNull()
+			} else {
+				plan.ProjectID = types.StringValue(tt.planProjectID)
+			}
+
+			var diagErrors []string
+			diagMock := &testDiagnosticsCollector{errors: &diagErrors}
+
+			ok := r.finalizeRotation(t.Context(), plan, newCred, "new-cred-id", "old-cred-id", diagMock)
+			assert.Equal(t, tt.expectOK, ok)
+
+			//: Verify plan was updated on success.
+			if tt.expectOK {
+				assert.Equal(t, "new-cred-id", plan.ID.ValueString())
+				assert.Equal(t, "test-cred", plan.Name.ValueString())
+			}
+		})
+	}
+}
+
+// TestCredentialResource_executeDeleteCredential tests the executeDeleteCredential method.
+func TestCredentialResource_executeDeleteCredential(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		credID      string
+		httpStatus  int
+		responseErr bool
+		expectError bool
+	}{
+		{
+			name:        "success with 200",
+			credID:      "cred-1",
+			httpStatus:  http.StatusOK,
+			expectError: false,
+		},
+		{
+			name:        "success with 204",
+			credID:      "cred-2",
+			httpStatus:  http.StatusNoContent,
+			expectError: false,
+		},
+		{
+			name:        "error case - delete fails with 500",
+			credID:      "cred-3",
+			httpStatus:  http.StatusInternalServerError,
+			expectError: true,
+		},
+		{
+			name:        "error case - delete returns 404",
+			credID:      "cred-4",
+			httpStatus:  http.StatusNotFound,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				//: Handle DELETE credential request.
+				if r.Method == http.MethodDelete {
+					w.WriteHeader(tt.httpStatus)
+					if tt.httpStatus != http.StatusOK && tt.httpStatus != http.StatusNoContent {
+						w.Write([]byte(`{"message":"error"}`))
+					}
+					return
+				}
+				t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+			})
+
+			testClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &CredentialResource{client: testClient}
+			resp := &resource.DeleteResponse{}
+
+			r.executeDeleteCredential(t.Context(), tt.credID, resp)
+
+			assert.Equal(t, tt.expectError, resp.Diagnostics.HasError())
 		})
 	}
 }

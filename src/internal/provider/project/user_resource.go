@@ -19,8 +19,8 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
 
-// COMPOSITE_ID_PARTS is the expected number of parts in a composite ID (project_id/user_id).
-const COMPOSITE_ID_PARTS int = 2
+// CompositeIDParts is the expected number of parts in a composite ID (project_id/user_id).
+const CompositeIDParts int = 2
 
 // Ensure ProjectUserResource implements required interfaces.
 var (
@@ -53,8 +53,8 @@ type ProjectUserResource struct {
 // NewProjectUserResource creates a new ProjectUserResource instance.
 // Returns:
 //   - *ProjectUserResource: new ProjectUserResource instance
-func NewProjectUserResource() *ProjectUserResource {
-	// Return result.
+func NewProjectUserResource() (projectUserResource *ProjectUserResource) {
+	//: Return new empty ProjectUserResource instance.
 	return &ProjectUserResource{}
 }
 
@@ -62,9 +62,9 @@ func NewProjectUserResource() *ProjectUserResource {
 // This wrapper function is used by the provider to maintain compatibility with the framework.
 //
 // Returns:
-//   - resource.Resource: the wrapped ProjectUserResource instance
-func NewProjectUserResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+//   - projectUserResource: the wrapped ProjectUserResource instance
+func NewProjectUserResourceWrapper() (projectUserResource resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewProjectUserResource()
 }
 
@@ -76,7 +76,12 @@ func NewProjectUserResourceWrapper() resource.Resource {
 //
 // Returns:
 //   - none
-func (r *ProjectUserResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ProjectUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Return early if context is cancelled.
+	if ctx.Err() != nil {
+		//: Return when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_project_user"
 }
 
@@ -88,7 +93,12 @@ func (r *ProjectUserResource) Metadata(_ctx context.Context, req resource.Metada
 //
 // Returns:
 //   - none
-func (r *ProjectUserResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ProjectUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Return early if context is cancelled.
+	if ctx.Err() != nil {
+		//: Return when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages user membership and roles within n8n projects. Allows adding users to projects, changing their roles, and removing them from projects.",
 
@@ -121,21 +131,26 @@ func (r *ProjectUserResource) Schema(_ctx context.Context, _req resource.SchemaR
 //
 // Returns:
 //   - none
-func (r *ProjectUserResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Check for nil value.
+func (r *ProjectUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Return early if context is cancelled.
+	if ctx.Err() != nil {
+		//: Return when context is cancelled.
+		return
+	}
+	//: Skip configuration when provider data is not yet available.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return early when no provider data is set.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Validate the provider data type is the expected N8nClient.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return after reporting the type mismatch error.
 		return
 	}
 
@@ -154,15 +169,15 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 	var plan *models.UserResource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check condition.
+	//: Check for plan parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return after plan parsing failure.
 		return
 	}
 
-	// Execute create logic
+	//: Execute create logic and return if it fails.
 	if !r.executeCreateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return after create logic failure.
 		return
 	}
 
@@ -178,9 +193,9 @@ func (r *ProjectUserResource) Create(ctx context.Context, req resource.CreateReq
 //   - resp: Create response
 //
 // Returns:
-//   - bool: True if creation succeeded, false otherwise
-func (r *ProjectUserResource) executeCreateLogic(ctx context.Context, plan *models.UserResource, resp *resource.CreateResponse) bool {
-	// Build request to add user to project.
+//   - ok: True if creation succeeded, false otherwise
+func (r *ProjectUserResource) executeCreateLogic(ctx context.Context, plan *models.UserResource, resp *resource.CreateResponse) (ok bool) {
+	//: Build request to add user to project.
 	relation := n8nsdk.NewProjectsProjectIdUsersPostRequestRelationsInner(
 		plan.UserID.ValueString(),
 		plan.Role.ValueString(),
@@ -188,28 +203,33 @@ func (r *ProjectUserResource) executeCreateLogic(ctx context.Context, plan *mode
 	relations := []n8nsdk.ProjectsProjectIdUsersPostRequestRelationsInner{*relation}
 	addUserReq := n8nsdk.NewProjectsProjectIdUsersPostRequest(relations)
 
-	// Add user to project.
+	//: Add user to project via API.
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersPost(ctx, plan.ProjectID.ValueString()).
 		ProjectsProjectIdUsersPostRequest(*addUserReq).Execute()
-	// Check for non-nil value.
+	//: Close HTTP response body if present to prevent resource leaks.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for API error when adding user to project.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error adding user to project",
 			fmt.Sprintf("Could not add user %s to project %s: %s\nHTTP Response: %v",
 				plan.UserID.ValueString(), plan.ProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure when the API call fails.
 		return false
 	}
 
-	// Set composite ID.
+	//: Set composite ID combining project ID and user ID.
 	plan.ID = types.StringValue(fmt.Sprintf("%s/%s", plan.ProjectID.ValueString(), plan.UserID.ValueString()))
 
-	// Return success.
+	//: Return success after user was added to project.
 	return true
 }
 
@@ -225,15 +245,15 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 	var state *models.UserResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check for state parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return after state parsing failure.
 		return
 	}
 
-	// Execute read logic
+	//: Execute read logic and return if it fails.
 	if !r.executeReadLogic(ctx, state, resp) {
-		// Return with error.
+		//: Return after read logic failure.
 		return
 	}
 
@@ -249,16 +269,16 @@ func (r *ProjectUserResource) Read(ctx context.Context, req resource.ReadRequest
 //   - resp: Read response
 //
 // Returns:
-//   - bool: True if read succeeded, false otherwise
-func (r *ProjectUserResource) executeReadLogic(ctx context.Context, state *models.UserResource, resp *resource.ReadResponse) bool {
+//   - ok: True if read succeeded, false otherwise
+func (r *ProjectUserResource) executeReadLogic(ctx context.Context, state *models.UserResource, resp *resource.ReadResponse) (ok bool) {
 	found := r.findUserInProject(ctx, state, resp)
-	// Check condition.
+	//: Check if user was found in the project.
 	if !found {
-		// Return failure.
+		//: Return failure when user was not found.
 		return false
 	}
 
-	// Return success.
+	//: Return success when user was found in project.
 	return true
 }
 
@@ -270,43 +290,48 @@ func (r *ProjectUserResource) executeReadLogic(ctx context.Context, state *model
 //   - resp: read response
 //
 // Returns:
-//   - found: true if user was found in project
+//   - ok: true if user was found in project
 func (r *ProjectUserResource) findUserInProject(
 	ctx context.Context,
 	state *models.UserResource,
 	resp *resource.ReadResponse,
-) bool {
+) (ok bool) {
 	userList, httpResp, err := r.client.APIClient.UserAPI.UsersGet(ctx).
 		ProjectId(state.ProjectID.ValueString()).
 		IncludeRole(true).
 		Execute()
-	// Check for non-nil value.
+	//: Close HTTP response body if present to prevent resource leaks.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for API error when listing project users.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading project users",
 			fmt.Sprintf("Could not read users for project %s: %s\nHTTP Response: %v",
 				state.ProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return false to indicate failure.
+		//: Return false to indicate failure.
 		return false
 	}
 
-	// Find the user in the project.
+	//: Find the user in the project member list.
 	found := r.searchUserInList(userList, state)
 
-	// Check condition.
+	//: Remove resource if user was not found (deleted outside Terraform).
 	if !found {
 		// User not found in project - resource has been deleted outside Terraform.
 		resp.State.RemoveResource(ctx)
-		// Return false to indicate resource was removed.
+		//: Return false to indicate resource was removed.
 		return false
 	}
 
-	// Return true to indicate user was found.
+	//: Return true to indicate user was found.
 	return true
 }
 
@@ -317,31 +342,31 @@ func (r *ProjectUserResource) findUserInProject(
 //   - state: current resource state to update
 //
 // Returns:
-//   - found: true if user was found in the list
+//   - ok: true if user was found in the list
 func (r *ProjectUserResource) searchUserInList(
 	userList *n8nsdk.UserList,
 	state *models.UserResource,
-) bool {
-	// Check for non-nil value.
+) (ok bool) {
+	//: Return false if no data is available in the user list.
 	if userList.Data == nil {
-		// Return false if no data available.
+		//: Return false if no data available.
 		return false
 	}
 
-	// Iterate over items.
+	//: Iterate over all users to find the matching one.
 	for _, user := range userList.Data {
-		// Check for non-nil value.
+		//: Check if current user matches the state user ID.
 		if user.Id != nil && *user.Id == state.UserID.ValueString() {
-			// Update role if available.
+			//: Update role if available.
 			if user.Role != nil {
 				state.Role = types.StringPointerValue(user.Role)
 			}
-			// Return true to indicate user was found.
+			//: Return true to indicate user was found.
 			return true
 		}
 	}
 
-	// Return false if user was not found.
+	//: Return false if user was not found in the list.
 	return false
 }
 
@@ -358,15 +383,15 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check for plan/state parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return after plan/state parsing failure.
 		return
 	}
 
-	// Execute update logic
+	//: Execute update logic and return if it fails.
 	if !r.executeUpdateLogic(ctx, plan, state, resp) {
-		// Return with error.
+		//: Return after update logic failure.
 		return
 	}
 
@@ -383,19 +408,19 @@ func (r *ProjectUserResource) Update(ctx context.Context, req resource.UpdateReq
 //   - resp: Update response
 //
 // Returns:
-//   - bool: True if update succeeded, false otherwise
-func (r *ProjectUserResource) executeUpdateLogic(ctx context.Context, plan, state *models.UserResource, resp *resource.UpdateResponse) bool {
-	// Check if project or user changed - not supported.
+//   - ok: True if update succeeded, false otherwise
+func (r *ProjectUserResource) executeUpdateLogic(ctx context.Context, plan, state *models.UserResource, resp *resource.UpdateResponse) (ok bool) {
+	//: Check if project or user changed - not supported.
 	if !plan.ProjectID.Equal(state.ProjectID) || !plan.UserID.Equal(state.UserID) {
 		resp.Diagnostics.AddError(
 			"Project/User Change Not Supported",
 			"Cannot change project_id or user_id. Please delete and recreate the resource.",
 		)
-		// Return failure.
+		//: Return failure when unsupported change is requested.
 		return false
 	}
 
-	// Update role if changed.
+	//: Update role if it has changed.
 	if !plan.Role.Equal(state.Role) {
 		roleReq := n8nsdk.NewProjectsProjectIdUsersUserIdPatchRequest(plan.Role.ValueString())
 		httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersUserIdPatch(
@@ -403,24 +428,29 @@ func (r *ProjectUserResource) executeUpdateLogic(ctx context.Context, plan, stat
 			plan.ProjectID.ValueString(),
 			plan.UserID.ValueString(),
 		).ProjectsProjectIdUsersUserIdPatchRequest(*roleReq).Execute()
-		// Check for non-nil value.
+		//: Close HTTP response body if present to prevent resource leaks.
 		if httpResp != nil && httpResp.Body != nil {
-			defer httpResp.Body.Close()
+			defer func() {
+				//: Silently discard close error on response body.
+				if closeErr := httpResp.Body.Close(); closeErr != nil {
+					resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+				}
+			}()
 		}
 
-		// Check for error.
+		//: Check for API error when updating user role.
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating user role in project",
 				fmt.Sprintf("Could not update role for user %s in project %s: %s\nHTTP Response: %v",
 					plan.UserID.ValueString(), plan.ProjectID.ValueString(), err.Error(), httpResp),
 			)
-			// Return failure.
+			//: Return failure when role update API call fails.
 			return false
 		}
 	}
 
-	// Return success.
+	//: Return success after role update or when no change was needed.
 	return true
 }
 
@@ -436,13 +466,13 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 	var state *models.UserResource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check for state parsing errors.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return after state parsing failure.
 		return
 	}
 
-	// Execute delete logic
+	//: Execute delete logic.
 	r.executeDeleteLogic(ctx, state, resp)
 }
 
@@ -455,31 +485,36 @@ func (r *ProjectUserResource) Delete(ctx context.Context, req resource.DeleteReq
 //   - resp: Delete response
 //
 // Returns:
-//   - bool: True if delete succeeded, false otherwise
-func (r *ProjectUserResource) executeDeleteLogic(ctx context.Context, state *models.UserResource, resp *resource.DeleteResponse) bool {
-	// Remove user from project.
+//   - ok: True if delete succeeded, false otherwise
+func (r *ProjectUserResource) executeDeleteLogic(ctx context.Context, state *models.UserResource, resp *resource.DeleteResponse) (ok bool) {
+	//: Remove user from project via API.
 	httpResp, err := r.client.APIClient.ProjectsAPI.ProjectsProjectIdUsersUserIdDelete(
 		ctx,
 		state.ProjectID.ValueString(),
 		state.UserID.ValueString(),
 	).Execute()
-	// Check for non-nil value.
+	//: Close HTTP response body if present to prevent resource leaks.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for API error when removing user from project.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error removing user from project",
 			fmt.Sprintf("Could not remove user %s from project %s: %s\nHTTP Response: %v",
 				state.UserID.ValueString(), state.ProjectID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure when the delete API call fails.
 		return false
 	}
 
-	// Return success.
+	//: Return success after user was removed from project.
 	return true
 }
 
@@ -492,15 +527,15 @@ func (r *ProjectUserResource) executeDeleteLogic(ctx context.Context, state *mod
 // Returns:
 //   - none
 func (r *ProjectUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Split composite ID.
+	//: Split composite ID into project ID and user ID parts.
 	parts := strings.Split(req.ID, "/")
-	// Check condition.
-	if len(parts) != COMPOSITE_ID_PARTS {
+	//: Validate that the import ID has exactly two parts.
+	if len(parts) != CompositeIDParts {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
 			fmt.Sprintf("Expected import ID in format 'project_id/user_id', got: %s", req.ID),
 		)
-		// Return result.
+		//: Return after reporting invalid import ID format.
 		return
 	}
 

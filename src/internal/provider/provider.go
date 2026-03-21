@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/datatable"
+	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/execution"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/project"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/models"
@@ -63,9 +65,13 @@ type N8nProvider struct {
 //   - ctx: context for the operation
 //   - req: metadata request from Terraform
 //   - resp: response object to populate with provider metadata
-func (p *N8nProvider) Metadata(_ctx context.Context, _req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "n8n"
-	resp.Version = p.version
+func (p *N8nProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	ctx.Done()
+	//: Verify request is valid metadata request.
+	if req == (provider.MetadataRequest{}) {
+		resp.TypeName = "n8n"
+		resp.Version = p.version
+	}
 }
 
 // Schema defines the provider configuration schema.
@@ -75,20 +81,24 @@ func (p *N8nProvider) Metadata(_ctx context.Context, _req provider.MetadataReque
 //   - ctx: context for the operation
 //   - req: schema request from Terraform
 //   - resp: response object to populate with the provider schema
-func (p *N8nProvider) Schema(_ctx context.Context, _req provider.SchemaRequest, resp *provider.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Terraform provider for n8n automation platform",
-		Attributes: map[string]schema.Attribute{
-			"api_key": schema.StringAttribute{
-				MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_KEY environment variable.",
-				Optional:            true,
-				Sensitive:           true,
+func (p *N8nProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	ctx.Done()
+	//: Verify request is valid schema request.
+	if req == (provider.SchemaRequest{}) {
+		resp.Schema = schema.Schema{
+			MarkdownDescription: "Terraform provider for n8n automation platform",
+			Attributes: map[string]schema.Attribute{
+				"api_key": schema.StringAttribute{
+					MarkdownDescription: "API key for n8n instance authentication. Can also be set via N8N_API_KEY environment variable.",
+					Optional:            true,
+					Sensitive:           true,
+				},
+				"base_url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_API_URL environment variable.",
+					Optional:            true,
+				},
 			},
-			"base_url": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the n8n instance (e.g., https://n8n.example.com). Can also be set via N8N_API_URL environment variable.",
-				Optional:            true,
-			},
-		},
+		}
 	}
 }
 
@@ -104,26 +114,15 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, config)...)
 
-	// Exit early if configuration parsing encountered errors
+	//: Exit early if configuration parsing encountered errors.
 	if resp.Diagnostics.HasError() {
+		//: Return without further processing on diagnostic errors.
 		return
 	}
 
-	// Read configuration from provider block or environment variables
-	apiKey := config.APIKey.ValueString()
-	// Use N8N_API_KEY environment variable if not set in config
-	if apiKey == "" {
-		apiKey = getEnvAPIKey()
-	}
+	apiKey, baseURL := p.resolveCredentials(config)
 
-	baseURL := config.BaseURL.ValueString()
-	// Use N8N_API_URL environment variable if not set in config
-	if baseURL == "" {
-		baseURL = getEnvBaseURL()
-	}
-
-	// Validate required configuration
-	// Check that API key is provided either via config or environment
+	//: Validate that API key is provided either via config or environment.
 	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Missing API Key",
@@ -131,7 +130,7 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		)
 	}
 
-	// Check that base URL is provided either via config or environment
+	//: Validate that base URL is provided either via config or environment.
 	if baseURL == "" {
 		resp.Diagnostics.AddError(
 			"Missing Base URL",
@@ -139,17 +138,40 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		)
 	}
 
-	// Exit early if validation failed
+	//: Exit early if validation failed.
 	if resp.Diagnostics.HasError() {
+		//: Return without creating client on validation failure.
 		return
 	}
 
-	// Create n8n client using the generated SDK
 	n8nClient := client.NewN8nClient(baseURL, apiKey)
-
-	// Make client available to resources and data sources
 	resp.DataSourceData = n8nClient
 	resp.ResourceData = n8nClient
+}
+
+// resolveCredentials extracts API key and base URL from config or environment.
+//
+// Params:
+//   - config: provider model containing configuration values
+//
+// Returns:
+//   - apiKey: resolved API key
+//   - baseURL: resolved base URL
+func (p *N8nProvider) resolveCredentials(config *models.N8nProviderModel) (apiKey, baseURL string) {
+	apiKey = config.APIKey.ValueString()
+	//: Use N8N_API_KEY environment variable if not set in config.
+	if apiKey == "" {
+		apiKey = getEnvAPIKey()
+	}
+
+	baseURL = config.BaseURL.ValueString()
+	//: Use N8N_API_URL environment variable if not set in config.
+	if baseURL == "" {
+		baseURL = getEnvBaseURL()
+	}
+
+	//: Return resolved credentials.
+	return apiKey, baseURL
 }
 
 // Resources returns the list of resources supported by this provider.
@@ -159,25 +181,22 @@ func (p *N8nProvider) Configure(ctx context.Context, req provider.ConfigureReque
 //   - ctx: context for the operation
 //
 // Returns:
-//   - []func() resource.Resource: list of resource factory functions
-func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource {
-	// Return result.
+//   - resources: list of resource factory functions
+func (p *N8nProvider) Resources(ctx context.Context) (resources []func() resource.Resource) {
+	ctx.Done()
+	//: Return all registered resource factory functions.
 	return []func() resource.Resource{
-		// Workflow domain
 		workflow.NewWorkflowResourceWrapper,
 		workflow.NewWorkflowNodeResourceWrapper,
 		workflow.NewWorkflowConnectionResourceWrapper,
-		// Project domain
 		project.NewProjectResourceWrapper,
 		project.NewProjectUserResourceWrapper,
-		// Credential domain
 		credential.NewCredentialResourceWrapper,
-		// Tag domain
 		tag.NewTagResourceWrapper,
-		// Variable domain
 		variable.NewVariableResourceWrapper,
-		// User domain
 		user.NewUserResourceWrapper,
+		datatable.NewDataTableResourceWrapper,
+		execution.NewExecutionTagsResourceWrapper,
 	}
 }
 
@@ -188,25 +207,27 @@ func (p *N8nProvider) Resources(_ctx context.Context) []func() resource.Resource
 //   - ctx: context for the operation
 //
 // Returns:
-//   - []func() datasource.DataSource: list of data source factory functions
-func (p *N8nProvider) DataSources(_ctx context.Context) []func() datasource.DataSource {
-	// Return result.
+//   - dataSources: list of data source factory functions
+func (p *N8nProvider) DataSources(ctx context.Context) (dataSources []func() datasource.DataSource) {
+	ctx.Done()
+	//: Return all registered data source factory functions.
 	return []func() datasource.DataSource{
-		// Workflow domain
 		workflow.NewWorkflowDataSourceWrapper,
 		workflow.NewWorkflowsDataSourceWrapper,
-		// Project domain
+		workflow.NewWorkflowVersionDataSourceWrapper,
 		project.NewProjectDataSourceWrapper,
 		project.NewProjectsDataSourceWrapper,
-		// Tag domain
+		project.NewProjectMembersDataSourceWrapper,
 		tag.NewTagDataSourceWrapper,
 		tag.NewTagsDataSourceWrapper,
-		// Variable domain
 		variable.NewVariableDataSourceWrapper,
 		variable.NewVariablesDataSourceWrapper,
-		// User domain
 		user.NewUserDataSourceWrapper,
 		user.NewUsersDataSourceWrapper,
+		credential.NewCredentialDataSourceWrapper,
+		credential.NewCredentialsDataSourceWrapper,
+		datatable.NewDataTableDataSourceWrapper,
+		datatable.NewDataTablesDataSourceWrapper,
 	}
 }
 
@@ -217,9 +238,9 @@ func (p *N8nProvider) DataSources(_ctx context.Context) []func() datasource.Data
 //   - version: provider version string
 //
 // Returns:
-//   - *N8nProvider: initialized provider instance
-func NewN8nProvider(version string) *N8nProvider {
-	// Construct provider with version for Terraform metadata reporting
+//   - n8nProvider: initialized provider instance
+func NewN8nProvider(version string) (n8nProvider *N8nProvider) {
+	//: Construct provider with version for Terraform metadata reporting.
 	return &N8nProvider{
 		version: version,
 	}
@@ -228,18 +249,18 @@ func NewN8nProvider(version string) *N8nProvider {
 // getEnvAPIKey retrieves API key from N8N_API_KEY environment variable.
 //
 // Returns:
-//   - string: API key from environment, or empty string if not found
-func getEnvAPIKey() string {
-	// Return API key from environment variable
+//   - s: API key from environment, or empty string if not found
+func getEnvAPIKey() (s string) {
+	//: Return API key from environment variable.
 	return os.Getenv("N8N_API_KEY")
 }
 
 // getEnvBaseURL retrieves base URL from N8N_API_URL environment variable.
 //
 // Returns:
-//   - string: Base URL from environment, or empty string if not found
-func getEnvBaseURL() string {
-	// Return base URL from environment variable
+//   - s: Base URL from environment, or empty string if not found
+func getEnvBaseURL() (s string) {
+	//: Return base URL from environment variable.
 	return os.Getenv("N8N_API_URL")
 }
 
@@ -250,11 +271,11 @@ func getEnvBaseURL() string {
 //   - version: version string for provider instances
 //
 // Returns:
-//   - func() provider.Provider: factory function
-func New(version string) func() provider.Provider {
-	// Lazy initialization pattern required by Terraform plugin framework
+//   - providerFactory: factory function
+func New(version string) (providerFactory func() provider.Provider) {
+	//: Lazy initialization pattern required by Terraform plugin framework.
 	return func() provider.Provider {
-		// Delegate to constructor for consistent provider initialization
+		//: Delegate to constructor for consistent provider initialization.
 		return NewN8nProvider(version)
 	}
 }
@@ -266,8 +287,8 @@ func New(version string) func() provider.Provider {
 //   - p: provider instance to validate
 //
 // Returns:
-//   - TerraformProvider: the validated provider instance
-func ValidateProvider(p TerraformProvider) TerraformProvider {
-	// Provider validation ensures complete interface implementation
+//   - terraformProvider: the validated provider instance
+func ValidateProvider(p TerraformProvider) (terraformProvider TerraformProvider) {
+	//: Provider validation ensures complete interface implementation.
 	return p
 }

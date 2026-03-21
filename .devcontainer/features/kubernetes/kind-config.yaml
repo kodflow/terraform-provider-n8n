@@ -1,0 +1,62 @@
+# kind cluster configuration
+# Usage: kind create cluster --config kind-config.yaml --name dev
+#
+# Documentation: https://kind.sigs.k8s.io/docs/user/configuration/
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+
+# Cluster name (override with --name flag)
+name: dev
+
+# Single control-plane node (add workers for multi-node)
+nodes:
+  - role: control-plane
+    # Port mappings for accessing services from host
+    extraPortMappings:
+      # NodePort range start
+      - containerPort: 30000
+        hostPort: 30000
+        protocol: TCP
+      - containerPort: 30001
+        hostPort: 30001
+        protocol: TCP
+      # HTTP ingress
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      # HTTPS ingress
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
+    # Kubernetes API (optional, for external access)
+    # - containerPort: 6443
+    #   hostPort: 6443
+    #   protocol: TCP
+
+    # Node labels for scheduling
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+
+# Uncomment for multi-node cluster
+# - role: worker
+# - role: worker
+
+# Networking configuration
+networking:
+  # Pod subnet (default)
+  podSubnet: "10.244.0.0/16"
+  # Service subnet (default)
+  serviceSubnet: "10.96.0.0/16"
+  # Disable default CNI to use Calico/Cilium (uncomment if needed)
+  # disableDefaultCNI: true
+
+# Container registry configuration (for local registry)
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"

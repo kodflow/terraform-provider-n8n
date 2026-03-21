@@ -51,8 +51,8 @@ type VariableResource struct {
 //
 // Returns:
 //   - resource.Resource: A new VariableResource instance
-func NewVariableResource() *VariableResource {
-	// Return result.
+func NewVariableResource() (variableResource *VariableResource) {
+	//: Return result.
 	return &VariableResource{}
 }
 
@@ -61,8 +61,8 @@ func NewVariableResource() *VariableResource {
 //
 // Returns:
 //   - resource.Resource: the wrapped VariableResource instance
-func NewVariableResourceWrapper() resource.Resource {
-	// Return the wrapped resource instance.
+func NewVariableResourceWrapper() (r resource.Resource) {
+	//: Return the wrapped resource instance.
 	return NewVariableResource()
 }
 
@@ -76,7 +76,12 @@ func NewVariableResourceWrapper() resource.Resource {
 // Returns:
 //
 //	(none, modifies resp parameter in place)
-func (r *VariableResource) Metadata(_ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *VariableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_variable"
 }
 
@@ -90,7 +95,12 @@ func (r *VariableResource) Metadata(_ctx context.Context, req resource.MetadataR
 // Returns:
 //
 //	(none, modifies resp parameter in place)
-func (r *VariableResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *VariableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "n8n variable resource. Note: API limitations require workarounds for Read operations.",
 
@@ -131,21 +141,26 @@ func (r *VariableResource) Schema(_ctx context.Context, _req resource.SchemaRequ
 // Returns:
 //
 //	(none, modifies resp parameter in place)
-func (r *VariableResource) Configure(_ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Check for nil value.
+func (r *VariableResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -167,15 +182,15 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 	var plan *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check for error.
+	//: Check for error.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute create logic
+	//: Execute create logic
 	if !r.executeCreateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -192,25 +207,25 @@ func (r *VariableResource) Create(ctx context.Context, req resource.CreateReques
 //
 // Returns:
 //   - bool: True if creation succeeded, false otherwise
-func (r *VariableResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
-	// Execute create operation
+func (r *VariableResource) executeCreateLogic(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (ok bool) {
+	//: Execute create operation
 	if !r.executeVariableCreate(ctx, plan, resp) {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Find created variable
 	foundVariable := r.findCreatedVariable(ctx, plan, resp)
-	// Return early if variable not found.
+	//: Return early if variable not found.
 	if foundVariable == nil {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Map variable to model
 	mapVariableToResourceModel(foundVariable, plan)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -223,26 +238,33 @@ func (r *VariableResource) executeCreateLogic(ctx context.Context, plan *models.
 //
 // Returns:
 //   - bool: true if successful, false if error occurred
-func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) bool {
+func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (ok bool) {
 	variableRequest := buildVariableRequest(plan)
 
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesPost(ctx).
 		VariableCreate(variableRequest).
 		Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating variable",
 			fmt.Sprintf("Could not create variable: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
+		//: Return failure.
 		return false
 	}
 
+	//: Return success.
 	return true
 }
 
@@ -255,42 +277,47 @@ func (r *VariableResource) executeVariableCreate(ctx context.Context, plan *mode
 //
 // Returns:
 //   - *n8nsdk.Variable: found variable or nil if not found
-func (r *VariableResource) findCreatedVariable(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) *n8nsdk.Variable {
+func (r *VariableResource) findCreatedVariable(ctx context.Context, plan *models.Resource, resp *resource.CreateResponse) (variable *n8nsdk.Variable) {
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading variable after creation",
 			fmt.Sprintf("Variable was created but could not retrieve ID: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
 	// Find our variable by key
 	var foundVariable *n8nsdk.Variable
 	var found bool
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if variableList.Data != nil {
 		foundVariable, found = findVariableByKey(variableList.Data, plan.Key.ValueString())
 	}
 
-	// Check condition.
+	//: Check condition.
 	if !found {
 		resp.Diagnostics.AddError(
 			"Error finding created variable",
 			fmt.Sprintf("Variable with key '%s' was created but not found in list", plan.Key.ValueString()),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
-	// Return result.
+	//: Return result.
 	return foundVariable
 }
 
@@ -309,15 +336,15 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
-	// Execute read logic
+	//: Execute read logic
 	if !r.executeReadLogic(ctx, state, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -334,38 +361,43 @@ func (r *VariableResource) Read(ctx context.Context, req resource.ReadRequest, r
 //
 // Returns:
 //   - bool: True if read succeeded, false otherwise
-func (r *VariableResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) bool {
+func (r *VariableResource) executeReadLogic(ctx context.Context, state *models.Resource, resp *resource.ReadResponse) (ok bool) {
 	// Fetch variable list from API
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading variable",
 			fmt.Sprintf("Could not read variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Find variable by ID
 	foundVariable := r.findVariableByID(variableList, state.ID.ValueString())
-	// Check condition.
+	//: Check condition.
 	if foundVariable == nil {
 		// Variable not found = deleted outside Terraform
 		resp.State.RemoveResource(ctx)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Update state with found variable data
 	r.updateStateFromVariable(foundVariable, state)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -377,21 +409,21 @@ func (r *VariableResource) executeReadLogic(ctx context.Context, state *models.R
 //
 // Returns:
 //   - *n8nsdk.Variable: found variable or nil if not found
-func (r *VariableResource) findVariableByID(variableList *n8nsdk.VariableList, id string) *n8nsdk.Variable {
-	// Check for non-nil value.
+func (r *VariableResource) findVariableByID(variableList *n8nsdk.VariableList, id string) (variable *n8nsdk.Variable) {
+	//: Check for non-nil value.
 	if variableList.Data == nil {
-		// Return result.
+		//: Return result.
 		return nil
 	}
-	// Iterate over items.
+	//: Iterate over items.
 	for _, v := range variableList.Data {
-		// Check for non-nil value.
+		//: Check for non-nil value.
 		if v.Id != nil && *v.Id == id {
-			// Return matching variable.
+			//: Return matching variable.
 			return &v
 		}
 	}
-	// Return result.
+	//: Return result.
 	return nil
 }
 
@@ -403,17 +435,19 @@ func (r *VariableResource) findVariableByID(variableList *n8nsdk.VariableList, i
 func (r *VariableResource) updateStateFromVariable(foundVariable *n8nsdk.Variable, state *models.Resource) {
 	state.Key = types.StringValue(foundVariable.Key)
 	state.Value = types.StringValue(foundVariable.Value)
-	// Set Type - use null if not present to ensure known value after apply.
+	//: Set Type - use null if not present to ensure known value after apply.
 	if foundVariable.Type != nil {
 		state.Type = types.StringPointerValue(foundVariable.Type)
 	} else {
+		//: Handle alternate case.
 		// Type not present in API response, set to null.
 		state.Type = types.StringNull()
 	}
-	// Set ProjectID - use null if not present to ensure known value after apply.
+	//: Set ProjectID - use null if not present to ensure known value after apply.
 	if foundVariable.Project != nil && foundVariable.Project.Id != nil {
 		state.ProjectID = types.StringPointerValue(foundVariable.Project.Id)
 	} else {
+		//: Handle alternate case.
 		// Project not present in API response, set to null.
 		state.ProjectID = types.StringNull()
 	}
@@ -435,25 +469,25 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// Check for error.
+	//: Check for error.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check for error.
+	//: Check for error.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	// Copy ID from state since it's computed and not in the plan.
 	plan.ID = state.ID
 
-	// Execute update logic
+	//: Execute update logic
 	if !r.executeUpdateLogic(ctx, plan, resp) {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -470,25 +504,25 @@ func (r *VariableResource) Update(ctx context.Context, req resource.UpdateReques
 //
 // Returns:
 //   - bool: True if update succeeded, false otherwise
-func (r *VariableResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
-	// Execute the update API call
+func (r *VariableResource) executeUpdateLogic(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) (ok bool) {
+	//: Execute the update API call
 	if !r.executeVariableUpdate(ctx, plan, resp) {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Verify the update by listing variables
 	foundVariable := r.findUpdatedVariable(ctx, plan, resp)
-	// Return early if variable not found.
+	//: Return early if variable not found.
 	if foundVariable == nil {
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
 	// Map variable to model (only updates non-ID fields)
 	mapVariableToResourceModel(foundVariable, plan)
 
-	// Return success.
+	//: Return success.
 	return true
 }
 
@@ -501,26 +535,33 @@ func (r *VariableResource) executeUpdateLogic(ctx context.Context, plan *models.
 //
 // Returns:
 //   - bool: true if successful, false if error occurred
-func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) bool {
+func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) (ok bool) {
 	variableRequest := buildVariableRequest(plan)
 
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdPut(ctx, plan.ID.ValueString()).
 		VariableCreate(variableRequest).
 		Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating variable",
 			fmt.Sprintf("Could not update variable ID %s: %s\nHTTP Response: %v", plan.ID.ValueString(), err.Error(), httpResp),
 		)
+		//: Return failure.
 		return false
 	}
 
+	//: Return success.
 	return true
 }
 
@@ -533,42 +574,47 @@ func (r *VariableResource) executeVariableUpdate(ctx context.Context, plan *mode
 //
 // Returns:
 //   - *n8nsdk.Variable: found variable or nil if not found
-func (r *VariableResource) findUpdatedVariable(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) *n8nsdk.Variable {
+func (r *VariableResource) findUpdatedVariable(ctx context.Context, plan *models.Resource, resp *resource.UpdateResponse) (variable *n8nsdk.Variable) {
 	variableList, httpResp, err := r.client.APIClient.VariablesAPI.VariablesGet(ctx).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading variable after update",
 			fmt.Sprintf("Variable was updated but could not verify: %s\nHTTP Response: %v", err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
 	// Find our variable by ID
 	var foundVariable *n8nsdk.Variable
 	var found bool
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if variableList.Data != nil {
 		foundVariable, found = findVariableByID(variableList.Data, plan.ID.ValueString())
 	}
 
-	// Check condition.
+	//: Check condition.
 	if !found {
 		resp.Diagnostics.AddError(
 			"Error verifying updated variable",
 			fmt.Sprintf("Variable with ID '%s' was updated but not found in list", plan.ID.ValueString()),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
 
-	// Return the found variable.
+	//: Return the found variable.
 	return foundVariable
 }
 
@@ -586,9 +632,9 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 	var state *models.Resource
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
@@ -606,25 +652,30 @@ func (r *VariableResource) Delete(ctx context.Context, req resource.DeleteReques
 //
 // Returns:
 //   - bool: True if delete succeeded, false otherwise
-func (r *VariableResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) bool {
+func (r *VariableResource) executeDeleteLogic(ctx context.Context, state *models.Resource, resp *resource.DeleteResponse) (ok bool) {
 	// DELETE returns 204 with no body
 	httpResp, err := r.client.APIClient.VariablesAPI.VariablesIdDelete(ctx, state.ID.ValueString()).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
 
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting variable",
 			fmt.Sprintf("Could not delete variable ID %s: %s\nHTTP Response: %v", state.ID.ValueString(), err.Error(), httpResp),
 		)
-		// Return failure.
+		//: Return failure.
 		return false
 	}
 
-	// Return success.
+	//: Return success.
 	return true
 }
 

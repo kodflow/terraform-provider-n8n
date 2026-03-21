@@ -44,8 +44,8 @@ type UserDataSource struct {
 //
 // Returns:
 //   - datasource.DataSource: new user data source instance
-func NewUserDataSource() *UserDataSource {
-	// Return result.
+func NewUserDataSource() (userDataSource *UserDataSource) {
+	//: Return result.
 	return &UserDataSource{}
 }
 
@@ -54,8 +54,8 @@ func NewUserDataSource() *UserDataSource {
 //
 // Returns:
 //   - datasource.DataSource: the wrapped UserDataSource instance
-func NewUserDataSourceWrapper() datasource.DataSource {
-	// Return the wrapped datasource instance.
+func NewUserDataSourceWrapper() (dataSource datasource.DataSource) {
+	//: Return the wrapped datasource instance.
 	return NewUserDataSource()
 }
 
@@ -65,7 +65,12 @@ func NewUserDataSourceWrapper() datasource.DataSource {
 //   - ctx: context.Context for request lifecycle
 //   - req: datasource.MetadataRequest containing provider type name
 //   - resp: datasource.MetadataResponse to set the type name
-func (d *UserDataSource) Metadata(_ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *UserDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
 
@@ -75,7 +80,12 @@ func (d *UserDataSource) Metadata(_ctx context.Context, req datasource.MetadataR
 //   - ctx: context.Context for request lifecycle
 //   - req: datasource.SchemaRequest for schema definition
 //   - resp: datasource.SchemaResponse to set the schema
-func (d *UserDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *UserDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches a single n8n user by ID or email. The API accepts both ID and email as identifiers.",
 		Attributes:          d.schemaAttributes(),
@@ -86,8 +96,8 @@ func (d *UserDataSource) Schema(_ctx context.Context, _req datasource.SchemaRequ
 //
 // Returns:
 //   - map[string]schema.Attribute: the data source attribute definitions
-func (d *UserDataSource) schemaAttributes() map[string]schema.Attribute {
-	// Return schema attributes.
+func (d *UserDataSource) schemaAttributes() (m map[string]schema.Attribute) {
+	//: Return schema attributes.
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			MarkdownDescription: "User identifier. Either `id` or `email` must be specified. Only available for instance owners.",
@@ -132,21 +142,26 @@ func (d *UserDataSource) schemaAttributes() map[string]schema.Attribute {
 //   - ctx: context.Context for request lifecycle
 //   - req: datasource.ConfigureRequest containing provider data
 //   - resp: datasource.ConfigureResponse for diagnostics
-func (d *UserDataSource) Configure(_ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Check for nil value.
+func (d *UserDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	//: Guard against cancelled context.
+	if ctx.Err() != nil {
+		//: Return early when context is cancelled.
+		return
+	}
+	//: Check for nil value.
 	if req.ProviderData == nil {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	clientData, ok := req.ProviderData.(*client.N8nClient)
-	// Check condition.
+	//: Check condition.
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *client.N8nClient, got: %T", req.ProviderData),
 		)
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -163,25 +178,25 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data := &models.DataSource{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, data)...)
-	// Check condition.
+	//: Check condition.
 	if resp.Diagnostics.HasError() {
-		// Return with error.
+		//: Return with error.
 		return
 	}
 
 	// Validate and get identifier
 	identifier := d.getIdentifier(data, resp)
-	// Check condition.
+	//: Check condition.
 	if identifier == "" {
-		// Return result.
+		//: Return result.
 		return
 	}
 
 	// Fetch user from API
 	user := d.fetchUser(ctx, identifier, resp)
-	// Check for nil value.
+	//: Check for nil value.
 	if user == nil {
-		// Return result.
+		//: Return result.
 		return
 	}
 
@@ -199,24 +214,24 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 //
 // Returns:
 //   - string: the identifier (ID or email)
-func (d *UserDataSource) getIdentifier(data *models.DataSource, resp *datasource.ReadResponse) string {
-	// Validate that at least one identifier is provided
+func (d *UserDataSource) getIdentifier(data *models.DataSource, resp *datasource.ReadResponse) (s string) {
+	//: Validate that at least one identifier is provided
 	if data.ID.IsNull() && data.Email.IsNull() {
 		resp.Diagnostics.AddError(
 			"Missing Required Attribute",
 			"Either 'id' or 'email' must be specified",
 		)
-		// Return result.
+		//: Return result.
 		return ""
 	}
 
 	// Use ID if provided, otherwise use email
 	identifier := data.ID.ValueString()
-	// Check condition.
+	//: Check condition.
 	if identifier == "" {
 		identifier = data.Email.ValueString()
 	}
-	// Return result.
+	//: Return result.
 	return identifier
 }
 
@@ -229,22 +244,27 @@ func (d *UserDataSource) getIdentifier(data *models.DataSource, resp *datasource
 //
 // Returns:
 //   - *n8nsdk.User: the user or nil if error occurred
-func (d *UserDataSource) fetchUser(ctx context.Context, identifier string, resp *datasource.ReadResponse) *n8nsdk.User {
+func (d *UserDataSource) fetchUser(ctx context.Context, identifier string, resp *datasource.ReadResponse) (user *n8nsdk.User) {
 	user, httpResp, err := d.client.APIClient.UserAPI.UsersIdGet(ctx, identifier).Execute()
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
+		defer func() {
+			//: Silently discard close error on response body.
+			if closeErr := httpResp.Body.Close(); closeErr != nil {
+				resp.Diagnostics.AddWarning("Failed to close response body", closeErr.Error())
+			}
+		}()
 	}
-	// Check for error.
+	//: Check for error.
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving user",
 			fmt.Sprintf("Could not retrieve user with identifier %s: %s\nHTTP Response: %v", identifier, err.Error(), httpResp),
 		)
-		// Return with error.
+		//: Return with error.
 		return nil
 	}
-	// Return result.
+	//: Return result.
 	return user
 }
 
@@ -254,32 +274,32 @@ func (d *UserDataSource) fetchUser(ctx context.Context, identifier string, resp 
 //   - user: source user
 //   - data: target data model
 func (d *UserDataSource) populateUserData(user *n8nsdk.User, data *models.DataSource) {
-	// Check condition.
+	//: Check condition.
 	if user.Id != nil {
 		data.ID = types.StringValue(*user.Id)
 	}
 	data.Email = types.StringValue(user.Email)
-	// Check condition.
+	//: Check condition.
 	if user.FirstName != nil {
 		data.FirstName = types.StringPointerValue(user.FirstName)
 	}
-	// Check condition.
+	//: Check condition.
 	if user.LastName != nil {
 		data.LastName = types.StringPointerValue(user.LastName)
 	}
-	// Check condition.
+	//: Check condition.
 	if user.IsPending != nil {
 		data.IsPending = types.BoolPointerValue(user.IsPending)
 	}
-	// Check condition.
+	//: Check condition.
 	if user.CreatedAt != nil {
 		data.CreatedAt = types.StringValue(user.CreatedAt.String())
 	}
-	// Check condition.
+	//: Check condition.
 	if user.UpdatedAt != nil {
 		data.UpdatedAt = types.StringValue(user.UpdatedAt.String())
 	}
-	// Check condition.
+	//: Check condition.
 	if user.Role != nil {
 		data.Role = types.StringPointerValue(user.Role)
 	}

@@ -20,16 +20,16 @@ import (
 // Returns:
 //   - None
 func mapTagToDataSourceModel(tag *n8nsdk.Tag, data *models.DataSource) {
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.Id != nil {
 		data.ID = types.StringValue(*tag.Id)
 	}
 	data.Name = types.StringValue(tag.Name)
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.CreatedAt != nil {
 		data.CreatedAt = types.StringValue(tag.CreatedAt.String())
 	}
-	// Check for non-nil value.
+	//: Check for non-nil value.
 	if tag.UpdatedAt != nil {
 		data.UpdatedAt = types.StringValue(tag.UpdatedAt.String())
 	}
@@ -44,15 +44,15 @@ func mapTagToDataSourceModel(tag *n8nsdk.Tag, data *models.DataSource) {
 // Returns:
 //   - *n8nsdk.Tag: Pointer to the found tag, or nil if not found
 //   - bool: True if tag was found, false otherwise
-func findTagByName(tags []n8nsdk.Tag, name string) (*n8nsdk.Tag, bool) {
-	// Iterate over items.
-	for _, tag := range tags {
-		// Check condition.
-		if tag.Name == name {
-			// Return success status.
-			return &tag, true
+func findTagByName(tags []n8nsdk.Tag, name string) (tag *n8nsdk.Tag, ok bool) {
+	//: Iterate over items.
+	for _, t := range tags {
+		//: Check condition.
+		if t.Name == name {
+			//: Return success status.
+			return &t, true
 		}
 	}
-	// Return nil to indicate failure.
+	//: Return nil to indicate failure.
 	return nil, false
 }

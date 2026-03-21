@@ -7,6 +7,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -16,6 +17,9 @@ import (
 )
 
 var (
+	// ErrUnexpectedArguments is returned when the root command receives unexpected arguments.
+	ErrUnexpectedArguments = errors.New("this command takes no arguments")
+
 	// Version is the build version, injected at compile time.
 	Version string = "dev"
 
@@ -29,55 +33,77 @@ var (
 	debug bool
 
 	// rootCmd represents the base command.
-	rootCmd *cobra.Command = &cobra.Command{
+	rootCmd *cobra.Command = newRootCmd()
+)
+
+// newRootCmd creates and configures the root cobra command with flags.
+//
+// Returns:
+//   - cmd: configured root command
+func newRootCmd() (cmd *cobra.Command) {
+	//: Build the root command with provider configuration.
+	c := &cobra.Command{
 		Use:   "terraform-provider-n8n",
 		Short: "Terraform provider for n8n automation platform",
 		Long:  `A Terraform provider that allows you to manage n8n resources.`,
 		RunE:  run,
 	}
-)
 
-// init initializes the root command with flags.
-func init() {
-	rootCmd.Flags().BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	//: Register debug flag for debugger support.
+	c.Flags().BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
+
+	//: Return configured command.
+	return c
 }
 
 // run starts the Terraform provider server.
 //
 // Params:
-//   - cmd: The cobra command being executed
-//   - args: Command line arguments
+//   - cmd: cobra command providing lifecycle context
+//   - args: command arguments (must be empty for this command)
 //
 // Returns:
-//   - error: Error if provider server fails to start
-func run(_cmd *cobra.Command, _args []string) error {
+//   - err: Error if provider server fails to start
+func run(cmd *cobra.Command, args []string) (err error) {
+	//: Guard against unexpected arguments.
+	if len(args) > 0 {
+		//: Return sentinel error for unexpected arguments.
+		return ErrUnexpectedArguments
+	}
+
 	opts := providerserver.ServeOpts{
 		Address: "registry.terraform.io/kodflow/n8n",
 		Debug:   debug,
 	}
 
-	err := ProviderServe(context.Background(), n8nprovider.New(Version), opts)
-	// Check for error.
+	//: Fall back to background context when cmd is unavailable.
+	ctx := context.Background()
+	//: Prefer cmd context for proper signal/cancellation propagation.
+	if cmd != nil && cmd.Context() != nil {
+		ctx = cmd.Context()
+	}
+	err = ProviderServe(ctx, n8nprovider.New(Version), opts)
+	//: Check for provider serve error.
 	if err != nil {
-		// Return error.
+		//: Return error from provider server.
 		return err
 	}
 
-	// Return result.
+	//: Return nil on successful provider serve.
 	return nil
 }
 
 // Execute runs the root command and returns the exit code.
 //
 // Returns:
-//   - int: Exit code (0 for success, 1 for error)
-func Execute() int {
-	// Check for error.
+//   - n: Exit code (0 for success, 1 for error)
+func Execute() (n int) {
+	//: Check for error on root command execution.
 	if err := rootCmd.Execute(); err != nil {
-		// Return error code.
+		//: Return error code on failure.
 		return 1
 	}
-	// Return success code.
+	//: Return success code.
 	return 0
 }
 

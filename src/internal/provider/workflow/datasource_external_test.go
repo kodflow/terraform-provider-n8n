@@ -1,7 +1,6 @@
 package workflow_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,11 +27,10 @@ func TestNewWorkflowDataSourceExternal(t *testing.T) {
 		{name: "error case - validation checks", wantErr: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			switch tt.name {
-			case "create new instance from external package":
+			case "create new instance from external package", "error case - validation checks":
 				ds := workflow.NewWorkflowDataSource()
 
 				assert.NotNil(t, ds)
@@ -44,14 +42,10 @@ func TestNewWorkflowDataSourceExternal(t *testing.T) {
 				assert.NotSame(t, ds1, ds2, "each call should return a new instance")
 
 			case "returned instance is not nil even on repeated calls":
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					ds := workflow.NewWorkflowDataSource()
 					assert.NotNil(t, ds, "instance should never be nil")
 				}
-
-			case "error case - validation checks":
-				ds := workflow.NewWorkflowDataSource()
-				assert.NotNil(t, ds)
 			}
 		})
 	}
@@ -70,11 +64,10 @@ func TestNewWorkflowDataSourceWrapperExternal(t *testing.T) {
 		{name: "error case - validation checks", wantErr: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			switch tt.name {
-			case "create wrapped instance from external package":
+			case "create wrapped instance from external package", "error case - validation checks":
 				ds := workflow.NewWorkflowDataSourceWrapper()
 
 				assert.NotNil(t, ds)
@@ -86,14 +79,10 @@ func TestNewWorkflowDataSourceWrapperExternal(t *testing.T) {
 				assert.NotSame(t, ds1, ds2, "each call should return a new instance")
 
 			case "returned instance is not nil even on repeated calls":
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					ds := workflow.NewWorkflowDataSourceWrapper()
 					assert.NotNil(t, ds, "instance should never be nil")
 				}
-
-			case "error case - validation checks":
-				ds := workflow.NewWorkflowDataSourceWrapper()
-				assert.NotNil(t, ds)
 			}
 		})
 	}
@@ -101,6 +90,8 @@ func TestNewWorkflowDataSourceWrapperExternal(t *testing.T) {
 
 // TestNewWorkflowDataSource tests the exact function name expected by KTN-TEST-003.
 func TestNewWorkflowDataSource(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -134,6 +125,8 @@ func TestNewWorkflowDataSource(t *testing.T) {
 
 // TestNewWorkflowDataSourceWrapper tests the exact function name expected by KTN-TEST-003.
 func TestNewWorkflowDataSourceWrapper(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -197,7 +190,6 @@ func TestWorkflowDataSource_Metadata(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -207,7 +199,7 @@ func TestWorkflowDataSource_Metadata(t *testing.T) {
 			}
 			resp := &datasource.MetadataResponse{}
 
-			ds.Metadata(context.Background(), req, resp)
+			ds.Metadata(t.Context(), req, resp)
 
 			assert.Equal(t, tt.expectedTypeName, resp.TypeName)
 		})
@@ -229,7 +221,6 @@ func TestWorkflowDataSource_Schema(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -237,7 +228,7 @@ func TestWorkflowDataSource_Schema(t *testing.T) {
 			req := datasource.SchemaRequest{}
 			resp := &datasource.SchemaResponse{}
 
-			ds.Schema(context.Background(), req, resp)
+			ds.Schema(t.Context(), req, resp)
 
 			switch tt.name {
 			case "defines valid schema":
@@ -279,7 +270,6 @@ func TestWorkflowDataSource_Configure(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -290,7 +280,7 @@ func TestWorkflowDataSource_Configure(t *testing.T) {
 					ProviderData: &client.N8nClient{},
 				}
 				resp := &datasource.ConfigureResponse{}
-				d.Configure(context.Background(), req, resp)
+				d.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - nil provider data":
@@ -299,7 +289,7 @@ func TestWorkflowDataSource_Configure(t *testing.T) {
 					ProviderData: nil,
 				}
 				resp := &datasource.ConfigureResponse{}
-				d.Configure(context.Background(), req, resp)
+				d.Configure(t.Context(), req, resp)
 				assert.False(t, resp.Diagnostics.HasError())
 
 			case "error case - wrong provider data type":
@@ -308,7 +298,7 @@ func TestWorkflowDataSource_Configure(t *testing.T) {
 					ProviderData: "wrong type",
 				}
 				resp := &datasource.ConfigureResponse{}
-				d.Configure(context.Background(), req, resp)
+				d.Configure(t.Context(), req, resp)
 				assert.True(t, resp.Diagnostics.HasError())
 				assert.Contains(t, resp.Diagnostics.Errors()[0].Summary(), "Unexpected Data Source Configure Type")
 			}
@@ -319,6 +309,8 @@ func TestWorkflowDataSource_Configure(t *testing.T) {
 // TestWorkflowDataSource_Read tests the Read method.
 
 func TestWorkflowDataSource_Read(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		testFunc func(*testing.T)
@@ -337,11 +329,11 @@ func TestWorkflowDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := workflow.NewWorkflowDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 
@@ -385,7 +377,7 @@ func TestWorkflowDataSource_Read(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				ds := workflow.NewWorkflowDataSource()
-				ctx := context.Background()
+				ctx := t.Context()
 
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
@@ -428,11 +420,11 @@ func TestWorkflowDataSource_Read(t *testing.T) {
 				defer server.Close()
 
 				ds := workflow.NewWorkflowDataSource()
-				ds.Configure(context.Background(), datasource.ConfigureRequest{
+				ds.Configure(t.Context(), datasource.ConfigureRequest{
 					ProviderData: n8nClient,
 				}, &datasource.ConfigureResponse{})
 
-				ctx := context.Background()
+				ctx := t.Context()
 				schemaResp := datasource.SchemaResponse{}
 				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
 

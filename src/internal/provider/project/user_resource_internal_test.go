@@ -1,7 +1,6 @@
 package project
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -39,9 +38,9 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
 					userID := "user-456"
 					role := "project:admin"
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":    userID,
 								"email": "user@example.com",
 								"role":  role,
@@ -64,9 +63,9 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 			userID:    "user-999",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":    "user-456",
 								"email": "other@example.com",
 							},
@@ -103,8 +102,8 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 			userID:    "user-456",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{},
+					response := map[string]any{
+						"data": []any{},
 					}
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)
@@ -122,7 +121,7 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 			userID:    "user-456",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{}
+					response := map[string]any{}
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)
 					json.NewEncoder(w).Encode(response)
@@ -141,9 +140,9 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
 					userID := "user-456"
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":    userID,
 								"email": "user@example.com",
 							},
@@ -165,9 +164,9 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 			userID:    "user-456",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"email": "user@example.com",
 							},
 						},
@@ -189,19 +188,19 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 			expectedRole: "project:editor",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/users" && r.Method == http.MethodGet {
-					response := map[string]interface{}{
-						"data": []interface{}{
-							map[string]interface{}{
+					response := map[string]any{
+						"data": []any{
+							map[string]any{
 								"id":    "user-456",
 								"email": "user1@example.com",
 								"role":  "project:admin",
 							},
-							map[string]interface{}{
+							map[string]any{
 								"id":    "user-789",
 								"email": "user2@example.com",
 								"role":  "project:editor",
 							},
-							map[string]interface{}{
+							map[string]any{
 								"id":    "user-101",
 								"email": "user3@example.com",
 								"role":  "project:viewer",
@@ -221,7 +220,6 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -263,7 +261,7 @@ func TestProjectUserResource_findUserInProject(t *testing.T) {
 				State: tfState,
 			}
 
-			found := r.findUserInProject(context.Background(), state, resp)
+			found := r.findUserInProject(t.Context(), state, resp)
 
 			if tt.expectFound {
 				assert.True(t, found)
@@ -296,13 +294,11 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "user found with role",
 			userList: func() *n8nsdk.UserList {
-				userID := "user-123"
-				role := "project:admin"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
 						{
-							Id:   &userID,
-							Role: &role,
+							Id:   new("user-123"),
+							Role: new("project:admin"),
 						},
 					},
 				}
@@ -314,11 +310,10 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "user found without role",
 			userList: func() *n8nsdk.UserList {
-				userID := "user-456"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
 						{
-							Id: &userID,
+							Id: new("user-456"),
 						},
 					},
 				}
@@ -329,11 +324,10 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "user not found",
 			userList: func() *n8nsdk.UserList {
-				userID := "user-123"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
 						{
-							Id: &userID,
+							Id: new("user-123"),
 						},
 					},
 				}
@@ -370,17 +364,11 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "multiple users in list",
 			userList: func() *n8nsdk.UserList {
-				user1ID := "user-123"
-				user2ID := "user-456"
-				user3ID := "user-789"
-				role1 := "project:admin"
-				role2 := "project:editor"
-				role3 := "project:viewer"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
-						{Id: &user1ID, Role: &role1},
-						{Id: &user2ID, Role: &role2},
-						{Id: &user3ID, Role: &role3},
+						{Id: new("user-123"), Role: new("project:admin")},
+						{Id: new("user-456"), Role: new("project:editor")},
+						{Id: new("user-789"), Role: new("project:viewer")},
 					},
 				}
 			}(),
@@ -391,13 +379,10 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "user found is first in list",
 			userList: func() *n8nsdk.UserList {
-				user1ID := "user-123"
-				user2ID := "user-456"
-				role1 := "project:admin"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
-						{Id: &user1ID, Role: &role1},
-						{Id: &user2ID},
+						{Id: new("user-123"), Role: new("project:admin")},
+						{Id: new("user-456")},
 					},
 				}
 			}(),
@@ -408,13 +393,10 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "user found is last in list",
 			userList: func() *n8nsdk.UserList {
-				user1ID := "user-123"
-				user2ID := "user-456"
-				role2 := "project:viewer"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
-						{Id: &user1ID},
-						{Id: &user2ID, Role: &role2},
+						{Id: new("user-123")},
+						{Id: new("user-456"), Role: new("project:viewer")},
 					},
 				}
 			}(),
@@ -425,10 +407,9 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "empty string user ID",
 			userList: func() *n8nsdk.UserList {
-				userID := ""
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
-						{Id: &userID},
+						{Id: new("")},
 					},
 				}
 			}(),
@@ -438,11 +419,9 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 		{
 			name: "special characters in user ID",
 			userList: func() *n8nsdk.UserList {
-				userID := "user-!@#$%^&*()"
-				role := "project:admin"
 				return &n8nsdk.UserList{
 					Data: []n8nsdk.User{
-						{Id: &userID, Role: &role},
+						{Id: new("user-!@#$%^&*()"), Role: new("project:admin")},
 					},
 				}
 			}(),
@@ -453,7 +432,6 @@ func TestProjectUserResource_searchUserInList(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 

@@ -1,7 +1,6 @@
 package variable
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -113,7 +112,6 @@ func TestVariableResource_executeCreateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -122,7 +120,7 @@ func TestVariableResource_executeCreateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Key:   types.StringValue(tt.variableKey),
 				Value: types.StringValue(tt.variableVal),
@@ -201,7 +199,6 @@ func TestVariableResource_executeReadLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -210,7 +207,7 @@ func TestVariableResource_executeReadLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.variableID),
 			}
@@ -297,7 +294,6 @@ func TestVariableResource_executeUpdateLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -306,7 +302,7 @@ func TestVariableResource_executeUpdateLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				ID:    types.StringValue(tt.variableID),
 				Key:   types.StringValue(tt.newKey),
@@ -372,7 +368,6 @@ func TestVariableResource_executeDeleteLogic(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -381,7 +376,7 @@ func TestVariableResource_executeDeleteLogic(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			state := &models.Resource{
 				ID: types.StringValue(tt.variableID),
 			}
@@ -449,7 +444,6 @@ func TestVariableResource_executeVariableCreate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -458,7 +452,7 @@ func TestVariableResource_executeVariableCreate(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Key:   types.StringValue(tt.variableKey),
 				Value: types.StringValue(tt.variableVal),
@@ -550,7 +544,6 @@ func TestVariableResource_findCreatedVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -559,7 +552,7 @@ func TestVariableResource_findCreatedVariable(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				Key: types.StringValue(tt.variableKey),
 			}
@@ -661,7 +654,6 @@ func TestVariableResource_updateStateFromVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -741,7 +733,6 @@ func TestVariableResource_executeVariableUpdate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -750,7 +741,7 @@ func TestVariableResource_executeVariableUpdate(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				ID:    types.StringValue(tt.variableID),
 				Key:   types.StringValue(tt.newKey),
@@ -843,7 +834,6 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -852,7 +842,7 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 			defer server.Close()
 
 			r := &VariableResource{client: n8nClient}
-			ctx := context.Background()
+			ctx := t.Context()
 			plan := &models.Resource{
 				ID: types.StringValue(tt.variableID),
 			}
@@ -875,6 +865,80 @@ func TestVariableResource_findUpdatedVariable(t *testing.T) {
 }
 
 // stringPtr is a helper function to create string pointers for test cases.
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
+}
+
+// TestVariableResource_findVariableByID tests the private findVariableByID method.
+func TestVariableResource_findVariableByID(t *testing.T) {
+	t.Parallel()
+
+	id1 := "var-1"
+	id2 := "var-2"
+
+	tests := []struct {
+		name         string
+		variableList *n8nsdk.VariableList
+		searchID     string
+		wantNil      bool
+	}{
+		{
+			name: "found by ID",
+			variableList: &n8nsdk.VariableList{
+				Data: []n8nsdk.Variable{
+					{Id: &id1, Key: "key-1", Value: "val-1"},
+					{Id: &id2, Key: "key-2", Value: "val-2"},
+				},
+			},
+			searchID: "var-1",
+			wantNil:  false,
+		},
+		{
+			name: "not found",
+			variableList: &n8nsdk.VariableList{
+				Data: []n8nsdk.Variable{
+					{Id: &id1, Key: "key-1", Value: "val-1"},
+				},
+			},
+			searchID: "nonexistent",
+			wantNil:  true,
+		},
+		{
+			name: "nil data slice",
+			variableList: &n8nsdk.VariableList{
+				Data: nil,
+			},
+			searchID: "var-1",
+			wantNil:  true,
+		},
+		{
+			name: "variable with nil ID is skipped",
+			variableList: &n8nsdk.VariableList{
+				Data: []n8nsdk.Variable{
+					{Id: nil, Key: "key-1", Value: "val-1"},
+					{Id: &id2, Key: "key-2", Value: "val-2"},
+				},
+			},
+			searchID: "var-2",
+			wantNil:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &VariableResource{}
+			result := r.findVariableByID(tt.variableList, tt.searchID)
+
+			if tt.wantNil {
+				assert.Nil(t, result)
+			} else {
+				assert.NotNil(t, result)
+				assert.Equal(t, tt.searchID, *result.Id)
+			}
+		})
+	}
 }

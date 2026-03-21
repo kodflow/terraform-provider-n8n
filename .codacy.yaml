@@ -1,0 +1,18 @@
+# Copyright (c) 2024 Florent (Kodflow). All rights reserved.
+# Licensed under the Sustainable Use License 1.0
+# See LICENSE in the project root for license information.
+
+---
+exclude_paths:
+  - "CLAUDE.md"
+  - "README.md"
+  - "COVERAGE.MD"
+  - "docs/**"
+  - ".devcontainer/**/*.md"
+  - ".claude/**/*.md"
+  - ".devcontainer/images/.claude/**/*.md"
+  - "vendor/**"
+  - "bazel-*/**"
+  - ".grepai/**"
+  - ".taskmaster/**"
+  - "examples/nodes/README.md"

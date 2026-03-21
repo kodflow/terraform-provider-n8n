@@ -1,87 +1,163 @@
 services:
+  # ========== DEVCONTAINER ==========
   devcontainer:
-    # Container name will use project name automatically via COMPOSE_PROJECT_NAME
-    # which defaults to the parent directory name
+    # Ollama runs on HOST for GPU acceleration (installed via initialize.sh)
+    # Accessible via host.docker.internal:11434
 
-    # Build locally - no remote image needed
+    # Build from Dockerfile (uses GHCR base image)
     build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
-      # Build arguments for optimization
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+      context: .
+      dockerfile: Dockerfile
+      # Always pull latest base image on rebuild
+      pull: true
 
     env_file:
       - .env
     volumes:
       # Mount workspace
       - ..:/workspace:cached
+
       # Named volumes for persistence (survive rebuilds)
+      # Only persist USER DATA, not tools/binaries (those come from image)
       - zsh-history:/home/vscode/.zsh_history_dir
       - package-cache:/home/vscode/.cache
-      - config-dir:/home/vscode/.config
-      - local-bin:/home/vscode/.local/bin
-
-      # npm global packages persistence (survives rebuilds)
       - npm-global:/home/vscode/.local/share/npm-global
 
-      # Claude CLI session persistence (survives rebuilds)
+      # Claude config persistence (credentials, settings, sessions)
+      # Commands/scripts are restored from image on each start
       - claude-config:/home/vscode/.claude
-      - anthropic-config:/home/vscode/.config/@anthropic
-      - anthropic-cache:/home/vscode/.cache/@anthropic
-      - anthropic-data:/home/vscode/.local/share/@anthropic
 
-      # 1Password CLI session persistence (survives rebuilds)
-      - op-config:/home/vscode/.config/op
+      # Config persistence (1Password, cloud CLIs: aws, gcloud, azure, openvpn)
+      - cloud-config:/home/vscode/.config
+
+      # 1Password CLI cache persistence
       - op-cache:/home/vscode/.op
 
-      # Oh My Zsh persistence (survives rebuilds)
-      - oh-my-zsh:/home/vscode/.oh-my-zsh
+      # Kubernetes config persistence
+      - kube-config:/home/vscode/.kube
+
+      # Docker socket for Docker-from-Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+
+      # GPG keys from host (for commit signing)
+      # Note: NOT read-only because GPG needs to write sockets and lock files
+      - ~/.gnupg:/home/vscode/.gnupg:cached
 
     # Network configuration
     networks:
       - default
+
+    # Host resolution for accessing host Ollama (GPU-accelerated)
+    # Needed on Linux; Mac/Windows Docker Desktop provides this automatically
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # Capabilities for VPN clients (OpenVPN, WireGuard, IPsec, PPTP)
+    cap_add:
+      - NET_ADMIN
+      - IPC_LOCK
+    devices:
+      - /dev/net/tun:/dev/net/tun
 
     # Keep container running
     command: /bin/sh -c "while sleep 1000; do :; done"
 
     # Environment variables for package managers cache
     environment:
+      # Home directory (required for many tools including Claude CLI)
+      - HOME=/home/vscode
+
       # Claude CLI configuration
       - CLAUDE_CONFIG_DIR=/home/vscode/.claude
 
       # 1Password configuration
       - OP_CONFIG_DIR=/home/vscode/.config/op
 
-      # Node.js / npm / yarn / pnpm
+      # Node.js / npm / yarn / pnpm / nvm
+      - NVM_DIR=/usr/local/share/nvm
       - npm_config_cache=/home/vscode/.cache/npm
       - YARN_CACHE_FOLDER=/home/vscode/.cache/yarn
       - PNPM_HOME=/home/vscode/.cache/pnpm
 
-      # Python / pip / poetry / pipenv
+      # Python / pip / poetry / pipenv / pyenv
+      - PYENV_ROOT=/home/vscode/.cache/pyenv
       - PIP_CACHE_DIR=/home/vscode/.cache/pip
       - POETRY_CACHE_DIR=/home/vscode/.cache/poetry
       - PIPENV_CACHE_DIR=/home/vscode/.cache/pipenv
 
-      # Go
+      # Go / gvm
+      - GVM_ROOT=/home/vscode/.cache/gvm
       - GOPATH=/home/vscode/.cache/go
       - GOCACHE=/home/vscode/.cache/go-build
       - GOMODCACHE=/home/vscode/.cache/go/pkg/mod
 
-      # Ruby / Bundler
+      # Ruby / Bundler / rbenv
+      - RBENV_ROOT=/home/vscode/.cache/rbenv
       - GEM_HOME=/home/vscode/.cache/gems
       - BUNDLE_PATH=/home/vscode/.cache/bundle
 
-      # Rust / Cargo
+      # Rust / Cargo / rustup
       - CARGO_HOME=/home/vscode/.cache/cargo
       - RUSTUP_HOME=/home/vscode/.cache/rustup
 
-      # Java / Maven / Gradle
+      # Java / Maven / Gradle / sdkman
+      - SDKMAN_DIR=/home/vscode/.cache/sdkman
       - MAVEN_OPTS=-Dmaven.repo.local=/home/vscode/.cache/maven
       - GRADLE_USER_HOME=/home/vscode/.cache/gradle
 
-      # PATH - Add all bin directories (npm-global first for user packages)
-      - PATH=/home/vscode/.local/share/npm-global/bin:/home/vscode/.local/bin:/home/vscode/.cache/go/bin:/home/vscode/.cache/cargo/bin:/home/vscode/.cache/gems/bin:/home/vscode/.cache/pnpm:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+      # PHP / Composer / Symfony
+      - COMPOSER_HOME=/home/vscode/.cache/composer
+      - COMPOSER_CACHE_DIR=/home/vscode/.cache/composer/cache
+      - SYMFONY_CLI_HOME=/home/vscode/.cache/symfony
+
+      # Dart / Flutter / Pub
+      - PUB_CACHE=/home/vscode/.cache/pub-cache
+      - FLUTTER_ROOT=/home/vscode/.cache/flutter
+
+      # Elixir / Hex / Mix / asdf
+      - ASDF_DATA_DIR=/home/vscode/.cache/asdf
+      - MIX_HOME=/home/vscode/.cache/mix
+      - HEX_HOME=/home/vscode/.cache/hex
+
+      # C / C++ / CMake / Conan / vcpkg
+      - CCACHE_DIR=/home/vscode/.cache/ccache
+      - CONAN_USER_HOME=/home/vscode/.cache/conan
+      - VCPKG_ROOT=/home/vscode/.cache/vcpkg
+      - CMAKE_BUILD_PARALLEL_LEVEL=4
+
+      # Carbon (Google's C++ successor)
+      - CARBON_PATH=/home/vscode/.cache/carbon
+      - BAZEL_USER_ROOT=/home/vscode/.cache/bazel
+
+      # Ollama runs on HOST (installed via initialize.sh)
+      # Accessible at host.docker.internal:11434
+
+      # VPN configuration (previously set by openvpn feature containerEnv)
+      - OPENVPN_CONFIG=/home/vscode/.config/openvpn/client.ovpn
+      - OPENVPN_AUTH=/home/vscode/.config/openvpn/auth.txt
+
+      # Cloud CLIs (AWS / Google Cloud / Azure)
+      - AWS_CONFIG_FILE=/home/vscode/.config/aws/config
+      - AWS_SHARED_CREDENTIALS_FILE=/home/vscode/.config/aws/credentials
+      - AWS_CLI_CACHE_DIR=/home/vscode/.cache/aws
+      # Uncomment if using Google Cloud SDK (requires cloud-cli feature)
+      # - GOOGLE_APPLICATION_CREDENTIALS=/home/vscode/.config/gcloud/application_default_credentials.json
+      - CLOUDSDK_CONFIG=/home/vscode/.config/gcloud
+      - AZURE_CONFIG_DIR=/home/vscode/.config/azure
+
+      # Infrastructure as Code (Terraform)
+      - TF_PLUGIN_CACHE_DIR=/home/vscode/.cache/terraform
+
+      # Kubernetes / Helm
+      - KUBECONFIG=/home/vscode/.kube/config
+      - HELM_CACHE_HOME=/home/vscode/.cache/helm
+
+      # GPG configuration (for commit signing)
+      - GPG_TTY=/dev/tty
+      - GNUPGHOME=/home/vscode/.gnupg
+
+      # PATH - Add all bin directories (user packages first, then system)
+      - PATH=/home/vscode/.local/share/npm-global/bin:/home/vscode/.local/bin:/usr/local/share/nvm/current/bin:/home/vscode/.cache/pyenv/bin:/home/vscode/.cache/rbenv/bin:/home/vscode/.cache/sdkman/bin:/home/vscode/.cache/composer/vendor/bin:/home/vscode/.cache/pub-cache/bin:/home/vscode/.cache/flutter/bin:/home/vscode/.cache/mix/escripts:/home/vscode/.cache/vcpkg:/home/vscode/.cache/carbon/bin:/home/vscode/.cache/go/bin:/home/vscode/.cache/cargo/bin:/home/vscode/.cache/gems/bin:/home/vscode/.cache/pnpm:/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
 
     # User
     user: vscode
@@ -89,20 +165,11 @@ services:
 volumes:
   zsh-history:
   package-cache:
-  config-dir:
-  local-bin:
-  # npm global packages volume
   npm-global:
-  # Claude CLI volumes (persist sessions across rebuilds)
   claude-config:
-  anthropic-config:
-  anthropic-cache:
-  anthropic-data:
-  # 1Password CLI volumes (persist sessions across rebuilds)
-  op-config:
   op-cache:
-  # Oh My Zsh volume (persist across rebuilds)
-  oh-my-zsh:
+  cloud-config:
+  kube-config:
 
 networks:
   default:
