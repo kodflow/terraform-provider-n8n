@@ -101,7 +101,16 @@ logs/
 # Logs
 .m2/
 MANIFEST
+# MCP & Claude Code (local AI tooling — may contain secrets)
 .mcp.json
+mcp.json
+mcp.json.local
+*.mcp.json
+.claude/
+!.claude/agents/
+!.claude/commands/
+!.claude/agents/**
+!.claude/commands/**
 MODULE.bazel.lock
 .mvn/
 .mypy_cache/
