@@ -1,18 +1,20 @@
-# Commit guard — checks that commit messages carry no AI attribution and that
-# no credentials were added.
+# post-commit — mandatory merge gate.
 #
-# This file is intentionally a 3-line stub. All the logic lives in
-# kodflow/commit-guard-action and is pinned to @main, so a fix or a new rule
-# added there applies here on the next run with no change to this repo.
-# Do not fork the logic into this file.
+# No AI attribution anywhere in the history, conventional commit subjects,
+# no credentials added. Every rule lives in kodflow/post-commit and is
+# pinned to @main on purpose: a fix or a new rule there is live here on the
+# next run with no change to this file. Pinning a SHA would freeze this
+# repo out of every future fix, which is the opposite of the design — do
+# not pin it, and do not copy the logic into this repo.
+#
+# The job MUST stay named `post-commit`: that is the status the branch
+# ruleset requires, so renaming or deleting this file leaves the required
+# status unreported and blocks every merge.
 name: post-commit
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  # Catches merges and any direct push to the trunk. PR branches are already
-  # covered by the pull_request trigger above, so this is scoped to the trunk
-  # to avoid running the same check twice on the same commits.
   push:
     branches: [main, master]
 
@@ -20,5 +22,8 @@ permissions:
   contents: read
 
 jobs:
-  commit-guard:
-    uses: kodflow/commit-guard-action/.github/workflows/commit-guard.yml@main
+  post-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: kodflow/post-commit@main
