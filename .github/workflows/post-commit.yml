@@ -1,0 +1,24 @@
+# Commit guard — checks that commit messages carry no AI attribution and that
+# no credentials were added.
+#
+# This file is intentionally a 3-line stub. All the logic lives in
+# kodflow/commit-guard-action and is pinned to @main, so a fix or a new rule
+# added there applies here on the next run with no change to this repo.
+# Do not fork the logic into this file.
+name: post-commit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # Catches merges and any direct push to the trunk. PR branches are already
+  # covered by the pull_request trigger above, so this is scoped to the trunk
+  # to avoid running the same check twice on the same commits.
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  commit-guard:
+    uses: kodflow/commit-guard-action/.github/workflows/commit-guard.yml@main
