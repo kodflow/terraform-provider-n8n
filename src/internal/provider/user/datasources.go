@@ -106,31 +106,31 @@ func (d *UsersDataSource) userItemAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "User identifier",
 			Computed:            true,
 		},
-		"email": schema.StringAttribute{
+		attrEmail: schema.StringAttribute{
 			MarkdownDescription: "User email address",
 			Computed:            true,
 		},
-		"first_name": schema.StringAttribute{
-			MarkdownDescription: "User's first name",
+		attrFirstName: schema.StringAttribute{
+			MarkdownDescription: descFirstName,
 			Computed:            true,
 		},
-		"last_name": schema.StringAttribute{
-			MarkdownDescription: "User's last name",
+		attrLastName: schema.StringAttribute{
+			MarkdownDescription: descLastName,
 			Computed:            true,
 		},
-		"is_pending": schema.BoolAttribute{
+		attrIsPending: schema.BoolAttribute{
 			MarkdownDescription: "Whether the user finished setting up their account",
 			Computed:            true,
 		},
-		"created_at": schema.StringAttribute{
-			MarkdownDescription: "Timestamp when the user was created",
+		attrCreatedAt: schema.StringAttribute{
+			MarkdownDescription: descCreatedAt,
 			Computed:            true,
 		},
-		"updated_at": schema.StringAttribute{
-			MarkdownDescription: "Timestamp when the user was last updated",
+		attrUpdatedAt: schema.StringAttribute{
+			MarkdownDescription: descUpdatedAt,
 			Computed:            true,
 		},
-		"role": schema.StringAttribute{
+		attrRole: schema.StringAttribute{
 			MarkdownDescription: "User's global role",
 			Computed:            true,
 		},

@@ -109,11 +109,11 @@ func (d *ProjectsDataSource) projectAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Project identifier",
 			Computed:            true,
 		},
-		"name": schema.StringAttribute{
+		attrName: schema.StringAttribute{
 			MarkdownDescription: "Project name",
 			Computed:            true,
 		},
-		"type": schema.StringAttribute{
+		attrType: schema.StringAttribute{
 			MarkdownDescription: "Project type (e.g., 'team', 'personal')",
 			Computed:            true,
 		},

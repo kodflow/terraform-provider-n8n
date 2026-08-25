@@ -99,20 +99,20 @@ func (r *VariableResource) Schema(_ctx context.Context, _req resource.SchemaRequ
 				MarkdownDescription: "Variable identifier",
 				Computed:            true,
 			},
-			"key": schema.StringAttribute{
+			attrKey: schema.StringAttribute{
 				MarkdownDescription: "Variable key",
 				Required:            true,
 			},
-			"value": schema.StringAttribute{
-				MarkdownDescription: "Variable value",
+			attrValue: schema.StringAttribute{
+				MarkdownDescription: descValue,
 				Required:            true,
 				Sensitive:           true,
 			},
-			"type": schema.StringAttribute{
+			attrType: schema.StringAttribute{
 				MarkdownDescription: "Variable type (computed by n8n, read-only)",
 				Computed:            true,
 			},
-			"project_id": schema.StringAttribute{
+			attrProjectID: schema.StringAttribute{
 				MarkdownDescription: "Project ID to associate this variable with",
 				Optional:            true,
 				Computed:            true,

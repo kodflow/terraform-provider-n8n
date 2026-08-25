@@ -96,16 +96,16 @@ func (r *TagResource) Schema(_ctx context.Context, _req resource.SchemaRequest, 
 				MarkdownDescription: "Tag identifier",
 				Computed:            true,
 			},
-			"name": schema.StringAttribute{
+			attrName: schema.StringAttribute{
 				MarkdownDescription: "Tag name",
 				Required:            true,
 			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the tag was created",
+			attrCreatedAt: schema.StringAttribute{
+				MarkdownDescription: descCreatedAt,
 				Computed:            true,
 			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the tag was last updated",
+			attrUpdatedAt: schema.StringAttribute{
+				MarkdownDescription: descUpdatedAt,
 				Computed:            true,
 			},
 		},

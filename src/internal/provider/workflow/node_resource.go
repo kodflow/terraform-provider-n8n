@@ -139,7 +139,7 @@ func (r *WorkflowNodeResource) addRequiredAttributes(attrs map[string]schema.Att
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	}
-	attrs["name"] = schema.StringAttribute{
+	attrs[attrName] = schema.StringAttribute{
 		MarkdownDescription: "Display name of the node (used in connections)",
 		Required:            true,
 	}
@@ -362,9 +362,9 @@ func (r *WorkflowNodeResource) addOptionalNodeFields(plan *models.NodeResource, 
 func (r *WorkflowNodeResource) generateNodeJSON(ctx context.Context, plan *models.NodeResource, diags *diag.Diagnostics) bool {
 	// Build node structure.
 	node := map[string]any{
-		"id":   plan.ID.ValueString(),
-		"name": plan.Name.ValueString(),
-		"type": plan.Type.ValueString(),
+		"id":     plan.ID.ValueString(),
+		attrName: plan.Name.ValueString(),
+		"type":   plan.Type.ValueString(),
 	}
 
 	// Add type version.

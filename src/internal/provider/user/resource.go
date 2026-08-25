@@ -117,33 +117,33 @@ func (r *UserResource) schemaAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "User identifier",
 			Computed:            true,
 		},
-		"email": schema.StringAttribute{
+		attrEmail: schema.StringAttribute{
 			MarkdownDescription: "User's email address",
 			Required:            true,
 		},
-		"first_name": schema.StringAttribute{
-			MarkdownDescription: "User's first name",
+		attrFirstName: schema.StringAttribute{
+			MarkdownDescription: descFirstName,
 			Computed:            true,
 		},
-		"last_name": schema.StringAttribute{
-			MarkdownDescription: "User's last name",
+		attrLastName: schema.StringAttribute{
+			MarkdownDescription: descLastName,
 			Computed:            true,
 		},
-		"role": schema.StringAttribute{
+		attrRole: schema.StringAttribute{
 			MarkdownDescription: "User's global role (e.g., 'global:admin', 'global:member')",
 			Optional:            true,
 			Computed:            true,
 		},
-		"is_pending": schema.BoolAttribute{
+		attrIsPending: schema.BoolAttribute{
 			MarkdownDescription: "Whether the user has finished setting up their account",
 			Computed:            true,
 		},
-		"created_at": schema.StringAttribute{
-			MarkdownDescription: "Timestamp when the user was created",
+		attrCreatedAt: schema.StringAttribute{
+			MarkdownDescription: descCreatedAt,
 			Computed:            true,
 		},
-		"updated_at": schema.StringAttribute{
-			MarkdownDescription: "Timestamp when the user was last updated",
+		attrUpdatedAt: schema.StringAttribute{
+			MarkdownDescription: descUpdatedAt,
 			Computed:            true,
 		},
 	}
@@ -250,10 +250,10 @@ func (r *UserResource) executeCreateLogic(ctx context.Context, plan *models.Reso
 // Returns:
 //   - []byte: JSON body or nil on error
 func (r *UserResource) buildUserCreateRequest(plan *models.Resource, resp *resource.CreateResponse) []byte {
-	reqBody := []map[string]string{{"email": plan.Email.ValueString()}}
+	reqBody := []map[string]string{{attrEmail: plan.Email.ValueString()}}
 	// Check condition.
 	if !plan.Role.IsNull() && !plan.Role.IsUnknown() {
-		reqBody[0]["role"] = plan.Role.ValueString()
+		reqBody[0][attrRole] = plan.Role.ValueString()
 	}
 	jsonBody, err := json.Marshal(reqBody)
 	// Check for error.
