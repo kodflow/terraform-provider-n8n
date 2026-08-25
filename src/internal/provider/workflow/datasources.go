@@ -81,7 +81,7 @@ func (d *WorkflowsDataSource) Schema(_ctx context.Context, _req datasource.Schem
 		MarkdownDescription: "Fetches a list of n8n workflows",
 
 		Attributes: map[string]schema.Attribute{
-			"active": schema.BoolAttribute{
+			attrActive: schema.BoolAttribute{
 				MarkdownDescription: "Filter by active status",
 				Optional:            true,
 			},
@@ -91,15 +91,15 @@ func (d *WorkflowsDataSource) Schema(_ctx context.Context, _req datasource.Schem
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							MarkdownDescription: "Workflow identifier",
+							MarkdownDescription: descID,
 							Computed:            true,
 						},
-						"name": schema.StringAttribute{
-							MarkdownDescription: "Workflow name",
+						attrName: schema.StringAttribute{
+							MarkdownDescription: descName,
 							Computed:            true,
 						},
-						"active": schema.BoolAttribute{
-							MarkdownDescription: "Whether the workflow is active",
+						attrActive: schema.BoolAttribute{
+							MarkdownDescription: descActive,
 							Computed:            true,
 						},
 					},

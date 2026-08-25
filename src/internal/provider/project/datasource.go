@@ -84,12 +84,12 @@ func (d *ProjectDataSource) Schema(_ctx context.Context, _req datasource.SchemaR
 				Optional:            true,
 				Computed:            true,
 			},
-			"name": schema.StringAttribute{
+			attrName: schema.StringAttribute{
 				MarkdownDescription: "Project name. Either `id` or `name` must be specified.",
 				Optional:            true,
 				Computed:            true,
 			},
-			"type": schema.StringAttribute{
+			attrType: schema.StringAttribute{
 				MarkdownDescription: "Project type (e.g., 'team', 'personal')",
 				Computed:            true,
 			},

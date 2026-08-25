@@ -96,7 +96,7 @@ func (d *VariablesDataSource) Schema(_ctx context.Context, _req datasource.Schem
 func (d *VariablesDataSource) schemaAttributes() map[string]schema.Attribute {
 	// Return schema attributes.
 	return map[string]schema.Attribute{
-		"project_id": schema.StringAttribute{
+		attrProjectID: schema.StringAttribute{
 			MarkdownDescription: "Filter variables by project ID",
 			Optional:            true,
 		},
@@ -123,20 +123,20 @@ func (d *VariablesDataSource) variableItemAttributes() map[string]schema.Attribu
 			MarkdownDescription: "Variable identifier",
 			Computed:            true,
 		},
-		"key": schema.StringAttribute{
+		attrKey: schema.StringAttribute{
 			MarkdownDescription: "Variable key",
 			Computed:            true,
 		},
-		"value": schema.StringAttribute{
-			MarkdownDescription: "Variable value",
+		attrValue: schema.StringAttribute{
+			MarkdownDescription: descValue,
 			Computed:            true,
 			Sensitive:           true,
 		},
-		"type": schema.StringAttribute{
+		attrType: schema.StringAttribute{
 			MarkdownDescription: "Variable type",
 			Computed:            true,
 		},
-		"project_id": schema.StringAttribute{
+		attrProjectID: schema.StringAttribute{
 			MarkdownDescription: "Project ID the variable belongs to",
 			Computed:            true,
 		},

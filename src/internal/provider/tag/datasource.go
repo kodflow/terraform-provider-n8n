@@ -90,17 +90,17 @@ func (d *TagDataSource) Schema(_ctx context.Context, _req datasource.SchemaReque
 				Optional:            true,
 				Computed:            true,
 			},
-			"name": schema.StringAttribute{
+			attrName: schema.StringAttribute{
 				MarkdownDescription: "Tag name. Either `id` or `name` must be specified.",
 				Optional:            true,
 				Computed:            true,
 			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the tag was created",
+			attrCreatedAt: schema.StringAttribute{
+				MarkdownDescription: descCreatedAt,
 				Computed:            true,
 			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Timestamp when the tag was last updated",
+			attrUpdatedAt: schema.StringAttribute{
+				MarkdownDescription: descUpdatedAt,
 				Computed:            true,
 			},
 		},

@@ -91,11 +91,11 @@ func (r *ProjectResource) Schema(_ctx context.Context, _req resource.SchemaReque
 				MarkdownDescription: "Project identifier",
 				Computed:            true,
 			},
-			"name": schema.StringAttribute{
+			attrName: schema.StringAttribute{
 				MarkdownDescription: "Project name",
 				Required:            true,
 			},
-			"type": schema.StringAttribute{
+			attrType: schema.StringAttribute{
 				MarkdownDescription: "Project type",
 				Computed:            true,
 			},
