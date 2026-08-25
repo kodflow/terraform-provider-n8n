@@ -80,15 +80,15 @@ func (d *WorkflowDataSource) Schema(_ctx context.Context, _req datasource.Schema
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Workflow identifier",
+				MarkdownDescription: descID,
 				Required:            true,
 			},
-			"name": schema.StringAttribute{
-				MarkdownDescription: "Workflow name",
+			attrName: schema.StringAttribute{
+				MarkdownDescription: descName,
 				Computed:            true,
 			},
-			"active": schema.BoolAttribute{
-				MarkdownDescription: "Whether the workflow is active",
+			attrActive: schema.BoolAttribute{
+				MarkdownDescription: descActive,
 				Computed:            true,
 			},
 		},

@@ -1,0 +1,37 @@
+# post-commit — mandatory merge gate.
+#
+# No AI attribution anywhere in the history, conventional commit subjects,
+# no credentials added. Every rule lives in kodflow/post-commit and is
+# pinned to @main on purpose: a fix or a new rule there is live here on the
+# next run with no change to this file. Pinning a SHA would freeze this
+# repo out of every future fix, which is the opposite of the design — do
+# not pin it, and do not copy the logic into this repo.
+#
+# The job MUST stay named `post-commit`: that is the status the branch
+# ruleset requires, so renaming or deleting this file leaves the required
+# status unreported and blocks every merge.
+name: post-commit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  post-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # history: range — this repository's existing history carries AI
+      # attribution from before the gate existed (6 commit(s)). Scanning it
+      # whole would keep every PR red for a reason no PR can fix, so the gate
+      # scans only the commits a push or a PR introduces: nothing tainted can
+      # get in from now on. Drop this input back to the default (`full`) once
+      # the history has been rewritten.
+      - uses: kodflow/post-commit@main
+        with:
+          history: range

@@ -129,15 +129,15 @@ func (r *WorkflowResource) schemaAttributes() map[string]schema.Attribute {
 //   - attrs: attribute map to populate
 func (r *WorkflowResource) addCoreAttributes(attrs map[string]schema.Attribute) {
 	attrs["id"] = schema.StringAttribute{
-		MarkdownDescription: "Workflow identifier",
+		MarkdownDescription: descID,
 		Computed:            true,
 	}
-	attrs["name"] = schema.StringAttribute{
-		MarkdownDescription: "Workflow name",
+	attrs[attrName] = schema.StringAttribute{
+		MarkdownDescription: descName,
 		Required:            true,
 	}
-	attrs["active"] = schema.BoolAttribute{
-		MarkdownDescription: "Whether the workflow is active",
+	attrs[attrActive] = schema.BoolAttribute{
+		MarkdownDescription: descActive,
 		Optional:            true,
 		Computed:            true,
 	}

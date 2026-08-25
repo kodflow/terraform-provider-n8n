@@ -90,21 +90,21 @@ func (d *VariableDataSource) Schema(_ctx context.Context, _req datasource.Schema
 				Optional:            true,
 				Computed:            true,
 			},
-			"key": schema.StringAttribute{
+			attrKey: schema.StringAttribute{
 				MarkdownDescription: "Variable key. Either `id` or `key` must be specified.",
 				Optional:            true,
 				Computed:            true,
 			},
-			"value": schema.StringAttribute{
-				MarkdownDescription: "Variable value",
+			attrValue: schema.StringAttribute{
+				MarkdownDescription: descValue,
 				Computed:            true,
 				Sensitive:           true,
 			},
-			"type": schema.StringAttribute{
+			attrType: schema.StringAttribute{
 				MarkdownDescription: "Variable type",
 				Computed:            true,
 			},
-			"project_id": schema.StringAttribute{
+			attrProjectID: schema.StringAttribute{
 				MarkdownDescription: "Project ID the variable belongs to",
 				Optional:            true,
 				Computed:            true,
