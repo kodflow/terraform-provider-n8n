@@ -38,6 +38,14 @@ jobs:
           cache: true
 
       - name: Install linting tools
+        # setup-go v6 pins GOTOOLCHAIN=local to the go.mod version (1.25.4),
+        # but these tools are fetched at @latest and ktn-linter v1.45.2
+        # already declares go >= 1.26 — with a local-only toolchain the
+        # install aborts and the required "Lint & Format" status never turns
+        # green. `auto` lets go fetch the toolchain a tool asks for; the
+        # module itself still builds against go.mod's version.
+        env:
+          GOTOOLCHAIN: auto
         run: |
           go install github.com/kodflow/ktn-linter/cmd/ktn-linter@latest
           go install golang.org/x/tools/cmd/goimports@latest
