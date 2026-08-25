@@ -26,4 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # history: range — this repository's existing history carries AI
+      # attribution from before the gate existed (6 commit(s)). Scanning it
+      # whole would keep every PR red for a reason no PR can fix, so the gate
+      # scans only the commits a push or a PR introduces: nothing tainted can
+      # get in from now on. Drop this input back to the default (`full`) once
+      # the history has been rewritten.
       - uses: kodflow/post-commit@main
+        with:
+          history: range
