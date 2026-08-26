@@ -17,6 +17,11 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: [main, master]
+  # On demand: the gate reads the whole history, so its verdict can change
+  # without this repository changing — a new rule lands in kodflow/post-commit,
+  # or the history is rewritten under it. Without this you cannot ask a quiet
+  # repository whether it is still clean; you have to push something to find out.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,12 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # history: range — this repository's existing history carries AI
-      # attribution from before the gate existed (6 commit(s)). Scanning it
-      # whole would keep every PR red for a reason no PR can fix, so the gate
-      # scans only the commits a push or a PR introduces: nothing tainted can
-      # get in from now on. Drop this input back to the default (`full`) once
-      # the history has been rewritten.
       - uses: kodflow/post-commit@main
         with:
-          history: range
+          # Every commit in this repository must carry the owning GitHub
+          # account, not a personal identity. Same value in all three orgs
+          # on purpose — one human commits across the whole fleet, so the
+          # stub stays byte-identical everywhere.
+          authors: kodflow
