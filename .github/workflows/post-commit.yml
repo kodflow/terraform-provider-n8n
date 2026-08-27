@@ -46,8 +46,14 @@ jobs:
   post-commit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # The verdict travels to the job below, which is the one allowed to write
+    # to the pull request. Job outputs survive a failed job, which is the only
+    # case that needs them.
+    outputs:
+      report: ${{ steps.gate.outputs.report }}
     steps:
       - uses: kodflow/post-commit@main
+        id: gate
         with:
           # Every commit in this repository must carry the owning GitHub
           # account, not a personal identity. Same value in all three orgs
@@ -100,6 +106,50 @@ jobs:
     permissions:
       pull-requests: write
     steps:
+      # The verdict, where the author will actually read it. The job summary
+      # needs someone to open the run; a pull-request comment does not.
+      #
+      # The comment also answers the question the run cannot: is this refusal
+      # enforced here? A private repository in a Free-plan org gets no ruleset,
+      # so the red status stops nothing and saying so plainly is the only
+      # honest thing left. One comment per pull request, rewritten in place.
+      - name: post the verdict on the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          REPORT: ${{ needs['post-commit'].outputs.report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          MARKER='<!-- post-commit-verdict -->'
+
+          # Is the status actually required here, and can it be bypassed?
+          # Three answers, three different messages — a missing ruleset someone
+          # can still create is a defect; one GitHub refuses to create is not.
+          RULESETS="$(gh api "repos/$REPO/rulesets" 2>&1 || true)"
+          if printf '%s' "$RULESETS" | grep -q 'Upgrade to GitHub'; then
+              ENFORCEMENT=$'> [!WARNING]\n> **Nothing here stops this merge.** GitHub does not offer rulesets on a\n> private repository in a Free-plan org, so `post-commit` can run but can\n> never be a required status. The pull request has been put back into draft,\n> which raises the cost of merging a bad history — it does not prevent it.\n>\n> To make it real: move the org to a paid plan, or make this repository\n> public. Then run `scripts/enforce.sh --apply '"$REPO"'`.'
+          elif printf '%s' "$RULESETS" | jq -e '[.[]|select(.name=="post-commit")]|length>0' >/dev/null 2>&1; then
+              ENFORCEMENT='> The `post-commit` ruleset requires this status, so the merge is refused until it is green.'
+          else
+              ENFORCEMENT=$'> [!WARNING]\n> This repository has **no `post-commit` ruleset**, so the red status blocks\n> nothing on its own. Create it with `scripts/enforce.sh --apply '"$REPO"'`.'
+          fi
+
+          BODY="$(printf '%s\n\n%s\n\n%s\n\n---\n<sub>[full run](%s) · rules live in [kodflow/post-commit](https://github.com/kodflow/post-commit) · this comment is rewritten in place, not repeated</sub>\n' \
+              "$MARKER" "$ENFORCEMENT" "${REPORT:-The gate produced no report — see the run.}" "$RUN_URL")"
+
+          ID="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+                --jq "[.[]|select(.body|contains(\"$MARKER\"))|.id]|first // empty" 2>/dev/null || true)"
+          if [ -n "$ID" ]; then
+              gh api "repos/$REPO/issues/comments/$ID" -X PATCH -f body="$BODY" >/dev/null \
+                  && echo "::notice::verdict comment updated" \
+                  || echo "::warning::could not update the verdict comment"
+          else
+              gh api "repos/$REPO/issues/$PR/comments" -f body="$BODY" >/dev/null \
+                  && echo "::notice::verdict comment posted" \
+                  || echo "::warning::could not post the verdict comment"
+          fi
+
       - env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
