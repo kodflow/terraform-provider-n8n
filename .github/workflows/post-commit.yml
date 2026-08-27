@@ -55,13 +55,20 @@ jobs:
           # stub stays byte-identical everywhere.
           authors: kodflow
 
-  # The block of last resort, deliberately a SEPARATE job.
+  # A fallback, deliberately a SEPARATE job — and deliberately not called a gate.
   #
-  # A red status only refuses a merge where a ruleset can require it, and GitHub
-  # declines rulesets outright on a private repository in a Free-plan org. Draft
-  # state has no such hole: GitHub refuses to merge a draft on every plan and
-  # for admins too. So when the gate fails, put the pull request back into
-  # draft; `ready_for_review` above is what lets you ask for a new verdict.
+  # Where a ruleset can require the status, that ruleset is the enforcement and
+  # this job is redundant. Where GitHub declines rulesets — a private repository
+  # in a Free-plan org — there is no enforcement to be had, and this is what is
+  # left: a failed run puts the pull request back into draft, which GitHub will
+  # not merge on any plan, admins included.
+  #
+  # Be clear about what that is worth. Marking the pull request ready removes
+  # the draft at once, while the new verdict takes minutes to arrive; the pull
+  # request is mergeable for that whole window with nothing standing in the way.
+  # So this raises the cost of merging a failing history and leaves a trail —
+  # it does not prevent it. On a repository that can carry the ruleset, prevention
+  # comes from the ruleset. On one that cannot, prevention is not on offer.
   #
   # Why a second job rather than a step inside the action: the write permission
   # has to live somewhere, and a workflow- or job-level grant on the job above
