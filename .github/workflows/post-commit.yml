@@ -28,10 +28,6 @@ on:
 
 permissions:
   contents: read
-  # Lets the gate put a failing pull request back into draft. GitHub refuses to
-  # merge a draft on every plan and for admins too, which is the only hard
-  # block available on repositories where a ruleset cannot exist.
-  pull-requests: write
 
 jobs:
   post-commit:
@@ -45,3 +41,32 @@ jobs:
           # on purpose — one human commits across the whole fleet, so the
           # stub stays byte-identical everywhere.
           authors: kodflow
+
+  # The block of last resort, deliberately a SEPARATE job.
+  #
+  # A red status only refuses a merge where a ruleset can require it, and GitHub
+  # declines rulesets outright on a private repository in a Free-plan org. Draft
+  # state has no such hole: GitHub refuses to merge a draft on every plan and
+  # for admins too. So when the gate fails, put the pull request back into
+  # draft; `ready_for_review` above is what lets you ask for a new verdict.
+  #
+  # Why a second job rather than a step inside the action: the write permission
+  # has to live somewhere, and a workflow- or job-level grant on the job above
+  # would hand a pull-request-write token to kodflow/post-commit@main — a
+  # mutable external reference — on every trigger, push and manual runs
+  # included. Here the token never reaches it. This job runs no action at all.
+  block-merge:
+    needs: post-commit
+    if: ${{ failure() && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr ready --undo "$PR" -R "$REPO"
+          echo "::notice::post-commit failed — pull request put back into draft. Fix the history, then mark it ready: that re-runs the gate."
