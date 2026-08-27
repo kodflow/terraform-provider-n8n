@@ -26,6 +26,13 @@ on:
   # repository whether it is still clean; you have to push something to find out.
   workflow_dispatch:
 
+# One verdict at a time, per branch. Without this the ready_for_review retry
+# path lets an older run finish after a newer one: the stale failure would put
+# a pull request back into draft that the newer commit already fixed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -67,6 +74,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
+          JUDGED: ${{ github.event.pull_request.head.sha }}
         run: |
+          # Cancellation narrows the race but does not close it: this job can
+          # already be running when a newer commit lands. Only act if the head
+          # this run judged is still the head, or a stale failure would undo a
+          # ready state that a later, passing commit earned.
+          CURRENT="$(gh pr view "$PR" -R "$REPO" --json headRefOid --jq .headRefOid)"
+          if [ "$CURRENT" != "$JUDGED" ]; then
+              echo "::notice::head moved on from ${JUDGED:0:8} to ${CURRENT:0:8}; the newer run owns the verdict. Not drafting."
+              exit 0
+          fi
           gh pr ready --undo "$PR" -R "$REPO"
           echo "::notice::post-commit failed — pull request put back into draft. Fix the history, then mark it ready: that re-runs the gate."
