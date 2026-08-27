@@ -26,11 +26,17 @@ on:
   # repository whether it is still clean; you have to push something to find out.
   workflow_dispatch:
 
-# One verdict at a time, per branch. Without this the ready_for_review retry
-# path lets an older run finish after a newer one: the stale failure would put
-# a pull request back into draft that the newer commit already fixed.
+# One verdict at a time. Without this the ready_for_review retry path lets an
+# older run finish after a newer one: the stale failure would put a pull
+# request back into draft that the newer commit already fixed.
+#
+# github.ref, not head_ref: on a pull request head_ref is the bare source
+# branch name, so two pull requests from different forks that happen to share a
+# branch name would land in the same group and cancel each other's verdict.
+# github.ref is refs/pull/<n>/merge there — one group per pull request — and
+# the branch ref on push and manual runs.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
