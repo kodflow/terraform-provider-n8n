@@ -70,7 +70,24 @@ jobs:
   # included. Here the token never reaches it. This job runs no action at all.
   block-merge:
     needs: post-commit
-    if: ${{ failure() && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    # Two limits worth stating rather than discovering.
+    #
+    # A pull request from a fork gets a read-only GITHUB_TOKEN whatever this
+    # job declares, so the draft never happens there. Where a ruleset exists it
+    # still refuses the merge; where none can, a fork pull request is the one
+    # case this does not cover. head.repo.full_name skips those runs instead of
+    # failing loudly on a permission that was never grantable.
+    #
+    # And the head check below is narrowed, not closed: reading the head and
+    # drafting are two calls, so a commit landing between them is still drafted
+    # on a stale verdict. GitHub offers no compare-and-swap for draft state.
+    # The consequence is mild — a spurious draft, and the newer run's green
+    # status is what the ruleset actually reads — but it is not zero.
+    if: >-
+      ${{ failure()
+          && github.event_name == 'pull_request'
+          && github.event.pull_request.draft == false
+          && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -91,5 +108,8 @@ jobs:
               echo "::notice::head moved on from ${JUDGED:0:8} to ${CURRENT:0:8}; the newer run owns the verdict. Not drafting."
               exit 0
           fi
-          gh pr ready --undo "$PR" -R "$REPO"
-          echo "::notice::post-commit failed — pull request put back into draft. Fix the history, then mark it ready: that re-runs the gate."
+          if gh pr ready --undo "$PR" -R "$REPO"; then
+              echo "::notice::post-commit failed — pull request put back into draft. Fix the history, then mark it ready: that re-runs the gate."
+          else
+              echo "::warning::post-commit failed and the pull request could not be drafted. If this repository carries the post-commit ruleset the merge is still refused; if it cannot carry one, nothing here stops it."
+          fi
