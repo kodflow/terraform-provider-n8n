@@ -1,40 +1,40 @@
 # post-commit — mandatory merge gate.
 #
 # No AI attribution anywhere in the history, conventional commit subjects,
-# no credentials added. Every rule lives in kodflow/post-commit and is
-# pinned to @main on purpose: a fix or a new rule there is live here on the
-# next run with no change to this file. Pinning a SHA would freeze this
-# repo out of every future fix, which is the opposite of the design — do
-# not pin it, and do not copy the logic into this repo.
+# no credentials added. Every rule — and what happens to a pull request that
+# fails them — lives in kodflow/post-commit. The gate is pinned to @main on
+# purpose: it holds contents: read only, and a fix there is live here on the
+# next run with no change to this file. Do not pin it, and do not copy the
+# logic into this repo.
 #
 # The job MUST stay named `post-commit`: that is the status the branch
-# ruleset requires, so renaming or deleting this file leaves the required
-# status unreported and blocks every merge.
+# ruleset requires, so renaming it or deleting this file leaves the required
+# status unreported and blocks every merge. It is also why this is not a
+# reusable workflow: a called job reports as `<caller> / <job>`, never as
+# `post-commit`, and from any owner but kodflow it could not reach that
+# owner's self-hosted runners at all.
+#
+# `runs-on:` is the only thing allowed to differ between repositories. A private
+# repository runs both jobs on its owner's self-hosted runner, set centrally in
+# RUNNER_OVERRIDES of kodflow/post-commit/scripts/enforce.sh; a public one stays
+# on ubuntu-latest, because a self-hosted runner there would run strangers'
+# pull requests on the fleet.
 name: post-commit
 
 on:
   pull_request:
     # ready_for_review matters: a failed run puts the pull request back into
-    # draft, so marking it ready is how you ask for another verdict. Without
-    # this type that second attempt would never be judged.
+    # draft, so marking it ready is how you ask for another verdict.
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main, master]
-  # On demand: the gate reads the whole history, so its verdict can change
-  # without this repository changing — a new rule lands in kodflow/post-commit,
-  # or the history is rewritten under it. Without this you cannot ask a quiet
-  # repository whether it is still clean; you have to push something to find out.
+  # The verdict can change without this repository changing — a new rule, or a
+  # rewritten history — so a quiet repository can be asked on demand.
   workflow_dispatch:
 
-# One verdict at a time. Without this the ready_for_review retry path lets an
-# older run finish after a newer one: the stale failure would put a pull
-# request back into draft that the newer commit already fixed.
-#
-# github.ref, not head_ref: on a pull request head_ref is the bare source
-# branch name, so two pull requests from different forks that happen to share a
-# branch name would land in the same group and cancel each other's verdict.
-# github.ref is refs/pull/<n>/merge there — one group per pull request — and
-# the branch ref on push and manual runs.
+# One verdict at a time, one group per pull request (github.ref is
+# refs/pull/<n>/merge there; head_ref would collide across forks). Without it
+# a stale failure could draft a pull request a newer commit already fixed.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -46,56 +46,32 @@ jobs:
   post-commit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # The verdict travels to the job below, which is the one allowed to write
-    # to the pull request. Job outputs survive a failed job, which is the only
-    # case that needs them.
+    # Job outputs survive a failed job, which is the only case that needs them.
     outputs:
       report: ${{ steps.gate.outputs.report }}
     steps:
       - uses: kodflow/post-commit@main
         id: gate
         with:
-          # Every commit in this repository must carry the owning GitHub
-          # account, not a personal identity. Same value in all three orgs
-          # on purpose — one human commits across the whole fleet, so the
-          # stub stays byte-identical everywhere.
+          # One human commits across the whole fleet, as this account.
           authors: kodflow
 
-  # A fallback, deliberately a SEPARATE job — and deliberately not called a gate.
+  # A fallback, not a gate: a failed run puts the pull request back into draft
+  # and comments the verdict. Where a ruleset requires the status this is
+  # redundant; where GitHub refuses one (a private repo in a Free-plan org) it
+  # raises the cost of merging a failing history, it does not prevent it.
   #
-  # Where a ruleset can require the status, that ruleset is the enforcement and
-  # this job is redundant. Where GitHub declines rulesets — a private repository
-  # in a Free-plan org — there is no enforcement to be had, and this is what is
-  # left: a failed run puts the pull request back into draft, which GitHub will
-  # not merge on any plan, admins included.
+  # A separate job so the gate above never holds a write token. The `if:` must
+  # stay here: a job that does not start is what keeps `pull-requests: write`
+  # away from push, manual and fork runs (a fork gets a read-only token anyway,
+  # so it is skipped rather than failing on a grant that cannot happen).
   #
-  # Be clear about what that is worth. Marking the pull request ready removes
-  # the draft at once, while the new verdict takes minutes to arrive; the pull
-  # request is mergeable for that whole window with nothing standing in the way.
-  # So this raises the cost of merging a failing history and leaves a trail —
-  # it does not prevent it. On a repository that can carry the ruleset, prevention
-  # comes from the ruleset. On one that cannot, prevention is not on offer.
-  #
-  # Why a second job rather than a step inside the action: the write permission
-  # has to live somewhere, and a workflow- or job-level grant on the job above
-  # would hand a pull-request-write token to kodflow/post-commit@main — a
-  # mutable external reference — on every trigger, push and manual runs
-  # included. Here the token never reaches it. This job runs no action at all.
+  # And pinned to a commit, unlike the gate: this is the one job holding a
+  # write token, and @main would hand it to whatever @main becomes. The pin
+  # moves only through kodflow/post-commit's scripts/bump-block-merge.sh and a
+  # reviewed change to the central stub, which enforce.sh then rolls out.
   block-merge:
     needs: post-commit
-    # Two limits worth stating rather than discovering.
-    #
-    # A pull request from a fork gets a read-only GITHUB_TOKEN whatever this
-    # job declares, so the draft never happens there. Where a ruleset exists it
-    # still refuses the merge; where none can, a fork pull request is the one
-    # case this does not cover. head.repo.full_name skips those runs instead of
-    # failing loudly on a permission that was never grantable.
-    #
-    # And the head check below is narrowed, not closed: reading the head and
-    # drafting are two calls, so a commit landing between them is still drafted
-    # on a stale verdict. GitHub offers no compare-and-swap for draft state.
-    # The consequence is mild — a spurious draft, and the newer run's green
-    # status is what the ruleset actually reads — but it is not zero.
     if: >-
       ${{ failure()
           && github.event_name == 'pull_request'
@@ -106,67 +82,6 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      # The verdict, where the author will actually read it. The job summary
-      # needs someone to open the run; a pull-request comment does not.
-      #
-      # The comment also answers the question the run cannot: is this refusal
-      # enforced here? A private repository in a Free-plan org gets no ruleset,
-      # so the red status stops nothing and saying so plainly is the only
-      # honest thing left. One comment per pull request, rewritten in place.
-      - name: post the verdict on the pull request
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-          REPORT: ${{ needs['post-commit'].outputs.report }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          MARKER='<!-- post-commit-verdict -->'
-
-          # Is the status actually required here, and can it be bypassed?
-          # Three answers, three different messages — a missing ruleset someone
-          # can still create is a defect; one GitHub refuses to create is not.
-          RULESETS="$(gh api "repos/$REPO/rulesets" 2>&1 || true)"
-          if printf '%s' "$RULESETS" | grep -q 'Upgrade to GitHub'; then
-              ENFORCEMENT=$'> [!WARNING]\n> **Nothing here stops this merge.** GitHub does not offer rulesets on a\n> private repository in a Free-plan org, so `post-commit` can run but can\n> never be a required status. The pull request has been put back into draft,\n> which raises the cost of merging a bad history — it does not prevent it.\n>\n> To make it real: move the org to a paid plan, or make this repository\n> public. Then run `scripts/enforce.sh --apply '"$REPO"'`.'
-          elif printf '%s' "$RULESETS" | jq -e '[.[]|select(.name=="post-commit")]|length>0' >/dev/null 2>&1; then
-              ENFORCEMENT='> The `post-commit` ruleset requires this status, so the merge is refused until it is green.'
-          else
-              ENFORCEMENT=$'> [!WARNING]\n> This repository has **no `post-commit` ruleset**, so the red status blocks\n> nothing on its own. Create it with `scripts/enforce.sh --apply '"$REPO"'`.'
-          fi
-
-          BODY="$(printf '%s\n\n%s\n\n%s\n\n---\n<sub>[full run](%s) · rules live in [kodflow/post-commit](https://github.com/kodflow/post-commit) · this comment is rewritten in place, not repeated</sub>\n' \
-              "$MARKER" "$ENFORCEMENT" "${REPORT:-The gate produced no report — see the run.}" "$RUN_URL")"
-
-          ID="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
-                --jq "[.[]|select(.body|contains(\"$MARKER\"))|.id]|first // empty" 2>/dev/null || true)"
-          if [ -n "$ID" ]; then
-              gh api "repos/$REPO/issues/comments/$ID" -X PATCH -f body="$BODY" >/dev/null \
-                  && echo "::notice::verdict comment updated" \
-                  || echo "::warning::could not update the verdict comment"
-          else
-              gh api "repos/$REPO/issues/$PR/comments" -f body="$BODY" >/dev/null \
-                  && echo "::notice::verdict comment posted" \
-                  || echo "::warning::could not post the verdict comment"
-          fi
-
-      - env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-          JUDGED: ${{ github.event.pull_request.head.sha }}
-        run: |
-          # Cancellation narrows the race but does not close it: this job can
-          # already be running when a newer commit lands. Only act if the head
-          # this run judged is still the head, or a stale failure would undo a
-          # ready state that a later, passing commit earned.
-          CURRENT="$(gh pr view "$PR" -R "$REPO" --json headRefOid --jq .headRefOid)"
-          if [ "$CURRENT" != "$JUDGED" ]; then
-              echo "::notice::head moved on from ${JUDGED:0:8} to ${CURRENT:0:8}; the newer run owns the verdict. Not drafting."
-              exit 0
-          fi
-          if gh pr ready --undo "$PR" -R "$REPO"; then
-              echo "::notice::post-commit failed — pull request put back into draft. Fix the history, then mark it ready: that re-runs the gate."
-          else
-              echo "::warning::post-commit failed and the pull request could not be drafted. If this repository carries the post-commit ruleset the merge is still refused; if it cannot carry one, nothing here stops it."
-          fi
+      - uses: kodflow/post-commit/block-merge@db14679a9662f4224ba8d99d189f100733f1da9e  # 2026-09-30
+        with:
+          report: ${{ needs['post-commit'].outputs.report }}
