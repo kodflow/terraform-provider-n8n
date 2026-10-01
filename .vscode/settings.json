@@ -6,7 +6,6 @@
     ".bazel-cache": true,
     ".bazelrc": true,
     ".bazelversion": true,
-    ".codacy.yml": true,
     ".coderabbit.yml": true,
     ".goreleaser.yml": true,
     ".prettierignore": true,

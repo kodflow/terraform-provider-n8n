@@ -7,8 +7,6 @@
 [![n8n](https://img.shields.io/badge/n8n-1.121.2-EA4B71?logo=n8n)](https://n8n.io/)
 [![Terraform Registry](https://img.shields.io/badge/dynamic/json?url=https://registry.terraform.io/v1/providers/kodflow/n8n&query=$.version&label=terraform&logo=terraform&color=7B42BC)](https://registry.terraform.io/providers/kodflow/n8n/latest)
 [![CI](https://github.com/kodflow/terraform-provider-n8n/actions/workflows/ci.yml/badge.svg)](https://github.com/kodflow/terraform-provider-n8n/actions/workflows/ci.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/6ad65f0b28b64849ad2799943e8ad338)](https://app.codacy.com/gh/kodflow/terraform-provider-n8n/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/6ad65f0b28b64849ad2799943e8ad338)](https://app.codacy.com/gh/kodflow/terraform-provider-n8n/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
 **Manage your n8n workflows as code.** Version control, PR reviews, GitOps workflows, and reproducible environments for your automation platform.
 
