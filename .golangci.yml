@@ -11,14 +11,9 @@ run:
   modules-download-mode: readonly
 
 linters:
-  # Aligned with Codacy configuration
-  # Codacy enabled tools: Aligncheck, Revive, Staticcheck, Deadcode, Gosec
   enable:
-    # Codacy: Gosec (37 patterns enabled)
     - gosec
-    # Codacy: Staticcheck (143 patterns enabled)
     - staticcheck
-    # Codacy: Revive (96 patterns enabled)
     - revive
     # Additional quality linters
     - bodyclose
@@ -57,22 +52,19 @@ linters:
         - performance
     gocyclo:
       min-complexity: 15
-    # Codacy: Gosec configuration (all 37 patterns enabled)
     gosec:
-      # Enable all security checks to match Codacy
+      # Enable all security checks
       config:
         global:
           nosec: false
           show-ignored: true
           audit: true
-    # Codacy: Staticcheck configuration (143 patterns enabled)
     staticcheck:
       checks:
         - all
         - "-ST1003" # Disabled due to conflict with ktn-linter constant naming requirements
-    # Codacy: Revive configuration (96 patterns enabled)
     revive:
-      # Enable all default rules to match Codacy's 96 enabled patterns
+      # Enable all rules, then disable the ones listed below
       enable-all-rules: true
       # Disable rules that conflict with ktn-linter or project standards
       rules:
@@ -114,7 +106,6 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    # Aligned with Codacy exclude_paths configuration
     rules:
       # Test files - reduce strictness
       - linters:
@@ -150,7 +141,7 @@ linters:
           - revive
         path: (.+)_test\.go
     paths:
-      # Exclude paths matching Codacy configuration
+      # Generated, vendored and build output paths
       - docs/ # Terraform plugin generated documentation
       - bazel-* # Bazel build artifacts
       - vendor/ # Third-party dependencies
