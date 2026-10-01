@@ -31,15 +31,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # The lint tools are fetched at @latest and already require go >= 1.26
-      # (ktn-linter, golang.org/x/tools, golang.org/x/sys). GOTOOLCHAIN=auto
-      # only switched for the top-level module and the install still died on
-      # x/sys, so this job runs on 1.26 outright. A newer Go builds the
-      # module fine; Test & Build keeps go.mod's version.
+      # The lint tools are fetched at @latest and follow the newest Go
+      # (ktn-linter's main already declares go 1.27.1). GOTOOLCHAIN=auto only
+      # switched for the top-level module and the install still died on
+      # golang.org/x/sys, and a fixed version would age the same way, so this
+      # job tracks the latest stable Go. A newer Go builds the module fine;
+      # Test & Build keeps go.mod's version.
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
-          go-version: "1.26"
+          go-version: stable
           cache: true
 
       - name: Install linting tools
