@@ -31,21 +31,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      # The lint tools are fetched at @latest and follow the newest Go
+      # (ktn-linter's main already declares go 1.27.1). GOTOOLCHAIN=auto only
+      # switched for the top-level module and the install still died on
+      # golang.org/x/sys, and a fixed version would age the same way, so this
+      # job tracks the latest stable Go. A newer Go builds the module fine;
+      # Test & Build keeps go.mod's version.
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
-          go-version-file: "go.mod"
+          go-version: stable
           cache: true
 
       - name: Install linting tools
-        # setup-go v6 pins GOTOOLCHAIN=local to the go.mod version (1.25.4),
-        # but these tools are fetched at @latest and ktn-linter v1.45.2
-        # already declares go >= 1.26 — with a local-only toolchain the
-        # install aborts and the required "Lint & Format" status never turns
-        # green. `auto` lets go fetch the toolchain a tool asks for; the
-        # module itself still builds against go.mod's version.
-        env:
-          GOTOOLCHAIN: auto
         run: |
           go install github.com/kodflow/ktn-linter/cmd/ktn-linter@latest
           go install golang.org/x/tools/cmd/goimports@latest
