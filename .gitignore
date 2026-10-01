@@ -209,3 +209,6 @@ codacy_issues_analysis.json
 .n8n-repo-cache/
 NODES_SYNC.md
 WORKFLOWS_TEST_RESULTS.md
+
+# Local agent settings (per-developer, never committed)
+.claude/settings.local.json
