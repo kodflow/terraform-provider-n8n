@@ -1,6 +1,48 @@
 --- sdk/n8nsdk/api/openapi.yaml
 +++ sdk/n8nsdk/api/openapi.yaml
-@@ -211,7 +211,7 @@ paths:
+@@ -111,6 +111,41 @@ paths:
+         '415':
+           description: Unsupported media type.
+   /credentials/{id}:
++    patch:
++      x-eov-operation-id: updateCredential
++      x-eov-operation-handler: v1/handlers/credentials/credentials.handler
++      tags:
++      - Credential
++      summary: Update credential by ID
++      description: Updates an existing credential. You must be the owner of the credential.
++      operationId: updateCredential
++      parameters:
++      - name: id
++        in: path
++        description: The credential ID that needs to be updated
++        required: true
++        schema:
++          type: string
++      requestBody:
++        description: Credential data to update. All fields are optional.
++        required: true
++        content:
++          application/json:
++            schema:
++              $ref: '#/components/schemas/update-credential-request'
++      responses:
++        '200':
++          description: Operation successful.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/create-credential-response'
++        '400':
++          description: Bad request - invalid credential type or data.
++        '401':
++          $ref: '#/components/responses/unauthorized'
++        '404':
++          $ref: '#/components/responses/notFound'
+     delete:
+       x-eov-operation-id: deleteCredential
+       x-eov-operation-handler: v1/handlers/credentials/credentials.handler
+@@ -211,7 +246,7 @@ paths:
                - destinationProjectId
          required: true
        responses:
@@ -9,7 +51,7 @@
            description: Operation successful.
          '400':
            $ref: '#/components/responses/badRequest'
-@@ -689,7 +689,7 @@ paths:
+@@ -689,7 +724,7 @@ paths:
                - destinationProjectId
          required: true
        responses:
@@ -18,7 +60,7 @@
            description: Operation successful.
          '400':
            $ref: '#/components/responses/badRequest'
-@@ -804,7 +804,7 @@ paths:
+@@ -804,7 +839,7 @@ paths:
                  required:
                  - email
        responses:
@@ -27,7 +69,7 @@
            description: Operation successful.
            content:
              application/json:
-@@ -890,7 +890,7 @@ paths:
+@@ -890,7 +925,7 @@ paths:
                required:
                - newRoleName
        responses:
@@ -36,7 +78,7 @@
            description: Operation successful.
          '401':
            $ref: '#/components/responses/unauthorized'
-@@ -1340,6 +1341,11 @@ components:
+@@ -1341,6 +1376,11 @@ components:
            writeOnly: true
            example:
              token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s
@@ -48,7 +90,44 @@
          createdAt:
            type: string
            format: date-time
-@@ -1369,6 +1375,11 @@ components:
+@@ -1351,6 +1391,36 @@ components:
+           format: date-time
+           readOnly: true
+           example: '2022-04-29T11:02:29.842Z'
++    update-credential-request:
++      type: object
++      properties:
++        name:
++          type: string
++          example: Updated Credential Name
++          description: The name of the credential
++        type:
++          type: string
++          example: githubApi
++          description: The credential type. If changing type, data must also be provided.
++        data:
++          type: object
++          writeOnly: true
++          example:
++            accessToken: new_token_value
++          description: The credential data. Required when changing credential type.
++        isGlobal:
++          type: boolean
++          example: false
++          description: Whether this credential is available globally
++        isResolvable:
++          type: boolean
++          example: false
++          description: Whether this credential has resolvable fields
++        isPartialData:
++          type: boolean
++          example: false
++          default: false
++          description: If true, unredacts and merges existing credential data with the provided data. If false, replaces the entire data object.
+     create-credential-response:
+       required:
+       - id
+@@ -1370,6 +1440,11 @@ components:
          type:
            type: string
            example: github
@@ -60,7 +139,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -1389,6 +1400,7 @@ components:
+@@ -1390,6 +1465,7 @@ components:
            type: object
          finished:
            type: boolean
@@ -68,7 +147,7 @@
            example: true
          mode:
            type: string
-@@ -1403,13 +1415,20 @@ components:
+@@ -1404,13 +1480,20 @@ components:
            - webhook
          retryOf:
            type: number
@@ -89,7 +168,7 @@
            format: date-time
          stoppedAt:
            type: string
-@@ -1461,6 +1480,8 @@ components:
+@@ -1462,6 +1545,8 @@ components:
          name:
            type: string
            example: Production
@@ -98,7 +177,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -1631,17 +1652,29 @@ components:
+@@ -1632,17 +1717,29 @@ components:
            example: false
      sharedWorkflow:
        type: object
@@ -132,7 +211,7 @@
          project:
            type: object
            properties:
-@@ -1663,7 +1696,7 @@ components:
+@@ -1664,7 +1761,7 @@ components:
            readOnly: true
      workflow:
        type: object
@@ -141,7 +220,7 @@
        required:
        - name
        - nodes
-@@ -1677,6 +1710,10 @@ components:
+@@ -1678,6 +1775,10 @@ components:
          name:
            type: string
            example: Workflow 1
@@ -152,7 +231,7 @@
          active:
            type: boolean
            readOnly: true
-@@ -1716,10 +1753,38 @@ components:
+@@ -1717,10 +1818,38 @@ components:
            items:
              $ref: '#/components/schemas/tag'
            readOnly: true
@@ -191,7 +270,7 @@
      workflowList:
        type: object
        properties:
-@@ -1882,6 +1947,60 @@ components:
+@@ -1883,6 +2012,60 @@ components:
          type:
            type: string
            readOnly: true
@@ -252,7 +331,7 @@
      variable:
        type: object
        additionalProperties: false
-@@ -2051,6 +2170,7 @@ components:
+@@ -2052,6 +2235,7 @@ components:
            type: object
          finished:
            type: boolean
@@ -260,7 +339,7 @@
            example: true
          mode:
            type: string
-@@ -2065,13 +2185,20 @@ components:
+@@ -2066,13 +2250,20 @@ components:
            - webhook
          retryOf:
            type: number
@@ -281,7 +360,7 @@
            format: date-time
          stoppedAt:
            type: string
-@@ -2182,6 +2309,8 @@ components:
+@@ -2183,6 +2374,8 @@ components:
          name:
            type: string
            example: Production
@@ -290,7 +369,7 @@
          createdAt:
            type: string
            format: date-time
-@@ -2372,6 +2501,11 @@ components:
+@@ -2373,6 +2566,11 @@ components:
            writeOnly: true
            example:
              token: ada612vad6fa5df4adf5a5dsf4389adsf76da7s

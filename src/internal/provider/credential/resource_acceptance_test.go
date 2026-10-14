@@ -7,12 +7,18 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider"
 )
 
 func TestAccCredentialResource(t *testing.T) {
+	// The credential is updated in place, so its ID must not change across steps.
+	idUnchanged := statecheck.CompareValue(compare.ValuesSame())
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -20,7 +26,10 @@ func TestAccCredentialResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccCredentialResourceConfig("terraform-acc-test-credential", "httpHeaderAuth"),
+				Config: testAccCredentialResourceConfig("terraform-acc-test-credential", "httpHeaderAuth", "Bearer test-token-123"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idUnchanged.AddStateValue("n8n_credential.test", tfjsonpath.New("id")),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("n8n_credential.test", "name", "terraform-acc-test-credential"),
 					resource.TestCheckResourceAttr("n8n_credential.test", "type", "httpHeaderAuth"),
@@ -39,7 +48,10 @@ func TestAccCredentialResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccCredentialResourceConfig("terraform-acc-test-credential-updated", "httpHeaderAuth"),
+				Config: testAccCredentialResourceConfig("terraform-acc-test-credential-updated", "httpHeaderAuth", "Bearer test-token-456"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idUnchanged.AddStateValue("n8n_credential.test", tfjsonpath.New("id")),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("n8n_credential.test", "name", "terraform-acc-test-credential-updated"),
 				),
@@ -49,7 +61,7 @@ func TestAccCredentialResource(t *testing.T) {
 	})
 }
 
-func testAccCredentialResourceConfig(name, credType string) string {
+func testAccCredentialResourceConfig(name, credType, token string) string {
 	return fmt.Sprintf(`
 provider "n8n" {}
 
@@ -58,10 +70,10 @@ resource "n8n_credential" "test" {
   type = %[2]q
   data = {
     name  = "Authorization"
-    value = "Bearer test-token-123"
+    value = %[3]q
   }
 }
-`, name, credType)
+`, name, credType, token)
 }
 
 func testAccPreCheck(t *testing.T) {

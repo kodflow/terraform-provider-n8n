@@ -2,7 +2,7 @@
 // Licensed under the Sustainable Use License 1.0
 // See LICENSE in the project root for license information.
 
-// Package credential implements the n8n credential resource with rotation support.
+// Package credential implements the n8n credential resource.
 package credential
 
 import (
@@ -20,9 +20,6 @@ import (
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/credential/models"
 	"github.com/kodflow/terraform-provider-n8n/src/internal/provider/shared/client"
 )
-
-// ROTATION_THROTTLE_MILLISECONDS is the delay between workflow updates during credential rotation.
-const ROTATION_THROTTLE_MILLISECONDS int = 100
 
 // Ensure CredentialResource implements required interfaces.
 var (
@@ -46,7 +43,6 @@ type CredentialResourceInterface interface {
 }
 
 // CredentialResource defines the resource implementation for n8n credentials.
-// Note: Uses rotation strategy for updates (CREATE new, UPDATE workflows, DELETE old).
 type CredentialResource struct {
 	// client is the N8n API client used for credential operations.
 	client *client.N8nClient
@@ -89,13 +85,10 @@ func (r *CredentialResource) Metadata(_ctx context.Context, req resource.Metadat
 //   - resp: Schema response
 func (r *CredentialResource) Schema(_ctx context.Context, _req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "n8n credential resource with automatic rotation on update.\n\n" +
-			"**Update Behavior**: When updated, the credential is rotated:\n" +
-			"1. New credential is created\n" +
-			"2. All workflows using the old credential are updated\n" +
-			"3. Old credential is deleted\n" +
-			"4. If any step fails, automatic rollback is performed\n\n" +
-			"**Note**: The credential ID will change after an update, but this is handled automatically.",
+		MarkdownDescription: "n8n credential resource.\n\n" +
+			"**Update Behavior**: Updates are applied in place with `PATCH /credentials/{id}` " +
+			"(requires n8n >= 2.3.0). The credential ID is preserved, so workflows referencing it " +
+			"keep working without modification. The whole `data` object is replaced on each update.",
 		Attributes: r.schemaAttributes(),
 	}
 }
@@ -356,9 +349,8 @@ func (r *CredentialResource) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// Update updates the resource using rotation strategy.
-// WORKAROUND: n8n API doesn't support PUT /credentials/{id}.
-// Instead: CREATE new -> UPDATE workflows -> DELETE old.
+// Update updates the credential in place via PATCH /credentials/{id}.
+// The credential ID is preserved, so workflows referencing it keep working.
 //
 // Params:
 //   - ctx: Context for the request
@@ -384,7 +376,7 @@ func (r *CredentialResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// executeUpdateLogic contains the main logic for updating a credential using rotation strategy.
+// executeUpdateLogic contains the main logic for updating a credential.
 // This helper function is separated for testability.
 //
 // Params:
@@ -422,70 +414,104 @@ func (r *CredentialResource) executeUpdateLogic(ctx context.Context, plan, state
 // Returns:
 //   - bool: True if update succeeded, false otherwise
 func (r *CredentialResource) executeUpdateLogicWithData(ctx context.Context, plan, state *models.Resource, credData map[string]any, resp *resource.UpdateResponse) bool {
-	oldCredID := state.ID.ValueString()
-	tflog.Info(ctx, fmt.Sprintf("Starting credential rotation for %s", oldCredID))
+	credID := state.ID.ValueString()
 
 	// Convert string values to proper types based on credential schema.
 	convertedData := r.convertDataToSchemaTypes(ctx, plan.Type.ValueString(), credData)
 
-	// STEP 1: Create new credential
-	newCred := r.createNewCredential(ctx, plan.Name.ValueString(), plan.Type.ValueString(), convertedData, &resp.Diagnostics)
-	// Check if new credential creation succeeded.
-	if resp.Diagnostics.HasError() {
-		// Return failure.
-		return false
+	// Update credential in place via API
+	updateResp, httpResp, err := r.executeUpdate(ctx, credID, plan.Name.ValueString(), plan.Type.ValueString(), convertedData)
+	// Close HTTP response body if present.
+	if httpResp != nil && httpResp.Body != nil {
+		defer httpResp.Body.Close()
 	}
 
-	newCredID := newCred.Id
-	tflog.Info(ctx, fmt.Sprintf("Created new credential %s", newCredID))
-
-	// STEP 2: Scan workflows using old credential
-	affectedWorkflows, success := r.scanAffectedWorkflows(ctx, oldCredID, newCredID, &resp.Diagnostics)
-	// Check if workflow scan succeeded.
-	if !success {
-		// Return failure.
-		return false
-	}
-
-	// STEP 3: Update each workflow
-	updatedWorkflows, success := r.updateAffectedWorkflows(ctx, affectedWorkflows, oldCredID, newCredID, &resp.Diagnostics)
-	// Check if all workflow updates succeeded.
-	if !success {
-		// Return failure.
-		return false
-	}
-
-	// STEP 4: Delete old credential
-	r.deleteOldCredential(ctx, oldCredID, newCredID)
-
-	// STEP 5: Handle project assignment if project_id changed or is set.
-	// Note: On update with rotation, the new credential needs to be transferred
-	// to the target project since it was created in personal space.
-	if !plan.ProjectID.IsNull() && !plan.ProjectID.IsUnknown() {
-		// Transfer the new credential to the specified project.
-		if !r.transferCredentialToProject(ctx, newCredID, plan.ProjectID.ValueString(), &resp.Diagnostics) {
-			// Return failure - project assignment failed.
-			return false
+	// Check if credential update failed.
+	if err != nil {
+		detail := fmt.Sprintf("Could not update credential ID %s: %s\nHTTP Response: %v", credID, err.Error(), httpResp)
+		// PATCH /credentials/{id} only exists since n8n 2.3.0.
+		if httpResp != nil && httpResp.StatusCode == http.StatusMethodNotAllowed {
+			detail += "\nUpdating credentials requires n8n >= 2.3.0."
 		}
+		resp.Diagnostics.AddError("Error updating credential", detail)
+		// Return failure.
+		return false
 	}
 
-	// STEP 6: Update plan with new values
-	plan.ID = types.StringValue(newCredID)
-	plan.Name = types.StringValue(newCred.Name)
-	plan.Type = types.StringValue(newCred.Type)
-	plan.CreatedAt = types.StringValue(newCred.CreatedAt.Format("2006-01-02T15:04:05Z07:00"))
-	plan.UpdatedAt = types.StringValue(newCred.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
+	// Map response to plan (ID is unchanged)
+	r.mapCreateResponseToPlan(plan, updateResp)
 
-	// Map project_id to plan (keep the requested value).
-	mapCredentialProjectID(plan, plan.ProjectID)
+	// Move the credential if the requested project changed.
+	projectID, ok := r.updateProjectAssignment(ctx, credID, plan.ProjectID, state.ProjectID, &resp.Diagnostics)
+	// Check if project assignment succeeded.
+	if !ok {
+		// Return failure - project assignment failed.
+		return false
+	}
 
-	tflog.Info(ctx, fmt.Sprintf(
-		"Credential rotated successfully: %s → %s (%d workflows updated)",
-		oldCredID, newCredID, len(updatedWorkflows),
-	))
+	// Map project_id to plan.
+	mapCredentialProjectID(plan, projectID)
+
+	tflog.Info(ctx, fmt.Sprintf("Updated credential %s", credID))
 
 	// Return success.
 	return true
+}
+
+// updateProjectAssignment transfers the credential when the requested project differs from the current one.
+//
+// Params:
+//   - ctx: Context for the request
+//   - credID: Credential ID
+//   - planned: The planned project ID
+//   - current: The project ID in state
+//   - diags: Diagnostics collector for errors
+//
+// Returns:
+//   - projectID: The project ID to store in state
+//   - ok: True if the assignment succeeded, false otherwise
+func (r *CredentialResource) updateProjectAssignment(ctx context.Context, credID string, planned, current types.String, diags *diag.Diagnostics) (projectID types.String, ok bool) {
+	projectID = planned
+	// project_id is unknown when removed from the config: the credential stays in its current project.
+	if projectID.IsUnknown() {
+		projectID = current
+	}
+
+	// Transfer only when the requested project differs from the current one.
+	if !projectID.IsNull() && !projectID.Equal(current) {
+		// Return transfer result.
+		return projectID, r.transferCredentialToProject(ctx, credID, projectID.ValueString(), diags)
+	}
+
+	// Return unchanged project.
+	return projectID, true
+}
+
+// executeUpdate executes the API call to update a credential.
+// The whole data object is replaced (isPartialData is left to its false default).
+//
+// Params:
+//   - ctx: Context for the request
+//   - id: Credential ID
+//   - name: Credential name
+//   - credType: Credential type
+//   - data: Credential data
+//
+// Returns:
+//   - updated: The updated credential
+//   - httpResp: The HTTP response
+//   - err: Error if any
+func (r *CredentialResource) executeUpdate(ctx context.Context, id, name, credType string, data map[string]any) (updated *n8nsdk.CreateCredentialResponse, httpResp *http.Response, err error) {
+	updateRequest := n8nsdk.UpdateCredentialRequest{
+		Name: &name,
+		Type: &credType,
+		Data: data,
+	}
+
+	// Execute API call and return result.
+	return r.client.APIClient.CredentialAPI.UpdateCredential(ctx, id).
+		UpdateCredentialRequest(updateRequest).
+		Execute()
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -541,224 +567,4 @@ func (r *CredentialResource) ImportState(ctx context.Context, req resource.Impor
 	)
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-// rollbackRotation rolls back a failed rotation.
-//
-// Params:
-//   - ctx: Context for the operation
-//   - newCredID: ID of the new credential to delete
-//   - affectedWorkflows: List of workflow backups for restoration
-//   - updatedWorkflows: List of workflows that were updated
-func (r *CredentialResource) rollbackRotation(
-	ctx context.Context,
-	newCredID string,
-	affectedWorkflows []models.WorkflowBackup,
-	updatedWorkflows []string,
-) {
-	tflog.Error(ctx, "Rolling back credential rotation")
-
-	r.deleteNewCredential(ctx, newCredID)
-	restoredCount := r.restoreWorkflows(ctx, affectedWorkflows, updatedWorkflows)
-
-	tflog.Info(ctx, fmt.Sprintf("Rollback complete: restored %d/%d workflows", restoredCount, len(updatedWorkflows)))
-}
-
-// deleteNewCredential deletes the newly created credential during rollback.
-//
-// Params:
-//   - ctx: Context for the operation
-//   - newCredID: ID of the new credential to delete
-func (r *CredentialResource) deleteNewCredential(ctx context.Context, newCredID string) {
-	_, httpResp, err := r.client.APIClient.CredentialAPI.DeleteCredential(ctx, newCredID).Execute()
-	// Close HTTP response body if present.
-	if httpResp != nil && httpResp.Body != nil {
-		defer httpResp.Body.Close()
-	}
-	// Check if credential deletion failed during rollback.
-	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("CRITICAL: Failed to delete new credential %s during rollback: %s", newCredID, err.Error()))
-		// Handle alternative case.
-	} else {
-		tflog.Info(ctx, fmt.Sprintf("Deleted new credential %s during rollback", newCredID))
-	}
-}
-
-// restoreWorkflows restores workflows to their original state during rollback.
-//
-// Params:
-//   - ctx: Context for the operation
-//   - affectedWorkflows: List of workflow backups for restoration
-//   - updatedWorkflows: List of workflows that were updated
-//
-// Returns:
-//   - restoredCount: Number of workflows successfully restored
-func (r *CredentialResource) restoreWorkflows(
-	ctx context.Context,
-	affectedWorkflows []models.WorkflowBackup,
-	updatedWorkflows []string,
-) int {
-	restoredCount := 0
-	// Iterate through each updated workflow to restore it.
-	for _, workflowID := range updatedWorkflows {
-		original := r.findWorkflowBackup(affectedWorkflows, workflowID)
-		// Check if workflow backup was found.
-		if original == nil {
-			tflog.Error(ctx, fmt.Sprintf("Cannot find original for workflow %s", workflowID))
-			continue
-		}
-
-		// Restore workflow to original state.
-		if r.restoreWorkflow(ctx, workflowID, original) {
-			restoredCount++
-		}
-	}
-	// Return count of successfully restored workflows.
-	return restoredCount
-}
-
-// findWorkflowBackup finds the original workflow from backups.
-//
-// Params:
-//   - affectedWorkflows: List of workflow backups
-//   - workflowID: ID of the workflow to find
-//
-// Returns:
-//   - original: Pointer to the original workflow, nil if not found
-func (r *CredentialResource) findWorkflowBackup(
-	affectedWorkflows []models.WorkflowBackup,
-	workflowID string,
-) *n8nsdk.Workflow {
-	// Iterate through backups to find matching workflow.
-	for _, backup := range affectedWorkflows {
-		// Check if this backup matches the workflow being restored.
-		if backup.ID == workflowID {
-			// Return the original workflow from backup.
-			return backup.Original
-		}
-	}
-	// Return nil if no backup found.
-	return nil
-}
-
-// restoreWorkflow restores a single workflow to its original state.
-//
-// Params:
-//   - ctx: Context for the operation
-//   - workflowID: ID of the workflow to restore
-//   - original: Original workflow state
-//
-// Returns:
-//   - success: True if workflow was restored successfully
-func (r *CredentialResource) restoreWorkflow(
-	ctx context.Context,
-	workflowID string,
-	original *n8nsdk.Workflow,
-) bool {
-	_, httpRespRestore, errRestore := r.client.APIClient.WorkflowAPI.
-		WorkflowsIdPut(ctx, workflowID).
-		Workflow(*original).
-		Execute()
-	// Close HTTP response body if present.
-	if httpRespRestore != nil && httpRespRestore.Body != nil {
-		defer httpRespRestore.Body.Close()
-	}
-
-	// Check if workflow restoration failed.
-	if errRestore != nil {
-		tflog.Error(ctx, fmt.Sprintf("Failed to restore workflow %s: %s", workflowID, errRestore.Error()))
-		// Return failure status.
-		return false
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("Restored workflow %s", workflowID))
-	// Return success status.
-	return true
-}
-
-// usesCredential checks if a workflow uses a specific credential.
-//
-// Params:
-//   - workflow: The workflow to check
-//   - credentialID: The credential ID to search for
-//
-// Returns:
-//   - bool: True if workflow uses the credential, false otherwise
-func usesCredential(workflow *n8nsdk.Workflow, credentialID string) bool {
-	// Check if workflow is nil first.
-	if workflow == nil {
-		return false
-	}
-
-	// Check if workflow nodes are available.
-	if workflow.Nodes == nil {
-		// Return result.
-		return false
-	}
-
-	// Iterate through workflow nodes to check for credential usage.
-	for _, node := range workflow.Nodes {
-		// Check if node has credentials defined.
-		if node.Credentials != nil {
-			// node.Credentials is already map[string]any
-			for _, credValue := range node.Credentials {
-				// Check if credential value is a map.
-				if credInfo, okMap := credValue.(map[string]any); okMap {
-					// Check if credential ID matches the target credential.
-					if id, okID := credInfo["id"].(string); okID && id == credentialID {
-						// Return result.
-						return true
-					}
-				}
-			}
-		}
-	}
-
-	// Return result.
-	return false
-}
-
-// replaceCredentialInWorkflow replaces all references to oldCredID with newCredID.
-//
-// Params:
-//   - workflow: The workflow to modify
-//   - oldCredID: The old credential ID to replace
-//   - newCredID: The new credential ID to use
-//
-// Returns:
-//   - *n8nsdk.Workflow: The modified workflow
-func replaceCredentialInWorkflow(workflow *n8nsdk.Workflow, oldCredID, newCredID string) *n8nsdk.Workflow {
-	// Check if workflow is nil first.
-	if workflow == nil {
-		return nil
-	}
-
-	// Check if workflow nodes are available.
-	if workflow.Nodes == nil {
-		// Return result.
-		return workflow
-	}
-
-	// Iterate through workflow nodes to replace credentials.
-	for i := range workflow.Nodes {
-		node := &workflow.Nodes[i]
-
-		// Check if node has credentials defined.
-		if node.Credentials != nil {
-			// node.Credentials is already map[string]any
-			for credType, credValue := range node.Credentials {
-				// Check if credential value is a map.
-				if credInfo, okMap := credValue.(map[string]any); okMap {
-					// Check if credential ID matches the old credential.
-					if id, okID := credInfo["id"].(string); okID && id == oldCredID {
-						credInfo["id"] = newCredID
-						node.Credentials[credType] = credInfo
-					}
-				}
-			}
-		}
-	}
-
-	// Return result.
-	return workflow
 }

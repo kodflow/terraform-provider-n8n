@@ -35,16 +35,16 @@ the visual magic for rapid prototyping.
 
 ### 🚨 Important Limitation: Credentials
 
-> **The official n8n API does not support GET/PUT/PATCH operations on credentials.**
+> **The official n8n API does not support GET operations on credentials.**
 >
 > As a result, the `n8n_credential` resource has **degraded behavior**:
 >
 > - ✅ Create (`POST`): works normally
 > - ❌ Read (`GET`): not possible — state cannot be retrieved from n8n
-> - ❌ Update (`PUT/PATCH`): not possible — changes require resource recreation
+> - ✅ Update (`PATCH`): updated in place, the credential ID is preserved (requires n8n >= 2.3.0)
 > - ✅ Delete (`DELETE`): works normally
 >
-> **Impact**: Terraform cannot detect drift on existing credentials. Any modification forces a resource recreation.
+> **Impact**: Terraform cannot detect drift on existing credentials.
 
 ---
 

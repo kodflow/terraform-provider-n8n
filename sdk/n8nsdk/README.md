@@ -84,6 +84,7 @@ Class | Method | HTTP request | Description
 *CredentialAPI* | [**CredentialsPost**](docs/CredentialAPI.md#credentialspost) | **Post** /credentials | Create a credential
 *CredentialAPI* | [**CredentialsSchemaCredentialTypeNameGet**](docs/CredentialAPI.md#credentialsschemacredentialtypenameget) | **Get** /credentials/schema/{credentialTypeName} | Show credential data schema
 *CredentialAPI* | [**DeleteCredential**](docs/CredentialAPI.md#deletecredential) | **Delete** /credentials/{id} | Delete credential by ID
+*CredentialAPI* | [**UpdateCredential**](docs/CredentialAPI.md#updatecredential) | **Patch** /credentials/{id} | Update credential by ID
 *ExecutionAPI* | [**ExecutionsGet**](docs/ExecutionAPI.md#executionsget) | **Get** /executions | Retrieve all executions
 *ExecutionAPI* | [**ExecutionsIdDelete**](docs/ExecutionAPI.md#executionsiddelete) | **Delete** /executions/{id} | Delete an execution
 *ExecutionAPI* | [**ExecutionsIdGet**](docs/ExecutionAPI.md#executionsidget) | **Get** /executions/{id} | Retrieve an execution
@@ -157,6 +158,7 @@ Class | Method | HTTP request | Description
  - [Tag](docs/Tag.md)
  - [TagIdsInner](docs/TagIdsInner.md)
  - [TagList](docs/TagList.md)
+ - [UpdateCredentialRequest](docs/UpdateCredentialRequest.md)
  - [User](docs/User.md)
  - [UserList](docs/UserList.md)
  - [UsersIdRolePatchRequest](docs/UsersIdRolePatchRequest.md)

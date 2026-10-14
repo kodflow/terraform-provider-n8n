@@ -3,7 +3,6 @@ package credential
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -29,11 +28,6 @@ import (
 // from properly testing the functions that depend on the client field.
 //
 // Note: Mock implementations are in helpers_test.go to avoid duplication.
-
-// Helper functions.
-func strPtr(s string) *string {
-	return &s
-}
 
 // TestNewCredentialResource is now in resource_external_test.go
 // TestNewCredentialResourceWrapper is now in resource_external_test.go
@@ -109,406 +103,6 @@ func TestCredentialResource_Configure_Internal(t *testing.T) {
 	}
 }
 
-func Test_usesCredential(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		workflow *n8nsdk.Workflow
-		credID   string
-		want     bool
-		wantErr  bool
-	}{
-		{
-			name: "workflow uses credential",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}}},
-			},
-			credID:  "cred-123",
-			want:    true,
-			wantErr: false,
-		},
-		{
-			name: "workflow does not use credential",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}}},
-			},
-			credID:  "cred-123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name: "workflow with no credentials",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: nil}},
-			},
-			credID:  "cred-123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name:     "workflow with empty nodes",
-			workflow: &n8nsdk.Workflow{Nodes: []n8nsdk.Node{}},
-			credID:   "cred-123",
-			want:     false,
-			wantErr:  false,
-		},
-		{
-			name:     "nil workflow",
-			workflow: nil,
-			credID:   "cred-123",
-			want:     false,
-			wantErr:  false,
-		},
-		{
-			name: "multiple nodes with credentials",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}},
-					{Credentials: map[string]interface{}{"http": map[string]interface{}{"id": "cred-123"}}},
-				},
-			},
-			credID:  "cred-123",
-			want:    true,
-			wantErr: false,
-		},
-		{
-			name: "credential in nested structure",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api":  map[string]interface{}{"id": "cred-123", "name": "Test"},
-					"http": map[string]interface{}{"id": "other-cred"},
-				}}},
-			},
-			credID:  "cred-123",
-			want:    true,
-			wantErr: false,
-		},
-		{
-			name: "invalid credential structure",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": "invalid-not-a-map"}}},
-			},
-			credID:  "cred-123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name: "credential with different types",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api":  map[string]interface{}{"id": "cred-123"},
-					"http": map[string]interface{}{"id": "cred-123"},
-				}}},
-			},
-			credID:  "cred-123",
-			want:    true,
-			wantErr: false,
-		},
-		{
-			name:     "error case - empty credential ID",
-			workflow: &n8nsdk.Workflow{Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}}}},
-			credID:   "",
-			want:     false,
-			wantErr:  true,
-		},
-		{
-			name:     "workflow with nil Nodes",
-			workflow: &n8nsdk.Workflow{Nodes: nil},
-			credID:   "cred-123",
-			want:     false,
-			wantErr:  false,
-		},
-		{
-			name: "node with empty credentials map",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{}}},
-			},
-			credID:  "cred-123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name: "credential ID is nil in map",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": nil}}}},
-			},
-			credID:  "cred-123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name: "credential map without id field",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"name": "test"}}}},
-			},
-			credID:  "cred-123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name: "multiple nodes with nil and valid credentials",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{
-					{Credentials: nil},
-					{Credentials: map[string]interface{}{}},
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred-123"}}},
-				},
-			},
-			credID:  "cred-123",
-			want:    true,
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := usesCredential(tt.workflow, tt.credID)
-			assert.Equal(t, tt.want, result)
-		})
-	}
-}
-
-func Test_replaceCredentialInWorkflow(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		workflow *n8nsdk.Workflow
-		oldCred  string
-		newCred  string
-		wantErr  bool
-		checkFn  func(*testing.T, *n8nsdk.Workflow)
-	}{
-		{
-			name: "replace single credential",
-			workflow: &n8nsdk.Workflow{
-				Id:    strPtr("wf-1"),
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred", "name": "Old"}}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "new-cred", apiCred["id"])
-			},
-		},
-		{
-			name: "replace multiple occurrences",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred"}}},
-					{Credentials: map[string]interface{}{"http": map[string]interface{}{"id": "old-cred"}}},
-				},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "new-cred", apiCred["id"])
-				httpCred := w.Nodes[1].Credentials["http"].(map[string]interface{})
-				assert.Equal(t, "new-cred", httpCred["id"])
-			},
-		},
-		{
-			name: "no replacement needed",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "other-cred"}}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "other-cred", apiCred["id"])
-			},
-		},
-		{
-			name:     "nil workflow",
-			workflow: nil,
-			oldCred:  "old-cred",
-			newCred:  "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.Nil(t, w)
-			},
-		},
-		{
-			name:     "empty nodes",
-			workflow: &n8nsdk.Workflow{Id: strPtr("wf-1"), Nodes: []n8nsdk.Node{}},
-			oldCred:  "old-cred",
-			newCred:  "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.Empty(t, w.Nodes)
-			},
-		},
-		{
-			name: "node without credentials",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: nil}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.Nil(t, w.Nodes[0].Credentials)
-			},
-		},
-		{
-			name: "invalid credential structure",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": "invalid-string"}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-			},
-		},
-		{
-			name: "mixed valid and invalid credentials",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api":     map[string]interface{}{"id": "old-cred"},
-					"invalid": "not-a-map",
-				}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "new-cred", apiCred["id"])
-			},
-		},
-		{
-			name: "preserve other credential properties",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{
-					"api": map[string]interface{}{"id": "old-cred", "name": "API Credential", "type": "oauth2"},
-				}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "new-cred", apiCred["id"])
-				assert.Equal(t, "API Credential", apiCred["name"])
-				assert.Equal(t, "oauth2", apiCred["type"])
-			},
-		},
-		{
-			name: "error case - empty old credential ID",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "cred"}}}},
-			},
-			oldCred: "",
-			newCred: "new-cred",
-			wantErr: true,
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-			},
-		},
-		{
-			name:     "workflow with nil Nodes",
-			workflow: &n8nsdk.Workflow{Nodes: nil},
-			oldCred:  "old-cred",
-			newCred:  "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-				assert.Nil(t, w.Nodes)
-			},
-		},
-		{
-			name: "node with empty credentials map",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.NotNil(t, w)
-				assert.Empty(t, w.Nodes[0].Credentials)
-			},
-		},
-		{
-			name: "credential map without id field",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"name": "test"}}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "test", apiCred["name"])
-				assert.Nil(t, apiCred["id"])
-			},
-		},
-		{
-			name: "credential ID is nil",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": nil}}}},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				apiCred := w.Nodes[0].Credentials["api"].(map[string]interface{})
-				assert.Nil(t, apiCred["id"])
-			},
-		},
-		{
-			name: "multiple nodes with various credential states",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{
-					{Credentials: nil},
-					{Credentials: map[string]interface{}{}},
-					{Credentials: map[string]interface{}{"api": map[string]interface{}{"id": "old-cred"}}},
-					{Credentials: map[string]interface{}{"http": map[string]interface{}{"name": "test"}}},
-				},
-			},
-			oldCred: "old-cred",
-			newCred: "new-cred",
-			checkFn: func(t *testing.T, w *n8nsdk.Workflow) {
-				t.Helper()
-				assert.Nil(t, w.Nodes[0].Credentials)
-				assert.Empty(t, w.Nodes[1].Credentials)
-				apiCred := w.Nodes[2].Credentials["api"].(map[string]interface{})
-				assert.Equal(t, "new-cred", apiCred["id"])
-				httpCred := w.Nodes[3].Credentials["http"].(map[string]interface{})
-				assert.Equal(t, "test", httpCred["name"])
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := replaceCredentialInWorkflow(tt.workflow, tt.oldCred, tt.newCred)
-			if tt.checkFn != nil {
-				tt.checkFn(t, result)
-			}
-		})
-	}
-}
-
 func Test_extractCredentialData(t *testing.T) {
 	t.Parallel()
 
@@ -575,31 +169,6 @@ func Test_extractCredentialData(t *testing.T) {
 	}
 }
 
-func TestROTATION_THROTTLE_MILLISECONDS(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		want    int
-		wantErr bool
-	}{
-		{name: "constant value", want: 100, wantErr: false},
-		{name: "error case - constant should not be zero", want: 100, wantErr: false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "constant value":
-				assert.Equal(t, tt.want, ROTATION_THROTTLE_MILLISECONDS)
-			case "error case - constant should not be zero":
-				assert.NotEqual(t, 0, ROTATION_THROTTLE_MILLISECONDS)
-				assert.Equal(t, tt.want, ROTATION_THROTTLE_MILLISECONDS)
-			}
-		})
-	}
-}
-
 func TestCredentialResource_InterfaceCompliance(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -636,229 +205,6 @@ func TestCredentialResource_InterfaceCompliance(t *testing.T) {
 	}
 }
 
-func TestCredentialResource_ConcurrentOperations(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{name: "concurrent credential checks", wantErr: false},
-		{name: "concurrent replacements", wantErr: false},
-		{name: "error case - concurrent operations on nil workflow", wantErr: true},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			switch tt.name {
-			case "concurrent credential checks":
-				workflow := &n8nsdk.Workflow{
-					Nodes: []n8nsdk.Node{
-						{
-							Credentials: map[string]interface{}{
-								"api": map[string]interface{}{
-									"id": "cred-123",
-								},
-							},
-						},
-					},
-				}
-
-				// Run concurrent checks
-				results := make(chan bool, 100)
-				for range 100 {
-					go func() {
-						results <- usesCredential(workflow, "cred-123")
-					}()
-				}
-
-				// Collect results
-				for range 100 {
-					assert.True(t, <-results)
-				}
-
-			case "concurrent replacements":
-				// Run concurrent replacements on copies
-				results := make(chan *n8nsdk.Workflow, 100)
-				for i := range 100 {
-					go func(idx int) {
-						// Create a copy for each goroutine
-						workflow := &n8nsdk.Workflow{
-							Id: strPtr("wf-1"),
-							Nodes: []n8nsdk.Node{
-								{
-									Credentials: map[string]interface{}{
-										"api": map[string]interface{}{
-											"id": "old-cred",
-										},
-									},
-								},
-							},
-						}
-						newCredID := fmt.Sprintf("new-cred-%d", idx)
-						results <- replaceCredentialInWorkflow(workflow, "old-cred", newCredID)
-					}(i)
-				}
-
-				// Verify all replacements
-				for range 100 {
-					result := <-results
-					assert.NotNil(t, result)
-				}
-
-			case "error case - concurrent operations on nil workflow":
-				// Test that concurrent operations on nil workflow are safe
-				results := make(chan bool, 10)
-				for range 10 {
-					go func() {
-						results <- usesCredential(nil, "cred-123")
-					}()
-				}
-
-				// Collect results - should all be false
-				for range 10 {
-					assert.False(t, <-results)
-				}
-			}
-		})
-	}
-}
-
-func TestCredentialResource_EdgeCases(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name     string
-		workflow *n8nsdk.Workflow
-		credID   string
-		want     bool
-		wantErr  bool
-	}{
-		{
-			name: "deeply nested credential structure",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{
-					{
-						Credentials: map[string]interface{}{
-							"oauth": map[string]interface{}{
-								"id": "cred-123",
-								"metadata": map[string]interface{}{
-									"scope":   "read write",
-									"expires": 3600,
-								},
-							},
-						},
-					},
-				},
-			},
-			credID:  "cred-123",
-			want:    true,
-			wantErr: false,
-		},
-		{
-			name: "credential ID as non-string",
-			workflow: &n8nsdk.Workflow{
-				Nodes: []n8nsdk.Node{
-					{
-						Credentials: map[string]interface{}{
-							"api": map[string]interface{}{
-								"id": 123, // Number instead of string
-							},
-						},
-					},
-				},
-			},
-			credID:  "123",
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name:     "error case - nil workflow",
-			workflow: nil,
-			credID:   "cred-123",
-			want:     false,
-			wantErr:  true,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			result := usesCredential(tt.workflow, tt.credID)
-			assert.Equal(t, tt.want, result)
-		})
-	}
-}
-
-func BenchmarkUsesCredential(b *testing.B) {
-	workflow := &n8nsdk.Workflow{
-		Nodes: []n8nsdk.Node{
-			{
-				Credentials: map[string]interface{}{
-					"api": map[string]interface{}{
-						"id": "cred-123",
-					},
-				},
-			},
-			{
-				Credentials: map[string]interface{}{
-					"http": map[string]interface{}{
-						"id": "other-cred",
-					},
-				},
-			},
-		},
-	}
-
-	b.ResetTimer()
-	for b.Loop() {
-		_ = usesCredential(workflow, "cred-123")
-	}
-}
-
-func BenchmarkReplaceCredentialInWorkflow(b *testing.B) {
-	workflow := &n8nsdk.Workflow{
-		Id: strPtr("wf-1"),
-		Nodes: []n8nsdk.Node{
-			{
-				Credentials: map[string]interface{}{
-					"api": map[string]interface{}{
-						"id": "old-cred",
-					},
-				},
-			},
-		},
-	}
-
-	b.ResetTimer()
-	for b.Loop() {
-		_ = replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-	}
-}
-
-func BenchmarkReplaceCredentialLargeWorkflow(b *testing.B) {
-	// Create a workflow with many nodes
-	nodes := make([]n8nsdk.Node, 100)
-	for range 100 {
-		nodes = append(nodes, n8nsdk.Node{
-			Credentials: map[string]interface{}{
-				fmt.Sprintf("api%d", len(nodes)): map[string]interface{}{
-					"id": "old-cred",
-				},
-			},
-		})
-	}
-
-	workflow := &n8nsdk.Workflow{
-		Id:    strPtr("large-wf"),
-		Nodes: nodes,
-	}
-
-	b.ResetTimer()
-	for b.Loop() {
-		_ = replaceCredentialInWorkflow(workflow, "old-cred", "new-cred")
-	}
-}
-
 // Test helper functions
 
 // setupTestClient creates a test N8nClient with httptest server.
@@ -884,31 +230,6 @@ func setupTestClient(t *testing.T, handler http.HandlerFunc) (*client.N8nClient,
 
 	return n8nClient, server
 }
-
-// TestCredentialResource_Create tests credential creation.
-// TestCredentialResource_Create is now in resource_external_test.go
-// TestCredentialResource_Read is now in resource_external_test.go
-// TestCredentialResource_Update is now in resource_external_test.go
-// TestCredentialResource_Delete is now in resource_external_test.go.
-// TestCredentialResource_RollbackFunctions is now in external test file - refactored to test behavior only.
-
-func TestCredentialResource_DeleteOldCredential(t *testing.T) {
-	t.Run("deleteOldCredential failure logs warning", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Internal server error"}`))
-		})
-
-		n8nClient, server := setupTestClient(t, handler)
-		defer server.Close()
-
-		r := &CredentialResource{client: n8nClient}
-		r.deleteOldCredential(context.Background(), "old-cred-123", "new-cred-456")
-	})
-}
-
-// TestCredentialResource_HelperFunctions tests the helper functions for credential rotation.
-// TestCredentialResource_HelperFunctions is now in external test file - refactored to test behavior only.
 
 func TestCredentialResource_schemaAttributes(t *testing.T) {
 	t.Parallel()
@@ -964,560 +285,6 @@ func TestCredentialResource_schemaAttributes(t *testing.T) {
 			for _, unexpectedAttr := range tt.unexpectedAttrs {
 				assert.NotContains(t, attrs, unexpectedAttr, "schemaAttributes should not contain attribute: %s", unexpectedAttr)
 			}
-		})
-	}
-}
-
-// TestCredentialResource_rollbackRotation tests the rollbackRotation method.
-func TestCredentialResource_rollbackRotation(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name              string
-		newCredID         string
-		setupHandler      func(w http.ResponseWriter, r *http.Request)
-		expectDeleteCall  bool
-		expectUpdateCalls int
-	}{
-		{
-			name:      "rollback with delete and restore",
-			newCredID: "new-cred-123",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
-				if r.Method == http.MethodPut {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":          "wf-123",
-						"name":        "Test",
-						"nodes":       []any{},
-						"connections": map[string]any{},
-						"settings":    map[string]any{},
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectDeleteCall:  true,
-			expectUpdateCalls: 1,
-		},
-		{
-			name:      "rollback with delete failure",
-			newCredID: "new-cred-456",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				if r.Method == http.MethodPut {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":          "wf-123",
-						"name":        "Test",
-						"nodes":       []any{},
-						"connections": map[string]any{},
-						"settings":    map[string]any{},
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectDeleteCall:  true,
-			expectUpdateCalls: 1,
-		},
-		{
-			name:      "rollback with restore failure",
-			newCredID: "new-cred-789",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
-				if r.Method == http.MethodPut {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectDeleteCall:  true,
-			expectUpdateCalls: 1,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			handler := http.HandlerFunc(tt.setupHandler)
-			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
-
-			r := &CredentialResource{client: n8nClient}
-			backups := []models.WorkflowBackup{
-				{
-					ID: "wf-123",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-123"),
-						Name:        "Test",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-			}
-			updatedWorkflows := []string{"wf-123"}
-
-			// Call rollbackRotation - it should not panic
-			r.rollbackRotation(context.Background(), tt.newCredID, backups, updatedWorkflows)
-
-			// Verification is implicit - if the function completes without panic, the test passes
-			assert.NotNil(t, r, "resource should not be nil after rollback")
-		})
-	}
-}
-
-// TestCredentialResource_deleteNewCredential tests the deleteNewCredential method.
-func TestCredentialResource_deleteNewCredential(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name       string
-		credID     string
-		statusCode int
-		expectCall bool
-	}{
-		{
-			name:       "successful delete",
-			credID:     "new-cred-123",
-			statusCode: http.StatusNoContent,
-			expectCall: true,
-		},
-		{
-			name:       "delete failure",
-			credID:     "new-cred-456",
-			statusCode: http.StatusInternalServerError,
-			expectCall: true,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			called := false
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodDelete && r.URL.Path == "/credentials/"+tt.credID {
-					called = true
-					w.WriteHeader(tt.statusCode)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			})
-
-			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
-
-			r := &CredentialResource{client: n8nClient}
-
-			// Call deleteNewCredential - it should not panic
-			r.deleteNewCredential(context.Background(), tt.credID)
-
-			if tt.expectCall {
-				assert.True(t, called, "expected API call to be made")
-			}
-		})
-	}
-}
-
-// TestCredentialResource_restoreWorkflows tests the restoreWorkflows method.
-func TestCredentialResource_restoreWorkflows(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name             string
-		backups          []models.WorkflowBackup
-		updatedWorkflows []string
-		setupHandler     func(w http.ResponseWriter, r *http.Request)
-		expectedRestored int
-	}{
-		{
-			name: "restore single workflow",
-			backups: []models.WorkflowBackup{
-				{
-					ID: "wf-123",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-123"),
-						Name:        "Test",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-			},
-			updatedWorkflows: []string{"wf-123"},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":          "wf-123",
-						"name":        "Test",
-						"nodes":       []any{},
-						"connections": map[string]any{},
-						"settings":    map[string]any{},
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectedRestored: 1,
-		},
-		{
-			name:             "no workflows to restore",
-			backups:          []models.WorkflowBackup{},
-			updatedWorkflows: []string{},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectedRestored: 0,
-		},
-		{
-			name: "restore fails with error",
-			backups: []models.WorkflowBackup{
-				{
-					ID: "wf-error",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-error"),
-						Name:        "Error Test",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-			},
-			updatedWorkflows: []string{"wf-error"},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			},
-			expectedRestored: 0,
-		},
-		{
-			name: "restore multiple workflows with one missing backup",
-			backups: []models.WorkflowBackup{
-				{
-					ID: "wf-123",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-123"),
-						Name:        "First",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-			},
-			updatedWorkflows: []string{"wf-123", "wf-missing", "wf-456"},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":          "wf-123",
-						"name":        "First",
-						"nodes":       []any{},
-						"connections": map[string]any{},
-						"settings":    map[string]any{},
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectedRestored: 1,
-		},
-		{
-			name: "restore with all backups missing",
-			backups: []models.WorkflowBackup{
-				{
-					ID: "wf-other",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-other"),
-						Name:        "Other",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-			},
-			updatedWorkflows: []string{"wf-123", "wf-456"},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectedRestored: 0,
-		},
-		{
-			name: "restore with mixed success and failure",
-			backups: []models.WorkflowBackup{
-				{
-					ID: "wf-success",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-success"),
-						Name:        "Success",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-				{
-					ID: "wf-fail",
-					Original: &n8nsdk.Workflow{
-						Id:          strPtr("wf-fail"),
-						Name:        "Fail",
-						Nodes:       []n8nsdk.Node{},
-						Connections: map[string]interface{}{},
-						Settings:    n8nsdk.WorkflowSettings{},
-					},
-				},
-			},
-			updatedWorkflows: []string{"wf-success", "wf-fail"},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-success" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":          "wf-success",
-						"name":        "Success",
-						"nodes":       []any{},
-						"connections": map[string]any{},
-						"settings":    map[string]any{},
-					})
-					return
-				}
-				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-fail" {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectedRestored: 1,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			handler := http.HandlerFunc(tt.setupHandler)
-			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
-
-			r := &CredentialResource{client: n8nClient}
-
-			count := r.restoreWorkflows(context.Background(), tt.backups, tt.updatedWorkflows)
-
-			assert.Equal(t, tt.expectedRestored, count, "unexpected number of restored workflows")
-		})
-	}
-}
-
-// TestCredentialResource_findWorkflowBackup tests the findWorkflowBackup method.
-func TestCredentialResource_findWorkflowBackup(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name              string
-		affectedWorkflows []models.WorkflowBackup
-		workflowID        string
-		want              *n8nsdk.Workflow
-		wantErr           bool
-	}{
-		{
-			name: "find existing workflow backup",
-			affectedWorkflows: []models.WorkflowBackup{
-				{
-					ID: "wf-123",
-					Original: &n8nsdk.Workflow{
-						Id:   strPtr("wf-123"),
-						Name: "Test Workflow",
-					},
-				},
-			},
-			workflowID: "wf-123",
-			want: &n8nsdk.Workflow{
-				Id:   strPtr("wf-123"),
-				Name: "Test Workflow",
-			},
-			wantErr: false,
-		},
-		{
-			name: "workflow not found in backups",
-			affectedWorkflows: []models.WorkflowBackup{
-				{
-					ID: "wf-123",
-					Original: &n8nsdk.Workflow{
-						Id:   strPtr("wf-123"),
-						Name: "Test Workflow",
-					},
-				},
-			},
-			workflowID: "wf-456",
-			want:       nil,
-			wantErr:    false,
-		},
-		{
-			name:              "empty backups list",
-			affectedWorkflows: []models.WorkflowBackup{},
-			workflowID:        "wf-123",
-			want:              nil,
-			wantErr:           false,
-		},
-		{
-			name: "find workflow in multiple backups",
-			affectedWorkflows: []models.WorkflowBackup{
-				{
-					ID: "wf-111",
-					Original: &n8nsdk.Workflow{
-						Id:   strPtr("wf-111"),
-						Name: "First Workflow",
-					},
-				},
-				{
-					ID: "wf-222",
-					Original: &n8nsdk.Workflow{
-						Id:   strPtr("wf-222"),
-						Name: "Second Workflow",
-					},
-				},
-				{
-					ID: "wf-333",
-					Original: &n8nsdk.Workflow{
-						Id:   strPtr("wf-333"),
-						Name: "Third Workflow",
-					},
-				},
-			},
-			workflowID: "wf-222",
-			want: &n8nsdk.Workflow{
-				Id:   strPtr("wf-222"),
-				Name: "Second Workflow",
-			},
-			wantErr: false,
-		},
-		{
-			name: "backup with nil original",
-			affectedWorkflows: []models.WorkflowBackup{
-				{
-					ID:       "wf-123",
-					Original: nil,
-				},
-			},
-			workflowID: "wf-123",
-			want:       nil,
-			wantErr:    false,
-		},
-		{
-			name:              "error case - empty workflow ID",
-			affectedWorkflows: []models.WorkflowBackup{},
-			workflowID:        "",
-			want:              nil,
-			wantErr:           true,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			r := &CredentialResource{}
-			result := r.findWorkflowBackup(tt.affectedWorkflows, tt.workflowID)
-
-			if tt.want == nil {
-				assert.Nil(t, result, "expected nil result")
-			} else {
-				assert.NotNil(t, result, "expected non-nil result")
-				if result != nil {
-					assert.Equal(t, tt.want.Id, result.Id, "workflow ID should match")
-					assert.Equal(t, tt.want.Name, result.Name, "workflow name should match")
-				}
-			}
-		})
-	}
-}
-
-func TestCredentialResource_restoreWorkflow(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name            string
-		workflowID      string
-		workflow        *n8nsdk.Workflow
-		setupHandler    func(w http.ResponseWriter, r *http.Request)
-		expectedSuccess bool
-	}{
-		{
-			name:       "successful restore",
-			workflowID: "wf-123",
-			workflow: &n8nsdk.Workflow{
-				Id:          strPtr("wf-123"),
-				Name:        "Test",
-				Nodes:       []n8nsdk.Node{},
-				Connections: map[string]interface{}{},
-				Settings:    n8nsdk.WorkflowSettings{},
-			},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":          "wf-123",
-						"name":        "Test",
-						"nodes":       []any{},
-						"connections": map[string]any{},
-						"settings":    map[string]any{},
-					})
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectedSuccess: true,
-		},
-		{
-			name:       "restore failure",
-			workflowID: "wf-123",
-			workflow: &n8nsdk.Workflow{
-				Id:          strPtr("wf-123"),
-				Name:        "Test",
-				Nodes:       []n8nsdk.Node{},
-				Connections: map[string]interface{}{},
-				Settings:    n8nsdk.WorkflowSettings{},
-			},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			},
-			expectedSuccess: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			handler := http.HandlerFunc(tt.setupHandler)
-			n8nClient, server := setupTestClient(t, handler)
-			defer server.Close()
-
-			r := &CredentialResource{client: n8nClient}
-
-			success := r.restoreWorkflow(context.Background(), tt.workflowID, tt.workflow)
-
-			assert.Equal(t, tt.expectedSuccess, success, "unexpected restore result")
 		})
 	}
 }
@@ -1642,28 +409,18 @@ func TestCredentialResource_Update_WithMockClient(t *testing.T) {
 		expectError  bool
 	}{
 		{
-			name: "successful credential rotation",
+			name: "successful credential update",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+				if r.Method == http.MethodPatch && r.URL.Path == "/credentials/cred-123" {
 					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusCreated)
+					w.WriteHeader(http.StatusOK)
 					json.NewEncoder(w).Encode(map[string]any{
-						"id":        "new-cred-456",
+						"id":        "cred-123",
 						"name":      "Updated",
 						"type":      "httpHeaderAuth",
 						"createdAt": "2024-01-01T00:00:00Z",
-						"updatedAt": "2024-01-01T00:00:00Z",
+						"updatedAt": "2024-01-02T00:00:00Z",
 					})
-					return
-				}
-				if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{"data": []any{}})
-					return
-				}
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusNoContent)
 					return
 				}
 				w.WriteHeader(http.StatusNotFound)
@@ -1671,38 +428,11 @@ func TestCredentialResource_Update_WithMockClient(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "error creating new credential",
+			name: "error updating credential",
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+				if r.Method == http.MethodPatch && r.URL.Path == "/credentials/cred-123" {
 					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to create credential"}`))
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectError: true,
-		},
-		{
-			name: "error scanning workflows",
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":        "new-cred-456",
-						"name":      "Updated",
-						"type":      "httpHeaderAuth",
-						"createdAt": "2024-01-01T00:00:00Z",
-						"updatedAt": "2024-01-01T00:00:00Z",
-					})
-					return
-				}
-				if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusNoContent)
+					w.Write([]byte(`{"message": "Failed to update credential"}`))
 					return
 				}
 				w.WriteHeader(http.StatusNotFound)
@@ -1722,9 +452,17 @@ func TestCredentialResource_Update_WithMockClient(t *testing.T) {
 
 			r := &CredentialResource{client: n8nClient}
 
-			// Verify client is configured for update operations
-			assert.NotNil(t, r.client, "Client should be configured")
-			assert.NotNil(t, r.client.APIClient, "API client should be configured")
+			updateResp, httpResp, err := r.executeUpdate(context.Background(), "cred-123", "Updated", "httpHeaderAuth", map[string]any{"value": "new"})
+			if httpResp != nil && httpResp.Body != nil {
+				httpResp.Body.Close()
+			}
+
+			if tt.expectError {
+				assert.Error(t, err, "Should return error")
+				return
+			}
+			assert.NoError(t, err, "Should not return error")
+			assert.Equal(t, "cred-123", updateResp.Id, "Should keep the same credential ID")
 		})
 	}
 }
@@ -2604,7 +1342,7 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 			},
 		},
 		{
-			name: "error - create new credential fails",
+			name: "error - update credential fails",
 			testFunc: func(t *testing.T) {
 				t.Helper()
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -2613,8 +1351,8 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 						w.WriteHeader(http.StatusNotFound)
 						return
 					}
-					// POST /credentials - fail
-					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+					// PATCH /credentials/{id} - fail
+					if r.Method == http.MethodPatch && r.URL.Path == "/credentials/old-cred-123" {
 						w.WriteHeader(http.StatusInternalServerError)
 						w.Write([]byte(`{"message":"Internal server error"}`))
 						return
@@ -2675,16 +1413,14 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 
 				r.Update(ctx, req, resp)
 
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when creating new credential fails")
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error when updating credential fails")
 			},
 		},
 		{
-			name: "error - workflow scan fails",
+			name: "success - credential updated in place keeps its ID",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				callCount := 0
 				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					callCount++
 					w.Header().Set("Content-Type", "application/json")
 
 					// Handle schema request (type conversion feature)
@@ -2693,26 +1429,22 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 						return
 					}
 
-					// Step 1: POST /credentials - create new credential successfully
-					if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
-						w.WriteHeader(http.StatusCreated)
-						w.Write([]byte(`{"id":"new-cred-123","name":"updated-cred","type":"httpHeaderAuth","createdAt":"2024-01-02T00:00:00Z","updatedAt":"2024-01-02T00:00:00Z"}`))
+					// PATCH /credentials/{id} - update in place, full data replacement
+					if r.Method == http.MethodPatch && r.URL.Path == "/credentials/old-cred-123" {
+						var body map[string]any
+						if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+							t.Fatalf("Invalid request body: %v", err)
+						}
+						assert.Equal(t, "updated-cred", body["name"])
+						assert.Equal(t, "httpHeaderAuth", body["type"])
+						assert.Equal(t, map[string]any{"key": "value"}, body["data"])
+						assert.NotContains(t, body, "isPartialData")
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"id":"old-cred-123","name":"updated-cred","type":"httpHeaderAuth","createdAt":"2024-01-01T00:00:00Z","updatedAt":"2024-01-02T00:00:00Z"}`))
 						return
 					}
 
-					// Step 2: GET /workflows - fail
-					if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(`{"message":"Internal server error"}`))
-						return
-					}
-
-					// Rollback: DELETE /credentials/{id} - delete new credential
-					if r.Method == http.MethodDelete && r.URL.Path == "/credentials/new-cred-123" {
-						w.WriteHeader(http.StatusNoContent)
-						return
-					}
-
+					// No credential creation, workflow rewrite or deletion is expected.
 					t.Fatalf("Unexpected request: %s %s", r.Method, r.URL.Path)
 				})
 
@@ -2769,7 +1501,13 @@ func TestCredentialResource_Update_CRUD(t *testing.T) {
 
 				r.Update(ctx, req, resp)
 
-				assert.True(t, resp.Diagnostics.HasError(), "Expected error when workflow scan fails")
+				assert.False(t, resp.Diagnostics.HasError(), "Unexpected error: %v", resp.Diagnostics)
+
+				var newState models.Resource
+				resp.State.Get(ctx, &newState)
+				assert.Equal(t, "old-cred-123", newState.ID.ValueString(), "Credential ID must be preserved")
+				assert.Equal(t, "updated-cred", newState.Name.ValueString())
+				assert.Equal(t, "2024-01-02T00:00:00Z", newState.UpdatedAt.ValueString())
 			},
 		},
 	}
@@ -2871,7 +1609,7 @@ func TestCredentialResource_executeCreateLogic(t *testing.T) {
 }
 
 // TestCredentialResource_executeUpdateLogic tests the executeUpdateLogic method with error cases.
-// Note: This test focuses on error paths. The success path with full credential rotation is tested
+// Note: This test focuses on error paths. The success path is tested
 // through the Update method because executeUpdateLogic relies on Terraform framework internals
 // (ElementsAs) that require proper schema context not available in unit tests.
 func TestCredentialResource_executeUpdateLogic(t *testing.T) {
@@ -2899,99 +1637,15 @@ func TestCredentialResource_executeUpdateLogic(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:         "error during createNewCredential",
+			name:         "error during UpdateCredential",
 			oldCredID:    "cred-old",
 			newCredName:  "Updated Credential",
 			newCredType:  "httpHeaderAuth",
 			setupInvalid: false,
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
+				if r.Method == http.MethodPatch && r.URL.Path == "/credentials/cred-old" {
 					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to create credential"}`))
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectError: true,
-		},
-		{
-			name:         "error during scanAffectedWorkflows",
-			oldCredID:    "cred-old",
-			newCredName:  "Updated Credential",
-			newCredType:  "httpHeaderAuth",
-			setupInvalid: false,
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":        "cred-new-123",
-						"name":      "Updated Credential",
-						"type":      "httpHeaderAuth",
-						"createdAt": "2024-01-01T00:00:00Z",
-						"updatedAt": "2024-01-01T00:00:00Z",
-					})
-					return
-				}
-				if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to list workflows"}`))
-					return
-				}
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
-				w.WriteHeader(http.StatusNotFound)
-			},
-			expectError: true,
-		},
-		{
-			name:         "error during updateAffectedWorkflows",
-			oldCredID:    "cred-old",
-			newCredName:  "Updated Credential",
-			newCredType:  "httpHeaderAuth",
-			setupInvalid: false,
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/credentials" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusCreated)
-					json.NewEncoder(w).Encode(map[string]any{
-						"id":        "cred-new-456",
-						"name":      "Updated Credential",
-						"type":      "httpHeaderAuth",
-						"createdAt": "2024-01-01T00:00:00Z",
-						"updatedAt": "2024-01-01T00:00:00Z",
-					})
-					return
-				}
-				if r.Method == http.MethodGet && r.URL.Path == "/workflows" {
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					json.NewEncoder(w).Encode(map[string]any{
-						"data": []any{
-							map[string]any{
-								"id":   "wf-123",
-								"name": "Test Workflow",
-								"nodes": []any{
-									map[string]any{
-										"credentials": map[string]any{
-											"api": map[string]any{"id": "cred-old"},
-										},
-									},
-								},
-							},
-						},
-					})
-					return
-				}
-				if r.Method == http.MethodGet && r.URL.Path == "/workflows/wf-123" {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to get workflow"}`))
-					return
-				}
-				if r.Method == http.MethodDelete {
-					w.WriteHeader(http.StatusNoContent)
+					w.Write([]byte(`{"message": "Failed to update credential"}`))
 					return
 				}
 				w.WriteHeader(http.StatusNotFound)
@@ -3186,27 +1840,10 @@ func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
 		setupHandler  func(w http.ResponseWriter, r *http.Request)
 		expectSuccess bool
 		expectError   bool
+		expectDetail  string
 	}{
 		{
-			name:        "error - createNewCredential fails",
-			oldCredID:   "cred-old-123",
-			newCredName: "Updated Credential",
-			newCredType: "httpHeaderAuth",
-			credData: map[string]any{
-				"name":  "Authorization",
-				"value": "Bearer updated-token",
-			},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == "POST" && r.URL.Path == "/credentials" {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to create credential"}`))
-				}
-			},
-			expectSuccess: false,
-			expectError:   true,
-		},
-		{
-			name:        "error - scanAffectedWorkflows fails",
+			name:        "success - credential updated in place",
 			oldCredID:   "cred-old-123",
 			newCredName: "Updated Credential",
 			newCredType: "httpHeaderAuth",
@@ -3216,84 +1853,60 @@ func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
 			},
 			setupHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-
-				switch {
-				case r.Method == "POST" && r.URL.Path == "/credentials":
-					// Create succeeds
-					w.WriteHeader(http.StatusCreated)
-					now := time.Now()
-					w.Write([]byte(`{
-						"id": "cred-new-456",
-						"name": "Updated Credential",
-						"type": "httpHeaderAuth",
-						"createdAt": "` + now.Format(time.RFC3339) + `",
-						"updatedAt": "` + now.Format(time.RFC3339) + `"
-					}`))
-				case r.Method == "GET" && r.URL.Path == "/workflows":
-					// Workflow listing fails
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to list workflows"}`))
-				default:
-					w.WriteHeader(http.StatusNotFound)
-				}
-			},
-			expectSuccess: false,
-			expectError:   true,
-		},
-		{
-			name:        "error - updateAffectedWorkflows fails",
-			oldCredID:   "cred-old-123",
-			newCredName: "Updated Credential",
-			newCredType: "httpHeaderAuth",
-			credData: map[string]any{
-				"name":  "Authorization",
-				"value": "Bearer updated-token",
-			},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-
-				switch {
-				case r.Method == "POST" && r.URL.Path == "/credentials":
-					// Create succeeds
-					w.WriteHeader(http.StatusCreated)
-					now := time.Now()
-					w.Write([]byte(`{
-						"id": "cred-new-456",
-						"name": "Updated Credential",
-						"type": "httpHeaderAuth",
-						"createdAt": "` + now.Format(time.RFC3339) + `",
-						"updatedAt": "` + now.Format(time.RFC3339) + `"
-					}`))
-				case r.Method == "GET" && r.URL.Path == "/workflows":
-					// List workflows succeeds
+				if r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123" {
 					w.WriteHeader(http.StatusOK)
+					now := time.Now()
 					w.Write([]byte(`{
-						"data": [
-							{
-								"id": "workflow-1",
-								"name": "Test Workflow",
-								"active": true,
-								"nodes": [
-									{
-										"credentials": {
-											"httpHeaderAuth": {
-												"id": "cred-old-123"
-											}
-										}
-									}
-								],
-								"connections": {},
-								"settings": {}
-							}
-						]
+						"id": "cred-old-123",
+						"name": "Updated Credential",
+						"type": "httpHeaderAuth",
+						"createdAt": "` + now.Format(time.RFC3339) + `",
+						"updatedAt": "` + now.Format(time.RFC3339) + `"
 					}`))
-				case r.Method == "PUT" && r.URL.Path == "/workflows/workflow-1":
-					// Workflow update fails
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"message": "Failed to update workflow"}`))
-				default:
-					w.WriteHeader(http.StatusNotFound)
+					return
 				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+		{
+			name:        "error - n8n older than 2.3.0 without PATCH support",
+			oldCredID:   "cred-old-123",
+			newCredName: "Updated Credential",
+			newCredType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer updated-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123" {
+					w.WriteHeader(http.StatusMethodNotAllowed)
+					w.Write([]byte(`{"message": "PATCH method not allowed"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			expectSuccess: false,
+			expectError:   true,
+			expectDetail:  "requires n8n >= 2.3.0",
+		},
+		{
+			name:        "error - UpdateCredential fails",
+			oldCredID:   "cred-old-123",
+			newCredName: "Updated Credential",
+			newCredType: "httpHeaderAuth",
+			credData: map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer updated-token",
+			},
+			setupHandler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123" {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"message": "Failed to update credential"}`))
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
 			},
 			expectSuccess: false,
 			expectError:   true,
@@ -3339,7 +1952,7 @@ func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
 			if tt.expectSuccess {
 				assert.True(t, result, "Should return true on success")
 				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
-				assert.Equal(t, "cred-new-456", plan.ID.ValueString(), "Should set new credential ID")
+				assert.Equal(t, tt.oldCredID, plan.ID.ValueString(), "Should keep the credential ID")
 				assert.Equal(t, tt.newCredName, plan.Name.ValueString(), "Should preserve credential name")
 			} else {
 				assert.False(t, result, "Should return false on error")
@@ -3347,6 +1960,12 @@ func TestCredentialResource_executeUpdateLogicWithData(t *testing.T) {
 
 			if tt.expectError {
 				assert.True(t, resp.Diagnostics.HasError(), "Should have diagnostics error")
+			}
+
+			if tt.expectDetail != "" {
+				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), tt.expectDetail)
+			} else if tt.expectError {
+				assert.NotContains(t, resp.Diagnostics.Errors()[0].Detail(), "requires n8n >= 2.3.0")
 			}
 		})
 	}
@@ -3357,92 +1976,137 @@ func TestCredentialResource_executeUpdateLogicWithData_ProjectTransfer(t *testin
 	t.Parallel()
 
 	tests := []struct {
-		name          string
-		oldCredID     string
-		newCredName   string
-		newCredType   string
-		projectID     string
-		credData      map[string]any
-		setupHandler  func(w http.ResponseWriter, r *http.Request)
-		expectSuccess bool
-		expectError   bool
+		name           string
+		stateProjectID types.String
+		projectID      types.String
+		wantProjectID  string
+		setupHandler   func(t *testing.T) http.HandlerFunc
+		expectSuccess  bool
+		expectError    bool
 	}{
 		{
-			name:        "success - update with project transfer",
-			oldCredID:   "cred-old-123",
-			newCredName: "Updated Credential",
-			newCredType: "httpHeaderAuth",
-			projectID:   "project-456",
-			credData: map[string]any{
-				"name":  "Authorization",
-				"value": "Bearer updated-token",
-			},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
+			name:           "success - update with project transfer",
+			stateProjectID: types.StringValue("project-123"),
+			projectID:      types.StringValue("project-456"),
+			wantProjectID:  "project-456",
+			setupHandler: func(t *testing.T) http.HandlerFunc {
+				t.Helper()
+				return func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
 
-				switch {
-				case r.Method == "POST" && r.URL.Path == "/credentials":
-					w.WriteHeader(http.StatusCreated)
-					now := time.Now()
-					_, _ = w.Write([]byte(`{
-						"id": "cred-new-456",
-						"name": "Updated Credential",
-						"type": "httpHeaderAuth",
-						"createdAt": "` + now.Format(time.RFC3339) + `",
-						"updatedAt": "` + now.Format(time.RFC3339) + `"
-					}`))
-				case r.Method == "GET" && r.URL.Path == "/workflows":
-					// No affected workflows
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write([]byte(`{"data": []}`))
-				case r.Method == "DELETE" && strings.HasPrefix(r.URL.Path, "/credentials/"):
-					w.WriteHeader(http.StatusNoContent)
-				case r.Method == "PUT" && r.URL.Path == "/credentials/cred-new-456/transfer":
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write([]byte(`{}`))
-				default:
-					w.WriteHeader(http.StatusNotFound)
+					switch {
+					case r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123":
+						w.WriteHeader(http.StatusOK)
+						now := time.Now()
+						_, _ = w.Write([]byte(`{
+							"id": "cred-old-123",
+							"name": "Updated Credential",
+							"type": "httpHeaderAuth",
+							"createdAt": "` + now.Format(time.RFC3339) + `",
+							"updatedAt": "` + now.Format(time.RFC3339) + `"
+						}`))
+					case r.Method == "PUT" && r.URL.Path == "/credentials/cred-old-123/transfer":
+						w.WriteHeader(http.StatusOK)
+						_, _ = w.Write([]byte(`{}`))
+					default:
+						w.WriteHeader(http.StatusNotFound)
+					}
 				}
 			},
 			expectSuccess: true,
 			expectError:   false,
 		},
 		{
-			name:        "error - project transfer fails",
-			oldCredID:   "cred-old-123",
-			newCredName: "Updated Credential",
-			newCredType: "httpHeaderAuth",
-			projectID:   "project-456",
-			credData: map[string]any{
-				"name":  "Authorization",
-				"value": "Bearer updated-token",
-			},
-			setupHandler: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
+			name:           "success - no transfer when project is unchanged",
+			stateProjectID: types.StringValue("project-456"),
+			projectID:      types.StringValue("project-456"),
+			wantProjectID:  "project-456",
+			setupHandler: func(t *testing.T) http.HandlerFunc {
+				t.Helper()
+				return func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
 
-				switch {
-				case r.Method == "POST" && r.URL.Path == "/credentials":
-					w.WriteHeader(http.StatusCreated)
-					now := time.Now()
-					_, _ = w.Write([]byte(`{
-						"id": "cred-new-456",
-						"name": "Updated Credential",
-						"type": "httpHeaderAuth",
-						"createdAt": "` + now.Format(time.RFC3339) + `",
-						"updatedAt": "` + now.Format(time.RFC3339) + `"
-					}`))
-				case r.Method == "GET" && r.URL.Path == "/workflows":
-					// No affected workflows
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write([]byte(`{"data": []}`))
-				case r.Method == "DELETE" && strings.HasPrefix(r.URL.Path, "/credentials/"):
-					w.WriteHeader(http.StatusNoContent)
-				case r.Method == "PUT" && r.URL.Path == "/credentials/cred-new-456/transfer":
-					// Project transfer fails
-					w.WriteHeader(http.StatusInternalServerError)
-					_, _ = w.Write([]byte(`{"message": "Failed to transfer credential"}`))
-				default:
-					w.WriteHeader(http.StatusNotFound)
+					switch {
+					case r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123":
+						w.WriteHeader(http.StatusOK)
+						now := time.Now()
+						_, _ = w.Write([]byte(`{
+							"id": "cred-old-123",
+							"name": "Updated Credential",
+							"type": "httpHeaderAuth",
+							"createdAt": "` + now.Format(time.RFC3339) + `",
+							"updatedAt": "` + now.Format(time.RFC3339) + `"
+						}`))
+					case r.Method == "PUT" && r.URL.Path == "/credentials/cred-old-123/transfer":
+						t.Errorf("Unexpected transfer when project is unchanged")
+						w.WriteHeader(http.StatusInternalServerError)
+					default:
+						w.WriteHeader(http.StatusNotFound)
+					}
+				}
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+		{
+			name:           "success - project_id removed from config keeps the current project",
+			stateProjectID: types.StringValue("project-123"),
+			projectID:      types.StringUnknown(),
+			wantProjectID:  "project-123",
+			setupHandler: func(t *testing.T) http.HandlerFunc {
+				t.Helper()
+				return func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+
+					switch {
+					case r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123":
+						w.WriteHeader(http.StatusOK)
+						now := time.Now()
+						_, _ = w.Write([]byte(`{
+							"id": "cred-old-123",
+							"name": "Updated Credential",
+							"type": "httpHeaderAuth",
+							"createdAt": "` + now.Format(time.RFC3339) + `",
+							"updatedAt": "` + now.Format(time.RFC3339) + `"
+						}`))
+					case r.Method == "PUT" && r.URL.Path == "/credentials/cred-old-123/transfer":
+						t.Errorf("Unexpected transfer when project is unchanged")
+						w.WriteHeader(http.StatusInternalServerError)
+					default:
+						w.WriteHeader(http.StatusNotFound)
+					}
+				}
+			},
+			expectSuccess: true,
+			expectError:   false,
+		},
+		{
+			name:           "error - project transfer fails",
+			stateProjectID: types.StringNull(),
+			projectID:      types.StringValue("project-456"),
+			wantProjectID:  "project-456",
+			setupHandler: func(t *testing.T) http.HandlerFunc {
+				t.Helper()
+				return func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+
+					switch {
+					case r.Method == "PATCH" && r.URL.Path == "/credentials/cred-old-123":
+						w.WriteHeader(http.StatusOK)
+						now := time.Now()
+						_, _ = w.Write([]byte(`{
+							"id": "cred-old-123",
+							"name": "Updated Credential",
+							"type": "httpHeaderAuth",
+							"createdAt": "` + now.Format(time.RFC3339) + `",
+							"updatedAt": "` + now.Format(time.RFC3339) + `"
+						}`))
+					case r.Method == "PUT" && r.URL.Path == "/credentials/cred-old-123/transfer":
+						w.WriteHeader(http.StatusInternalServerError)
+						_, _ = w.Write([]byte(`{}`))
+					default:
+						w.WriteHeader(http.StatusNotFound)
+					}
 				}
 			},
 			expectSuccess: false,
@@ -3455,8 +2119,7 @@ func TestCredentialResource_executeUpdateLogicWithData_ProjectTransfer(t *testin
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			handler := http.HandlerFunc(tt.setupHandler)
-			n8nClient, server := setupTestClient(t, handler)
+			n8nClient, server := setupTestClient(t, tt.setupHandler(t))
 			defer server.Close()
 
 			r := &CredentialResource{client: n8nClient}
@@ -3471,25 +2134,32 @@ func TestCredentialResource_executeUpdateLogicWithData_ProjectTransfer(t *testin
 			}
 
 			state := &models.Resource{
-				ID:   types.StringValue(tt.oldCredID),
-				Name: types.StringValue("Old Credential"),
-				Type: types.StringValue("httpHeaderAuth"),
-				Data: oldDataValue,
+				ID:        types.StringValue("cred-old-123"),
+				Name:      types.StringValue("Old Credential"),
+				Type:      types.StringValue("httpHeaderAuth"),
+				Data:      oldDataValue,
+				ProjectID: tt.stateProjectID,
 			}
 			plan := &models.Resource{
-				Name:      types.StringValue(tt.newCredName),
-				Type:      types.StringValue(tt.newCredType),
-				ProjectID: types.StringValue(tt.projectID),
+				Name:      types.StringValue("Updated Credential"),
+				Type:      types.StringValue("httpHeaderAuth"),
+				ProjectID: tt.projectID,
 			}
 			resp := &resource.UpdateResponse{
 				State: resource.UpdateResponse{}.State,
 			}
+			credData := map[string]any{
+				"name":  "Authorization",
+				"value": "Bearer updated-token",
+			}
 
-			result := r.executeUpdateLogicWithData(ctx, plan, state, tt.credData, resp)
+			result := r.executeUpdateLogicWithData(ctx, plan, state, credData, resp)
 
 			if tt.expectSuccess {
 				assert.True(t, result, "Should return true on success")
 				assert.False(t, resp.Diagnostics.HasError(), "Should not have diagnostics error")
+				assert.Equal(t, "cred-old-123", plan.ID.ValueString(), "Should keep the credential ID")
+				assert.Equal(t, tt.wantProjectID, plan.ProjectID.ValueString(), "Should store the credential project")
 			} else {
 				assert.False(t, result, "Should return false on error")
 			}
