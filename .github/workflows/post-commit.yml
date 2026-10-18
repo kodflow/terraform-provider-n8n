@@ -28,6 +28,14 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main, master]
+  # The merge queue requires this status on its own gh-readonly-queue/... ref,
+  # and the ruleset's required check waits for it there. On this event the
+  # action takes its generic branch: the queue's tip commit alone (there is no
+  # `before` to range from), authors and subject checked as everywhere else.
+  # block-merge below stays pull_request-only: a queue entry has no draft state
+  # to restore.
+  merge_group:
+    types: [checks_requested]
   # The verdict can change without this repository changing — a new rule, or a
   # rewritten history — so a quiet repository can be asked on demand.
   workflow_dispatch:
