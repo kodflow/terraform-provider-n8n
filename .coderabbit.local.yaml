@@ -1,3 +1,7 @@
+# This repository's own part of its CodeRabbit configuration. CodeRabbit
+# does not read this file: kodflow/post-commit enforce renders .coderabbit.yaml
+# from it, with the fleet's central part laid on top. Edit this file, never
+# .coderabbit.yaml. https://github.com/kodflow/post-commit#coderabbit
 # Copyright (c) 2024 Florent (Kodflow). All rights reserved.
 # Licensed under the Sustainable Use License 1.0
 # See LICENSE in the project root for license information.
