@@ -273,15 +273,19 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	}
 	// Normalize settings before serialization to avoid unnecessary diffs.
 	normalizedSettings := normalizeWorkflowSettings(workflow.Settings)
+	// Keep undocumented settings only when settings_json declares them.
+	normalizedSettings.AdditionalProperties = configuredAdditionalSettings(workflow.Settings.AdditionalProperties, plan.SettingsJSON)
 	// Check for error.
 	if settingsJSON, err := json.Marshal(normalizedSettings); err == nil {
 		plan.SettingsJSON = types.StringValue(string(settingsJSON))
 	}
 }
 
-// normalizeWorkflowSettings removes default values from settings.
-// The n8n API returns default values for certain settings even when not explicitly set.
-// This function removes callerPolicy and availableInMCP defaults to match user config.
+// normalizeWorkflowSettings removes default values and clears undocumented fields from settings.
+// The n8n API returns default values for certain settings even when not explicitly set,
+// as well as undocumented fields (e.g. binaryMode) that are rejected on PUT requests.
+// This function removes callerPolicy and availableInMCP defaults to match user config,
+// and clears AdditionalProperties to prevent "inconsistent result after apply" errors.
 //
 // Params:
 //   - settings: Original workflow settings from API
@@ -302,8 +306,54 @@ func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.Workflow
 		normalized.AvailableInMCP = nil
 	}
 
+	// Clear AdditionalProperties to prevent fields returned by the n8n API
+	// (e.g. binaryMode) but rejected on PUT requests from being persisted
+	// in Terraform state, which causes "inconsistent result after apply".
+	normalized.AdditionalProperties = nil
+
 	// Return result.
 	return normalized
+}
+
+// configuredAdditionalSettings returns the undocumented settings returned by the API
+// that the configured settings_json also declares. API-only fields (e.g. binaryMode)
+// are dropped, while keys set on purpose (e.g. timeSavedMode on newer n8n versions)
+// stay in state so they match the configuration.
+//
+// Params:
+//   - returned: AdditionalProperties of the settings returned by the API
+//   - configuredJSON: settings_json value from the plan or prior state
+//
+// Returns:
+//   - map[string]any: Undocumented settings declared in settings_json, or nil when none
+func configuredAdditionalSettings(returned map[string]any, configuredJSON types.String) map[string]any {
+	// Nothing to keep without undocumented settings.
+	if len(returned) == 0 {
+		return nil
+	}
+
+	var configured map[string]any
+	// Null, unknown or invalid settings_json declares no key.
+	if err := json.Unmarshal([]byte(configuredJSON.ValueString()), &configured); err != nil {
+		return nil
+	}
+
+	kept := make(map[string]any, len(returned))
+	// Keep each returned key that the configuration declares.
+	for key, value := range returned {
+		// Skip API-only fields.
+		if _, declared := configured[key]; declared {
+			kept[key] = value
+		}
+	}
+
+	// Use nil instead of an empty map so no key is serialized.
+	if len(kept) == 0 {
+		return nil
+	}
+
+	// Return declared keys.
+	return kept
 }
 
 // convertTagIDsToTagIdsInner converts string tag IDs to SDK TagIdsInner format.

@@ -1551,10 +1551,10 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			},
 		},
 		{
-			name: "error case - preserves other settings fields untouched",
+			name: "clears AdditionalProperties to prevent undocumented API fields in state",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				// Test that other fields are preserved.
+				// Test that AdditionalProperties are cleared.
 				settings := n8nsdk.WorkflowSettings{
 					AdditionalProperties: map[string]interface{}{
 						"customField": "value",
@@ -1563,9 +1563,9 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 
 				result := normalizeWorkflowSettings(settings)
 
-				// Other fields should remain intact.
-				assert.NotNil(t, result.AdditionalProperties)
-				assert.Equal(t, "value", result.AdditionalProperties["customField"])
+				// AdditionalProperties should be cleared to prevent
+				// undocumented API fields from polluting Terraform state.
+				assert.Nil(t, result.AdditionalProperties)
 			},
 		},
 		{
@@ -1591,6 +1591,86 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			tt.testFunc(t)
 		})
 	}
+}
+
+// Test_configuredAdditionalSettings tests the configuredAdditionalSettings function.
+func Test_configuredAdditionalSettings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		returned   map[string]any
+		configured types.String
+		want       map[string]any
+	}{
+		{
+			name:       "keeps declared keys and drops API-only fields",
+			returned:   map[string]any{"binaryMode": "separate", "timeSavedMode": "fixed"},
+			configured: types.StringValue(`{"executionOrder":"v1","timeSavedMode":"fixed"}`),
+			want:       map[string]any{"timeSavedMode": "fixed"},
+		},
+		{
+			name:       "drops every field when none is declared",
+			returned:   map[string]any{"binaryMode": "separate"},
+			configured: types.StringValue(`{"executionOrder":"v1"}`),
+			want:       nil,
+		},
+		{
+			name:       "returns nil without undocumented settings",
+			returned:   nil,
+			configured: types.StringValue(`{"timeSavedMode":"fixed"}`),
+			want:       nil,
+		},
+		{
+			name:       "null settings_json declares no key",
+			returned:   map[string]any{"binaryMode": "separate"},
+			configured: types.StringNull(),
+			want:       nil,
+		},
+		{
+			name:       "unknown settings_json declares no key",
+			returned:   map[string]any{"binaryMode": "separate"},
+			configured: types.StringUnknown(),
+			want:       nil,
+		},
+		{
+			name:       "invalid settings_json declares no key",
+			returned:   map[string]any{"binaryMode": "separate"},
+			configured: types.StringValue(`not json`),
+			want:       nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := configuredAdditionalSettings(tt.returned, tt.configured)
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+// Test_serializeWorkflowJSON_AdditionalSettings tests that only declared undocumented settings reach state.
+func Test_serializeWorkflowJSON_AdditionalSettings(t *testing.T) {
+	t.Parallel()
+
+	workflow := &n8nsdk.Workflow{
+		Nodes:       []n8nsdk.Node{},
+		Connections: map[string]any{},
+		Settings: n8nsdk.WorkflowSettings{
+			ExecutionOrder:       n8nsdk.PtrString("v1"),
+			AdditionalProperties: map[string]any{"binaryMode": "separate", "timeSavedMode": "fixed"},
+		},
+	}
+	plan := &models.Resource{
+		SettingsJSON: types.StringValue(`{"executionOrder":"v1","timeSavedMode":"fixed"}`),
+	}
+
+	serializeWorkflowJSON(workflow, plan)
+
+	assert.JSONEq(t, `{"executionOrder":"v1","timeSavedMode":"fixed"}`, plan.SettingsJSON.ValueString())
 }
 
 // Test_mapWorkflowProjectID tests the mapWorkflowProjectID function.
