@@ -1593,6 +1593,111 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 	}
 }
 
+// Test_resetRemovedWorkflowSettings tests the resetRemovedWorkflowSettings function.
+func Test_resetRemovedWorkflowSettings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		planJSON    types.String
+		stateJSON   types.String
+		want        map[string]any
+		expectError string
+	}{
+		{
+			name:      "no removal keeps the payload unchanged",
+			planJSON:  types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			want:      map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1"},
+		},
+		{
+			name:      "removed timezone is reset to DEFAULT",
+			planJSON:  types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1","timezone":"America/Manaus"}`),
+			want:      map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1", "timezone": SETTINGS_RESET_VALUE},
+		},
+		{
+			name:      "removed errorWorkflow is reset to DEFAULT",
+			planJSON:  types.StringValue(`{"executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			want:      map[string]any{"errorWorkflow": SETTINGS_RESET_VALUE, "executionOrder": "v1"},
+		},
+		{
+			name:      "removed callerPolicy and availableInMCP are reset to their defaults",
+			planJSON:  types.StringValue(`{"executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"executionOrder":"v1","callerPolicy":"any","availableInMCP":true}`),
+			want:      map[string]any{"executionOrder": "v1", "callerPolicy": CALLER_POLICY_DEFAULT, "availableInMCP": false},
+		},
+		{
+			name:      "keys added in the plan are left untouched",
+			planJSON:  types.StringValue(`{"executionOrder":"v1","timezone":"America/Sao_Paulo"}`),
+			stateJSON: types.StringValue(`{"executionOrder":"v1"}`),
+			want:      map[string]any{"executionOrder": "v1", "timezone": "America/Sao_Paulo"},
+		},
+		{
+			name:        "keys that cannot be reset produce a sorted error",
+			planJSON:    types.StringValue(`{"errorWorkflow":"wf-err"}`),
+			stateJSON:   types.StringValue(`{"errorWorkflow":"wf-err","executionTimeout":3600,"executionOrder":"v1"}`),
+			expectError: "[executionOrder, executionTimeout]",
+		},
+		{
+			name:      "null plan settings skip the comparison",
+			planJSON:  types.StringNull(),
+			stateJSON: types.StringValue(`{"timezone":"America/Manaus"}`),
+			want:      map[string]any{},
+		},
+		{
+			name:      "unknown plan settings skip the comparison",
+			planJSON:  types.StringUnknown(),
+			stateJSON: types.StringValue(`{"timezone":"America/Manaus"}`),
+			want:      map[string]any{},
+		},
+		{
+			name:      "null state settings skip the comparison",
+			planJSON:  types.StringValue(`{}`),
+			stateJSON: types.StringNull(),
+			want:      map[string]any{},
+		},
+		{
+			name:      "invalid state settings skip the comparison",
+			planJSON:  types.StringValue(`{}`),
+			stateJSON: types.StringValue(`not json`),
+			want:      map[string]any{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			plan := &models.Resource{
+				NodesJSON:       types.StringValue("[]"),
+				ConnectionsJSON: types.StringValue("{}"),
+				SettingsJSON:    tt.planJSON,
+			}
+			diags := &diag.Diagnostics{}
+			_, _, settings := parseWorkflowJSON(plan, diags)
+			assert.False(t, diags.HasError())
+
+			resetRemovedWorkflowSettings(&settings, tt.planJSON, tt.stateJSON, diags)
+
+			// Error cases must not produce a payload.
+			if tt.expectError != "" {
+				assert.True(t, diags.HasError())
+				assert.Contains(t, diags.Errors()[0].Detail(), tt.expectError)
+				return
+			}
+			assert.False(t, diags.HasError())
+
+			encoded, err := json.Marshal(settings)
+			assert.NoError(t, err)
+			var got map[string]any
+			assert.NoError(t, json.Unmarshal(encoded, &got))
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 // Test_mapWorkflowProjectID tests the mapWorkflowProjectID function.
 func Test_mapWorkflowProjectID(t *testing.T) {
 	t.Parallel()
