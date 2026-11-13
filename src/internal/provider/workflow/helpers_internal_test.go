@@ -1569,6 +1569,38 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			},
 		},
 		{
+			name: "removes DEFAULT errorWorkflow and timezone stored by older n8n versions",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				settings := n8nsdk.WorkflowSettings{
+					ErrorWorkflow:  n8nsdk.PtrString(SETTINGS_RESET_VALUE),
+					Timezone:       n8nsdk.PtrString(SETTINGS_RESET_VALUE),
+					ExecutionOrder: n8nsdk.PtrString("v1"),
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.ErrorWorkflow)
+				assert.Nil(t, result.Timezone)
+				assert.Equal(t, "v1", *result.ExecutionOrder)
+			},
+		},
+		{
+			name: "keeps configured errorWorkflow and timezone values",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				settings := n8nsdk.WorkflowSettings{
+					ErrorWorkflow: n8nsdk.PtrString("wf-err"),
+					Timezone:      n8nsdk.PtrString("America/Manaus"),
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Equal(t, "wf-err", *result.ErrorWorkflow)
+				assert.Equal(t, "America/Manaus", *result.Timezone)
+			},
+		},
+		{
 			name: "error case - empty string callerPolicy is not removed",
 			testFunc: func(t *testing.T) {
 				t.Helper()
@@ -1696,6 +1728,26 @@ func Test_resetRemovedWorkflowSettings(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+// Test_serializeWorkflowJSON_ResetSettings tests that a reset echoed back as "DEFAULT"
+// (n8n versions without server-side cleanup) matches a plan without the key.
+func Test_serializeWorkflowJSON_ResetSettings(t *testing.T) {
+	t.Parallel()
+
+	workflow := &n8nsdk.Workflow{
+		Nodes:       []n8nsdk.Node{},
+		Connections: map[string]any{},
+		Settings: n8nsdk.WorkflowSettings{
+			ExecutionOrder: n8nsdk.PtrString("v1"),
+			Timezone:       n8nsdk.PtrString(SETTINGS_RESET_VALUE),
+		},
+	}
+	plan := &models.Resource{SettingsJSON: types.StringValue(`{"executionOrder":"v1"}`)}
+
+	serializeWorkflowJSON(workflow, plan)
+
+	assert.JSONEq(t, `{"executionOrder":"v1"}`, plan.SettingsJSON.ValueString())
 }
 
 // Test_mapWorkflowProjectID tests the mapWorkflowProjectID function.

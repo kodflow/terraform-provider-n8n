@@ -23,8 +23,8 @@ import (
 // The n8n API returns this value even when not explicitly set by the user.
 const CALLER_POLICY_DEFAULT string = "workflowsFromSameOwner"
 
-// SETTINGS_RESET_VALUE is the value n8n removes from stored workflow settings on update,
-// restoring the instance default for that setting.
+// SETTINGS_RESET_VALUE is the value n8n treats as "use the instance default" for a setting.
+// n8n 2.x deletes it from stored settings on update; older versions store it as-is.
 const SETTINGS_RESET_VALUE string = "DEFAULT"
 
 // parseWorkflowJSON parses the JSON fields from a workflow model.
@@ -287,7 +287,9 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 
 // normalizeWorkflowSettings removes default values from settings.
 // The n8n API returns default values for certain settings even when not explicitly set.
-// This function removes callerPolicy and availableInMCP defaults to match user config.
+// This function removes callerPolicy and availableInMCP defaults to match user config,
+// and the "DEFAULT" value of errorWorkflow and timezone, which n8n versions without
+// server-side cleanup store as-is after a reset.
 //
 // Params:
 //   - settings: Original workflow settings from API
@@ -308,8 +310,30 @@ func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.Workflow
 		normalized.AvailableInMCP = nil
 	}
 
+	// Remove settings reset to the instance default.
+	normalized.ErrorWorkflow = clearSettingsResetValue(normalized.ErrorWorkflow)
+	normalized.Timezone = clearSettingsResetValue(normalized.Timezone)
+
 	// Return result.
 	return normalized
+}
+
+// clearSettingsResetValue returns nil when a setting holds the "DEFAULT" reset value.
+// n8n treats "DEFAULT" as unset, so it is equivalent to the key being absent.
+//
+// Params:
+//   - value: Setting value returned by the API
+//
+// Returns:
+//   - *string: nil for "DEFAULT", the original value otherwise
+func clearSettingsResetValue(value *string) *string {
+	// Treat the reset value as an absent setting.
+	if value != nil && *value == SETTINGS_RESET_VALUE {
+		return nil
+	}
+
+	// Return original value.
+	return value
 }
 
 // parseWorkflowUpdateJSON parses the plan JSON fields for an update request.
