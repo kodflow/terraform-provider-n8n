@@ -120,7 +120,7 @@ func TestCredentialResource_Schema(t *testing.T) {
 
 				assert.NotNil(t, resp.Schema)
 				assert.Contains(t, resp.Schema.MarkdownDescription, "credential resource")
-				assert.Contains(t, resp.Schema.MarkdownDescription, "automatic rotation")
+				assert.Contains(t, resp.Schema.MarkdownDescription, "PATCH /credentials/{id}")
 				assert.NotEmpty(t, resp.Schema.Attributes)
 
 			case "error case - schema must not be empty":

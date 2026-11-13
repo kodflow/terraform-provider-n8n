@@ -3,23 +3,15 @@
 page_title: "n8n_credential Resource - n8n"
 subcategory: ""
 description: |-
-  n8n credential resource with automatic rotation on update.
-  Update Behavior: When updated, the credential is rotated:
-  New credential is createdAll workflows using the old credential are updatedOld credential is deletedIf any step fails, automatic rollback is performed
-  Note: The credential ID will change after an update, but this is handled automatically.
+  n8n credential resource.
+  Update Behavior: Updates are applied in place with PATCH /credentials/{id} (requires n8n >= 2.3.0). The credential ID is preserved, so workflows referencing it keep working without modification. The whole data object is replaced on each update.
 ---
 
 # n8n_credential (Resource)
 
-n8n credential resource with automatic rotation on update.
+n8n credential resource.
 
-**Update Behavior**: When updated, the credential is rotated:
-1. New credential is created
-2. All workflows using the old credential are updated
-3. Old credential is deleted
-4. If any step fails, automatic rollback is performed
-
-**Note**: The credential ID will change after an update, but this is handled automatically.
+**Update Behavior**: Updates are applied in place with `PATCH /credentials/{id}` (requires n8n >= 2.3.0). The credential ID is preserved, so workflows referencing it keep working without modification. The whole `data` object is replaced on each update.
 
 
 

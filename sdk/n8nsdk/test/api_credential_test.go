@@ -76,4 +76,18 @@ func Test_n8nsdk_CredentialAPIService(t *testing.T) {
 
 	})
 
+	t.Run("Test CredentialAPIService UpdateCredential", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var id string
+
+		resp, httpRes, err := apiClient.CredentialAPI.UpdateCredential(context.Background(), id).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
 }

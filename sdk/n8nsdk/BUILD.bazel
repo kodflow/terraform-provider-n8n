@@ -52,6 +52,7 @@ go_library(
         "model_tag.go",
         "model_tag_ids_inner.go",
         "model_tag_list.go",
+        "model_update_credential_request.go",
         "model_user.go",
         "model_user_list.go",
         "model_variable.go",
