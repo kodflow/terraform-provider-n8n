@@ -201,12 +201,12 @@ func (r *WorkflowResource) addMetadataAttributes(attrs map[string]schema.Attribu
 		Computed:            true,
 	}
 	attrs["meta"] = schema.MapAttribute{
-		MarkdownDescription: "Workflow metadata",
+		MarkdownDescription: "Workflow metadata. Non-string values are JSON-encoded.",
 		ElementType:         types.StringType,
 		Computed:            true,
 	}
 	attrs["pin_data"] = schema.MapAttribute{
-		MarkdownDescription: "Pinned test data for the workflow",
+		MarkdownDescription: "Pinned test data for the workflow. Non-string values are JSON-encoded.",
 		ElementType:         types.StringType,
 		Computed:            true,
 	}

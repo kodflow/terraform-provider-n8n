@@ -33,8 +33,8 @@ n8n workflow resource using generated SDK
 - `created_at` (String) Timestamp when the workflow was created
 - `id` (String) Workflow identifier
 - `is_archived` (Boolean) Whether the workflow is archived
-- `meta` (Map of String) Workflow metadata
-- `pin_data` (Map of String) Pinned test data for the workflow
+- `meta` (Map of String) Workflow metadata. Non-string values are JSON-encoded.
+- `pin_data` (Map of String) Pinned test data for the workflow. Non-string values are JSON-encoded.
 - `trigger_count` (Number) Number of triggers in the workflow
 - `updated_at` (String) Timestamp when the workflow was last updated
 - `version_id` (String) Version identifier of the workflow
