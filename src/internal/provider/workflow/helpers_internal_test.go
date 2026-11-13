@@ -1569,6 +1569,38 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			},
 		},
 		{
+			name: "removes DEFAULT errorWorkflow and timezone stored by older n8n versions",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				settings := n8nsdk.WorkflowSettings{
+					ErrorWorkflow:  n8nsdk.PtrString(SETTINGS_RESET_VALUE),
+					Timezone:       n8nsdk.PtrString(SETTINGS_RESET_VALUE),
+					ExecutionOrder: n8nsdk.PtrString("v1"),
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Nil(t, result.ErrorWorkflow)
+				assert.Nil(t, result.Timezone)
+				assert.Equal(t, "v1", *result.ExecutionOrder)
+			},
+		},
+		{
+			name: "keeps configured errorWorkflow and timezone values",
+			testFunc: func(t *testing.T) {
+				t.Helper()
+				settings := n8nsdk.WorkflowSettings{
+					ErrorWorkflow: n8nsdk.PtrString("wf-err"),
+					Timezone:      n8nsdk.PtrString("America/Manaus"),
+				}
+
+				result := normalizeWorkflowSettings(settings)
+
+				assert.Equal(t, "wf-err", *result.ErrorWorkflow)
+				assert.Equal(t, "America/Manaus", *result.Timezone)
+			},
+		},
+		{
 			name: "error case - empty string callerPolicy is not removed",
 			testFunc: func(t *testing.T) {
 				t.Helper()
@@ -1591,6 +1623,131 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			tt.testFunc(t)
 		})
 	}
+}
+
+// Test_resetRemovedWorkflowSettings tests the resetRemovedWorkflowSettings function.
+func Test_resetRemovedWorkflowSettings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		planJSON    types.String
+		stateJSON   types.String
+		want        map[string]any
+		expectError string
+	}{
+		{
+			name:      "no removal keeps the payload unchanged",
+			planJSON:  types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			want:      map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1"},
+		},
+		{
+			name:      "removed timezone is reset to DEFAULT",
+			planJSON:  types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1","timezone":"America/Manaus"}`),
+			want:      map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1", "timezone": SETTINGS_RESET_VALUE},
+		},
+		{
+			name:      "removed errorWorkflow is reset to DEFAULT",
+			planJSON:  types.StringValue(`{"executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"errorWorkflow":"wf-err","executionOrder":"v1"}`),
+			want:      map[string]any{"errorWorkflow": SETTINGS_RESET_VALUE, "executionOrder": "v1"},
+		},
+		{
+			name:      "removed callerPolicy and availableInMCP are reset to their defaults",
+			planJSON:  types.StringValue(`{"executionOrder":"v1"}`),
+			stateJSON: types.StringValue(`{"executionOrder":"v1","callerPolicy":"any","availableInMCP":true}`),
+			want:      map[string]any{"executionOrder": "v1", "callerPolicy": CALLER_POLICY_DEFAULT, "availableInMCP": false},
+		},
+		{
+			name:      "keys added in the plan are left untouched",
+			planJSON:  types.StringValue(`{"executionOrder":"v1","timezone":"America/Sao_Paulo"}`),
+			stateJSON: types.StringValue(`{"executionOrder":"v1"}`),
+			want:      map[string]any{"executionOrder": "v1", "timezone": "America/Sao_Paulo"},
+		},
+		{
+			name:        "keys that cannot be reset produce a sorted error",
+			planJSON:    types.StringValue(`{"errorWorkflow":"wf-err"}`),
+			stateJSON:   types.StringValue(`{"errorWorkflow":"wf-err","executionTimeout":3600,"executionOrder":"v1"}`),
+			expectError: "[executionOrder, executionTimeout]",
+		},
+		{
+			name:      "null plan settings skip the comparison",
+			planJSON:  types.StringNull(),
+			stateJSON: types.StringValue(`{"timezone":"America/Manaus"}`),
+			want:      map[string]any{},
+		},
+		{
+			name:      "unknown plan settings skip the comparison",
+			planJSON:  types.StringUnknown(),
+			stateJSON: types.StringValue(`{"timezone":"America/Manaus"}`),
+			want:      map[string]any{},
+		},
+		{
+			name:      "null state settings skip the comparison",
+			planJSON:  types.StringValue(`{}`),
+			stateJSON: types.StringNull(),
+			want:      map[string]any{},
+		},
+		{
+			name:      "invalid state settings skip the comparison",
+			planJSON:  types.StringValue(`{}`),
+			stateJSON: types.StringValue(`not json`),
+			want:      map[string]any{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			plan := &models.Resource{
+				NodesJSON:       types.StringValue("[]"),
+				ConnectionsJSON: types.StringValue("{}"),
+				SettingsJSON:    tt.planJSON,
+			}
+			diags := &diag.Diagnostics{}
+			_, _, settings := parseWorkflowJSON(plan, diags)
+			assert.False(t, diags.HasError())
+
+			resetRemovedWorkflowSettings(&settings, tt.planJSON, tt.stateJSON, diags)
+
+			// Error cases must not produce a payload.
+			if tt.expectError != "" {
+				assert.True(t, diags.HasError())
+				assert.Contains(t, diags.Errors()[0].Detail(), tt.expectError)
+				return
+			}
+			assert.False(t, diags.HasError())
+
+			encoded, err := json.Marshal(settings)
+			assert.NoError(t, err)
+			var got map[string]any
+			assert.NoError(t, json.Unmarshal(encoded, &got))
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+// Test_serializeWorkflowJSON_ResetSettings tests that a reset echoed back as "DEFAULT"
+// (n8n versions without server-side cleanup) matches a plan without the key.
+func Test_serializeWorkflowJSON_ResetSettings(t *testing.T) {
+	t.Parallel()
+
+	workflow := &n8nsdk.Workflow{
+		Nodes:       []n8nsdk.Node{},
+		Connections: map[string]any{},
+		Settings: n8nsdk.WorkflowSettings{
+			ExecutionOrder: n8nsdk.PtrString("v1"),
+			Timezone:       n8nsdk.PtrString(SETTINGS_RESET_VALUE),
+		},
+	}
+	plan := &models.Resource{SettingsJSON: types.StringValue(`{"executionOrder":"v1"}`)}
+
+	serializeWorkflowJSON(workflow, plan)
+
+	assert.JSONEq(t, `{"executionOrder":"v1"}`, plan.SettingsJSON.ValueString())
 }
 
 // Test_mapWorkflowProjectID tests the mapWorkflowProjectID function.

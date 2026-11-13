@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +22,10 @@ import (
 // CALLER_POLICY_DEFAULT is the default value for the CallerPolicy workflow setting.
 // The n8n API returns this value even when not explicitly set by the user.
 const CALLER_POLICY_DEFAULT string = "workflowsFromSameOwner"
+
+// SETTINGS_RESET_VALUE is the value n8n treats as "use the instance default" for a setting.
+// n8n 2.x deletes it from stored settings on update; older versions store it as-is.
+const SETTINGS_RESET_VALUE string = "DEFAULT"
 
 // parseWorkflowJSON parses the JSON fields from a workflow model.
 //
@@ -281,7 +287,9 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 
 // normalizeWorkflowSettings removes default values from settings.
 // The n8n API returns default values for certain settings even when not explicitly set.
-// This function removes callerPolicy and availableInMCP defaults to match user config.
+// This function removes callerPolicy and availableInMCP defaults to match user config,
+// and the "DEFAULT" value of errorWorkflow and timezone, which n8n versions without
+// server-side cleanup store as-is after a reset.
 //
 // Params:
 //   - settings: Original workflow settings from API
@@ -302,8 +310,181 @@ func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.Workflow
 		normalized.AvailableInMCP = nil
 	}
 
+	// Remove settings reset to the instance default.
+	normalized.ErrorWorkflow = clearSettingsResetValue(normalized.ErrorWorkflow)
+	normalized.Timezone = clearSettingsResetValue(normalized.Timezone)
+
 	// Return result.
 	return normalized
+}
+
+// clearSettingsResetValue returns nil when a setting holds the "DEFAULT" reset value.
+// n8n treats "DEFAULT" as unset, so it is equivalent to the key being absent.
+//
+// Params:
+//   - value: Setting value returned by the API
+//
+// Returns:
+//   - *string: nil for "DEFAULT", the original value otherwise
+func clearSettingsResetValue(value *string) *string {
+	// Treat the reset value as an absent setting.
+	if value != nil && *value == SETTINGS_RESET_VALUE {
+		return nil
+	}
+
+	// Return original value.
+	return value
+}
+
+// parseWorkflowUpdateJSON parses the plan JSON fields for an update request.
+// Settings removed from settings_json are reset, since n8n merges settings on update.
+//
+// Params:
+//   - plan: The planned resource data
+//   - state: The current resource state
+//   - diags: Diagnostics for error reporting
+//
+// Returns:
+//   - []n8nsdk.Node: Parsed workflow nodes
+//   - map[string]any: Parsed workflow connections
+//   - n8nsdk.WorkflowSettings: Parsed workflow settings with removed keys reset
+func parseWorkflowUpdateJSON(plan, state *models.Resource, diags *diag.Diagnostics) ([]n8nsdk.Node, map[string]any, n8nsdk.WorkflowSettings) {
+	nodes, connections, settings := parseWorkflowJSON(plan, diags)
+	// Check for JSON parsing errors.
+	if diags.HasError() {
+		return nodes, connections, settings
+	}
+
+	resetRemovedWorkflowSettings(&settings, plan.SettingsJSON, state.SettingsJSON, diags)
+
+	// Return parsed fields.
+	return nodes, connections, settings
+}
+
+// resetRemovedWorkflowSettings marks settings removed from settings_json so n8n drops them.
+// The n8n API merges the submitted settings into the stored ones on update, so omitting a key
+// keeps its previous value and the API response no longer matches the plan, which causes
+// "Provider produced inconsistent result after apply". Each key present in state but absent
+// from the plan is sent with a value that n8n deletes ("DEFAULT") or that normalization removes
+// from state (default callerPolicy, availableInMCP=false). Keys the public API cannot reset
+// produce an error before any request is sent.
+//
+// Params:
+//   - settings: Settings parsed from the plan, updated in place
+//   - planSettingsJSON: settings_json value from the plan
+//   - stateSettingsJSON: settings_json value from the current state
+//   - diags: Diagnostics for error reporting
+func resetRemovedWorkflowSettings(settings *n8nsdk.WorkflowSettings, planSettingsJSON, stateSettingsJSON types.String, diags *diag.Diagnostics) {
+	removed, err := removedWorkflowSettingKeys(*settings, planSettingsJSON, stateSettingsJSON)
+	// Check for serialization error.
+	if err != nil {
+		diags.AddError("Invalid settings JSON", fmt.Sprintf("Could not serialize settings_json: %s", err.Error()))
+		return
+	}
+
+	unsupported := make([]string, 0, len(removed))
+	// Reset every removed key, keeping the ones the API cannot reset.
+	for _, key := range removed {
+		// Collect keys without a reset value for the error below.
+		if !resetWorkflowSetting(settings, key) {
+			unsupported = append(unsupported, key)
+		}
+	}
+
+	// Fail before the update when a removed key cannot be reset through the API.
+	if len(unsupported) > 0 {
+		diags.AddError(
+			"Workflow settings cannot be removed",
+			fmt.Sprintf(
+				"The settings [%s] are stored in n8n but missing from settings_json. "+
+					"The n8n API merges settings on update and cannot reset these keys. "+
+					"Declare them in settings_json or reset them in the n8n UI.",
+				strings.Join(unsupported, ", "),
+			),
+		)
+	}
+}
+
+// removedWorkflowSettingKeys returns the sorted settings keys present in state but absent from the plan.
+//
+// Params:
+//   - settings: Settings parsed from the plan
+//   - planSettingsJSON: settings_json value from the plan
+//   - stateSettingsJSON: settings_json value from the current state
+//
+// Returns:
+//   - []string: Removed keys, sorted; nil when plan or state settings are not known
+//   - error: Serialization error of the plan settings
+func removedWorkflowSettingKeys(settings n8nsdk.WorkflowSettings, planSettingsJSON, stateSettingsJSON types.String) ([]string, error) {
+	// Without known plan and state values there is no removal to detect.
+	if !isKnownString(planSettingsJSON) || !isKnownString(stateSettingsJSON) {
+		return nil, nil
+	}
+
+	var stateSettings map[string]any
+	// State is written by the provider; ignore content that is not a JSON object.
+	if err := json.Unmarshal([]byte(stateSettingsJSON.ValueString()), &stateSettings); err != nil {
+		return nil, nil
+	}
+
+	planSettings, err := settings.ToMap()
+	// Check for serialization error.
+	if err != nil {
+		return nil, err
+	}
+
+	removed := make([]string, 0, len(stateSettings))
+	// Collect every key stored in state that the plan no longer declares.
+	for key := range stateSettings {
+		// Keep only keys missing from the plan.
+		if _, declared := planSettings[key]; !declared {
+			removed = append(removed, key)
+		}
+	}
+	slices.Sort(removed)
+
+	// Return sorted keys.
+	return removed, nil
+}
+
+// resetWorkflowSetting sets the reset value accepted by the public API for a removed key.
+//
+// Params:
+//   - settings: Settings sent in the update request, updated in place
+//   - key: Removed settings key
+//
+// Returns:
+//   - bool: False when the key cannot be reset through the public API
+func resetWorkflowSetting(settings *n8nsdk.WorkflowSettings, key string) bool {
+	// Pick the value n8n deletes or normalization removes for this key.
+	switch key {
+	case "errorWorkflow":
+		settings.SetErrorWorkflow(SETTINGS_RESET_VALUE)
+	case "timezone":
+		settings.SetTimezone(SETTINGS_RESET_VALUE)
+	case "callerPolicy":
+		settings.SetCallerPolicy(CALLER_POLICY_DEFAULT)
+	case "availableInMCP":
+		settings.SetAvailableInMCP(false)
+	default:
+		// Booleans, enums and numbers reject "DEFAULT" in the public API schema.
+		return false
+	}
+
+	// Return success.
+	return true
+}
+
+// isKnownString reports whether a string value is neither null nor unknown.
+//
+// Params:
+//   - value: Terraform string value
+//
+// Returns:
+//   - bool: True when the value is known and not null
+func isKnownString(value types.String) bool {
+	// Return known state.
+	return !value.IsNull() && !value.IsUnknown()
 }
 
 // convertTagIDsToTagIdsInner converts string tag IDs to SDK TagIdsInner format.

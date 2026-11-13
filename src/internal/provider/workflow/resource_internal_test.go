@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -3258,6 +3259,115 @@ func TestWorkflowResource_performUpdateOperations(t *testing.T) {
 			} else {
 				assert.False(t, diags.HasError(), "Should not have error")
 			}
+		})
+	}
+}
+
+// TestWorkflowResource_performUpdateOperations_RemovedSettings tests that settings removed
+// from settings_json are reset in the update request, and that keys the API cannot reset
+// fail before any request is sent.
+func TestWorkflowResource_performUpdateOperations_RemovedSettings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		planSettJSON   string
+		stateSettJSON  string
+		expectRequest  bool
+		expectSettings map[string]any
+		expectError    bool
+	}{
+		{
+			name:           "success case - removed timezone is sent as DEFAULT",
+			planSettJSON:   `{"errorWorkflow":"wf-err","executionOrder":"v1"}`,
+			stateSettJSON:  `{"errorWorkflow":"wf-err","executionOrder":"v1","timezone":"America/Manaus"}`,
+			expectRequest:  true,
+			expectSettings: map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1", "timezone": "DEFAULT"},
+		},
+		{
+			name:           "success case - unchanged settings are sent as declared",
+			planSettJSON:   `{"errorWorkflow":"wf-err","executionOrder":"v1"}`,
+			stateSettJSON:  `{"errorWorkflow":"wf-err","executionOrder":"v1"}`,
+			expectRequest:  true,
+			expectSettings: map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1"},
+		},
+		{
+			name:          "error case - removed executionTimeout fails before the request",
+			planSettJSON:  `{"executionOrder":"v1"}`,
+			stateSettJSON: `{"executionOrder":"v1","executionTimeout":3600}`,
+			expectRequest: false,
+			expectError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var mu sync.Mutex
+			var sentSettings map[string]any
+			requests := 0
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				mu.Lock()
+				defer mu.Unlock()
+				requests++
+				// Capture the settings sent to PUT /workflows/{id}.
+				if r.Method == http.MethodPut && r.URL.Path == "/workflows/wf-123" {
+					var body map[string]any
+					// Reject request bodies that are not valid JSON.
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+					sentSettings, _ = body["settings"].(map[string]any)
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(map[string]any{
+						"id":          "wf-123",
+						"name":        "Test Workflow",
+						"nodes":       []any{},
+						"connections": map[string]any{},
+						"settings":    map[string]any{"errorWorkflow": "wf-err", "executionOrder": "v1"},
+					})
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			})
+			n8nClient, server := setupTestClient(t, handler)
+			defer server.Close()
+
+			r := &WorkflowResource{client: n8nClient}
+			plan := &models.Resource{
+				ID:              types.StringValue("wf-123"),
+				Name:            types.StringValue("Test Workflow"),
+				NodesJSON:       types.StringValue(`[]`),
+				ConnectionsJSON: types.StringValue(`{}`),
+				SettingsJSON:    types.StringValue(tt.planSettJSON),
+				Active:          types.BoolValue(false),
+				ProjectID:       types.StringValue("proj-1"),
+				Tags:            types.SetNull(types.StringType),
+			}
+			state := &models.Resource{
+				ID:           types.StringValue("wf-123"),
+				Active:       types.BoolValue(false),
+				ProjectID:    types.StringValue("proj-1"),
+				SettingsJSON: types.StringValue(tt.stateSettJSON),
+			}
+			diags := &diag.Diagnostics{}
+
+			result := r.performUpdateOperations(context.Background(), "wf-123", plan, state, diags)
+
+			mu.Lock()
+			defer mu.Unlock()
+			assert.Equal(t, tt.expectError, diags.HasError())
+			// Without a request the update must stop before reaching the API.
+			if !tt.expectRequest {
+				assert.Nil(t, result)
+				assert.Zero(t, requests)
+				return
+			}
+			assert.NotNil(t, result)
+			assert.Equal(t, tt.expectSettings, sentSettings)
 		})
 	}
 }

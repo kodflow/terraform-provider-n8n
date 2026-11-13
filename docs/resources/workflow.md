@@ -25,7 +25,7 @@ n8n workflow resource using generated SDK
 - `connections_json` (String) Workflow connections as JSON string. Must be valid JSON object mapping node connections.
 - `nodes_json` (String) Workflow nodes as JSON string. Must be valid JSON array of node objects.
 - `project_id` (String) Project ID where the workflow should be created. If not specified, workflow is created in the default 'Overview' location. The workflow can be transferred to a different project by updating this value. Note: Once assigned to a project, a workflow cannot be moved back to the Overview location due to n8n API limitations.
-- `settings_json` (String) Workflow settings as JSON string. Must be valid JSON object.
+- `settings_json` (String) Workflow settings as JSON string. Must be valid JSON object. Keys removed from this value are reset in n8n on update (`errorWorkflow`, `timezone`, `callerPolicy`, `availableInMCP`); other keys cannot be removed through the API and must be kept or reset in the n8n UI.
 - `tags` (Set of String) Set of tag IDs associated with this workflow
 
 ### Read-Only
