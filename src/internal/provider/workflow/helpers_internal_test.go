@@ -1551,10 +1551,10 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 			},
 		},
 		{
-			name: "error case - preserves other settings fields untouched",
+			name: "clears AdditionalProperties to prevent undocumented API fields in state",
 			testFunc: func(t *testing.T) {
 				t.Helper()
-				// Test that other fields are preserved.
+				// Test that AdditionalProperties are cleared.
 				settings := n8nsdk.WorkflowSettings{
 					AdditionalProperties: map[string]interface{}{
 						"customField": "value",
@@ -1563,9 +1563,9 @@ func Test_normalizeWorkflowSettings(t *testing.T) {
 
 				result := normalizeWorkflowSettings(settings)
 
-				// Other fields should remain intact.
-				assert.NotNil(t, result.AdditionalProperties)
-				assert.Equal(t, "value", result.AdditionalProperties["customField"])
+				// AdditionalProperties should be cleared to prevent
+				// undocumented API fields from polluting Terraform state.
+				assert.Nil(t, result.AdditionalProperties)
 			},
 		},
 		{

@@ -279,9 +279,11 @@ func serializeWorkflowJSON(workflow *n8nsdk.Workflow, plan *models.Resource) {
 	}
 }
 
-// normalizeWorkflowSettings removes default values from settings.
-// The n8n API returns default values for certain settings even when not explicitly set.
-// This function removes callerPolicy and availableInMCP defaults to match user config.
+// normalizeWorkflowSettings removes default values and clears undocumented fields from settings.
+// The n8n API returns default values for certain settings even when not explicitly set,
+// as well as undocumented fields (e.g. binaryMode) that are rejected on PUT requests.
+// This function removes callerPolicy and availableInMCP defaults to match user config,
+// and clears AdditionalProperties to prevent "inconsistent result after apply" errors.
 //
 // Params:
 //   - settings: Original workflow settings from API
@@ -301,6 +303,11 @@ func normalizeWorkflowSettings(settings n8nsdk.WorkflowSettings) n8nsdk.Workflow
 	if normalized.AvailableInMCP != nil && !*normalized.AvailableInMCP {
 		normalized.AvailableInMCP = nil
 	}
+
+	// Clear AdditionalProperties to prevent fields returned by the n8n API
+	// (e.g. binaryMode) but rejected on PUT requests from being persisted
+	// in Terraform state, which causes "inconsistent result after apply".
+	normalized.AdditionalProperties = nil
 
 	// Return result.
 	return normalized
