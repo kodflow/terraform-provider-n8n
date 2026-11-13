@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -194,6 +195,40 @@ func preserveProjectIDOnUpdate(plan, state *models.Resource) {
 	}
 }
 
+// workflowObjectAsStringMap preserves strings and JSON-encodes other API values
+// to fit the existing map(string) schema without discarding structured data.
+//
+// Params:
+//   - ctx: Context for the conversion
+//   - object: Workflow object returned by the API (meta or pinData)
+//
+// Returns:
+//   - types.Map: Map of strings with non-string values JSON-encoded
+//   - diag.Diagnostics: Conversion diagnostics
+func workflowObjectAsStringMap(ctx context.Context, object map[string]any) (types.Map, diag.Diagnostics) {
+	values := make(map[string]string, len(object))
+	// Convert every value to its string representation.
+	for key, value := range object {
+		// Keep string values without JSON quoting.
+		if text, ok := value.(string); ok {
+			values[key] = text
+			continue
+		}
+		var encoded strings.Builder
+		// Check for encoding error.
+		if err := json.NewEncoder(&encoded).Encode(value); err != nil {
+			var diagnostics diag.Diagnostics
+			diagnostics.AddError("Invalid workflow object", fmt.Sprintf("Could not JSON-encode field %q: %s", key, err))
+			// Return null map on error.
+			return types.MapNull(types.StringType), diagnostics
+		}
+		values[key] = strings.TrimSuffix(encoded.String(), "\n")
+	}
+
+	// Return converted map.
+	return types.MapValueFrom(ctx, types.StringType, values)
+}
+
 // mapWorkflowToModel maps a workflow from the SDK to the Terraform model.
 // This updates computed fields like timestamps, version, metadata, etc.
 //
@@ -221,7 +256,7 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *mo
 	// Map objects
 	// Check for non-nil value.
 	if workflow.Meta != nil {
-		metaMap, metaDiags := types.MapValueFrom(ctx, types.StringType, workflow.Meta)
+		metaMap, metaDiags := workflowObjectAsStringMap(ctx, workflow.Meta)
 		diags.Append(metaDiags...)
 		// Check condition.
 		if !diags.HasError() {
@@ -233,7 +268,7 @@ func mapWorkflowToModel(ctx context.Context, workflow *n8nsdk.Workflow, plan *mo
 	}
 	// Check for non-nil value.
 	if workflow.PinData != nil {
-		pinDataMap, pinDiags := types.MapValueFrom(ctx, types.StringType, workflow.PinData)
+		pinDataMap, pinDiags := workflowObjectAsStringMap(ctx, workflow.PinData)
 		diags.Append(pinDiags...)
 		// Check condition.
 		if !diags.HasError() {
